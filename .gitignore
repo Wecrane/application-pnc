@@ -1,0 +1,107 @@
+# =============================================================================
+# Apollo EDU PnC 赛事工程 .gitignore
+# =============================================================================
+
+# --- Bazel 构建产物（软链至 .cache）---
+bazel-*
+
+# --- Bazel 缓存（体积大，2.5GB+）---
+.cache/
+
+# --- 自动生成的 bazel 配置（含缓存路径）---
+.apollo.bazelrc
+
+# --- 运行时数据（日志、bag、record、地图）---
+/data
+
+# --- 根目录日志 ---
+/log/
+
+# --- 调试转储（bvar 监控数据）---
+/dumps/
+
+# --- 构建输出 ---
+/output/
+
+# --- dev 目录（buildtool 生成的软链和构建产物）---
+/dev/
+
+# --- 系统级软链目录 ---
+/tools
+/third_party/
+
+# --- 生成的 core 目录（buildtool 产物）---
+/core/
+
+# --- aem 环境管理数据 ---
+.aem
+
+# --- 环境相关软链（指向 arch 特定版本）---
+.buildtool.conf
+.env
+.workspace.json
+
+# --- 发布/提交压缩包 ---
+*.tar.gz
+
+# --- 临时文件 ---
+*.pyc
+*.swp
+*.swo
+*~
+
+# --- 生成文件 ---
+*.result
+py_proto
+*_pb2.py
+
+# --- IDE ---
+.project
+.cproject
+.settings
+.classpath
+.idea/
+.DS_Store
+
+# --- 编辑器 ---
+.ycm_extra_conf.py
+*.gch
+
+# --- 错误日志 ---
+.errors.log
+nohup.out
+*.bak
+*.stderr
+*.stdout
+
+# --- Bash 历史 ---
+.dev_bash_hist
+
+# --- 地图/标定数据 ---
+modules/map/data
+modules/calibration/data
+
+# --- 测试数据 ---
+modules/localization/msf/local_map/test_data/ndt_map/map_data
+
+# --- Demo 数据 ---
+docs/demo_guide/*.bag
+docs/demo_guide/*.record
+
+# --- Doxygen ---
+cyber/doxy-docs/build
+cyber/doxy-docs/xml
+
+# --- 第三方 CAN 库 ---
+third_party/can_card_library/esd_can/include
+third_party/can_card_library/esd_can/lib
+
+# --- 生成的 BUILD / proto / common_msgs ---
+modules/BUILD
+modules/common_msgs
+
+# --- FlameGraph 工具 ---
+tools/FlameGraph
+
+# --- 根目录构建输出 ---
+output
