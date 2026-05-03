@@ -88,57 +88,55 @@ StageResult LaneFollowStage::Process(const TrajectoryPoint& planning_start_point
 
     unsigned int count = 0;
     StageResult result;
-    // 赛题二：变道场景全程限速 30 km/h
-    bool has_lane_change = false;
-    for (auto& ri : *frame->mutable_reference_line_info()) {
-        if (ri.IsChangeLanePath()) {
-            has_lane_change = true;
-            break;
-        }
-    }
+    AINFO << "[STAGE_LOG] ===== Frame start, ref_line count=" << frame->mutable_reference_line_info()->size() << " =====";
     for (auto& reference_line_info : *frame->mutable_reference_line_info()) {
         // TODO(SHU): need refactor
         if (count++ == frame->mutable_reference_line_info()->size()) {
             break;
         }
-        ADEBUG << "No: [" << count << "] Reference Line.";
-        ADEBUG << "IsChangeLanePath: " << reference_line_info.IsChangeLanePath();
+        AINFO << "[STAGE_LOG] iter=" << (count-1)
+              << " is_change_lane=" << reference_line_info.IsChangeLanePath()
+              << " has_drivable=" << has_drivable_reference_line
+              << " id=" << reference_line_info.Lanes().Id();
 
         if (has_drivable_reference_line) {
-            reference_line_info.SetDrivable(false);
-            break;
+            // 如果已经有 drivable ref_line 且当前不是变道路径，则跳过
+            // 但变道路径仍需处理，防止 lane-follow 抢先后 lane-change 被丢弃
+            if (!reference_line_info.IsChangeLanePath()) {
+                AINFO << "[STAGE_LOG] SKIP: already have drivable, this is lane-follow, marking NOT drivable and breaking";
+                reference_line_info.SetDrivable(false);
+                break;
+            }
+            AINFO << "[STAGE_LOG] has drivable but this is lane-change, still processing";
         }
 
-        // 赛题二：存在变道时所有 reference_line 全程限速 30 km/h
-        if (has_lane_change) {
-            constexpr double kLaneChangeSpeedLimit = 30.0 / 3.6;
-            reference_line_info.mutable_reference_line()->AddSpeedLimit(
-                    reference_line_info.AdcSlBoundary().start_s(),
-                    reference_line_info.reference_line().Length(),
-                    kLaneChangeSpeedLimit);
-        }
-
+        AINFO << "[STAGE_LOG] calling PlanOnReferenceLine for iter=" << (count-1);
         result = PlanOnReferenceLine(planning_start_point, frame, &reference_line_info);
+        AINFO << "[STAGE_LOG] PlanOnReferenceLine done, has_error=" << result.HasError()
+              << " cost=" << reference_line_info.Cost();
 
         if (!result.HasError()) {
             if (!reference_line_info.IsChangeLanePath()) {
-                ADEBUG << "reference line is NOT lane change ref.";
+                AINFO << "[STAGE_LOG] WIN: lane-follow ref_line drivable, continue to next";
                 has_drivable_reference_line = true;
                 continue;
             }
             if (reference_line_info.Cost() < kStraightForwardLineCost) {
-                // If the path and speed optimization succeed on target lane while
-                // under smart lane-change or IsClearToChangeLane under older version
-                has_drivable_reference_line = true;
+                AINFO << "[STAGE_LOG] WIN: lane-change ref_line drivable (cost=" << reference_line_info.Cost() << " < " << kStraightForwardLineCost << ")";
+                if (!has_drivable_reference_line) {
+                    has_drivable_reference_line = true;
+                }
                 reference_line_info.SetDrivable(true);
             } else {
+                AINFO << "[STAGE_LOG] LOSE: lane-change cost too high (cost=" << reference_line_info.Cost() << " >= " << kStraightForwardLineCost << ")";
                 reference_line_info.SetDrivable(false);
-                ADEBUG << "\tlane change failed";
             }
         } else {
+            AINFO << "[STAGE_LOG] ERROR: PlanOnReferenceLine failed";
             reference_line_info.SetDrivable(false);
         }
     }
+    AINFO << "[STAGE_LOG] ===== Frame end, has_drivable=" << has_drivable_reference_line << " =====";
 
     return has_drivable_reference_line ? result.SetStageStatus(StageStatusType::RUNNING)
                                        : result.SetStageStatus(StageStatusType::ERROR);

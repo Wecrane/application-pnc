@@ -57,35 +57,45 @@ bool LaneChangePath::Init(
 }
 
 apollo::common::Status LaneChangePath::Process(Frame* frame, ReferenceLineInfo* reference_line_info) {
+    AINFO << "[LC_PROCESS] called, is_change_lane=" << reference_line_info->IsChangeLanePath()
+          << " path_reusable=" << reference_line_info->path_reusable()
+          << " ref_line_count=" << frame->reference_line_info().size();
     UpdateLaneChangeStatus();
-    const auto& status = injector_->planning_context()->mutable_planning_status()->mutable_change_lane()->status();
-    if (!reference_line_info->IsChangeLanePath() || reference_line_info->path_reusable()) {
-        ADEBUG << "Skip this time" << reference_line_info->IsChangeLanePath() << "path reusable"
-               << reference_line_info->path_reusable();
-        return Status::OK();
-    }
 
-    // 赛题二：变道场景全程限速 30 km/h (8.33 m/s)
-    constexpr double kLaneChangeSpeedLimit = 30.0 / 3.6;
+    // 赛题二：变道及变完后全程限速 29 km/h (8.06 m/s)
+    // 放在 IsChangeLanePath 判断之前，确保变道完成后仍有限速
+    constexpr double kLaneChangeSpeedLimit = 29.0 / 3.6;
     reference_line_info->mutable_reference_line()->AddSpeedLimit(
             reference_line_info->AdcSlBoundary().start_s(),
             reference_line_info->reference_line().Length(),
             kLaneChangeSpeedLimit);
 
+    const auto& status = injector_->planning_context()->mutable_planning_status()->mutable_change_lane()->status();
+    if (!reference_line_info->IsChangeLanePath() || reference_line_info->path_reusable()) {
+        AINFO << "[LC_PROCESS] SKIP: not change_lane or path reusable, returning OK";
+        return Status::OK();
+    }
+
+    AINFO << "[LC_PROCESS] GENERATING lane change path, status=" << status
+          << " clear=" << is_clear_to_change_lane_;
     // 始终规划路径：不在 IN_CHANGE_LANE 时通过 forbidden zone 保持当前位置直线行驶
     std::vector<PathBoundary> candidate_path_boundaries;
     std::vector<PathData> candidate_path_data;
 
     GetStartPointSLState();
     if (!DecidePathBounds(&candidate_path_boundaries)) {
+        AINFO << "[LC_PROCESS] FAIL: DecidePathBounds failed";
         return Status(ErrorCode::PLANNING_ERROR, "lane change path bounds failed");
     }
     if (!OptimizePath(candidate_path_boundaries, &candidate_path_data)) {
+        AINFO << "[LC_PROCESS] FAIL: OptimizePath failed";
         return Status(ErrorCode::PLANNING_ERROR, "lane change path optimize failed");
     }
     if (!AssessPath(&candidate_path_data, reference_line_info->mutable_path_data())) {
+        AINFO << "[LC_PROCESS] FAIL: AssessPath failed, no valid path";
         return Status(ErrorCode::PLANNING_ERROR, "No valid lane change path");
     }
+    AINFO << "[LC_PROCESS] SUCCESS: lane change path generated";
 
     // 赛题二：不清时忽略所有障碍物，速度规划器不跟车不刹车
     if (!is_clear_to_change_lane_) {
@@ -240,42 +250,54 @@ void LaneChangePath::UpdateLaneChangeStatus() {
     double now = Clock::NowInSeconds();
     // Init lane change status
     if (!prev_status->has_status()) {
+        AINFO << "[LC_STATUS] INIT: no prev status, setting FINISHED";
         UpdateStatus(now, ChangeLaneStatus::CHANGE_LANE_FINISHED, "");
         return;
     }
     bool has_change_lane = frame_->reference_line_info().size() > 1;
     if (!has_change_lane) {
         if (prev_status->status() == ChangeLaneStatus::IN_CHANGE_LANE) {
+            AINFO << "[LC_STATUS] EXIT: no change lane (size=" << frame_->reference_line_info().size()
+                  << "), was IN_CHANGE_LANE -> FINISHED";
             UpdateStatus(now, ChangeLaneStatus::CHANGE_LANE_FINISHED, prev_status->path_id());
         }
         return;
     }
     // has change lane
     if (reference_line_info_->IsChangeLanePath()) {
-        const auto* history_frame = injector_->frame_history()->Latest();
-        if (!CheckLastFrameSucceed(history_frame)) {
-            UpdateStatus(now, ChangeLaneStatus::CHANGE_LANE_FAILED, change_lane_id);
-            is_exist_lane_change_start_position_ = false;
-            return;
-        }
         is_clear_to_change_lane_ = IsClearToChangeLane(reference_line_info_);
         change_lane_id = reference_line_info_->Lanes().Id();
         ADEBUG << "change_lane_id" << change_lane_id;
         if (prev_status->status() == ChangeLaneStatus::CHANGE_LANE_FAILED) {
-            if (now - prev_status->timestamp() > config_.change_lane_fail_freeze_time()) {
+            double elapsed = now - prev_status->timestamp();
+            if (elapsed > config_.change_lane_fail_freeze_time()) {
+                AINFO << "[LC_STATUS] RETRY: FAILED -> IN_CHANGE_LANE, elapsed=" << elapsed
+                      << " freeze=" << config_.change_lane_fail_freeze_time();
                 UpdateStatus(now, ChangeLaneStatus::IN_CHANGE_LANE, change_lane_id);
-                ADEBUG << "change lane again after failed";
+            } else {
+                AINFO << "[LC_STATUS] WAIT: still FAILED, elapsed=" << elapsed
+                      << " freeze=" << config_.change_lane_fail_freeze_time();
             }
             return;
         } else if (prev_status->status() == ChangeLaneStatus::CHANGE_LANE_FINISHED) {
-            if (now - prev_status->timestamp() > config_.change_lane_success_freeze_time()) {
+            double elapsed = now - prev_status->timestamp();
+            if (elapsed > config_.change_lane_success_freeze_time()) {
+                AINFO << "[LC_STATUS] START: FINISHED -> IN_CHANGE_LANE, elapsed=" << elapsed
+                      << " freeze=" << config_.change_lane_success_freeze_time()
+                      << " id=" << change_lane_id;
                 UpdateStatus(now, ChangeLaneStatus::IN_CHANGE_LANE, change_lane_id);
-                AINFO << "change lane again after success";
+            } else {
+                AINFO << "[LC_STATUS] WAIT: still FINISHED, elapsed=" << elapsed
+                      << " freeze=" << config_.change_lane_success_freeze_time();
             }
         } else if (prev_status->status() == ChangeLaneStatus::IN_CHANGE_LANE) {
             if (prev_status->path_id() != change_lane_id) {
-                AINFO << "change_lane_id" << change_lane_id << "prev" << prev_status->path_id();
+                AINFO << "[LC_STATUS] SWITCH: IN_CHANGE_LANE but id changed (prev="
+                      << prev_status->path_id() << " now=" << change_lane_id << ") -> FINISHED";
                 UpdateStatus(now, ChangeLaneStatus::CHANGE_LANE_FINISHED, prev_status->path_id());
+            } else {
+                AINFO << "[LC_STATUS] CONTINUE: IN_CHANGE_LANE, clear=" << is_clear_to_change_lane_
+                      << " id=" << change_lane_id;
             }
         }
     }

@@ -346,7 +346,8 @@ void PathOptimizerUtil::UpdatePathRefWithBound(
       AINFO << "need_update_path_ref: s: " << path_boundary[i].s
             << ", l: " << ref_l->at(i);
     } else {
-      weight_ref_l->at(i) = 0;
+      ref_l->at(i) = 0.0;
+      weight_ref_l->at(i) = weight * 0.3;
     }
   }
 }
