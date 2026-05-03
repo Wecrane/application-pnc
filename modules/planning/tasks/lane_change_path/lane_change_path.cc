@@ -97,13 +97,18 @@ apollo::common::Status LaneChangePath::Process(Frame* frame, ReferenceLineInfo* 
     }
     AINFO << "[LC_PROCESS] SUCCESS: lane change path generated";
 
-    // 赛题二：不清时忽略所有障碍物，速度规划器不跟车不刹车
-    if (!is_clear_to_change_lane_) {
-        for (auto& obs : reference_line_info->path_decision()->obstacles().Items()) {
-            ObjectDecisionType object_decision;
-            object_decision.mutable_ignore();
-            reference_line_info->path_decision()->AddLongitudinalDecision(
-                    "LaneChangePath/ignore-all", obs->Id(), object_decision);
+    // 赛题二：变道期间忽略所有障碍物，速度规划器不跟车不刹车，快速变过去
+    {
+        bool is_in_change_lane =
+            injector_->planning_context()->planning_status().change_lane().status()
+            == ChangeLaneStatus::IN_CHANGE_LANE;
+        if (!is_clear_to_change_lane_ || is_in_change_lane) {
+            for (auto& obs : reference_line_info->path_decision()->obstacles().Items()) {
+                ObjectDecisionType object_decision;
+                object_decision.mutable_ignore();
+                reference_line_info->path_decision()->AddLongitudinalDecision(
+                        "LaneChangePath/ignore-all", obs->Id(), object_decision);
+            }
         }
     }
 
@@ -139,8 +144,12 @@ bool LaneChangePath::DecidePathBounds(std::vector<PathBoundary>* boundary) {
     PathBound temp_path_bound = path_bound;
     std::string blocking_obstacle_id;
     std::vector<SLPolygon> obs_sl_polygons;
-    // 赛题二：不清时跳过障碍物约束，防止目标车道来车把路径截断
-    if (is_clear_to_change_lane_) {
+    // 赛题二：变道执行期间跳过障碍物约束，快速变过去
+    // 找窗口期间（FINISHED 状态）仍正常检查障碍物
+    bool is_in_change_lane =
+        injector_->planning_context()->planning_status().change_lane().status()
+        == ChangeLaneStatus::IN_CHANGE_LANE;
+    if (is_clear_to_change_lane_ && !is_in_change_lane) {
         PathBoundsDeciderUtil::GetSLPolygons(*reference_line_info_, &obs_sl_polygons, init_sl_state_);
         if (!PathBoundsDeciderUtil::GetBoundaryFromStaticObstacles(
                     *reference_line_info_,
@@ -267,30 +276,39 @@ void LaneChangePath::UpdateLaneChangeStatus() {
     if (reference_line_info_->IsChangeLanePath()) {
         is_clear_to_change_lane_ = IsClearToChangeLane(reference_line_info_);
         change_lane_id = reference_line_info_->Lanes().Id();
-        ADEBUG << "change_lane_id" << change_lane_id;
+        double ego_speed = frame_->vehicle_state().linear_velocity();
+        constexpr double kMinLaneChangeSpeed = 25.0 / 3.6;  // 25 km/h
+
         if (prev_status->status() == ChangeLaneStatus::CHANGE_LANE_FAILED) {
             double elapsed = now - prev_status->timestamp();
-            if (elapsed > config_.change_lane_fail_freeze_time()) {
+            if (elapsed > config_.change_lane_fail_freeze_time()
+                && ego_speed >= kMinLaneChangeSpeed
+                && is_clear_to_change_lane_) {
                 AINFO << "[LC_STATUS] RETRY: FAILED -> IN_CHANGE_LANE, elapsed=" << elapsed
-                      << " freeze=" << config_.change_lane_fail_freeze_time();
+                      << " freeze=" << config_.change_lane_fail_freeze_time()
+                      << " speed=" << ego_speed * 3.6;
                 UpdateStatus(now, ChangeLaneStatus::IN_CHANGE_LANE, change_lane_id);
-            } else {
-                AINFO << "[LC_STATUS] WAIT: still FAILED, elapsed=" << elapsed
-                      << " freeze=" << config_.change_lane_fail_freeze_time();
             }
             return;
         } else if (prev_status->status() == ChangeLaneStatus::CHANGE_LANE_FINISHED) {
+            // 赛题二：先提速到 25 km/h 再开始找变道窗口
+            if (ego_speed < kMinLaneChangeSpeed) {
+                AINFO << "[LC_STATUS] WAIT: speed=" << ego_speed * 3.6 << " km/h < 25, waiting to accelerate";
+                return;
+            }
+            if (!is_clear_to_change_lane_) {
+                AINFO << "[LC_STATUS] WAIT: speed ok but window not clear, waiting";
+                return;
+            }
             double elapsed = now - prev_status->timestamp();
             if (elapsed > config_.change_lane_success_freeze_time()) {
                 AINFO << "[LC_STATUS] START: FINISHED -> IN_CHANGE_LANE, elapsed=" << elapsed
-                      << " freeze=" << config_.change_lane_success_freeze_time()
-                      << " id=" << change_lane_id;
+                      << " speed=" << ego_speed * 3.6 << " km/h id=" << change_lane_id;
                 UpdateStatus(now, ChangeLaneStatus::IN_CHANGE_LANE, change_lane_id);
-            } else {
-                AINFO << "[LC_STATUS] WAIT: still FINISHED, elapsed=" << elapsed
-                      << " freeze=" << config_.change_lane_success_freeze_time();
             }
         } else if (prev_status->status() == ChangeLaneStatus::IN_CHANGE_LANE) {
+            // 一旦进入变道，忽略后续障碍物检查，快速变过去
+            is_clear_to_change_lane_ = true;
             if (prev_status->path_id() != change_lane_id) {
                 AINFO << "[LC_STATUS] SWITCH: IN_CHANGE_LANE but id changed (prev="
                       << prev_status->path_id() << " now=" << change_lane_id << ") -> FINISHED";

@@ -121,14 +121,21 @@ StageResult LaneFollowStage::Process(const TrajectoryPoint& planning_start_point
                 has_drivable_reference_line = true;
                 continue;
             }
-            if (reference_line_info.Cost() < kStraightForwardLineCost) {
-                AINFO << "[STAGE_LOG] WIN: lane-change ref_line drivable (cost=" << reference_line_info.Cost() << " < " << kStraightForwardLineCost << ")";
+            // 变道期间即使 cost 高（如 speed fallback 加了 20000）也不淘汰 lane-change 路径
+            // 否则 lane-follow 会反复接管，导致"退出又进入"
+            bool is_in_change_lane =
+                injector_->planning_context()->planning_status().change_lane().status()
+                == ChangeLaneStatus::IN_CHANGE_LANE;
+            if (reference_line_info.Cost() < kStraightForwardLineCost || is_in_change_lane) {
+                AINFO << "[STAGE_LOG] WIN: lane-change ref_line drivable (cost=" << reference_line_info.Cost()
+                      << " threshold=" << kStraightForwardLineCost << " in_change_lane=" << is_in_change_lane << ")";
                 if (!has_drivable_reference_line) {
                     has_drivable_reference_line = true;
                 }
                 reference_line_info.SetDrivable(true);
             } else {
-                AINFO << "[STAGE_LOG] LOSE: lane-change cost too high (cost=" << reference_line_info.Cost() << " >= " << kStraightForwardLineCost << ")";
+                AINFO << "[STAGE_LOG] LOSE: lane-change cost too high (cost=" << reference_line_info.Cost()
+                      << " >= " << kStraightForwardLineCost << ")";
                 reference_line_info.SetDrivable(false);
             }
         } else {

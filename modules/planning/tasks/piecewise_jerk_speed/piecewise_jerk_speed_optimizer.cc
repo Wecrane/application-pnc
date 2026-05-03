@@ -156,6 +156,9 @@ Status PiecewiseJerkSpeedOptimizer::Process(const PathData& path_data,
     double v_upper_bound = FLAGS_planning_upper_speed_limit;
     v_upper_bound =
         std::fmin(speed_limit.GetSpeedLimitByS(path_s), v_upper_bound);
+    // 预留余量使有效限速 = 28.5 km/h，防止优化器在 jerk 最小化时略微超调
+    constexpr double kSpeedLimitMargin = 1.5 / 3.6;  // 1.5 km/h → m/s
+    v_upper_bound = std::fmax(0.0, v_upper_bound - kSpeedLimitMargin);
     dx_ref[i] = std::fmin(v_upper_bound, dx_ref[i]);
     s_dot_bounds.emplace_back(v_lower_bound, std::fmax(v_upper_bound, 0.0));
     print_debug.AddPoint("st_reference_line", curr_t, x_ref[i]);
