@@ -94,18 +94,7 @@ bool LaneFollowPath::DecidePathBounds(std::vector<PathBoundary>* boundary) {
         AERROR << "Failed to decide a rough boundary based on self lane.";
         return false;
     }
-    // 路肩缓冲：边界内缩0.3m防止弯道切内线撞路肩
-    for (size_t i = 0; i < path_bound.size(); ++i) {
-        path_bound[i].l_lower.l += 0.3;
-        path_bound[i].l_upper.l -= 0.3;
-    }
     // 赛题二：变道场景下判断是否清晰，不清时锁横位，清晰时正常变道
-    // 非变道时还原默认参数，防止弯道切内线
-    if (frame_->reference_line_info().size() <= 1) {
-        config_.mutable_path_optimizer_config()->set_l_weight(1.0);
-        config_.mutable_path_optimizer_config()->set_dl_weight(20.0);
-        config_.mutable_path_optimizer_config()->set_lateral_derivative_bound_default(2.0);
-    }
     if (frame_->reference_line_info().size() > 1) {
         auto indexed_obstacles = reference_line_info_->path_decision()->obstacles();
         bool should_stay = false;
@@ -135,10 +124,6 @@ bool LaneFollowPath::DecidePathBounds(std::vector<PathBoundary>* boundary) {
             }
         }
         if (should_stay) {
-            // 还原默认参数，防止切内线
-            config_.mutable_path_optimizer_config()->set_l_weight(1.0);
-            config_.mutable_path_optimizer_config()->set_dl_weight(20.0);
-            config_.mutable_path_optimizer_config()->set_lateral_derivative_bound_default(2.0);
             double current_l = init_sl_state_.second[0];
             for (size_t i = 0; i < path_bound.size(); ++i) {
                 double& lo = path_bound[i].l_lower.l;
@@ -153,10 +138,7 @@ bool LaneFollowPath::DecidePathBounds(std::vector<PathBoundary>* boundary) {
                 }
             }
         } else {
-            // 清晰时扩宽边界覆盖邻车道，临时改参数加速横移
-            config_.mutable_path_optimizer_config()->set_l_weight(0.5);
-            config_.mutable_path_optimizer_config()->set_dl_weight(5.0);
-            config_.mutable_path_optimizer_config()->set_lateral_derivative_bound_default(4.0);
+            // 清晰时扩宽边界覆盖邻车道，横移速度放开
             for (size_t i = 0; i < path_bound.size(); ++i) {
                 path_bound[i].l_lower.l -= 4.0;
                 path_bound[i].l_upper.l += 4.0;
