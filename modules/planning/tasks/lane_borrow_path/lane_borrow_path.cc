@@ -60,6 +60,10 @@ bool LaneBorrowPath::Init(
 }
 
 apollo::common::Status LaneBorrowPath::Process(Frame* frame, ReferenceLineInfo* reference_line_info) {
+    // 赛题二：变道 reference_line 上不跑 lane_borrow，避免干扰变道
+    if (reference_line_info->IsChangeLanePath()) {
+        return Status::OK();
+    }
     construct_zone = false;
     config_.mutable_path_optimizer_config()->set_l_weight(3.0);
     config_.mutable_path_optimizer_config()->set_path_reference_l_weight(10000.0);
