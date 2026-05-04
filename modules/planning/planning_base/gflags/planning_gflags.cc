@@ -142,6 +142,9 @@ DEFINE_double(nonstatic_obstacle_nudge_l_buffer, 0.4,
 DEFINE_double(lateral_ignore_buffer, 3.0,
               "If an obstacle's lateral distance is further away than this "
               "distance, ignore it");
+DEFINE_double(static_obstacle_hold_time_sec, 1.5,
+              "Keep a static obstacle alive after it disappears for this "
+              "amount of time.");
 DEFINE_double(max_stop_distance_obstacle, 10.0,
               "max stop distance from in-lane obstacle (meters)");
 DEFINE_double(min_stop_distance_obstacle, 6.0,
