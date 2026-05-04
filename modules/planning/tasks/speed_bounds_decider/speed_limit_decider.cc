@@ -21,6 +21,7 @@
 #include "modules/planning/tasks/speed_bounds_decider/speed_limit_decider.h"
 
 #include <algorithm>
+#include <cmath>
 #include <limits>
 #include "modules/common_msgs/basic_msgs/pnc_point.pb.h"
 #include "modules/common_msgs/planning_msgs/decision.pb.h"
@@ -32,6 +33,12 @@ namespace apollo {
 namespace planning {
 
 using apollo::common::Status;
+
+namespace {
+
+constexpr double kCentripetalSpeedLimitPreviewDistance = 12.0;
+
+}  // namespace
 
 SpeedLimitDecider::SpeedLimitDecider(const SpeedBoundsDeciderConfig& config,
                                      const ReferenceLine& reference_line,
@@ -67,10 +74,22 @@ Status SpeedLimitDecider::GetSpeedLimits(
                          speed_limit_from_reference_line);
     // (2) speed limit from path curvature
     //  -- 2.1: limit by centripetal force (acceleration)
+    double preview_abs_kappa = std::fabs(discretized_path.at(i).kappa());
+    const double preview_end_s =
+        path_s + kCentripetalSpeedLimitPreviewDistance;
+    for (uint32_t j = i + 1; j < discretized_path.size(); ++j) {
+      if (discretized_path.at(j).s() > preview_end_s) {
+        break;
+      }
+      preview_abs_kappa = std::max(
+          preview_abs_kappa, std::fabs(discretized_path.at(j).kappa()));
+    }
     const double speed_limit_from_centripetal_acc =
         std::sqrt(speed_bounds_config_.max_centric_acceleration_limit() /
-                  std::fmax(std::fabs(discretized_path.at(i).kappa()),
+                  std::fmax(preview_abs_kappa,
                             speed_bounds_config_.minimal_kappa()));
+    print_curve.AddPoint("speed_limit_preview_kappa", path_s,
+                         preview_abs_kappa);
     print_curve.AddPoint("speed_limit_from_centripetal_acc", path_s,
                          speed_limit_from_centripetal_acc);
     // (3) speed limit from nudge obstacles

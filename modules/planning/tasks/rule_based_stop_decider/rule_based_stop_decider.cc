@@ -16,12 +16,15 @@
 
 #include "modules/planning/tasks/rule_based_stop_decider/rule_based_stop_decider.h"
 
+#include <algorithm>
+#include <cmath>
 #include <string>
 #include <tuple>
 #include <vector>
 
 #include "modules/common_msgs/basic_msgs/pnc_point.pb.h"
 
+#include "modules/common/math/math_utils.h"
 #include "modules/common/vehicle_state/vehicle_state_provider.h"
 #include "modules/planning/planning_base/common/planning_context.h"
 #include "modules/planning/planning_base/common/util/common.h"
@@ -39,6 +42,56 @@ namespace {
 // TODO(ALL): temporarily copy the value from lane_follow_stage.cc, will extract
 // as a common value for planning later
 constexpr double kStraightForwardLineCost = 10.0;
+constexpr double kMinUsableUTurnShortPathLength = 3.0;
+constexpr double kUTurnLikePathKappaThreshold = 0.12;
+constexpr double kUTurnLikePathHeadingChangeThreshold = 0.7;
+constexpr double kUTurnLikePathHighKappaThreshold = 0.18;
+constexpr double kUTurnLikePathAverageKappaThreshold = 0.14;
+
+bool IsTightUTurnLikeShortPath(const PathData& path_data) {
+  const auto& path = path_data.discretized_path();
+  if (path.size() < 2) {
+    return false;
+  }
+
+  double max_abs_kappa = 0.0;
+  double sum_abs_kappa = 0.0;
+  for (const auto& path_point : path) {
+    const double abs_kappa = std::abs(path_point.kappa());
+    max_abs_kappa = std::max(max_abs_kappa, abs_kappa);
+    sum_abs_kappa += abs_kappa;
+  }
+  const double average_abs_kappa =
+      sum_abs_kappa / static_cast<double>(path.size());
+
+  const double heading_change = std::abs(common::math::NormalizeAngle(
+      path.back().theta() - path.front().theta()));
+  return (max_abs_kappa > kUTurnLikePathKappaThreshold &&
+          heading_change > kUTurnLikePathHeadingChangeThreshold) ||
+         (max_abs_kappa > kUTurnLikePathHighKappaThreshold &&
+          average_abs_kappa > kUTurnLikePathAverageKappaThreshold);
+}
+
+bool IsSuppressibleUTurnPathEndStop(
+    const ReferenceLineInfo& reference_line_info, const PathData& path_data,
+    const double path_start_s, const double path_end_s) {
+  if (path_data.path_label().find("self") == std::string::npos ||
+      !path_data.blocking_obstacle_id().empty()) {
+    return false;
+  }
+  if (path_end_s - path_start_s < kMinUsableUTurnShortPathLength) {
+    return false;
+  }
+  const bool is_uturn_path =
+      reference_line_info.GetPathTurnType(
+          reference_line_info.AdcSlBoundary().end_s()) == hdmap::Lane::U_TURN ||
+      reference_line_info.GetPathTurnType(path_end_s) == hdmap::Lane::U_TURN ||
+      IsTightUTurnLikeShortPath(path_data);
+  if (!is_uturn_path) {
+    return false;
+  }
+  return true;
+}
 }  // namespace
 
 bool RuleBasedStopDecider::Init(
@@ -120,16 +173,28 @@ void RuleBasedStopDecider::CheckLaneChangeUrgency(Frame *const frame) {
 
 void RuleBasedStopDecider::AddPathEndStop(
     Frame *const frame, ReferenceLineInfo *const reference_line_info) {
-  if (!reference_line_info->path_data().path_label().empty() &&
-      reference_line_info->path_data().frenet_frame_path().back().s() -
-              reference_line_info->path_data().frenet_frame_path().front().s() <
-          config_.short_path_length_threshold()) {
+  const auto& path_data = reference_line_info->path_data();
+  const auto& frenet_path = path_data.frenet_frame_path();
+  if (path_data.path_label().empty() || frenet_path.empty()) {
+    return;
+  }
+  const double path_start_s = frenet_path.front().s();
+  const double path_end_s = frenet_path.back().s();
+  const double path_length = path_end_s - path_start_s;
+  if (path_length < config_.short_path_length_threshold()) {
+    if (IsSuppressibleUTurnPathEndStop(*reference_line_info, path_data,
+                                       path_start_s, path_end_s)) {
+      AINFO << "Skip PATH_END stop wall on U-turn short self path, label["
+            << path_data.path_label() << "] path_length[" << path_length
+            << "] path_end_s[" << path_end_s << "] ref_length["
+            << reference_line_info->reference_line().Length() << "]";
+      return;
+    }
     const std::string stop_wall_id =
-        PATH_END_VO_ID_PREFIX + reference_line_info->path_data().path_label();
+        PATH_END_VO_ID_PREFIX + path_data.path_label();
     std::vector<std::string> wait_for_obstacles;
     util::BuildStopDecision(
-        stop_wall_id,
-        reference_line_info->path_data().frenet_frame_path().back().s() - 0.1,
+        stop_wall_id, path_end_s - 0.1,
         0.0, StopReasonCode::STOP_REASON_REFERENCE_END, wait_for_obstacles,
         "RuleBasedStopDecider", frame, reference_line_info);
   }

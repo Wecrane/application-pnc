@@ -17,6 +17,7 @@
 #include "modules/planning/tasks/lane_follow_path/lane_follow_path.h"
 
 #include <algorithm>
+#include <cmath>
 #include <memory>
 #include <string>
 #include <utility>
@@ -24,6 +25,7 @@
 
 #include "modules/common/configs/vehicle_config_helper.h"
 #include "modules/planning/planning_base/common/util/print_debug_info.h"
+#include "modules/planning/planning_base/gflags/planning_gflags.h"
 #include "modules/planning/planning_interface_base/task_base/common/path_generation.h"
 #include "modules/planning/planning_interface_base/task_base/common/path_util/path_assessment_decider_util.h"
 #include "modules/planning/planning_interface_base/task_base/common/path_util/path_bounds_decider_util.h"
@@ -33,6 +35,50 @@ namespace planning {
 
 using apollo::common::Status;
 using apollo::common::VehicleConfigHelper;
+
+namespace {
+
+bool IsDenseConeSCurve(const ReferenceLineInfo& reference_line_info) {
+    constexpr double kLookAheadS = 90.0;
+    constexpr double kSmallObstacleArea = 0.5;
+    constexpr double kMaxObstacleAbsL = 3.5;
+    constexpr int kMinSmallObstacleCount = 4;
+    constexpr double kMinAbsKappa = 0.015;
+
+    const auto& reference_line = reference_line_info.reference_line();
+    const double adc_start_s = reference_line_info.AdcSlBoundary().start_s();
+    const double adc_end_s = reference_line_info.AdcSlBoundary().end_s();
+
+    double max_abs_kappa = 0.0;
+    for (double s = adc_start_s; s < adc_start_s + kLookAheadS && s < reference_line.Length(); s += 2.0) {
+        max_abs_kappa = std::max(max_abs_kappa, std::fabs(reference_line.GetReferencePoint(s).kappa()));
+    }
+    if (max_abs_kappa < kMinAbsKappa) {
+        return false;
+    }
+
+    int small_obstacle_count = 0;
+    for (const auto* obs : reference_line_info.path_decision().obstacles().Items()) {
+        if (obs == nullptr || obs->IsVirtual() || obs->PerceptionPolygon().area() >= kSmallObstacleArea) {
+            continue;
+        }
+        const auto& sl_boundary = obs->PerceptionSLBoundary();
+        if (sl_boundary.end_s() < adc_start_s - 2.0 || sl_boundary.start_s() > adc_end_s + kLookAheadS) {
+            continue;
+        }
+        const double obstacle_center_l = (sl_boundary.start_l() + sl_boundary.end_l()) * 0.5;
+        if (std::fabs(obstacle_center_l) > kMaxObstacleAbsL) {
+            continue;
+        }
+        ++small_obstacle_count;
+        if (small_obstacle_count >= kMinSmallObstacleCount) {
+            return true;
+        }
+    }
+    return false;
+}
+
+}  // namespace
 
 bool LaneFollowPath::Init(
         const std::string& config_dir,
@@ -163,14 +209,23 @@ bool LaneFollowPath::DecidePathBounds(std::vector<PathBoundary>* boundary) {
     // 3. Fine-tune the boundary based on static obstacles
     PathBound temp_path_bound = path_bound;
     std::vector<SLPolygon> obs_sl_polygons;
-    PathBoundsDeciderUtil::GetSLPolygons(*reference_line_info_, &obs_sl_polygons, init_sl_state_);
-    if (!PathBoundsDeciderUtil::GetBoundaryFromStaticObstacles(
-                *reference_line_info_,
-                &obs_sl_polygons,
-                init_sl_state_,
-                &path_bound,
-                &blocking_obstacle_id,
-                &path_narrowest_width)) {
+    const double saved_obstacle_lat_buffer = FLAGS_obstacle_lat_buffer;
+    const bool dense_cone_s_curve = IsDenseConeSCurve(*reference_line_info_);
+    if (dense_cone_s_curve) {
+        FLAGS_obstacle_lat_buffer = std::max(FLAGS_obstacle_lat_buffer, 0.65);
+        AINFO << "Dense cone S-curve detected, obstacle_lat_buffer set to " << FLAGS_obstacle_lat_buffer;
+    }
+    PathBoundsDeciderUtil::GetSLPolygons(
+            *reference_line_info_, &obs_sl_polygons, init_sl_state_, dense_cone_s_curve);
+    const bool static_obstacle_boundary_success = PathBoundsDeciderUtil::GetBoundaryFromStaticObstacles(
+            *reference_line_info_,
+            &obs_sl_polygons,
+            init_sl_state_,
+            &path_bound,
+            &blocking_obstacle_id,
+            &path_narrowest_width);
+    FLAGS_obstacle_lat_buffer = saved_obstacle_lat_buffer;
+    if (!static_obstacle_boundary_success) {
         const std::string msg
                 = "Failed to decide fine tune the boundaries after "
                   "taking into consideration all static obstacles.";

@@ -18,10 +18,13 @@
  * @file
  **/
 
-#include "modules/planning/traffic_rules/yield_sign/yield_sign.h"
-
+#include <algorithm>
+#include <cmath>
 #include <memory>
 
+#include "modules/planning/traffic_rules/yield_sign/yield_sign.h"
+
+#include "modules/common/math/math_utils.h"
 #include "modules/map/pnc_map/path.h"
 #include "modules/planning/planning_base/common/frame.h"
 #include "modules/planning/planning_base/common/planning_context.h"
@@ -32,6 +35,76 @@ namespace planning {
 
 using apollo::common::Status;
 using apollo::hdmap::PathOverlap;
+
+namespace {
+
+constexpr double kUTurnYieldMaxDistanceToRefEnd = 35.0;
+constexpr double kUTurnYieldLookBackDistance = 8.0;
+constexpr double kUTurnYieldLookAheadDistance = 24.0;
+constexpr double kUTurnYieldSampleStep = 1.0;
+constexpr double kUTurnYieldKappaThreshold = 0.12;
+constexpr double kUTurnYieldHeadingChangeThreshold = 1.7;
+constexpr double kUTurnYieldMinSampleLength = 8.0;
+
+bool HasUTurnLaneTag(const ReferenceLineInfo& reference_line_info,
+                     const PathOverlap& yield_sign_overlap) {
+  const double reference_line_length =
+      reference_line_info.reference_line().Length();
+  const double start_s =
+      std::max(0.0, yield_sign_overlap.start_s - kUTurnYieldLookBackDistance);
+  const double end_s = std::min(reference_line_length,
+                                yield_sign_overlap.start_s +
+                                    kUTurnYieldLookAheadDistance);
+  for (double s = start_s; s <= end_s; s += kUTurnYieldSampleStep) {
+    if (reference_line_info.GetPathTurnType(s) == hdmap::Lane::U_TURN) {
+      return true;
+    }
+  }
+  return reference_line_info.GetPathTurnType(yield_sign_overlap.start_s) ==
+         hdmap::Lane::U_TURN;
+}
+
+bool HasTightUTurnGeometry(const ReferenceLineInfo& reference_line_info,
+                           const PathOverlap& yield_sign_overlap) {
+  const auto& reference_line = reference_line_info.reference_line();
+  const double reference_line_length = reference_line.Length();
+  if (reference_line_length - yield_sign_overlap.start_s >
+      kUTurnYieldMaxDistanceToRefEnd) {
+    return false;
+  }
+
+  const double adc_front_edge_s = reference_line_info.AdcSlBoundary().end_s();
+  const double sample_start_s =
+      std::max(0.0, std::min(adc_front_edge_s, yield_sign_overlap.start_s) -
+                        kUTurnYieldLookBackDistance);
+  const double sample_end_s = std::min(
+      reference_line_length,
+      std::max(adc_front_edge_s + kUTurnYieldLookAheadDistance,
+               yield_sign_overlap.start_s + kUTurnYieldLookAheadDistance));
+  if (sample_end_s - sample_start_s < kUTurnYieldMinSampleLength) {
+    return false;
+  }
+
+  double max_abs_kappa = 0.0;
+  for (double s = sample_start_s; s <= sample_end_s;
+       s += kUTurnYieldSampleStep) {
+    max_abs_kappa = std::max(
+        max_abs_kappa, std::abs(reference_line.GetReferencePoint(s).kappa()));
+  }
+  const double heading_change = std::abs(common::math::NormalizeAngle(
+      reference_line.GetReferencePoint(sample_end_s).heading() -
+      reference_line.GetReferencePoint(sample_start_s).heading()));
+  return max_abs_kappa > kUTurnYieldKappaThreshold &&
+         heading_change > kUTurnYieldHeadingChangeThreshold;
+}
+
+bool IsYieldSignOnUTurnPath(const ReferenceLineInfo& reference_line_info,
+                            const PathOverlap& yield_sign_overlap) {
+  return HasUTurnLaneTag(reference_line_info, yield_sign_overlap) ||
+         HasTightUTurnGeometry(reference_line_info, yield_sign_overlap);
+}
+
+}  // namespace
 
 bool YieldSign::Init(const std::string& name,
                      const std::shared_ptr<DependencyInjector>& injector) {
@@ -65,6 +138,12 @@ void YieldSign::MakeDecisions(Frame* const frame,
       reference_line_info->reference_line().map_path().yield_sign_overlaps();
   for (const auto& yield_sign_overlap : yield_sign_overlaps) {
     if (yield_sign_overlap.end_s <= adc_front_edge_s) {
+      continue;
+    }
+    if (IsYieldSignOnUTurnPath(*reference_line_info, yield_sign_overlap)) {
+      AINFO << "Skip yield_sign stop wall on U-turn-like yield_sign["
+            << yield_sign_overlap.object_id << "] start_s["
+            << yield_sign_overlap.start_s << "]";
       continue;
     }
 

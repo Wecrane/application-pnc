@@ -59,6 +59,8 @@ private:
      * @param final_path is output the best path
      */
     bool AssessPath(std::vector<PathData>* candidate_path_data, PathData* final_path);
+    bool HasDynamicVehicleConflictOnBorrowPath(const std::vector<PathData>& candidate_path_data) const;
+    bool GenerateBorrowHoldPath(PathData* final_path);
     /**
      * @brief Generate path boundary by left or right neightbor lane and self lane
      * @param pass_direction is side pass direction (left or right)

@@ -17,6 +17,7 @@
 #include "modules/planning/planning_interface_base/task_base/common/path_util/path_bounds_decider_util.h"
 
 #include <algorithm>
+#include <cmath>
 #include <functional>
 #include <limits>
 #include <set>
@@ -37,6 +38,29 @@ namespace apollo {
 namespace planning {
 
 using apollo::common::VehicleConfigHelper;
+
+namespace {
+
+bool IsSmallStaticObstacleNearPath(
+        const Obstacle& obstacle,
+        const SLState& init_sl_state,
+        const double adc_back_edge_s) {
+    constexpr double kLookAheadS = 90.0;
+    constexpr double kSmallObstacleArea = 0.5;
+    constexpr double kMaxObstacleAbsL = 3.5;
+
+    if (obstacle.PerceptionPolygon().area() >= kSmallObstacleArea) {
+        return false;
+    }
+    const auto& sl_boundary = obstacle.PerceptionSLBoundary();
+    if (sl_boundary.end_s() < adc_back_edge_s || sl_boundary.start_s() > init_sl_state.first[0] + kLookAheadS) {
+        return false;
+    }
+    const double obstacle_center_l = (sl_boundary.start_l() + sl_boundary.end_l()) * 0.5;
+    return std::fabs(obstacle_center_l) <= kMaxObstacleAbsL;
+}
+
+}  // namespace
 
 bool PathBoundsDeciderUtil::InitPathBoundary(
         const ReferenceLineInfo& reference_line_info,
@@ -179,7 +203,8 @@ void PathBoundsDeciderUtil::TrimPathBounds(const int path_blocked_idx, PathBound
 void PathBoundsDeciderUtil::GetSLPolygons(
         const ReferenceLineInfo& reference_line_info,
         std::vector<SLPolygon>* polygons,
-        const SLState& init_sl_state) {
+        const SLState& init_sl_state,
+        const bool include_non_blocking_static_obstacles) {
     polygons->clear();
     auto obstacles = reference_line_info.path_decision().obstacles();
     const double adc_back_edge_s = reference_line_info.AdcSlBoundary().start_s();
@@ -187,7 +212,10 @@ void PathBoundsDeciderUtil::GetSLPolygons(
         if (!IsWithinPathDeciderScopeObstacle(*obstacle)) {
             continue;
         }
-        if (!IsBlockingDrivingPathObstacle(reference_line_info.reference_line(), obstacle)) {
+        const bool is_blocking = IsBlockingDrivingPathObstacle(reference_line_info.reference_line(), obstacle);
+        if (!is_blocking
+            && (!include_non_blocking_static_obstacles
+                || !IsSmallStaticObstacleNearPath(*obstacle, init_sl_state, adc_back_edge_s))) {
             ADEBUG << "Skip non-blocking static obstacle: " << obstacle->Id();
             continue;
         }
@@ -298,6 +326,7 @@ bool PathBoundsDeciderUtil::UpdatePathBoundaryBySLPolygon(
                     left_bound.l = l_lower;
                     left_bound.type = BoundType::OBSTACLE;
                     left_bound.id = sl_polygon->at(j).id();
+                    path_boundary->at(i).is_nudge_bound[LEFT_INDEX] = true;
                     *narrowest_width = std::min(*narrowest_width, left_bound.l - right_bound.l);
                 }
             } else {
@@ -317,6 +346,7 @@ bool PathBoundsDeciderUtil::UpdatePathBoundaryBySLPolygon(
                     right_bound.l = l_upper;
                     right_bound.type = BoundType::OBSTACLE;
                     right_bound.id = sl_polygon->at(j).id();
+                    path_boundary->at(i).is_nudge_bound[RIGHT_INDEX] = true;
                     *narrowest_width = std::min(*narrowest_width, left_bound.l - right_bound.l);
                 }
             }

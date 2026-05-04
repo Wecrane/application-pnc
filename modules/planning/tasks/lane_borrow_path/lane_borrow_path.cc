@@ -17,6 +17,8 @@
 #include "modules/planning/tasks/lane_borrow_path/lane_borrow_path.h"
 
 #include <algorithm>
+#include <array>
+#include <cmath>
 #include <functional>
 #include <limits>
 #include <memory>
@@ -27,6 +29,7 @@
 #include <vector>
 
 #include "modules/common/configs/vehicle_config_helper.h"
+#include "modules/common_msgs/perception_msgs/perception_obstacle.pb.h"
 #include "modules/map/hdmap/hdmap_util.h"
 #include "modules/planning/planning_base/common/obstacle_blocking_analyzer.h"
 #include "modules/planning/planning_base/common/planning_context.h"
@@ -84,6 +87,13 @@ apollo::common::Status LaneBorrowPath::Process(Frame* frame, ReferenceLineInfo* 
     }
     if (!OptimizePath(candidate_path_boundaries, &candidate_path_data)) {
         return Status::OK();
+    }
+    if (HasDynamicVehicleConflictOnBorrowPath(candidate_path_data)) {
+        if (GenerateBorrowHoldPath(reference_line_info->mutable_path_data())) {
+            AINFO << "Borrow path is temporarily blocked by a dynamic vehicle, hold current lateral position.";
+            return Status::OK();
+        }
+        AWARN << "Failed to generate borrow hold path, continue assessing borrow candidates.";
     }
     if (AssessPath(&candidate_path_data, reference_line_info->mutable_path_data())) {
         ADEBUG << "lane borrow path success";
@@ -252,6 +262,162 @@ bool LaneBorrowPath::DecidePathBounds(std::vector<PathBoundary>* boundary) {
     }
     return !boundary->empty();
 }
+
+bool LaneBorrowPath::HasDynamicVehicleConflictOnBorrowPath(const std::vector<PathData>& candidate_path_data) const {
+    constexpr double kBorrowConflictLookAheadS = 35.0;
+    constexpr double kBorrowConflictRearBuffer = 2.0;
+    constexpr double kBorrowConflictFrontBuffer = 3.0;
+    constexpr double kBorrowConflictLatBuffer = 0.5;
+
+    if (candidate_path_data.empty() || decided_side_pass_direction_.empty()) {
+        return false;
+    }
+
+    const auto& adc_sl = reference_line_info_->AdcSlBoundary();
+    const double adc_center_l = (adc_sl.start_l() + adc_sl.end_l()) * 0.5;
+    const auto& vehicle_param = VehicleConfigHelper::GetConfig().vehicle_param();
+    const double adc_half_width = vehicle_param.width() * 0.5;
+    const bool borrow_left = std::any_of(
+            decided_side_pass_direction_.begin(),
+            decided_side_pass_direction_.end(),
+            [](SidePassDirection direction) { return direction == SidePassDirection::LEFT_BORROW; });
+    const bool borrow_right = std::any_of(
+            decided_side_pass_direction_.begin(),
+            decided_side_pass_direction_.end(),
+            [](SidePassDirection direction) { return direction == SidePassDirection::RIGHT_BORROW; });
+
+    for (const auto* obs : reference_line_info_->path_decision()->obstacles().Items()) {
+        if (obs == nullptr || obs->IsVirtual() || obs->IsStatic()
+            || obs->Perception().type() != apollo::perception::PerceptionObstacle::VEHICLE) {
+            continue;
+        }
+        const auto& obs_sl = obs->PerceptionSLBoundary();
+        if (obs_sl.end_s() < adc_sl.start_s() - kBorrowConflictRearBuffer
+            || obs_sl.start_s() > adc_sl.end_s() + kBorrowConflictLookAheadS) {
+            continue;
+        }
+        const double obs_center_l = (obs_sl.start_l() + obs_sl.end_l()) * 0.5;
+        if ((obs_center_l >= adc_center_l && !borrow_left) || (obs_center_l <= adc_center_l && !borrow_right)) {
+            continue;
+        }
+
+        for (const auto& path_data : candidate_path_data) {
+            for (const auto& point : path_data.frenet_frame_path()) {
+                if (point.s() < adc_sl.start_s()
+                    || point.s() > adc_sl.end_s() + kBorrowConflictLookAheadS) {
+                    continue;
+                }
+                const double ego_start_s = point.s() - vehicle_param.back_edge_to_center() - kBorrowConflictRearBuffer;
+                const double ego_end_s = point.s() + vehicle_param.front_edge_to_center() + kBorrowConflictFrontBuffer;
+                if (obs_sl.end_s() < ego_start_s || obs_sl.start_s() > ego_end_s) {
+                    continue;
+                }
+                const double ego_left_l = point.l() + adc_half_width + kBorrowConflictLatBuffer;
+                const double ego_right_l = point.l() - adc_half_width - kBorrowConflictLatBuffer;
+                if (obs_sl.start_l() <= ego_left_l && obs_sl.end_l() >= ego_right_l) {
+                    AINFO << "Borrow dynamic conflict obs[" << obs->Id() << "] obs_s[" << obs_sl.start_s() << ","
+                          << obs_sl.end_s() << "] obs_l[" << obs_sl.start_l() << "," << obs_sl.end_l()
+                          << "] path_l[" << point.l() << "]";
+                    return true;
+                }
+            }
+        }
+    }
+
+    return false;
+}
+
+bool LaneBorrowPath::GenerateBorrowHoldPath(PathData* final_path) {
+    if (final_path == nullptr) {
+        return false;
+    }
+
+    PathBoundary path_bound;
+    std::string blocking_obstacle_id;
+    double path_narrowest_width = 0.0;
+    const double current_l = init_sl_state_.second[0];
+    constexpr double kHoldHalfWidth = 0.35;
+    constexpr double kHoldSpeedLimit = 2.0;
+    constexpr double kHoldSpeedLimitDistance = 45.0;
+
+    if (!PathBoundsDeciderUtil::InitPathBoundary(*reference_line_info_, &path_bound, init_sl_state_)) {
+        return false;
+    }
+    if (!PathBoundsDeciderUtil::GetBoundaryFromRoad(*reference_line_info_, init_sl_state_, &path_bound)) {
+        return false;
+    }
+    for (auto& point : path_bound) {
+        point.l_lower.l = std::max(point.l_lower.l, current_l - kHoldHalfWidth);
+        point.l_upper.l = std::min(point.l_upper.l, current_l + kHoldHalfWidth);
+        if (point.l_lower.l > point.l_upper.l) {
+            AINFO << "Borrow hold path blocked by road boundary at s[" << point.s << "] current_l[" << current_l
+                  << "] bound[" << point.l_lower.l << "," << point.l_upper.l << "]";
+            return false;
+        }
+    }
+    path_bound.set_label("regular/borrow_hold");
+
+    std::vector<SLPolygon> obs_sl_polygons;
+    PathBoundsDeciderUtil::GetSLPolygons(*reference_line_info_, &obs_sl_polygons, init_sl_state_);
+    if (!PathBoundsDeciderUtil::GetBoundaryFromStaticObstacles(
+                *reference_line_info_,
+                &obs_sl_polygons,
+                init_sl_state_,
+                &path_bound,
+                &blocking_obstacle_id,
+                &path_narrowest_width)) {
+        return false;
+    }
+    path_bound.set_blocking_obstacle_id(blocking_obstacle_id);
+    if (path_bound.size() <= 1) {
+        return false;
+    }
+
+    const auto& config = config_.path_optimizer_config();
+    const ReferenceLine& reference_line = reference_line_info_->reference_line();
+    std::vector<double> opt_l;
+    std::vector<double> opt_dl;
+    std::vector<double> opt_ddl;
+    std::vector<std::pair<double, double>> ddl_bounds;
+    PathOptimizerUtil::CalculateAccBound(path_bound, reference_line, &ddl_bounds);
+    const double jerk_bound = PathOptimizerUtil::EstimateJerkBoundary(std::fmax(init_sl_state_.first[1], 1e-12));
+    std::vector<double> ref_l(path_bound.size(), current_l);
+    std::vector<double> weight_ref_l(path_bound.size(), config.path_reference_l_weight());
+    std::array<double, 3> end_state = {current_l, 0.0, 0.0};
+
+    if (!PathOptimizerUtil::OptimizePath(
+                init_sl_state_,
+                end_state,
+                ref_l,
+                weight_ref_l,
+                path_bound,
+                ddl_bounds,
+                jerk_bound,
+                config,
+                &opt_l,
+                &opt_dl,
+                &opt_ddl)) {
+        return false;
+    }
+
+    auto frenet_frame_path = PathOptimizerUtil::ToPiecewiseJerkPath(
+            opt_l, opt_dl, opt_ddl, path_bound.delta_s(), path_bound.start_s());
+    final_path->SetReferenceLine(&reference_line);
+    final_path->SetFrenetPath(std::move(frenet_frame_path));
+    if (FLAGS_use_front_axe_center_in_path_planning) {
+        auto discretized_path = DiscretizedPath(PathOptimizerUtil::ConvertPathPointRefFromFrontAxeToRearAxe(*final_path));
+        final_path->SetDiscretizedPath(discretized_path);
+    }
+    final_path->set_path_label(path_bound.label());
+    final_path->set_blocking_obstacle_id(blocking_obstacle_id);
+    reference_line_info_->mutable_reference_line()->AddSpeedLimit(
+            reference_line_info_->AdcSlBoundary().start_s(),
+            reference_line_info_->AdcSlBoundary().end_s() + kHoldSpeedLimitDistance,
+            kHoldSpeedLimit);
+    RecordDebugInfo(*final_path, final_path->path_label(), reference_line_info_);
+    return true;
+}
+
 bool LaneBorrowPath::OptimizePath(
         const std::vector<PathBoundary>& path_boundaries,
         std::vector<PathData>* candidate_path_data) {
@@ -297,7 +463,7 @@ bool LaneBorrowPath::OptimizePath(
             lastframe_->set_path_label(path_boundary.label());
             lastframe_->set_blocking_obstacle_id(path_boundary.blocking_obstacle_id());
             candidate_path_data->push_back(*lastframe_);
-        } else {
+        } else if (lastframe_ != nullptr) {
             candidate_path_data->push_back(*lastframe_);
         }
     }
