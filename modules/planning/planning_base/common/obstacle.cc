@@ -31,6 +31,7 @@
 #include "modules/common/util/map_util.h"
 #include "modules/common/util/util.h"
 #include "cyber/time/clock.h"
+#include "modules/planning/planning_base/common/obstacle_blocking_analyzer.h"
 #include "modules/planning/planning_base/common/speed/st_boundary.h"
 #include "modules/planning/planning_base/gflags/planning_gflags.h"
 
@@ -438,6 +439,10 @@ void Obstacle::BuildReferenceLineStBoundary(const ReferenceLine& reference_line,
       VehicleConfigHelper::Instance()->GetConfig().vehicle_param();
   const double half_adc_width = adc_param.width() / 2;
   if (is_static_ || trajectory_.trajectory_point().empty()) {
+    if (IsParkedVehicle(reference_line, this)) {
+      ADEBUG << "Skip reference line ST boundary for parked obstacle " << id_;
+      return;
+    }
     std::vector<std::pair<STPoint, STPoint>> point_pairs;
     double start_s = sl_boundary_.start_s();
     double end_s = sl_boundary_.end_s();

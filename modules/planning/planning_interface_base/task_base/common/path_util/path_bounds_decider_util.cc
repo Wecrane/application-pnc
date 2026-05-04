@@ -28,6 +28,7 @@
 #include "modules/common/configs/vehicle_config_helper.h"
 #include "modules/common/math/linear_interpolation.h"
 #include "modules/common/util/util.h"
+#include "modules/planning/planning_base/common/obstacle_blocking_analyzer.h"
 #include "modules/planning/planning_base/common/sl_polygon.h"
 #include "modules/planning/planning_base/common/util/util.h"
 #include "modules/planning/planning_base/gflags/planning_gflags.h"
@@ -184,6 +185,10 @@ void PathBoundsDeciderUtil::GetSLPolygons(
     const double adc_back_edge_s = reference_line_info.AdcSlBoundary().start_s();
     for (const auto* obstacle : obstacles.Items()) {
         if (!IsWithinPathDeciderScopeObstacle(*obstacle)) {
+            continue;
+        }
+        if (!IsBlockingDrivingPathObstacle(reference_line_info.reference_line(), obstacle)) {
+            ADEBUG << "Skip non-blocking static obstacle: " << obstacle->Id();
             continue;
         }
         auto xy_poly = obstacle->PerceptionPolygon();

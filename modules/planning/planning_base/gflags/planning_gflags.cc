@@ -135,7 +135,7 @@ DEFINE_double(st_max_s, 100, "the maximum s of st boundary");
 DEFINE_double(st_max_t, 8, "the maximum t of st boundary");
 
 // Decision Part
-DEFINE_double(static_obstacle_nudge_l_buffer, 0.3,
+DEFINE_double(static_obstacle_nudge_l_buffer, 0.45,
               "minimum l-distance to nudge a static obstacle (meters)");
 DEFINE_double(nonstatic_obstacle_nudge_l_buffer, 0.4,
               "minimum l-distance to nudge a non-static obstacle (meters)");

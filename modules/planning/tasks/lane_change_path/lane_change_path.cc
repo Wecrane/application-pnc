@@ -44,6 +44,10 @@ using apollo::cyber::Clock;
 
 constexpr double kIntersectionClearanceDist = 20.0;
 constexpr double kJunctionClearanceDist = 15.0;
+constexpr double kLaneChangeWatchRearBuffer = 2.0;
+constexpr double kLaneChangeWatchFrontBuffer = 0.2;
+constexpr double kLaneChangeWatchLateralBuffer = 0.5;
+constexpr double kLaneChangeHoldLateralHalfWidth = 0.5;
 
 bool LaneChangePath::Init(
         const std::string& config_dir,
@@ -78,7 +82,7 @@ apollo::common::Status LaneChangePath::Process(Frame* frame, ReferenceLineInfo* 
 
     AINFO << "[LC_PROCESS] GENERATING lane change path, status=" << status
           << " clear=" << is_clear_to_change_lane_;
-    // 始终规划路径：不在 IN_CHANGE_LANE 时通过 forbidden zone 保持当前位置直线行驶
+    // 始终规划路径：无车时继续往目标车道挪，有车时锁住当前横向位置直行
     std::vector<PathBoundary> candidate_path_boundaries;
     std::vector<PathData> candidate_path_data;
 
@@ -97,18 +101,15 @@ apollo::common::Status LaneChangePath::Process(Frame* frame, ReferenceLineInfo* 
     }
     AINFO << "[LC_PROCESS] SUCCESS: lane change path generated";
 
-    // 赛题二：变道期间忽略所有障碍物，速度规划器不跟车不刹车，快速变过去
+    // 赛题二：变道路径一旦生成，就不让后续 stop/follow 逻辑把它截断
     {
-        bool is_in_change_lane =
-            injector_->planning_context()->planning_status().change_lane().status()
-            == ChangeLaneStatus::IN_CHANGE_LANE;
-        if (!is_clear_to_change_lane_ || is_in_change_lane) {
-            for (auto& obs : reference_line_info->path_decision()->obstacles().Items()) {
-                ObjectDecisionType object_decision;
-                object_decision.mutable_ignore();
-                reference_line_info->path_decision()->AddLongitudinalDecision(
-                        "LaneChangePath/ignore-all", obs->Id(), object_decision);
-            }
+        for (auto& obs : reference_line_info->path_decision()->obstacles().Items()) {
+            ObjectDecisionType object_decision;
+            object_decision.mutable_ignore();
+            reference_line_info->path_decision()->AddLongitudinalDecision(
+                    "LaneChangePath/ignore-all", obs->Id(), object_decision);
+            reference_line_info->path_decision()->AddLateralDecision(
+                    "LaneChangePath/ignore-all", obs->Id(), object_decision);
         }
     }
 
@@ -144,12 +145,21 @@ bool LaneChangePath::DecidePathBounds(std::vector<PathBoundary>* boundary) {
     PathBound temp_path_bound = path_bound;
     std::string blocking_obstacle_id;
     std::vector<SLPolygon> obs_sl_polygons;
-    // 赛题二：变道执行期间跳过障碍物约束，快速变过去
-    // 找窗口期间（FINISHED 状态）仍正常检查障碍物
-    bool is_in_change_lane =
-        injector_->planning_context()->planning_status().change_lane().status()
-        == ChangeLaneStatus::IN_CHANGE_LANE;
-    if (is_clear_to_change_lane_ && !is_in_change_lane) {
+    if (!is_clear_to_change_lane_) {
+        // 有车就把整条路径压成“当前横向位置直线保持”
+        const double current_l = init_sl_state_.second[0];
+        AINFO << "[LC_BOUNDS] HOLD current_l=" << current_l;
+        for (size_t i = 0; i < path_bound.size(); ++i) {
+            auto& low = path_bound[i].l_lower.l;
+            auto& high = path_bound[i].l_upper.l;
+            low = std::max(low, current_l - kLaneChangeHoldLateralHalfWidth);
+            high = std::min(high, current_l + kLaneChangeHoldLateralHalfWidth);
+            if (low >= high) {
+                low = current_l - kLaneChangeHoldLateralHalfWidth;
+                high = current_l + kLaneChangeHoldLateralHalfWidth;
+            }
+        }
+    } else {
         PathBoundsDeciderUtil::GetSLPolygons(*reference_line_info_, &obs_sl_polygons, init_sl_state_);
         if (!PathBoundsDeciderUtil::GetBoundaryFromStaticObstacles(
                     *reference_line_info_,
@@ -180,7 +190,14 @@ bool LaneChangePath::OptimizePath(
         std::vector<PathData>* candidate_path_data) {
     const auto& config = config_.path_optimizer_config();
     const ReferenceLine& reference_line = reference_line_info_->reference_line();
-    std::array<double, 3> end_state = {0.0, 0.0, 0.0};
+    const bool should_hold_laterally = !is_clear_to_change_lane_;
+    AINFO << "[LC_OPT] hold_laterally=" << should_hold_laterally
+          << " current_l=" << init_sl_state_.second[0];
+    std::array<double, 3> end_state = {
+        should_hold_laterally ? init_sl_state_.second[0] : 0.0,
+        0.0,
+        0.0
+    };
     for (const auto& path_boundary : path_boundaries) {
         size_t path_boundary_size = path_boundary.boundary().size();
         if (path_boundary_size <= 1U) {
@@ -191,8 +208,10 @@ bool LaneChangePath::OptimizePath(
         std::vector<std::pair<double, double>> ddl_bounds;
         PathOptimizerUtil::CalculateAccBound(path_boundary, reference_line, &ddl_bounds);
         const double jerk_bound = PathOptimizerUtil::EstimateJerkBoundary(std::fmax(init_sl_state_.first[1], 1e-12));
-        std::vector<double> ref_l(path_boundary_size, 0);
-        std::vector<double> weight_ref_l(path_boundary_size, 0);
+        std::vector<double> ref_l(
+                path_boundary_size, should_hold_laterally ? init_sl_state_.second[0] : 0.0);
+        std::vector<double> weight_ref_l(
+                path_boundary_size, should_hold_laterally ? config.path_reference_l_weight() : 0.0);
 
         bool res_opt = PathOptimizerUtil::OptimizePath(
                 init_sl_state_,
@@ -307,8 +326,6 @@ void LaneChangePath::UpdateLaneChangeStatus() {
                 UpdateStatus(now, ChangeLaneStatus::IN_CHANGE_LANE, change_lane_id);
             }
         } else if (prev_status->status() == ChangeLaneStatus::IN_CHANGE_LANE) {
-            // 一旦进入变道，忽略后续障碍物检查，快速变过去
-            is_clear_to_change_lane_ = true;
             if (prev_status->path_id() != change_lane_id) {
                 AINFO << "[LC_STATUS] SWITCH: IN_CHANGE_LANE but id changed (prev="
                       << prev_status->path_id() << " now=" << change_lane_id << ") -> FINISHED";
@@ -322,14 +339,11 @@ void LaneChangePath::UpdateLaneChangeStatus() {
 }
 
 bool LaneChangePath::IsClearToChangeLane(ReferenceLineInfo* reference_line_info) {
-    double ego_start_s = reference_line_info->AdcSlBoundary().start_s();
-    double ego_end_s = reference_line_info->AdcSlBoundary().end_s();
-
-    // 只看自车前端到后端+后方1m这个纵向范围内的障碍物
-    constexpr double kRearBuffer = 1.0;
-    constexpr double kMinLateralClearance = 0.2;
-    double check_start_s = ego_start_s - kRearBuffer;
-    double check_end_s = ego_end_s;
+    const auto& adc_sl_boundary = reference_line_info->AdcSlBoundary();
+    const double check_start_s = adc_sl_boundary.start_s() - kLaneChangeWatchRearBuffer;
+    const double check_end_s = adc_sl_boundary.end_s() + kLaneChangeWatchFrontBuffer;
+    const double ego_min_l = std::min(adc_sl_boundary.start_l(), adc_sl_boundary.end_l());
+    const double ego_max_l = std::max(adc_sl_boundary.start_l(), adc_sl_boundary.end_l());
 
     for (const auto* obstacle : reference_line_info->path_decision()->obstacles().Items()) {
         if (obstacle->IsVirtual() || obstacle->IsStatic()) {
@@ -350,18 +364,16 @@ bool LaneChangePath::IsClearToChangeLane(ReferenceLineInfo* reference_line_info)
             obs_max_l = std::fmax(obs_max_l, sl_point.l());
         }
 
-        // 纵向不重叠则跳过
+        // 只关心车头前方 0.2m 到车尾后方 2m 的窗口
         if (obs_end_s < check_start_s || obs_start_s > check_end_s) {
             continue;
         }
 
-        // 横向距离：车和障碍物之间的最小间隙（左右两侧都算）
-        double ego_start_l = reference_line_info->AdcSlBoundary().start_l();
-        double ego_end_l = reference_line_info->AdcSlBoundary().end_l();
-        double lateral_gap = std::max(ego_start_l - obs_max_l, obs_min_l - ego_end_l);
-        AINFO << "LaneChange gap: ego_l=[" << ego_start_l << "," << ego_end_l << "] obs_l=[" << obs_min_l << ","
-              << obs_max_l << "] gap=" << lateral_gap << " obs=" << obstacle->Id();
-        if (lateral_gap < kMinLateralClearance) {
+        const double lateral_gap = std::max(ego_min_l - obs_max_l, obs_min_l - ego_max_l);
+        AINFO << "[LC_CLEAR] obs=" << obstacle->Id() << " ego_l=[" << ego_min_l << "," << ego_max_l
+              << "] obs_l=[" << obs_min_l << "," << obs_max_l << "] gap=" << lateral_gap
+              << " s=[" << check_start_s << "," << check_end_s << "]";
+        if (lateral_gap < kLaneChangeWatchLateralBuffer) {
             ADEBUG << "Lane change blocked: lateral_gap=" << lateral_gap << " obstacle=" << obstacle->Id();
             return false;
         }
