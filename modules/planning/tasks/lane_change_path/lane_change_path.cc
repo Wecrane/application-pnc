@@ -48,6 +48,9 @@ constexpr double kLaneChangeWatchRearBuffer = 2.0;
 constexpr double kLaneChangeWatchFrontBuffer = 0.2;
 constexpr double kLaneChangeWatchLateralBuffer = 0.5;
 constexpr double kLaneChangeHoldLateralHalfWidth = 0.5;
+constexpr int kLaneChangeClearCyclesToStart = 3;
+constexpr int kLaneChangeFilterMaxCycles = 20;
+constexpr double kMinLaneChangeStartSpeed = 5.0 / 3.6;  // 5 km/h
 
 bool LaneChangePath::Init(
         const std::string& config_dir,
@@ -284,6 +287,7 @@ void LaneChangePath::UpdateLaneChangeStatus() {
     }
     bool has_change_lane = frame_->reference_line_info().size() > 1;
     if (!has_change_lane) {
+        ResetClearToChangeLaneFilter();
         if (prev_status->status() == ChangeLaneStatus::IN_CHANGE_LANE) {
             AINFO << "[LC_STATUS] EXIT: no change lane (size=" << frame_->reference_line_info().size()
                   << "), was IN_CHANGE_LANE -> FINISHED";
@@ -293,15 +297,15 @@ void LaneChangePath::UpdateLaneChangeStatus() {
     }
     // has change lane
     if (reference_line_info_->IsChangeLanePath()) {
-        is_clear_to_change_lane_ = IsClearToChangeLane(reference_line_info_);
         change_lane_id = reference_line_info_->Lanes().Id();
+        const bool raw_clear_to_change_lane = IsClearToChangeLane(reference_line_info_);
+        is_clear_to_change_lane_ = UpdateClearToChangeLaneFilter(raw_clear_to_change_lane, change_lane_id);
         double ego_speed = frame_->vehicle_state().linear_velocity();
-        constexpr double kMinLaneChangeSpeed = 25.0 / 3.6;  // 25 km/h
 
         if (prev_status->status() == ChangeLaneStatus::CHANGE_LANE_FAILED) {
             double elapsed = now - prev_status->timestamp();
             if (elapsed > config_.change_lane_fail_freeze_time()
-                && ego_speed >= kMinLaneChangeSpeed
+                && ego_speed >= kMinLaneChangeStartSpeed
                 && is_clear_to_change_lane_) {
                 AINFO << "[LC_STATUS] RETRY: FAILED -> IN_CHANGE_LANE, elapsed=" << elapsed
                       << " freeze=" << config_.change_lane_fail_freeze_time()
@@ -310,9 +314,8 @@ void LaneChangePath::UpdateLaneChangeStatus() {
             }
             return;
         } else if (prev_status->status() == ChangeLaneStatus::CHANGE_LANE_FINISHED) {
-            // 赛题二：先提速到 25 km/h 再开始找变道窗口
-            if (ego_speed < kMinLaneChangeSpeed) {
-                AINFO << "[LC_STATUS] WAIT: speed=" << ego_speed * 3.6 << " km/h < 25, waiting to accelerate";
+            if (ego_speed < kMinLaneChangeStartSpeed) {
+                AINFO << "[LC_STATUS] WAIT: speed=" << ego_speed * 3.6 << " km/h < 5, waiting to accelerate";
                 return;
             }
             if (!is_clear_to_change_lane_) {
@@ -379,6 +382,37 @@ bool LaneChangePath::IsClearToChangeLane(ReferenceLineInfo* reference_line_info)
         }
     }
     return true;
+}
+
+bool LaneChangePath::UpdateClearToChangeLaneFilter(const bool raw_clear, const std::string& change_lane_id) {
+    if (clear_to_change_lane_id_ != change_lane_id) {
+        clear_to_change_lane_count_ = 0;
+        clear_to_change_lane_latched_ = false;
+        clear_to_change_lane_id_ = change_lane_id;
+    }
+
+    if (raw_clear) {
+        clear_to_change_lane_count_ = std::min(clear_to_change_lane_count_ + 1, kLaneChangeFilterMaxCycles);
+        if (clear_to_change_lane_count_ >= kLaneChangeClearCyclesToStart) {
+            clear_to_change_lane_latched_ = true;
+        }
+    } else {
+        clear_to_change_lane_count_ = 0;
+        clear_to_change_lane_latched_ = false;
+    }
+
+    AINFO << "[LC_SAFE_FILTER] raw=" << raw_clear
+          << " debounced=" << clear_to_change_lane_latched_
+          << " clear_count=" << clear_to_change_lane_count_
+          << " id=" << change_lane_id;
+    return clear_to_change_lane_latched_;
+}
+
+void LaneChangePath::ResetClearToChangeLaneFilter() {
+    is_clear_to_change_lane_ = false;
+    clear_to_change_lane_count_ = 0;
+    clear_to_change_lane_latched_ = false;
+    clear_to_change_lane_id_.clear();
 }
 
 void LaneChangePath::GetLaneChangeStartPoint(

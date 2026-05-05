@@ -82,6 +82,9 @@ class LaneChangePath : public PathGeneration {
    * @brief Determine if the space before and after changing lanes is safe
    */
   bool IsClearToChangeLane(ReferenceLineInfo* reference_line_info);
+  bool UpdateClearToChangeLaneFilter(bool raw_clear,
+                                     const std::string& change_lane_id);
+  void ResetClearToChangeLaneFilter();
   /**
    * @brief Update Planning context lane change status
    */
@@ -101,6 +104,9 @@ class LaneChangePath : public PathGeneration {
  private:
   LaneChangePathConfig config_;
   bool is_clear_to_change_lane_ = false;
+  int clear_to_change_lane_count_ = 0;
+  bool clear_to_change_lane_latched_ = false;
+  std::string clear_to_change_lane_id_;
   bool is_exist_lane_change_start_position_ = false;
   common::math::Vec2d lane_change_start_xy_;
 };

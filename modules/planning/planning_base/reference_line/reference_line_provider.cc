@@ -793,26 +793,12 @@ bool ReferenceLineProvider::Shrink(const common::SLPoint &sl,
     new_backward_distance = planning::FLAGS_look_backward_distance;
     need_shrink = true;
   }
-  // check heading
   const auto index = reference_line->GetNearestReferenceIndex(sl.s());
   const auto &ref_points = reference_line->reference_points();
   const double cur_heading = ref_points[index].heading();
-  auto last_index = index;
-  while (last_index < ref_points.size() &&
-         std::fabs(AngleDiff(cur_heading, ref_points[last_index].heading())) <
-             FLAGS_reference_line_max_forward_heading_diff) {
-    ++last_index;
-  }
-  --last_index;
-  if (last_index != ref_points.size() - 1) {
-    need_shrink = true;
-    common::SLPoint forward_sl;
-    reference_line->XYToSL(ref_points[last_index], &forward_sl);
-    new_forward_distance = forward_sl.s() - sl.s();
-  }
 
   // check backward heading
-  last_index = index;
+  auto last_index = index;
   while (last_index > 0 &&
          abs(AngleDiff(cur_heading, ref_points[last_index].heading())) <
              FLAGS_reference_line_max_backward_heading_diff) {

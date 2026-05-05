@@ -64,6 +64,7 @@ class LaneFollowPath : public PathGeneration {
   LaneFollowPathConfig config_;
   int uturn_conflict_seen_count_ = 0;
   int uturn_conflict_clear_count_ = 0;
+  bool uturn_safe_window_initialized_ = false;
   bool uturn_conflict_latched_ = false;
   std::string uturn_conflict_obstacle_id_;
 };

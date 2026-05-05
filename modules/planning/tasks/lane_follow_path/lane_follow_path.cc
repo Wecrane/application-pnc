@@ -38,8 +38,6 @@ namespace apollo {
 namespace planning {
 
 using apollo::common::Status;
-using apollo::common::VehicleConfigHelper;
-
 namespace {
 
 constexpr double kUTurnLookAheadS = 40.0;
@@ -48,7 +46,8 @@ constexpr double kUTurnKappaThreshold = 0.12;
 constexpr double kUTurnHeadingChangeThreshold = 1.35;
 constexpr double kUTurnGateHeadingChange = 1.52;
 constexpr double kUTurnDefaultGateS = 12.0;
-constexpr double kUTurnConflictLookAheadAfterGateS = 4.0;
+// Only trigger the stop once the oncoming vehicle is closer to the U-turn apex.
+constexpr double kUTurnConflictLookAheadAfterGateS = 2.0;
 constexpr double kUTurnConflictBeforeGateS = 0.2;
 constexpr double kUTurnConflictLatRange = 5.5;
 constexpr double kUTurnConflictCoreLatRange = 1.0;
@@ -58,12 +57,22 @@ constexpr double kUTurnConflictMaxLatSpan = 8.0;
 constexpr double kUTurnConflictMaxSSpan = 18.0;
 constexpr double kUTurnVehicleLikeMinArea = 4.0;
 constexpr double kUTurnStopDistance = 0.4;
-constexpr double kUTurnStopWallExtraS = 8.5;
-constexpr double kUTurnMinStopAheadS = 2.5;
+// Put the waiting stop deep enough into the turn so the vehicle can enter the opposite lane first.
+constexpr double kUTurnStopWallExtraS = 32.0;
+constexpr double kUTurnMinStopAheadS = 3.0;
+constexpr double kUTurnRelaxedDdlBound = 0.55;
+constexpr double kUTurnRelaxedDlBound = 3.0;
+constexpr double kUTurnRelaxedJerkBound = 1.2;
+constexpr double kUTurnFallbackBlendS = 10.0;
+constexpr double kUTurnFallbackBoundMargin = 0.05;
 constexpr double kDenseConeSCurveObstacleLatBuffer = 0.80;
 
 double ClampReferenceS(const ReferenceLine& reference_line, const double s) {
     return std::max(0.0, std::min(s, std::max(0.0, reference_line.Length() - 0.1)));
+}
+
+double ClampValue(const double value, const double lower, const double upper) {
+    return std::max(lower, std::min(value, upper));
 }
 
 bool IsVehicleLikeObstacle(const Obstacle& obstacle) {
@@ -180,6 +189,145 @@ bool BuildUTurnOuterExpandedBoundary(
 
     AINFO << "U-turn outer-expanded boundary direction[" << uturn_direction << "] points[" << path_bound->size() << "]";
     return path_bound->size() > 1;
+}
+
+void RelaxUTurnDdlBounds(std::vector<std::pair<double, double>>* ddl_bounds) {
+    for (auto& bound : *ddl_bounds) {
+        bound.first = std::min(bound.first, -kUTurnRelaxedDdlBound);
+        bound.second = std::max(bound.second, kUTurnRelaxedDdlBound);
+    }
+}
+
+double ClampFallbackLToBoundary(const double l, const PathBoundPoint& bound_point) {
+    double lower = bound_point.l_lower.l + kUTurnFallbackBoundMargin;
+    double upper = bound_point.l_upper.l - kUTurnFallbackBoundMargin;
+    if (lower > upper) {
+        lower = bound_point.l_lower.l;
+        upper = bound_point.l_upper.l;
+    }
+    return ClampValue(l, lower, upper);
+}
+
+bool BuildUTurnFallbackPath(
+        const PathBoundary& path_boundary,
+        const ReferenceLine& reference_line,
+        const SLState& init_sl_state,
+        PathData* path_data) {
+    if (path_boundary.size() <= 1 || path_boundary.delta_s() <= 1e-3) {
+        return false;
+    }
+
+    const size_t num_points = path_boundary.size();
+    const double start_s = path_boundary.front().s;
+    std::vector<double> l_values(num_points, 0.0);
+    std::vector<double> dl_values(num_points, 0.0);
+    std::vector<double> ddl_values(num_points, 0.0);
+
+    for (size_t i = 0; i < num_points; ++i) {
+        const auto& bound_point = path_boundary[i];
+        const double lower = bound_point.l_lower.l + kUTurnFallbackBoundMargin;
+        const double upper = bound_point.l_upper.l - kUTurnFallbackBoundMargin;
+        const double center_l = (lower <= upper)
+                ? 0.5 * (lower + upper)
+                : 0.5 * (bound_point.l_lower.l + bound_point.l_upper.l);
+        const double target_l = (lower <= 0.0 && 0.0 <= upper) ? 0.0 : center_l;
+        const double blend = ClampValue((bound_point.s - start_s) / kUTurnFallbackBlendS, 0.0, 1.0);
+        const double raw_l = (1.0 - blend) * init_sl_state.second[0] + blend * target_l;
+        l_values[i] = ClampFallbackLToBoundary(raw_l, bound_point);
+    }
+    l_values.front() = ClampFallbackLToBoundary(init_sl_state.second[0], path_boundary.front());
+
+    for (size_t i = 0; i < num_points; ++i) {
+        if (i == 0) {
+            const double ds = std::max(path_boundary[1].s - path_boundary[0].s, 1e-3);
+            dl_values[i] = (l_values[1] - l_values[0]) / ds;
+        } else if (i + 1 == num_points) {
+            const double ds = std::max(path_boundary[i].s - path_boundary[i - 1].s, 1e-3);
+            dl_values[i] = (l_values[i] - l_values[i - 1]) / ds;
+        } else {
+            const double ds = std::max(path_boundary[i + 1].s - path_boundary[i - 1].s, 1e-3);
+            dl_values[i] = (l_values[i + 1] - l_values[i - 1]) / ds;
+        }
+        dl_values[i] = ClampValue(dl_values[i], -kUTurnRelaxedDlBound, kUTurnRelaxedDlBound);
+    }
+
+    for (size_t i = 0; i < num_points; ++i) {
+        if (i == 0) {
+            const double ds = std::max(path_boundary[1].s - path_boundary[0].s, 1e-3);
+            ddl_values[i] = (dl_values[1] - dl_values[0]) / ds;
+        } else if (i + 1 == num_points) {
+            const double ds = std::max(path_boundary[i].s - path_boundary[i - 1].s, 1e-3);
+            ddl_values[i] = (dl_values[i] - dl_values[i - 1]) / ds;
+        } else {
+            const double ds = std::max(path_boundary[i + 1].s - path_boundary[i - 1].s, 1e-3);
+            ddl_values[i] = (dl_values[i + 1] - dl_values[i - 1]) / ds;
+        }
+        ddl_values[i] = ClampValue(ddl_values[i], -kUTurnRelaxedDdlBound, kUTurnRelaxedDdlBound);
+    }
+
+    std::vector<common::FrenetFramePoint> frenet_points;
+    frenet_points.reserve(num_points);
+    for (size_t i = 0; i < num_points; ++i) {
+        common::FrenetFramePoint point;
+        point.set_s(path_boundary[i].s);
+        point.set_l(l_values[i]);
+        point.set_dl(dl_values[i]);
+        point.set_ddl(ddl_values[i]);
+        frenet_points.push_back(std::move(point));
+    }
+
+    path_data->SetReferenceLine(&reference_line);
+    if (!path_data->SetFrenetPath(FrenetFramePath(std::move(frenet_points)))) {
+        AERROR << "Failed to convert U-turn fallback frenet path.";
+        return false;
+    }
+    if (FLAGS_use_front_axe_center_in_path_planning) {
+        auto discretized_path = DiscretizedPath(PathOptimizerUtil::ConvertPathPointRefFromFrontAxeToRearAxe(*path_data));
+        if (!path_data->SetDiscretizedPath(discretized_path)) {
+            AERROR << "Failed to convert U-turn fallback path to rear axle.";
+            return false;
+        }
+    }
+    path_data->set_path_label(path_boundary.label());
+    path_data->set_blocking_obstacle_id(path_boundary.blocking_obstacle_id());
+    AINFO << "Built U-turn fallback path points[" << path_data->frenet_frame_path().size() << "] start_l["
+          << l_values.front() << "] end_l[" << l_values.back() << "]";
+    return true;
+}
+
+void AddUTurnSafeWindowStop(
+        Frame* const frame,
+        ReferenceLineInfo* const reference_line_info,
+        const double gate_s,
+        const std::string& conflict_obstacle_id) {
+    if (frame == nullptr || reference_line_info == nullptr) {
+        return;
+    }
+    const auto& reference_line = reference_line_info->reference_line();
+    const double adc_front_s = reference_line_info->AdcSlBoundary().end_s();
+    const auto& vehicle_param = apollo::common::VehicleConfigHelper::GetConfig().vehicle_param();
+    double stop_line_s = gate_s + vehicle_param.front_edge_to_center() + kUTurnStopDistance + kUTurnStopWallExtraS;
+    stop_line_s = std::max(stop_line_s, adc_front_s + kUTurnMinStopAheadS);
+    stop_line_s = ClampReferenceS(reference_line, stop_line_s);
+    if (stop_line_s <= adc_front_s + 0.5 || stop_line_s <= kUTurnStopDistance) {
+        return;
+    }
+
+    std::vector<std::string> wait_for_obstacles;
+    if (!conflict_obstacle_id.empty()) {
+        wait_for_obstacles.push_back(conflict_obstacle_id);
+    }
+    util::BuildStopDecision(
+            "UTURN_SAFE_WINDOW",
+            stop_line_s,
+            kUTurnStopDistance,
+            StopReasonCode::STOP_REASON_OBSTACLE,
+            wait_for_obstacles,
+            "LaneFollowPath/uturn_safe_window",
+            frame,
+            reference_line_info);
+    AINFO << "U-turn safe window is occupied, build stop wall at s[" << stop_line_s << "] conflict["
+          << conflict_obstacle_id << "]";
 }
 
 bool IsUTurnWindowObstacle(
@@ -300,41 +448,6 @@ void AddIgnoreDecisionForUTurnConflictObstacles(
         path_decision->AddLongitudinalDecision("LaneFollowPath/uturn-window-ignore", obstacle->Id(), object_decision);
         path_decision->AddLateralDecision("LaneFollowPath/uturn-window-ignore", obstacle->Id(), object_decision);
     }
-}
-
-void AddUTurnSafeWindowStop(
-        Frame* const frame,
-        ReferenceLineInfo* const reference_line_info,
-        const double gate_s,
-        const std::string& conflict_obstacle_id) {
-    if (frame == nullptr || reference_line_info == nullptr) {
-        return;
-    }
-    const auto& reference_line = reference_line_info->reference_line();
-    const double adc_front_s = reference_line_info->AdcSlBoundary().end_s();
-    const auto& vehicle_param = VehicleConfigHelper::GetConfig().vehicle_param();
-    double stop_line_s = gate_s + vehicle_param.front_edge_to_center() + kUTurnStopDistance + kUTurnStopWallExtraS;
-    stop_line_s = std::max(stop_line_s, adc_front_s + kUTurnMinStopAheadS);
-    stop_line_s = ClampReferenceS(reference_line, stop_line_s);
-    if (stop_line_s <= adc_front_s + 0.5 || stop_line_s <= kUTurnStopDistance) {
-        return;
-    }
-
-    std::vector<std::string> wait_for_obstacles;
-    if (!conflict_obstacle_id.empty()) {
-        wait_for_obstacles.push_back(conflict_obstacle_id);
-    }
-    util::BuildStopDecision(
-            "UTURN_SAFE_WINDOW",
-            stop_line_s,
-            kUTurnStopDistance,
-            StopReasonCode::STOP_REASON_OBSTACLE,
-            wait_for_obstacles,
-            "LaneFollowPath/uturn_safe_window",
-            frame,
-            reference_line_info);
-    AINFO << "U-turn safe window is occupied, build stop wall at s[" << stop_line_s << "] conflict["
-          << conflict_obstacle_id << "]";
 }
 
 bool IsDenseConeSCurve(const ReferenceLineInfo& reference_line_info) {
@@ -659,6 +772,7 @@ bool LaneFollowPath::OptimizePath(
     const ReferenceLine& reference_line = reference_line_info_->reference_line();
     std::array<double, 3> end_state = {0.0, 0.0, 0.0};
     const bool dense_cone_s_curve = IsDenseConeSCurve(*reference_line_info_);
+    const bool is_uturn_like = IsUTurnLikeReferenceLine(*reference_line_info_, nullptr);
     for (const auto& path_boundary : path_boundaries) {
         size_t path_boundary_size = path_boundary.boundary().size();
         if (path_boundary_size <= 1U) {
@@ -696,6 +810,31 @@ bool LaneFollowPath::OptimizePath(
                 &opt_l,
                 &opt_dl,
                 &opt_ddl);
+        if (!res_opt && is_uturn_like) {
+            opt_l.clear();
+            opt_dl.clear();
+            opt_ddl.clear();
+            auto relaxed_ddl_bounds = ddl_bounds;
+            RelaxUTurnDdlBounds(&relaxed_ddl_bounds);
+            auto relaxed_config = config;
+            relaxed_config.set_lateral_derivative_bound_default(
+                    std::max(config.lateral_derivative_bound_default(), kUTurnRelaxedDlBound));
+            const double relaxed_jerk_bound = std::max(jerk_bound, kUTurnRelaxedJerkBound);
+            AINFO << "Retry U-turn path optimizer with relaxed bounds, dl_bound["
+                  << relaxed_config.lateral_derivative_bound_default() << "] jerk_bound[" << relaxed_jerk_bound << "]";
+            res_opt = PathOptimizerUtil::OptimizePath(
+                    init_sl_state_,
+                    end_state,
+                    ref_l,
+                    weight_ref_l,
+                    path_boundary,
+                    relaxed_ddl_bounds,
+                    relaxed_jerk_bound,
+                    relaxed_config,
+                    &opt_l,
+                    &opt_dl,
+                    &opt_ddl);
+        }
         if (res_opt) {
             auto frenet_frame_path = PathOptimizerUtil::ToPiecewiseJerkPath(
                     opt_l, opt_dl, opt_ddl, path_boundary.delta_s(), path_boundary.start_s());
@@ -716,6 +855,11 @@ bool LaneFollowPath::OptimizePath(
                         path_boundary.label() + "_path_kappa", p.s() + init_sl_state_.first[0], p.kappa());
             }
             print_path_kappa.PrintToLog();
+        } else if (is_uturn_like) {
+            PathData path_data;
+            if (BuildUTurnFallbackPath(path_boundary, reference_line, init_sl_state_, &path_data)) {
+                candidate_path_data->push_back(std::move(path_data));
+            }
         }
     }
     if (candidate_path_data->empty()) {
@@ -748,18 +892,21 @@ bool LaneFollowPath::AssessPath(std::vector<PathData>* candidate_path_data, Path
 }
 
 bool LaneFollowPath::UpdateUTurnConflictFilter(const bool raw_conflict, const std::string& conflict_obstacle_id) {
-    constexpr int kSeenCyclesToLatch = 8;
     constexpr int kClearCyclesToRelease = 3;
     constexpr int kMaxFilterCycles = 20;
+
+    if (!uturn_safe_window_initialized_) {
+        // Use the first real observation instead of forcing the window occupied on entry.
+        uturn_safe_window_initialized_ = true;
+        uturn_conflict_latched_ = raw_conflict;
+    }
 
     if (raw_conflict) {
         uturn_conflict_seen_count_ = std::min(uturn_conflict_seen_count_ + 1, kMaxFilterCycles);
         uturn_conflict_clear_count_ = 0;
+        uturn_conflict_latched_ = true;
         if (!conflict_obstacle_id.empty()) {
             uturn_conflict_obstacle_id_ = conflict_obstacle_id;
-        }
-        if (uturn_conflict_seen_count_ >= kSeenCyclesToLatch) {
-            uturn_conflict_latched_ = true;
         }
     } else {
         uturn_conflict_seen_count_ = 0;
@@ -779,6 +926,7 @@ bool LaneFollowPath::UpdateUTurnConflictFilter(const bool raw_conflict, const st
 void LaneFollowPath::ResetUTurnConflictFilter() {
     uturn_conflict_seen_count_ = 0;
     uturn_conflict_clear_count_ = 0;
+    uturn_safe_window_initialized_ = false;
     uturn_conflict_latched_ = false;
     uturn_conflict_obstacle_id_.clear();
 }

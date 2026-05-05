@@ -47,6 +47,8 @@ constexpr double kUTurnLikePathKappaThreshold = 0.12;
 constexpr double kUTurnLikePathHeadingChangeThreshold = 0.7;
 constexpr double kUTurnLikePathHighKappaThreshold = 0.18;
 constexpr double kUTurnLikePathAverageKappaThreshold = 0.14;
+constexpr double kUTurnLikeReferenceLineCheckAheadS = 12.0;
+constexpr double kUTurnLikeReferenceLineSampleStep = 0.5;
 
 bool IsTightUTurnLikeShortPath(const PathData& path_data) {
   const auto& path = path_data.discretized_path();
@@ -72,6 +74,50 @@ bool IsTightUTurnLikeShortPath(const PathData& path_data) {
           average_abs_kappa > kUTurnLikePathAverageKappaThreshold);
 }
 
+bool IsTightUTurnLikeReferenceLinePathEnd(
+    const ReferenceLineInfo& reference_line_info, const double path_start_s,
+    const double path_end_s) {
+  const auto& reference_line = reference_line_info.reference_line();
+  if (reference_line.Length() < 1.0 || path_end_s <= path_start_s) {
+    return false;
+  }
+
+  const double start_s =
+      std::max(0.0, std::min(path_start_s, reference_line.Length()));
+  const double end_s = std::min(
+      reference_line.Length(),
+      std::max(path_end_s, reference_line_info.AdcSlBoundary().end_s()) +
+          kUTurnLikeReferenceLineCheckAheadS);
+  if (end_s <= start_s + kUTurnLikeReferenceLineSampleStep) {
+    return false;
+  }
+
+  double max_abs_kappa = 0.0;
+  double sum_abs_kappa = 0.0;
+  int sample_count = 0;
+  for (double s = start_s; s <= end_s;
+       s += kUTurnLikeReferenceLineSampleStep) {
+    const double abs_kappa =
+        std::abs(reference_line.GetReferencePoint(s).kappa());
+    max_abs_kappa = std::max(max_abs_kappa, abs_kappa);
+    sum_abs_kappa += abs_kappa;
+    ++sample_count;
+  }
+  if (sample_count == 0) {
+    return false;
+  }
+
+  const double average_abs_kappa =
+      sum_abs_kappa / static_cast<double>(sample_count);
+  const double heading_change = std::abs(common::math::NormalizeAngle(
+      reference_line.GetReferencePoint(end_s).heading() -
+      reference_line.GetReferencePoint(start_s).heading()));
+  return (max_abs_kappa > kUTurnLikePathKappaThreshold &&
+          heading_change > kUTurnLikePathHeadingChangeThreshold) ||
+         (max_abs_kappa > kUTurnLikePathHighKappaThreshold &&
+          average_abs_kappa > kUTurnLikePathAverageKappaThreshold);
+}
+
 bool IsSuppressibleUTurnPathEndStop(
     const ReferenceLineInfo& reference_line_info, const PathData& path_data,
     const double path_start_s, const double path_end_s) {
@@ -86,7 +132,9 @@ bool IsSuppressibleUTurnPathEndStop(
       reference_line_info.GetPathTurnType(
           reference_line_info.AdcSlBoundary().end_s()) == hdmap::Lane::U_TURN ||
       reference_line_info.GetPathTurnType(path_end_s) == hdmap::Lane::U_TURN ||
-      IsTightUTurnLikeShortPath(path_data);
+      IsTightUTurnLikeShortPath(path_data) ||
+      IsTightUTurnLikeReferenceLinePathEnd(reference_line_info, path_start_s,
+                                           path_end_s);
   if (!is_uturn_path) {
     return false;
   }
