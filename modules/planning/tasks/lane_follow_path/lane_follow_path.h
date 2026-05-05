@@ -57,8 +57,15 @@ class LaneFollowPath : public PathGeneration {
    */
   bool AssessPath(std::vector<PathData>* candidate_path_data,
                   PathData* final_path);
+  bool UpdateUTurnConflictFilter(bool raw_conflict,
+                                 const std::string& conflict_obstacle_id);
+  void ResetUTurnConflictFilter();
 
   LaneFollowPathConfig config_;
+  int uturn_conflict_seen_count_ = 0;
+  int uturn_conflict_clear_count_ = 0;
+  bool uturn_conflict_latched_ = false;
+  std::string uturn_conflict_obstacle_id_;
 };
 
 CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(apollo::planning::LaneFollowPath, Task)
