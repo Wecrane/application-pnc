@@ -1,4 +1,3 @@
-
 你现在接手 Apollo EDU PnC 仓库，路径是：
 
 /home/skye/application-pnc
@@ -17,5 +16,8 @@
 
    如果我说“评测日志已更新”，就优先看这里；如果我说“评测日志不用看”，就只看 data/log/ 里的本地 planning 日志。
 
-
 不要编译，等我手动编译
+
+可参考planning-module-navigator这个skills
+
+下面是需求：
