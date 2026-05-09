@@ -105,3 +105,5 @@ tools/FlameGraph
 
 # --- 根目录构建输出 ---
 output
+
+.venv

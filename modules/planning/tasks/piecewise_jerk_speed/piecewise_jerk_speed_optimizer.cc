@@ -172,6 +172,24 @@ Status PiecewiseJerkSpeedOptimizer::Process(const PathData& path_data,
     print_debug.AddPoint("sv_boundary_upper", path_s, v_upper_bound);
   }
   AdjustInitStatus(s_dot_bounds, delta_t, init_s);
+
+  // If the vehicle's initial speed exceeds the speed limit at the first
+  // point (common when entering a high-curvature section like a U-turn),
+  // relax the first few speed bound points to allow a feasible
+  // deceleration ramp.  Without this, the speed optimizer sees an
+  // impossible initial condition and fails with "primal infeasible".
+  if (init_s[1] > s_dot_bounds[0].second + 1e-3) {
+    constexpr int kSpeedBoundRelaxCount = 8;
+    const double init_v = init_s[1];
+    for (int i = 0; i < kSpeedBoundRelaxCount && i < num_of_knots; ++i) {
+      // Linearly ramp from init_v down to the original bound over the
+      // relaxation window, then keep the original bound.
+      double relaxed_upper =
+          init_v + (s_dot_bounds[i].second - init_v) *
+                       static_cast<double>(i) / kSpeedBoundRelaxCount;
+      s_dot_bounds[i].second = std::fmax(relaxed_upper, s_dot_bounds[i].second);
+    }
+  }
   PiecewiseJerkSpeedProblem piecewise_jerk_problem(num_of_knots, delta_t,
                                                    init_s);
   piecewise_jerk_problem.set_weight_ddx(config_.acc_weight());

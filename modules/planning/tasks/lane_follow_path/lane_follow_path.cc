@@ -245,8 +245,7 @@ bool LaneFollowPath::DecidePathBounds(std::vector<PathBoundary>* boundary) {
     const bool saved_enable_adc_vertex_constraint = FLAGS_enable_adc_vertex_constraint;
     const bool dense_cone_s_curve = IsDenseConeSCurve(*reference_line_info_);
     if (dense_cone_s_curve) {
-        FLAGS_obstacle_lat_buffer
-                = std::max(FLAGS_obstacle_lat_buffer, kDenseConeSCurveObstacleLatBuffer);
+        FLAGS_obstacle_lat_buffer = std::max(FLAGS_obstacle_lat_buffer, kDenseConeSCurveObstacleLatBuffer);
         FLAGS_enable_adc_vertex_constraint = true;
         AINFO << "Dense cone S-curve detected, obstacle_lat_buffer set to " << FLAGS_obstacle_lat_buffer
               << ", adc vertex constraint enabled";
@@ -298,10 +297,30 @@ bool LaneFollowPath::DecidePathBounds(std::vector<PathBoundary>* boundary) {
     }
 
     ADEBUG << "Completed generating path boundaries.";
-    if (init_sl_state_.second[0] > path_bound[0].l_upper.l || init_sl_state_.second[0] < path_bound[0].l_lower.l) {
+    // In high-curvature scenarios (U-turn, sharp bends), the Frenet
+    // projection can introduce several centimeters of lateral error.
+    // A 0.08m (8cm) tolerance covers this plus numerical noise without
+    // meaningfully relaxing the safety check.
+    constexpr double kBoundaryTolerance = 0.08;
+    if (init_sl_state_.second[0] > path_bound[0].l_upper.l + kBoundaryTolerance
+        || init_sl_state_.second[0] < path_bound[0].l_lower.l - kBoundaryTolerance) {
         AINFO << "not in self lane maybe lane borrow or out of road. init l : " << init_sl_state_.second[0]
               << ", path_bound l: [ " << path_bound[0].l_lower.l << "," << path_bound[0].l_upper.l << " ]";
         return false;
+    }
+    // Ensure the path boundary at the first knot includes the vehicle's
+    // current lateral position.  Without this, the piecewise-jerk path
+    // optimizer sees an initial state that violates its boundary
+    // constraints, leading to "maximum iterations reached" / "primal
+    // infeasible" errors — especially on high-curvature U-turns where
+    // lateral drift accumulates cycle by cycle.
+    const double init_l = init_sl_state_.second[0];
+    constexpr double kInitLBoundBuffer = 0.05;
+    if (init_l > path_bound[0].l_upper.l) {
+        path_bound[0].l_upper.l = init_l + kInitLBoundBuffer;
+    }
+    if (init_l < path_bound[0].l_lower.l) {
+        path_bound[0].l_lower.l = init_l - kInitLBoundBuffer;
     }
     // std::vector<std::pair<double, double>> regular_path_bound_pair;
     // for (size_t i = 0; i < path_bound.size(); ++i) {
@@ -337,6 +356,19 @@ bool LaneFollowPath::OptimizePath(
         }
         print_debug.PrintToLog();
         const double jerk_bound = PathOptimizerUtil::EstimateJerkBoundary(std::fmax(init_sl_state_.first[1], 1e-12));
+        // Relax jerk bound for high-curvature (U-turn-like) scenarios to
+        // avoid "primal infeasible" when vehicle is laterally offset from
+        // the reference line on tight turns.
+        constexpr double kHighKappaForJerk = 0.12;
+        constexpr double kJerkRelaxFactor = 2.5;
+        double final_jerk_bound = jerk_bound;
+        for (size_t i = 0; i < path_boundary_size; ++i) {
+            double s = static_cast<double>(i) * path_boundary.delta_s() + path_boundary.start_s();
+            if (std::abs(reference_line.GetNearestReferencePoint(s).kappa()) > kHighKappaForJerk) {
+                final_jerk_bound = jerk_bound * kJerkRelaxFactor;
+                break;
+            }
+        }
         std::vector<double> ref_l(path_boundary_size, 0);
         std::vector<double> weight_ref_l(path_boundary_size, 0);
 
@@ -345,6 +377,22 @@ bool LaneFollowPath::OptimizePath(
         if (dense_cone_s_curve) {
             UpdateDenseConeSCurvePathRef(path_boundary, config.path_reference_l_weight(), &ref_l, &weight_ref_l);
         }
+        // In high-curvature sections (U-turns), the optimizer's jerk
+        // penalty (500000 * dddl²) strongly dominates the lateral
+        // deviation penalty, causing the planned path to return to the
+        // reference line very gradually.  At kappa=0.25 the dddl cost
+        // for the first control-step jump (~110k) outweighs the
+        // per-point l-cost (9000*l²=36k @ l=-2) by ~3×.  Boosting
+        // ref_l_weight by 30× (→270k @ l=-2) flips the balance so the
+        // optimizer pulls the vehicle back to the centre line
+        // aggressively, preventing the cumulative outward drift that
+        // eventually hits the solid lane boundary.
+        if (final_jerk_bound > jerk_bound * 1.01) {
+            constexpr double kHighCurvRefLWeightBoost = 30.0;
+            for (size_t i = 0; i < weight_ref_l.size(); ++i) {
+                weight_ref_l[i] *= kHighCurvRefLWeightBoost;
+            }
+        }
         bool res_opt = PathOptimizerUtil::OptimizePath(
                 init_sl_state_,
                 end_state,
@@ -352,7 +400,7 @@ bool LaneFollowPath::OptimizePath(
                 weight_ref_l,
                 path_boundary,
                 ddl_bounds,
-                jerk_bound,
+                final_jerk_bound,
                 config,
                 &opt_l,
                 &opt_dl,

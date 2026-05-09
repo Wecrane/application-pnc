@@ -7,4 +7,5 @@ path_optimizer_config {
   dddl_weight: 500000.0
   lateral_derivative_bound_default: 2.0
   path_reference_l_weight: 10000.0
+  max_iteration: 8000
 }
