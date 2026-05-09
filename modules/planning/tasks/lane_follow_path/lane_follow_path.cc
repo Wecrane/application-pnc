@@ -23,6 +23,7 @@
 #include <utility>
 #include <vector>
 
+#include "modules/common/math/math_utils.h"
 #include "modules/planning/planning_base/common/util/print_debug_info.h"
 #include "modules/planning/planning_base/gflags/planning_gflags.h"
 #include "modules/planning/planning_interface_base/task_base/common/path_generation.h"
@@ -109,6 +110,60 @@ void UpdateDenseConeSCurvePathRef(
 }
 
 }  // namespace
+
+bool HasUTurnLaneInPath(const ReferenceLineInfo& reference_line_info) {
+    const double adc_end_s = reference_line_info.AdcSlBoundary().end_s();
+    const auto& reference_line = reference_line_info.reference_line();
+    const double ref_length = reference_line.Length();
+
+    // 1. Check lane-turn tag (covers U-turn lanes like Lane_1559 / Lane_1583
+    //    that carry an explicit U_TURN classification in the HD map).
+    constexpr double kUTurnLookAheadByTag = 30.0;
+    for (double s = adc_end_s; s < adc_end_s + kUTurnLookAheadByTag && s < ref_length; s += 2.0) {
+        if (reference_line_info.GetPathTurnType(s) == hdmap::Lane::U_TURN) {
+            return true;
+        }
+    }
+    if (reference_line_info.GetPathTurnType(adc_end_s) == hdmap::Lane::U_TURN) {
+        return true;
+    }
+
+    // 2. Geometry-based detection: U-turns at junctions do not carry an
+    //    explicit lane-turn tag on the approach lanes.  We require BOTH a
+    //    high-curvature segment (|kappa| > 0.12) AND a large heading
+    //    change (> 2.0 rad ≈ 115°) within a local window around it.
+    //    Using a LOCAL window (instead of \"remaining reference line\") is
+    //    critical: as the vehicle enters the junction, the remaining
+    //    reference line is entirely on the far side (net Δheading ≈ 0),
+    //    which would cause the detection to drop out mid-turn.
+    constexpr double kGeoKappaThreshold = 0.12;
+    constexpr double kGeoHeadingChangeThreshold = 2.0;
+    constexpr double kGeoSampleStep = 2.0;
+    constexpr double kHeadingWindowRadius = 20.0;
+
+    const double search_start_s = adc_end_s + 5.0;
+    double high_kappa_s = -1.0;
+    for (double s = search_start_s; s + kGeoSampleStep < ref_length; s += kGeoSampleStep) {
+        if (std::abs(reference_line.GetReferencePoint(s).kappa()) > kGeoKappaThreshold) {
+            high_kappa_s = s;
+            break;
+        }
+    }
+    if (high_kappa_s < 0.0) {
+        return false;
+    }
+
+    const double window_start = std::max(0.0, high_kappa_s - kHeadingWindowRadius);
+    const double window_end = std::min(ref_length - 1.0, high_kappa_s + kHeadingWindowRadius);
+    if (window_end - window_start < 10.0) {
+        return false;
+    }
+    const double heading_change = std::abs(
+            common::math::NormalizeAngle(
+                    reference_line.GetReferencePoint(window_end).heading()
+                    - reference_line.GetReferencePoint(window_start).heading()));
+    return heading_change > kGeoHeadingChangeThreshold;
+}
 
 bool LaneFollowPath::Init(
         const std::string& config_dir,
@@ -297,6 +352,25 @@ bool LaneFollowPath::DecidePathBounds(std::vector<PathBoundary>* boundary) {
     }
 
     ADEBUG << "Completed generating path boundaries.";
+    // Expand lane boundaries for U-turn scenarios.  The U-turn lane is
+    // only ~14 m long with a 180° heading change (radius ~4.5 m), which
+    // is tighter than the vehicle's minimum turning radius (5.05 m).
+    // The path planner must be given enough lateral space to plan a
+    // physically driveable arc that borrows the junction area and the
+    // incoming lane on the far side.
+    //
+    // This expansion MUST happen before the boundary tolerance check
+    // below, because on subsequent planning cycles the vehicle may
+    // already be at l > 1.0 after following a previous wide-arc path.
+    // Without the expansion the tolerance check would reject a
+    // perfectly valid state as "out of self lane".
+    if (HasUTurnLaneInPath(*reference_line_info_)) {
+        constexpr double kUTurnLateralExpansion = 0.5;
+        for (size_t i = 0; i < path_bound.size(); ++i) {
+            path_bound[i].l_lower.l -= kUTurnLateralExpansion;
+            path_bound[i].l_upper.l += kUTurnLateralExpansion;
+        }
+    }
     // In high-curvature scenarios (U-turn, sharp bends), the Frenet
     // projection can introduce several centimeters of lateral error.
     // A 0.08m (8cm) tolerance covers this plus numerical noise without
@@ -377,17 +451,32 @@ bool LaneFollowPath::OptimizePath(
         if (dense_cone_s_curve) {
             UpdateDenseConeSCurvePathRef(path_boundary, config.path_reference_l_weight(), &ref_l, &weight_ref_l);
         }
-        // In high-curvature sections (U-turns), the optimizer's jerk
-        // penalty (500000 * dddl²) strongly dominates the lateral
-        // deviation penalty, causing the planned path to return to the
-        // reference line very gradually.  At kappa=0.25 the dddl cost
-        // for the first control-step jump (~110k) outweighs the
-        // per-point l-cost (9000*l²=36k @ l=-2) by ~3×.  Boosting
-        // ref_l_weight by 30× (→270k @ l=-2) flips the balance so the
-        // optimizer pulls the vehicle back to the centre line
-        // aggressively, preventing the cumulative outward drift that
-        // eventually hits the solid lane boundary.
-        if (final_jerk_bound > jerk_bound * 1.01) {
+        // For U-turn lanes the path must NOT hug the reference-line
+        // centre.  The lane geometry (14 m / 180° → ~4.5 m radius) is
+        // tighter than the vehicle's min turning radius (5.05 m).
+        //
+        // Prior attempts:  expanding boundaries alone (v4) — optimiser
+        // stays at l≈0 because deviation costs jerk/ddl.  Setting
+        // ref_l_weight=0 (v5) — same result, no incentive to leave.
+        //
+        // Correct approach:  make staying at the centre *expensive* by
+        // setting a non-zero ref_l with a high tracking weight.
+        //  ref_l = -2.5 pushes the path to the south (away from the
+        //  centre divider).  The ×10 weight (≈30 000) is strong enough
+        //  to overcome the jerk/ddl penalty of moving laterally but
+        //  not as extreme as the ×30 "hug the line" boost used on
+        //  normal high-curvature roads.
+        const bool is_uturn = HasUTurnLaneInPath(*reference_line_info_);
+        if (is_uturn) {
+            constexpr double kUTurnRefL = -0.8;
+            constexpr double kUTurnRefLWeightFactor = 10.0;
+            for (size_t i = 0; i < ref_l.size(); ++i) {
+                if (ref_l[i] == 0.0) {
+                    ref_l[i] = kUTurnRefL;
+                    weight_ref_l[i] = config.path_reference_l_weight() * 0.3 * kUTurnRefLWeightFactor;
+                }
+            }
+        } else if (final_jerk_bound > jerk_bound * 1.01) {
             constexpr double kHighCurvRefLWeightBoost = 30.0;
             for (size_t i = 0; i < weight_ref_l.size(); ++i) {
                 weight_ref_l[i] *= kHighCurvRefLWeightBoost;
