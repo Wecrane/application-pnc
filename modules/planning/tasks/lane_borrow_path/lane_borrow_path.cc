@@ -228,6 +228,31 @@ bool LaneBorrowPath::DecidePathBounds(std::vector<PathBoundary>* boundary) {
     }
     // 中间态（1~2个锥桶）：保持上一帧状态不变
 
+    // ── 施工区域退出检测 ──
+    // 基于连续空帧计数：当无可见锥桶持续超过阈值时强制退出。
+    // Wall s 值随车辆移动衰减（同一锥桶从 s≈149 → 0），无法用于退出判断。
+    // cone_history_ 因 SL 投影变化导致同一锥桶多帧重复记录而膨胀。
+    constexpr int kEmptyFramesThreshold = 50;  // 5秒 @ 10Hz
+    if (construct_zone && small_obs_count == 0) {
+        no_cone_counter_++;
+        if (no_cone_counter_ > kEmptyFramesThreshold) {
+            construct_zone = false;
+            zone_left_base = zone_right_base = 0.0;
+            construct_decision.clear();
+            left_wall_.clear();
+            right_wall_.clear();
+            cone_history_.clear();
+            cone_wall_memory_.clear();
+            classified_left_xy_.clear();
+            classified_right_xy_.clear();
+            no_cone_counter_ = 0;
+            AINFO << "[WALL] EXIT construct_zone after " << kEmptyFramesThreshold
+                  << " empty frames";
+        }
+    } else if (small_obs_count > 0) {
+        no_cone_counter_ = 0;
+    }
+
     // ── construct_zone 模式：生成跨全部可用车道的双向边界 ──
     if (construct_zone) {
         return DecideConstructZoneBoundary(boundary);
@@ -1420,6 +1445,17 @@ void LaneBorrowPath::ComputeConstructZoneBoundary(
         return (static_cast<uint64_t>(ix) << 32) | (static_cast<uint64_t>(static_cast<uint32_t>(iy)));
     };
 
+    // XY 近邻距离（复用于模糊分类和单墙预测分支）
+    auto nearest_dist = [](double x, double y, const std::vector<std::pair<double, double>>& pts) -> double {
+        double best = 1e9;
+        for (const auto& p : pts) {
+            double d = std::hypot(p.first - x, p.second - y);
+            if (d < best)
+                best = d;
+        }
+        return best;
+    };
+
     for (const auto& c : cones) {
         double s = (c.MinS() + c.MaxS()) * 0.5;
         double l = (c.MinL() + c.MaxL()) * 0.5;
@@ -1460,8 +1496,28 @@ void LaneBorrowPath::ComputeConstructZoneBoundary(
                     to_left = false;
                     why = "newL";
                 } else {
-                    to_left = false;
-                    why = "noL";
+                    // 锥桶靠近右墙预测，但用XY近邻二次确认：
+                    // 左墙锥桶可能因感知缺失尚未建立预测，
+                    // 此时右墙外推值可能恰好靠近左墙锥桶的真实位置。
+                    if (xy_it != cone_xy.end() && !classified_left_xy_.empty()) {
+                        double cx = xy_it->second.first, cy = xy_it->second.second;
+                        double nl = nearest_dist(cx, cy, classified_left_xy_);
+                        double nr = nearest_dist(cx, cy, classified_right_xy_);
+                        if (nl < nr && nl < 15.0) {
+                            to_left = true;
+                            static char buf[32];
+                            snprintf(buf, sizeof(buf), "nnL=%.1f nnR=%.1f", nl, nr);
+                            why = buf;
+                        } else {
+                            to_left = false;
+                            static char buf[32];
+                            snprintf(buf, sizeof(buf), "nnL=%.1f nnR=%.1f", nl, nr);
+                            why = buf;
+                        }
+                    } else {
+                        to_left = false;
+                        why = "noL";
+                    }
                 }
             } else if (std::isnan(pr)) {
                 // 左墙有预测，右墙无 → 增加道路边界兜底
@@ -1474,25 +1530,38 @@ void LaneBorrowPath::ComputeConstructZoneBoundary(
                     to_left = true;
                     why = "newR";
                 } else {
-                    to_left = true;
-                    why = "noR";
+                    // 锥桶靠近左墙预测，但用XY近邻二次确认：
+                    // 左墙S弯末尾外推l可能靠近右墙锥桶位置，
+                    // 导致末尾右墙锥桶被错分入左墙。
+                    if (xy_it != cone_xy.end() && !classified_right_xy_.empty()) {
+                        double cx = xy_it->second.first, cy = xy_it->second.second;
+                        double nl = nearest_dist(cx, cy, classified_left_xy_);
+                        double nr = nearest_dist(cx, cy, classified_right_xy_);
+                        if (nr < nl && nr < 15.0) {
+                            to_left = false;
+                            static char buf[32];
+                            snprintf(buf, sizeof(buf), "nnL=%.1f nnR=%.1f", nl, nr);
+                            why = buf;
+                        } else {
+                            to_left = true;
+                            static char buf[32];
+                            snprintf(buf, sizeof(buf), "nnL=%.1f nnR=%.1f", nl, nr);
+                            why = buf;
+                        }
+                    } else {
+                        to_left = true;
+                        why = "noR";
+                    }
                 }
             } else {
                 double dl = std::fabs(l - pl), dr = std::fabs(l - pr);
-                // 模糊分类：两墙距离差 < 2.0m 时，用 XY 近邻投票破平局
-                // 防止左墙急弯拉偏预测导致右墙锥桶被错分入左墙
-                if (std::fabs(dl - dr) < 2.0 && xy_it != cone_xy.end()) {
+                // 模糊分类：两墙距离差 < 3.5m 时，或最近预测距离 > 1.5m 时
+                // （预测不可靠），用 XY 近邻投票破平局。
+                // 防止左墙急弯拉偏预测导致右墙锥桶被错分入左墙，
+                // 也防止两墙预测均不准时（如末尾锥桶）SL距离误导。
+                if ((std::fabs(dl - dr) < 3.5 || std::min(dl, dr) > 1.5)
+                    && xy_it != cone_xy.end()) {
                     double cx = xy_it->second.first, cy = xy_it->second.second;
-                    auto nearest_dist
-                            = [](double x, double y, const std::vector<std::pair<double, double>>& pts) -> double {
-                        double best = 1e9;
-                        for (const auto& p : pts) {
-                            double d = std::hypot(p.first - x, p.second - y);
-                            if (d < best)
-                                best = d;
-                        }
-                        return best;
-                    };
                     double nl = nearest_dist(cx, cy, classified_left_xy_);
                     double nr = nearest_dist(cx, cy, classified_right_xy_);
                     to_left = nl < nr;

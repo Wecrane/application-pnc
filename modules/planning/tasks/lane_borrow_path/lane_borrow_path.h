@@ -171,6 +171,9 @@ private:
     // 已分类锥桶的XY坐标（用于模糊分类时的近邻投票）
     std::vector<std::pair<double, double>> classified_left_xy_;
     std::vector<std::pair<double, double>> classified_right_xy_;
+
+    // 施工区退出：连续无锥桶帧计数器，超过阈值强制退出
+    int no_cone_counter_ = 0;
 };
 
 /////////////////////////////////////////////////////////////////////////////
