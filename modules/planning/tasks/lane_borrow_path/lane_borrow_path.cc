@@ -73,9 +73,50 @@ apollo::common::Status LaneBorrowPath::Process(Frame* frame, ReferenceLineInfo* 
         ADEBUG << "path reusable" << reference_line_info->path_reusable() << ",skip";
         return Status::OK();
     }
-    if (!IsNecessaryToBorrowLane()) {
-        ADEBUG << "No need to borrow lane";
-        return Status::OK();
+
+    // ── 独立锥桶检测：不依赖 path_decider 的 blocking_obstacle_id ──
+    // 赛题五第二个场景中，车辆起始位置前方紧贴锥桶，path_decider 可能
+    // 不将其识别为阻塞障碍物（障碍物太小/太近），导致 IsNecessaryToBorrowLane
+    // 因 front_static_obstacle_id 为空而返回 false。
+    // 这里做一次独立计数，≥3 个锥桶即强制进入借道模式。
+    int early_cone_count = 0;
+    {
+        double adc_back_s = reference_line_info->AdcSlBoundary().start_s();
+        double adc_end_s = reference_line_info->AdcSlBoundary().end_s();
+        for (const auto* obs : reference_line_info->path_decision()->obstacles().Items()) {
+            if (!obs || obs->IsVirtual())
+                continue;
+            if (obs->PerceptionPolygon().area() >= 0.5)
+                continue;
+            const auto& sl = obs->PerceptionSLBoundary();
+            // 锥桶在主车前方 100m 范围内
+            if (sl.start_s() > adc_back_s - 3.0 && sl.start_s() - adc_end_s < 100.0) {
+                early_cone_count++;
+            }
+        }
+    }
+
+    if (early_cone_count >= 3) {
+        auto* mutable_path_decider_status
+                = injector_->planning_context()->mutable_planning_status()->mutable_path_decider();
+        if (!mutable_path_decider_status->is_in_path_lane_borrow_scenario()) {
+            mutable_path_decider_status->set_is_in_path_lane_borrow_scenario(true);
+            if (decided_side_pass_direction_.empty()) {
+                decided_side_pass_direction_.push_back(SidePassDirection::LEFT_BORROW);
+                decided_side_pass_direction_.push_back(SidePassDirection::RIGHT_BORROW);
+            }
+            AINFO << "Force lane borrow by early cone detection, count=" << early_cone_count;
+        }
+    }
+
+    // 施工区锥桶检测优先：跳过 IsNecessaryToBorrowLane() 中 use_self_lane_ 的退出逻辑，
+    // 防止刚被强制打开的借道模式又被 UpdateSelfPathInfo → use_self_lane_≥6 关掉，
+    // 导致 Force lane borrow → Switch to SELF-LANE → Force lane borrow 的死循环振荡。
+    if (early_cone_count < 3) {
+        if (!IsNecessaryToBorrowLane()) {
+            ADEBUG << "No need to borrow lane";
+            return Status::OK();
+        }
     }
     std::vector<PathBoundary> candidate_path_boundaries;
     std::vector<PathData> candidate_path_data;
@@ -91,7 +132,8 @@ apollo::common::Status LaneBorrowPath::Process(Frame* frame, ReferenceLineInfo* 
     if (!OptimizePath(candidate_path_boundaries, &candidate_path_data)) {
         return Status::OK();
     }
-    if (HasDynamicVehicleConflictOnBorrowPath(candidate_path_data)) {
+    // 倒车模式下跳过动态车辆冲突检测（倒车是为了远离前方锥桶，不需要检测后方来车）
+    if (!in_reverse_ && HasDynamicVehicleConflictOnBorrowPath(candidate_path_data)) {
         if (GenerateBorrowHoldPath(reference_line_info->mutable_path_data())) {
             AINFO << "Borrow path is temporarily blocked by a dynamic vehicle, hold current lateral position.";
             return Status::OK();
@@ -221,12 +263,30 @@ bool LaneBorrowPath::DecidePathBounds(std::vector<PathBoundary>* boundary) {
     int total_cone_estimate = small_obs_count + history_cone_ahead;
     if (total_cone_estimate >= 3) {
         construct_zone = true;
+        low_cone_counter_ = 0;
     } else if (total_cone_estimate < 1) {
-        construct_zone = false;
-        zone_left_base = zone_right_base = 0.0;
-        construct_decision.clear();
+        // 滞回：需连续 kLowConeExitThreshold 帧锥桶极少才退出，
+        // 防止感知闪烁或车辆移动导致 SL 投影变化使锥桶暂时"消失"
+        low_cone_counter_++;
+        if (low_cone_counter_ > kLowConeExitThreshold) {
+            construct_zone = false;
+            zone_left_base = zone_right_base = 0.0;
+            construct_decision.clear();
+            left_wall_.clear();
+            right_wall_.clear();
+            cone_history_.clear();
+            cone_wall_memory_.clear();
+            classified_left_xy_.clear();
+            classified_right_xy_.clear();
+            low_cone_counter_ = 0;
+            no_cone_counter_ = 0;
+            AINFO << "[WALL] EXIT construct_zone by low cone count after "
+                  << kLowConeExitThreshold << " frames";
+        }
+    } else {
+        // 1~2 个锥桶：保持上一帧状态不变，重置低锥桶计数器
+        low_cone_counter_ = 0;
     }
-    // 中间态（1~2个锥桶）：保持上一帧状态不变
 
     // ── 施工区域退出检测 ──
     // 基于连续空帧计数：当无可见锥桶持续超过阈值时强制退出。
@@ -246,8 +306,8 @@ bool LaneBorrowPath::DecidePathBounds(std::vector<PathBoundary>* boundary) {
             classified_left_xy_.clear();
             classified_right_xy_.clear();
             no_cone_counter_ = 0;
-            AINFO << "[WALL] EXIT construct_zone after " << kEmptyFramesThreshold
-                  << " empty frames";
+            low_cone_counter_ = 0;
+            AINFO << "[WALL] EXIT construct_zone after " << kEmptyFramesThreshold << " empty frames";
         }
     } else if (small_obs_count > 0) {
         no_cone_counter_ = 0;
@@ -255,6 +315,52 @@ bool LaneBorrowPath::DecidePathBounds(std::vector<PathBoundary>* boundary) {
 
     // ── construct_zone 模式：生成跨全部可用车道的双向边界 ──
     if (construct_zone) {
+        double adc_speed = frame_->PlanningStartPoint().v();
+        double adc_s = reference_line_info_->AdcSlBoundary().start_s();
+
+        // ── 倒车恢复逻辑 ──
+        // 场景：车辆起始位置前方紧贴锥桶，前向路径无法生成（边界过窄/Optimizer 无解）。
+        // 策略：检测卡死状态 → 倒车拉开距离 → 自动切回前向施工区绕行。
+        if (in_reverse_) {
+            reverse_frame_count_++;
+            double backed_dist = reverse_start_s_ - adc_s;
+            if (backed_dist > kReverseDistance || reverse_frame_count_ > kReverseMaxFrames) {
+                // 倒车到位或超时，切回前向模式
+                in_reverse_ = false;
+                reverse_frame_count_ = 0;
+                AINFO << "[REVERSE] Complete: backed=" << backed_dist << "m, frames=" << reverse_frame_count_;
+            } else {
+                AINFO << "[REVERSE] Active: frame=" << reverse_frame_count_ << ", backed=" << backed_dist << "m";
+                PathBoundary reverse_bound;
+                if (!GenerateReversePathBoundary(&reverse_bound)) {
+                    return false;
+                }
+                boundary->push_back(reverse_bound);
+                return !boundary->empty();
+            }
+        } else {
+            // 卡死检测：速度极低 + 位移极小 + 持续多帧
+            if (adc_speed < kStuckSpeedThreshold && std::fabs(adc_s - last_adc_s_for_stuck_) < 0.3) {
+                reverse_frame_count_++;
+            } else {
+                reverse_frame_count_ = 0;
+            }
+            last_adc_s_for_stuck_ = adc_s;
+
+            if (reverse_frame_count_ >= kStuckFrameThreshold) {
+                in_reverse_ = true;
+                reverse_start_s_ = adc_s;
+                reverse_frame_count_ = 0;
+                AINFO << "[REVERSE] STUCK detected (speed=" << adc_speed << "), starting reverse from s=" << adc_s;
+                PathBoundary reverse_bound;
+                if (!GenerateReversePathBoundary(&reverse_bound)) {
+                    return false;
+                }
+                boundary->push_back(reverse_bound);
+                return !boundary->empty();
+            }
+        }
+
         return DecideConstructZoneBoundary(boundary);
     }
 
@@ -523,14 +629,26 @@ bool LaneBorrowPath::OptimizePath(
 
         // 施工区域：路径终点不应强制归零，使用边界中点作为目标终点
         std::array<double, 3> end_state = {0.0, 0.0, 0.0};
+        bool is_reverse_path = (path_boundary.label().find("reverse_path") != std::string::npos);
         if (path_boundary.label().find("construct_zone") != std::string::npos) {
             const auto& last_pt = path_boundary.back();
             double end_l = (last_pt.l_lower.l + last_pt.l_upper.l) * 0.5;
             end_state = {end_l, 0.0, 0.0};
         }
+        if (is_reverse_path) {
+            // 倒车路径：终点横向保持当前 l，不强制归零
+            end_state = {init_sl_state_.second[0], 0.0, 0.0};
+        }
+
+        // 倒车路径：反转初始运动方向（dl, ddl 取负），让优化器沿参考线反向规划
+        SLState opt_init_state = init_sl_state_;
+        if (is_reverse_path) {
+            opt_init_state.second[1] = -opt_init_state.second[1];
+            opt_init_state.second[2] = -opt_init_state.second[2];
+        }
 
         bool res_opt = PathOptimizerUtil::OptimizePath(
-                init_sl_state_,
+                opt_init_state,
                 end_state,
                 ref_l,
                 weight_ref_l,
@@ -544,6 +662,22 @@ bool LaneBorrowPath::OptimizePath(
         if (res_opt) {
             auto frenet_frame_path = PathOptimizerUtil::ToPiecewiseJerkPath(
                     opt_l, opt_dl, opt_ddl, path_boundary.delta_s(), path_boundary.start_s());
+
+            // 倒车路径：反转 s 方向 + 恢复 dl/ddl 符号
+            if (is_reverse_path) {
+                double start_s = path_boundary.start_s();
+                for (auto& point : frenet_frame_path) {
+                    double frenet_delta_s = point.s() - start_s;
+                    point.set_s(start_s - frenet_delta_s);
+                    point.set_dl(-point.dl());
+                    point.set_ddl(-point.ddl());
+                }
+                // 按 s 升序排列（倒车路径 s 从大到小，反转后从小到大）
+                std::sort(frenet_frame_path.begin(), frenet_frame_path.end(), [](const auto& a, const auto& b) {
+                    return a.s() < b.s();
+                });
+            }
+
             lastframe_ = std::make_unique<PathData>();
             lastframe_->SetReferenceLine(&reference_line);
             lastframe_->SetFrenetPath(std::move(frenet_frame_path));
@@ -554,7 +688,45 @@ bool LaneBorrowPath::OptimizePath(
             }
             lastframe_->set_path_label(path_boundary.label());
             lastframe_->set_blocking_obstacle_id(path_boundary.blocking_obstacle_id());
+            if (is_reverse_path) {
+                lastframe_->set_is_reverse_path(true);
+            }
             candidate_path_data->push_back(*lastframe_);
+        } else if (is_reverse_path) {
+            // 倒车 OSQP 优化失败时的直线兜底：沿当前 l 匀速后退
+            double delta_s = std::fabs(path_boundary.delta_s());
+            double start_s = path_boundary.start_s();
+            FrenetFramePath fallback_frenet;
+            for (size_t i = 0; i < path_boundary.size(); ++i) {
+                common::FrenetFramePoint pt;
+                double cur_s = start_s - delta_s * i;
+                double cur_l = init_sl_state_.second[0] + init_sl_state_.second[1] * (-delta_s) * i;
+                // 夹紧到边界内
+                if (i < path_boundary.size()) {
+                    cur_l = std::max(path_boundary[i].l_lower.l, std::min(path_boundary[i].l_upper.l, cur_l));
+                }
+                pt.set_s(cur_s);
+                pt.set_l(cur_l);
+                pt.set_dl(-init_sl_state_.second[1]);
+                pt.set_ddl(0.0);
+                fallback_frenet.push_back(pt);
+            }
+            // 反转 s 使递增
+            for (auto& pt : fallback_frenet) {
+                pt.set_s(start_s + (start_s - pt.s()));
+            }
+            std::sort(fallback_frenet.begin(), fallback_frenet.end(), [](const auto& a, const auto& b) {
+                return a.s() < b.s();
+            });
+
+            lastframe_ = std::make_unique<PathData>();
+            lastframe_->SetReferenceLine(&reference_line);
+            lastframe_->SetFrenetPath(std::move(fallback_frenet));
+            lastframe_->set_path_label(path_boundary.label());
+            lastframe_->set_blocking_obstacle_id(path_boundary.blocking_obstacle_id());
+            lastframe_->set_is_reverse_path(true);
+            candidate_path_data->push_back(*lastframe_);
+            AINFO << "[REVERSE] OSQP failed, using linear fallback path";
         } else if (lastframe_ != nullptr) {
             candidate_path_data->push_back(*lastframe_);
         }
@@ -1559,8 +1731,7 @@ void LaneBorrowPath::ComputeConstructZoneBoundary(
                 // （预测不可靠），用 XY 近邻投票破平局。
                 // 防止左墙急弯拉偏预测导致右墙锥桶被错分入左墙，
                 // 也防止两墙预测均不准时（如末尾锥桶）SL距离误导。
-                if ((std::fabs(dl - dr) < 3.5 || std::min(dl, dr) > 1.5)
-                    && xy_it != cone_xy.end()) {
+                if ((std::fabs(dl - dr) < 3.5 || std::min(dl, dr) > 1.5) && xy_it != cone_xy.end()) {
                     double cx = xy_it->second.first, cy = xy_it->second.second;
                     double nl = nearest_dist(cx, cy, classified_left_xy_);
                     double nr = nearest_dist(cx, cy, classified_right_xy_);
@@ -1677,6 +1848,66 @@ void LaneBorrowPath::ConstructDecision(
                   << " distL=" << dist_to_left << " distR=" << dist_to_right << " → LEFT_NUDGE";
         }
     }
+}
+
+bool LaneBorrowPath::GenerateReversePathBoundary(PathBoundary* boundary) {
+    // ── 生成倒车路径边界 ──
+    // 沿当前参考线向后倒退 kReverseDistance 米，横向保持当前位置不变。
+    // 不穿越锥桶——倒车目的只是拉开距离，让后续前向路径有足够空间规划。
+    boundary->clear();
+    const double delta_s = -0.1;  // 向后采样
+    const double adc_s = reference_line_info_->AdcSlBoundary().start_s();
+    const double adc_l = init_sl_state_.second[0];
+    const double target_s = adc_s - kReverseDistance;
+
+    // 确保不超出参考线起点
+    const ReferenceLine& ref_line = reference_line_info_->reference_line();
+    double ref_min_s = ref_line.GetMapPath().accumulated_s().front();
+    double actual_target = std::max(target_s, ref_min_s + 0.5);
+
+    boundary->set_delta_s(delta_s);
+    boundary->set_label("regular/reverse_path");
+
+    for (double s = adc_s; s > actual_target; s += delta_s) {
+        // 获取当前 s 处的车道宽度
+        double lane_left = 0.0, lane_right = 0.0;
+        if (!ref_line.GetLaneWidth(s, &lane_left, &lane_right)) {
+            // 超出车道范围，停止扩展
+            break;
+        }
+        double offset = 0.0;
+        ref_line.GetOffsetToMap(s, &offset);
+        double left_bound = lane_left - offset;
+        double right_bound = -lane_right - offset;
+
+        // 保持当前横向位置附近，给 ±0.5m 的横向自由度
+        double lat_margin = 0.5;
+        double l_lower = std::max(right_bound, adc_l - lat_margin);
+        double l_upper = std::min(left_bound, adc_l + lat_margin);
+
+        // 如果当前 l 超出车道边界，扩展边界以包含当前位置
+        if (adc_l > l_upper)
+            l_upper = std::min(left_bound, adc_l + 0.2);
+        if (adc_l < l_lower)
+            l_lower = std::max(right_bound, adc_l - 0.2);
+
+        if (l_lower >= l_upper) {
+            // 边界无效，用宽松值
+            l_lower = right_bound;
+            l_upper = left_bound;
+        }
+
+        boundary->emplace_back(s, l_lower, l_upper);
+    }
+
+    if (boundary->empty()) {
+        AERROR << "[REVERSE] Failed to generate reverse boundary";
+        return false;
+    }
+
+    AINFO << "[REVERSE] Boundary: s=[" << boundary->back().s << "," << boundary->front().s
+          << "], points=" << boundary->size();
+    return true;
 }
 
 }  // namespace planning

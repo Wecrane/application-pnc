@@ -174,6 +174,22 @@ private:
 
     // 施工区退出：连续无锥桶帧计数器，超过阈值强制退出
     int no_cone_counter_ = 0;
+    // 施工区退出滞回：total_cone_estimate < 1 的连续帧计数，防止锥桶闪烁导致中途退出
+    int low_cone_counter_ = 0;
+    static constexpr int kLowConeExitThreshold = 30;  // 3秒@10Hz，锥桶持续消失才退出
+
+    // ── 倒车恢复：车辆起始位置被锥桶卡死无法前进时，先倒车拉开距离 ──
+    bool in_reverse_ = false;                            // 当前处于倒车模式
+    int reverse_frame_count_ = 0;                        // 倒车已执行帧数 / 卡死帧计数
+    double reverse_start_s_ = 0.0;                       // 倒车起始 s 坐标
+    double last_adc_s_for_stuck_ = 0.0;                  // 上一帧 ADC s 坐标，用于检测位移
+    static constexpr double kReverseDistance = 8.0;      // 倒车目标距离 (m)
+    static constexpr int kReverseMaxFrames = 120;        // 倒车最大帧数 (12s @ 10Hz)
+    static constexpr double kStuckSpeedThreshold = 0.3;  // 判定"卡死"的速度阈值 (m/s)
+    static constexpr int kStuckFrameThreshold = 15;      // 连续低速帧数阈值
+
+    // 倒车路径生成：生成一条向后直线倒车路径
+    bool GenerateReversePathBoundary(PathBoundary* boundary);
 };
 
 /////////////////////////////////////////////////////////////////////////////
