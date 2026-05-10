@@ -167,6 +167,10 @@ private:
     // key = ((int64_t)round(x) << 32) | (uint32_t)round(y)
     // value: true=左墙, false=右墙
     std::unordered_map<uint64_t, bool> cone_wall_memory_;
+
+    // 已分类锥桶的XY坐标（用于模糊分类时的近邻投票）
+    std::vector<std::pair<double, double>> classified_left_xy_;
+    std::vector<std::pair<double, double>> classified_right_xy_;
 };
 
 /////////////////////////////////////////////////////////////////////////////

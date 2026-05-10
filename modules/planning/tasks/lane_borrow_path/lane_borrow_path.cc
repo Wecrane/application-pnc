@@ -84,6 +84,10 @@ apollo::common::Status LaneBorrowPath::Process(Frame* frame, ReferenceLineInfo* 
     if (!DecidePathBounds(&candidate_path_boundaries)) {
         return Status::OK();
     }
+    // 施工区模式：降低对中心线的拉力，让路径自由跟随可行通道中心
+    if (construct_zone) {
+        config_.mutable_path_optimizer_config()->set_l_weight(1.0);
+    }
     if (!OptimizePath(candidate_path_boundaries, &candidate_path_data)) {
         return Status::OK();
     }
@@ -1144,7 +1148,7 @@ bool LaneBorrowPath::DecideConstructZoneBoundary(std::vector<PathBoundary>* boun
     {
         double temp_lat = FLAGS_obstacle_lat_buffer;
         if (obs_sl_polygons.size() >= 4)
-            FLAGS_obstacle_lat_buffer = 0.2;
+            FLAGS_obstacle_lat_buffer = 0.5;
         FLAGS_obstacle_lon_end_buffer_park = 0.1;
         PathBoundsDeciderUtil::GetBoundaryFromStaticObstacles(
                 *reference_line_info_,
@@ -1475,15 +1479,42 @@ void LaneBorrowPath::ComputeConstructZoneBoundary(
                 }
             } else {
                 double dl = std::fabs(l - pl), dr = std::fabs(l - pr);
-                to_left = dl < dr;
-                static char buf[32];
-                snprintf(buf, sizeof(buf), "dL=%.2f dR=%.2f", dl, dr);
-                why = buf;
+                // 模糊分类：两墙距离差 < 2.0m 时，用 XY 近邻投票破平局
+                // 防止左墙急弯拉偏预测导致右墙锥桶被错分入左墙
+                if (std::fabs(dl - dr) < 2.0 && xy_it != cone_xy.end()) {
+                    double cx = xy_it->second.first, cy = xy_it->second.second;
+                    auto nearest_dist
+                            = [](double x, double y, const std::vector<std::pair<double, double>>& pts) -> double {
+                        double best = 1e9;
+                        for (const auto& p : pts) {
+                            double d = std::hypot(p.first - x, p.second - y);
+                            if (d < best)
+                                best = d;
+                        }
+                        return best;
+                    };
+                    double nl = nearest_dist(cx, cy, classified_left_xy_);
+                    double nr = nearest_dist(cx, cy, classified_right_xy_);
+                    to_left = nl < nr;
+                    static char buf[32];
+                    snprintf(buf, sizeof(buf), "nnL=%.1f nnR=%.1f", nl, nr);
+                    why = buf;
+                } else {
+                    to_left = dl < dr;
+                    static char buf[32];
+                    snprintf(buf, sizeof(buf), "dL=%.2f dR=%.2f", dl, dr);
+                    why = buf;
+                }
             }
 
-            // 3) 记入 XY 位置记忆（仅对新分类的锥桶）
+            // 3) 记入 XY 位置记忆和近邻向量
             if (xy_it != cone_xy.end()) {
-                cone_wall_memory_[hash_xy(xy_it->second.first, xy_it->second.second)] = to_left;
+                uint64_t h = hash_xy(xy_it->second.first, xy_it->second.second);
+                cone_wall_memory_[h] = to_left;
+                if (to_left)
+                    classified_left_xy_.emplace_back(xy_it->second.first, xy_it->second.second);
+                else
+                    classified_right_xy_.emplace_back(xy_it->second.first, xy_it->second.second);
             }
         }
 
