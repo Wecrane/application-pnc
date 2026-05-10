@@ -245,7 +245,8 @@ bool PathBoundsDeciderUtil::UpdatePathBoundaryBySLPolygon(
     std::vector<double> center_l;
     double max_nudge_check_distance;
     if (reference_line_info.IsChangeLanePath() || path_boundary->label().find("regular/left") != std::string::npos
-        || path_boundary->label().find("regular/right") != std::string::npos) {
+        || path_boundary->label().find("regular/right") != std::string::npos
+        || path_boundary->label().find("regular/construct_zone") != std::string::npos) {
         center_l.push_back((path_boundary->front().l_upper.l + path_boundary->front().l_lower.l) * 0.5);
         max_nudge_check_distance = FLAGS_max_nudge_check_distance_in_lk;
     } else {

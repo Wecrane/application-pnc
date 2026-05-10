@@ -24,6 +24,7 @@
 #include <string>
 #include <tuple>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 #include "modules/planning/tasks/lane_borrow_path/proto/lane_borrow_path.pb.h"
 #include "cyber/plugin_manager/plugin_manager.h"
@@ -124,11 +125,23 @@ private:
             const ReferenceLineInfo& reference_line_info,
             std::vector<SLPolygon>* const sl_polygon,
             PathBoundary* const path_boundary);
+    /**
+     * @brief Generate a path boundary spanning all available lanes
+     *        (both left and right neighbors) for construction zone passage.
+     */
+    void GetConstructZoneBoundary(PathBoundary* const path_bound);
+    /**
+     * @brief Decide path bounds for construction zone mode,
+     *        generating a single bidirectional boundary.
+     */
+    bool DecideConstructZoneBoundary(std::vector<PathBoundary>* boundary);
     LaneBorrowPathConfig config_;
     std::vector<SidePassDirection> decided_side_pass_direction_;
     int use_self_lane_;
     std::string blocking_obstacle_id_;
     bool construct_zone;
+    // 锥桶位置记忆：记录所有出现过的锥桶 (s, l) 坐标，用于闪烁容错
+    std::vector<std::pair<double, double>> cone_history_;
     double zone_left_base;
     double zone_right_base;
     std::unordered_map<std::string, bool> construct_decision;
