@@ -135,6 +135,15 @@ private:
      *        generating a single bidirectional boundary.
      */
     bool DecideConstructZoneBoundary(std::vector<PathBoundary>* boundary);
+    /**
+     * @brief Compute the navigable corridor for construction zone by finding
+     *        the widest gap between cones at each S point, replacing the
+     *        per-cone nudge approach for scenarios where cones form S-curves.
+     */
+    void ComputeConstructZoneBoundary(
+            std::vector<SLPolygon>& cones,
+            const std::unordered_map<std::string, std::pair<double, double>>& cone_xy,
+            PathBoundary* const path_bound);
     LaneBorrowPathConfig config_;
     std::vector<SidePassDirection> decided_side_pass_direction_;
     int use_self_lane_;
@@ -142,6 +151,10 @@ private:
     bool construct_zone;
     // 锥桶位置记忆：记录所有出现过的锥桶 (s, l) 坐标，用于闪烁容错
     std::vector<std::pair<double, double>> cone_history_;
+    // 锥桶墙追踪：S 弯两侧锥桶分别形成"左墙"和"右墙"，
+    // 边界收缩到墙线而非单个锥桶，容忍闪烁
+    std::vector<std::pair<double, double>> left_wall_;   // (s, l) 按 s 排序
+    std::vector<std::pair<double, double>> right_wall_;  // (s, l) 按 s 排序
     double zone_left_base;
     double zone_right_base;
     std::unordered_map<std::string, bool> construct_decision;
@@ -149,6 +162,11 @@ private:
     std::unique_ptr<PathData> lastframe_;
     double mx_left_bound = 0.0;
     double mx_right_bound = 0.0;
+
+    // XY位置→墙分类记忆：用1m网格Hash，消除SL投影变化导致的分类闪烁
+    // key = ((int64_t)round(x) << 32) | (uint32_t)round(y)
+    // value: true=左墙, false=右墙
+    std::unordered_map<uint64_t, bool> cone_wall_memory_;
 };
 
 /////////////////////////////////////////////////////////////////////////////

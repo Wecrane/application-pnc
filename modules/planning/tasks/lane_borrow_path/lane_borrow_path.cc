@@ -212,14 +212,17 @@ bool LaneBorrowPath::DecidePathBounds(std::vector<PathBoundary>* boundary) {
     }
 
     // 4. 综合判断：当前可见 + 历史记忆 ≥ 3 即视为施工区域
+    //    滞回：一旦激活，需要锥桶完全消失（total<1）才退出，避免末尾锥桶
+    //    数量波动导致 construct_zone 反复切换致规划模式跳变。
     int total_cone_estimate = small_obs_count + history_cone_ahead;
     if (total_cone_estimate >= 3) {
         construct_zone = true;
-    } else {
+    } else if (total_cone_estimate < 1) {
         construct_zone = false;
         zone_left_base = zone_right_base = 0.0;
         construct_decision.clear();
     }
+    // 中间态（1~2个锥桶）：保持上一帧状态不变
 
     // ── construct_zone 模式：生成跨全部可用车道的双向边界 ──
     if (construct_zone) {
@@ -476,7 +479,18 @@ bool LaneBorrowPath::OptimizePath(
         double ref_weight = config.path_reference_l_weight();
         if (!U_turn_construct)
             ref_weight = 50;
-        PathOptimizerUtil::UpdatePathRefWithBound(path_boundary, ref_weight, &ref_l, &weight_ref_l);
+        // 施工区模式：参考目标用可行通道中心，而非 l=0 的中心线。
+        // 避免"回中心线趋势"把车拉向左侧锥桶导致卡在道路边界上。
+        if (path_boundary.label().find("construct_zone") != std::string::npos) {
+            ref_l.resize(path_boundary.size());
+            weight_ref_l.resize(path_boundary.size());
+            for (size_t i = 0; i < path_boundary.size(); ++i) {
+                ref_l[i] = (path_boundary[i].l_lower.l + path_boundary[i].l_upper.l) * 0.5;
+                weight_ref_l[i] = ref_weight;
+            }
+        } else {
+            PathOptimizerUtil::UpdatePathRefWithBound(path_boundary, ref_weight, &ref_l, &weight_ref_l);
+        }
 
         // 施工区域：路径终点不应强制归零，使用边界中点作为目标终点
         std::array<double, 3> end_state = {0.0, 0.0, 0.0};
@@ -1086,79 +1100,69 @@ bool LaneBorrowPath::DecideConstructZoneBoundary(std::vector<PathBoundary>* boun
 
     // 4. 绕过 GetSLPolygons 的默认过滤逻辑，直接收集所有小障碍物。
     //    默认的 GetSLPolygons 只返回"阻塞"障碍物 + |l| ≤ 3.5m 的小障碍物。
-    //    施工区 S 弯锥桶横跨 3 车道，|l| 可达 5~8m，必须全部纳入 nudge 决策。
+    //    施工区 S 弯锥桶横跨 3 车道，|l| 可达 5~8m，必须全部纳入。
     std::vector<SLPolygon> obs_sl_polygons;
+    std::unordered_map<std::string, std::pair<double, double>> cone_xy;  // id -> (x, y)
     {
         const double adc_back_s = reference_line_info_->AdcSlBoundary().start_s();
         const double adc_front_s = reference_line_info_->AdcSlBoundary().end_s();
         for (const auto* obs : reference_line_info_->path_decision()->obstacles().Items()) {
-            if (!obs || obs->IsVirtual()) continue;
-            // 只收集小障碍物（锥桶），忽略大障碍物（车辆等）
-            if (obs->PerceptionPolygon().area() >= 0.5) continue;
+            if (!obs || obs->IsVirtual())
+                continue;
+            if (obs->PerceptionPolygon().area() >= 0.5)
+                continue;
             const auto& sl = obs->PerceptionSLBoundary();
-            // 跳过主车后方或过远的障碍物
-            if (sl.end_s() < adc_back_s) continue;
-            if (sl.start_s() - adc_front_s > 100.0) continue;
+            if (sl.end_s() < adc_back_s)
+                continue;
+            if (sl.start_s() - adc_front_s > 100.0)
+                continue;
             obs_sl_polygons.emplace_back(sl, obs->Id());
-        }
-        // 按纵向排序
-        std::sort(obs_sl_polygons.begin(), obs_sl_polygons.end(),
-                  [](const SLPolygon& a, const SLPolygon& b) { return a.MinS() < b.MinS(); });
-    }
-    AINFO << "[CONSTRUCT_ZONE] collected " << obs_sl_polygons.size()
-          << " small obstacles, mx_left=" << mx_left_bound << " mx_right=" << mx_right_bound;
-
-    // 5. Decide per-cone nudge direction within the wide boundary.
-    construct_decision.clear();
-    ConstructDecision(*reference_line_info_, &obs_sl_polygons, &path_bound);
-    AINFO << "[CONSTRUCT_ZONE] ConstructDecision assigned nudge to "
-          << construct_decision.size() << " obstacles out of " << obs_sl_polygons.size();
-
-    // 6. Apply construct decisions and filter out-of-boundary obstacles.
-    for (auto& sl_polygon : obs_sl_polygons) {
-        // Obstacles outside the full boundary are undefined (ignored).
-        if (sl_polygon.MaxL() > mx_left_bound || sl_polygon.MinL() < mx_right_bound) {
-            sl_polygon.SetNudgeInfo(SLPolygon::UNDEFINED);
-        }
-        if (construct_decision.find(sl_polygon.id()) != construct_decision.end()) {
-            if (construct_decision[sl_polygon.id()]) {
-                sl_polygon.SetNudgeInfo(SLPolygon::RIGHT_NUDGE);
-            } else {
-                sl_polygon.SetNudgeInfo(SLPolygon::LEFT_NUDGE);
+            // 计算XY中心
+            double cx = 0, cy = 0;
+            const auto& pts = obs->PerceptionPolygon().points();
+            for (const auto& p : pts) {
+                cx += p.x();
+                cy += p.y();
             }
+            if (!pts.empty()) {
+                cx /= pts.size();
+                cy /= pts.size();
+            }
+            cone_xy[obs->Id()] = {cx, cy};
         }
+        std::sort(obs_sl_polygons.begin(), obs_sl_polygons.end(), [](const SLPolygon& a, const SLPolygon& b) {
+            return a.MinS() < b.MinS();
+        });
     }
+    AINFO << "[CONSTRUCT_ZONE] collected " << obs_sl_polygons.size() << " small obstacles, mx_left=" << mx_left_bound
+          << " mx_right=" << mx_right_bound;
 
-    // 7. Construction zone parameters: tight clearance for cones.
-    double temp = FLAGS_obstacle_lat_buffer;
-    if (obs_sl_polygons.size() >= 4) {
-        FLAGS_obstacle_lat_buffer = 0.2;
-    }
-    FLAGS_obstacle_lon_end_buffer_park = 0.1;
+    // 5. 墙追踪分类锥桶 + 分配nudge方向(在函数内部完成)
+    ComputeConstructZoneBoundary(obs_sl_polygons, cone_xy, &path_bound);
 
-    // 8. Compute final boundary with obstacle avoidance.
-    if (!PathBoundsDeciderUtil::GetBoundaryFromStaticObstacles(
+    // 6. 标准nudge系统计算边界
+    {
+        double temp_lat = FLAGS_obstacle_lat_buffer;
+        if (obs_sl_polygons.size() >= 4)
+            FLAGS_obstacle_lat_buffer = 0.2;
+        FLAGS_obstacle_lon_end_buffer_park = 0.1;
+        PathBoundsDeciderUtil::GetBoundaryFromStaticObstacles(
                 *reference_line_info_,
                 &obs_sl_polygons,
                 init_sl_state_,
                 &path_bound,
                 &blocking_obstacle_id,
-                &path_narrowest_width)) {
-        AERROR << "Failed to get boundary from static obstacles in construct zone.";
-        FLAGS_obstacle_lat_buffer = temp;
-        boundary->pop_back();
-        return false;
+                &path_narrowest_width);
+        FLAGS_obstacle_lat_buffer = temp_lat;
     }
-    FLAGS_obstacle_lat_buffer = temp;
 
-    // 9. Pad tail points to avoid zero-length path.
+    // 7. 尾部补齐 + 日志。
     int counter = 0;
     while (!blocking_obstacle_id.empty() && path_bound.size() < temp_path_bound.size()
            && counter < FLAGS_num_extra_tail_bound_point) {
         path_bound.push_back(temp_path_bound[path_bound.size()]);
         counter++;
     }
-
     path_bound.set_blocking_obstacle_id(blocking_obstacle_id);
     RecordDebugInfo(path_bound, path_bound.label(), reference_line_info_);
     AINFO << "Construct zone boundary generated: left=" << mx_left_bound << " right=" << mx_right_bound;
@@ -1254,6 +1258,271 @@ void LaneBorrowPath::GetConstructZoneBoundary(PathBoundary* const path_bound) {
     PathBoundsDeciderUtil::TrimPathBounds(path_blocked_idx, path_bound);
 }
 
+void LaneBorrowPath::ComputeConstructZoneBoundary(
+        std::vector<SLPolygon>& cones,
+        const std::unordered_map<std::string, std::pair<double, double>>& cone_xy,
+        PathBoundary* const path_bound) {
+    if (path_bound->empty())
+        return;
+
+    constexpr double kWallMergeDist = 0.8;
+    constexpr double kCleanupBehindDist = 30.0;
+    const double adc_back_s = reference_line_info_->AdcSlBoundary().start_s();
+    double road_left = mx_left_bound;
+    double road_right = mx_right_bound;
+
+    // ── 日志工具：统一前缀 [WALL] 方便 grep 提取 ──
+    auto fmt = [](double v) {
+        char b[32];
+        snprintf(b, sizeof(b), "%.2f", v);
+        return std::string(b);
+    };
+    auto dbg = [](const std::string& msg) { AINFO << "[WALL] " << msg; };
+
+    dbg("FRAME|cones=" + std::to_string(cones.size()) + "|lw=" + std::to_string(left_wall_.size())
+        + "|rw=" + std::to_string(right_wall_.size()) + "|road=[" + fmt(road_right) + "," + fmt(road_left) + "]");
+
+    // ── 1. 清理 ──
+    auto prune = [adc_back_s](std::vector<std::pair<double, double>>& w) {
+        w.erase(std::remove_if(
+                        w.begin(),
+                        w.end(),
+                        [adc_back_s](const auto& p) { return p.first < adc_back_s - kCleanupBehindDist; }),
+                w.end());
+    };
+    prune(left_wall_);
+    prune(right_wall_);
+
+    // ── 2. 墙插值 ──
+    // wall_l_classify: 锥桶分类用，>20m间隙才视为无墙，容忍更大闪烁
+    auto wall_l_classify = [](const std::vector<std::pair<double, double>>& w, double s) -> double {
+        if (w.empty())
+            return std::numeric_limits<double>::quiet_NaN();
+        auto it = std::lower_bound(w.begin(), w.end(), s, [](const auto& p, double v) { return p.first < v; });
+        if (it == w.end()) {
+            if (s - w.back().first > 20.0)
+                return std::numeric_limits<double>::quiet_NaN();
+            return w.back().second;
+        }
+        if (it == w.begin()) {
+            if (it->first - s > 20.0)
+                return std::numeric_limits<double>::quiet_NaN();
+            return it->second;
+        }
+        auto pr = std::prev(it);
+        if (it->first - pr->first > 20.0)
+            return std::numeric_limits<double>::quiet_NaN();
+        double r = (s - pr->first) / (it->first - pr->first);
+        return pr->second + r * (it->second - pr->second);
+    };
+
+    // ── 3. 初始化：滑动窗口冷启动 + 逐S追踪 ──
+    if (left_wall_.empty() && right_wall_.empty() && !cones.empty()) {
+        std::vector<std::pair<double, double>> sorted;
+        for (const auto& c : cones)
+            sorted.emplace_back((c.MinS() + c.MaxS()) * 0.5, (c.MinL() + c.MaxL()) * 0.5);
+        std::sort(sorted.begin(), sorted.end());
+
+        double lw_l = std::numeric_limits<double>::quiet_NaN();
+        double rw_l = std::numeric_limits<double>::quiet_NaN();
+        int nl = 0, nr = 0;
+
+        for (size_t i = 0; i < sorted.size(); ++i) {
+            double s = sorted[i].first, l = sorted[i].second;
+
+            // 冷启动用道路边界决定第一个锥桶归哪面墙
+            if (std::isnan(lw_l) && std::isnan(rw_l)) {
+                if (std::fabs(l - road_left) < std::fabs(l - road_right)) {
+                    left_wall_.emplace_back(s, l);
+                    nl++;
+                    lw_l = l;
+                } else {
+                    right_wall_.emplace_back(s, l);
+                    nr++;
+                    rw_l = l;
+                }
+                continue;
+            }
+
+            // 用墙线插值（而非EMA）判断归属，避免S弯漂移
+            bool to_left;
+            double pl = wall_l_classify(left_wall_, s);
+            double pr = wall_l_classify(right_wall_, s);
+            if (std::isnan(pl) && std::isnan(pr)) {
+                // 双墙均无预测（如锥桶出现在墙建立前），用道路边界兜底
+                if (std::fabs(l - road_left) < std::fabs(l - road_right)) {
+                    left_wall_.emplace_back(s, l);
+                    nl++;
+                } else {
+                    right_wall_.emplace_back(s, l);
+                    nr++;
+                }
+                continue;
+            } else if (std::isnan(pl)) {
+                // 右墙有预测，左墙无。锥桶远离右墙 → 可能左墙新段
+                // 增加道路边界兜底：若锥桶更靠近左边界而非右墙，即使距离>5m也归左墙
+                double d_to_rw = std::fabs(l - pr);
+                double d_to_road_l = std::fabs(l - road_left);
+                if (d_to_rw > 5.0 && d_to_rw > d_to_road_l) {
+                    left_wall_.emplace_back(s, l);
+                    nl++;
+                } else if (d_to_rw > 5.0) {
+                    // 远离右墙但也不靠左边界 → 保守归入右墙
+                    right_wall_.emplace_back(s, l);
+                    nr++;
+                } else {
+                    right_wall_.emplace_back(s, l);
+                    nr++;
+                }
+                continue;
+            } else if (std::isnan(pr)) {
+                // 左墙有预测，右墙无。锥桶远离左墙 → 可能右墙新段
+                double d_to_lw = std::fabs(l - pl);
+                double d_to_road_r = std::fabs(l - road_right);
+                if (d_to_lw > 5.0 && d_to_lw > d_to_road_r) {
+                    right_wall_.emplace_back(s, l);
+                    nr++;
+                } else if (d_to_lw > 5.0) {
+                    // 远离左墙但也不靠右边界 → 保守归入左墙
+                    left_wall_.emplace_back(s, l);
+                    nl++;
+                } else {
+                    left_wall_.emplace_back(s, l);
+                    nl++;
+                }
+                continue;
+            } else {
+                to_left = std::fabs(l - pl) < std::fabs(l - pr);
+            }
+
+            if (to_left) {
+                left_wall_.emplace_back(s, l);
+                nl++;
+            } else {
+                right_wall_.emplace_back(s, l);
+                nr++;
+            }
+        }
+        dbg("INIT|sliding|nL=" + std::to_string(nl) + "|nR=" + std::to_string(nr));
+    }
+
+    // ── 4. 逐锥桶分类 ──
+    // 关键修复：同一物理锥桶在不同帧中 SL 投影会随车辆位置变化，
+    // 仅依赖 wall_l_classify(s) 会导致分类闪烁。用 XY 坐标（1m网格）
+    // 建立分类记忆，已记住的锥桶直接用记忆分类，消除 SL 投影依赖。
+    auto hash_xy = [](double x, double y) -> uint64_t {
+        int64_t ix = static_cast<int64_t>(std::round(x));
+        int64_t iy = static_cast<int64_t>(std::round(y));
+        return (static_cast<uint64_t>(ix) << 32) | (static_cast<uint64_t>(static_cast<uint32_t>(iy)));
+    };
+
+    for (const auto& c : cones) {
+        double s = (c.MinS() + c.MaxS()) * 0.5;
+        double l = (c.MinL() + c.MaxL()) * 0.5;
+
+        bool to_left;
+        const char* why;
+
+        // 1) 先查 XY 位置记忆（1m 网格）
+        auto xy_it = cone_xy.find(c.id());
+        bool from_memory = false;
+        double pl = std::numeric_limits<double>::quiet_NaN();
+        double pr = std::numeric_limits<double>::quiet_NaN();
+        if (xy_it != cone_xy.end()) {
+            uint64_t h = hash_xy(xy_it->second.first, xy_it->second.second);
+            auto mem_it = cone_wall_memory_.find(h);
+            if (mem_it != cone_wall_memory_.end()) {
+                to_left = mem_it->second;
+                why = "mem";
+                from_memory = true;
+            }
+        }
+
+        if (!from_memory) {
+            // 2) 记忆未命中 → 用墙插值分类
+            pl = wall_l_classify(left_wall_, s);
+            pr = wall_l_classify(right_wall_, s);
+
+            if (std::isnan(pl) && std::isnan(pr))
+                continue;
+            else if (std::isnan(pl)) {
+                // 右墙有预测，左墙无 → 增加道路边界兜底
+                double d_to_rw = std::fabs(l - pr);
+                double d_to_road_l = std::fabs(l - road_left);
+                if (d_to_rw > 5.0 && d_to_rw > d_to_road_l) {
+                    to_left = true;
+                    why = "farL";
+                } else if (d_to_rw > 5.0) {
+                    to_left = false;
+                    why = "newL";
+                } else {
+                    to_left = false;
+                    why = "noL";
+                }
+            } else if (std::isnan(pr)) {
+                // 左墙有预测，右墙无 → 增加道路边界兜底
+                double d_to_lw = std::fabs(l - pl);
+                double d_to_road_r = std::fabs(l - road_right);
+                if (d_to_lw > 5.0 && d_to_lw > d_to_road_r) {
+                    to_left = false;
+                    why = "farR";
+                } else if (d_to_lw > 5.0) {
+                    to_left = true;
+                    why = "newR";
+                } else {
+                    to_left = true;
+                    why = "noR";
+                }
+            } else {
+                double dl = std::fabs(l - pl), dr = std::fabs(l - pr);
+                to_left = dl < dr;
+                static char buf[32];
+                snprintf(buf, sizeof(buf), "dL=%.2f dR=%.2f", dl, dr);
+                why = buf;
+            }
+
+            // 3) 记入 XY 位置记忆（仅对新分类的锥桶）
+            if (xy_it != cone_xy.end()) {
+                cone_wall_memory_[hash_xy(xy_it->second.first, xy_it->second.second)] = to_left;
+            }
+        }
+
+        auto& tgt = to_left ? left_wall_ : right_wall_;
+        bool merged = false;
+        for (auto& pt : tgt) {
+            if (std::fabs(pt.first - s) < kWallMergeDist) {
+                pt.second = pt.second * 0.7 + l * 0.3;
+                merged = true;
+                break;
+            }
+        }
+        if (!merged) {
+            tgt.emplace_back(s, l);
+            std::sort(tgt.begin(), tgt.end());
+        }
+
+        dbg(std::string("CONE|id=") + c.id()
+            + "|xy=" + (xy_it != cone_xy.end() ? fmt(xy_it->second.first) + "," + fmt(xy_it->second.second) : "nan,nan")
+            + "|s=" + fmt(s) + "|l=" + fmt(l) + "|pL=" + (std::isnan(pl) ? "nan" : fmt(pl)) + "|pR="
+            + (std::isnan(pr) ? "nan" : fmt(pr)) + "|->" + (to_left ? "L" : "R") + "|" + why + (merged ? "|m" : "|n"));
+    }
+    // 分配nudge：左墙→RIGHT_NUDGE，右墙→LEFT_NUDGE
+    for (auto& c : cones) {
+        double s = (c.MinS() + c.MaxS()) * 0.5;
+        double l = (c.MinL() + c.MaxL()) * 0.5;
+        double pl = wall_l_classify(left_wall_, s);
+        double pr = wall_l_classify(right_wall_, s);
+        if (std::isnan(pl) && std::isnan(pr))
+            continue;
+        if (std::isnan(pl))
+            c.SetNudgeInfo(std::fabs(l - pr) > 5.0 ? SLPolygon::RIGHT_NUDGE : SLPolygon::LEFT_NUDGE);
+        else if (std::isnan(pr))
+            c.SetNudgeInfo(std::fabs(l - pl) > 5.0 ? SLPolygon::LEFT_NUDGE : SLPolygon::RIGHT_NUDGE);
+        else
+            c.SetNudgeInfo(std::fabs(l - pl) < std::fabs(l - pr) ? SLPolygon::RIGHT_NUDGE : SLPolygon::LEFT_NUDGE);
+    }
+}
+
 void LaneBorrowPath::ConstructDecision(
         const ReferenceLineInfo& reference_line_info,
         std::vector<SLPolygon>* const sl_polygon,
@@ -1269,15 +1538,14 @@ void LaneBorrowPath::ConstructDecision(
         }
         if (sl_polygon->at(j).MinS() - reference_line_info.AdcSlBoundary().start_s() > 100) {
             AINFO << "[CONSTRUCT_ZONE] breaking at cone " << sl_polygon->at(j).id()
-                  << " MinS=" << sl_polygon->at(j).MinS()
-                  << " adc_s=" << reference_line_info.AdcSlBoundary().start_s();
+                  << " MinS=" << sl_polygon->at(j).MinS() << " adc_s=" << reference_line_info.AdcSlBoundary().start_s();
             break;
         }
         double mid_l = (sl_polygon->at(j).MaxL() + sl_polygon->at(j).MinL()) * 0.5;
         // 过滤完全超出借道边界的障碍物
         if (mid_l > mx_left_bound || mid_l < mx_right_bound) {
-            AINFO << "[CONSTRUCT_ZONE] skip out-of-bounds cone " << sl_polygon->at(j).id()
-                  << " l=" << mid_l << " bounds=[" << mx_right_bound << "," << mx_left_bound << "]";
+            AINFO << "[CONSTRUCT_ZONE] skip out-of-bounds cone " << sl_polygon->at(j).id() << " l=" << mid_l
+                  << " bounds=[" << mx_right_bound << "," << mx_left_bound << "]";
             continue;
         }
         if (std::fabs(mid_l) > 1e3) {
@@ -1298,17 +1566,15 @@ void LaneBorrowPath::ConstructDecision(
             sl_polygon->at(j).SetNudgeInfo(SLPolygon::RIGHT_NUDGE);
             construct_decision[sl_polygon->at(j).id()] = true;
             AINFO << "[CONSTRUCT_ZONE] cone " << sl_polygon->at(j).id()
-                  << " s=" << (sl_polygon->at(j).MinS() + sl_polygon->at(j).MaxS()) * 0.5
-                  << " l=" << mid_l << " distL=" << dist_to_left << " distR=" << dist_to_right
-                  << " → RIGHT_NUDGE";
+                  << " s=" << (sl_polygon->at(j).MinS() + sl_polygon->at(j).MaxS()) * 0.5 << " l=" << mid_l
+                  << " distL=" << dist_to_left << " distR=" << dist_to_right << " → RIGHT_NUDGE";
         } else {
             // 锥桶靠近右边界 → 从左侧绕行
             sl_polygon->at(j).SetNudgeInfo(SLPolygon::LEFT_NUDGE);
             construct_decision[sl_polygon->at(j).id()] = false;
             AINFO << "[CONSTRUCT_ZONE] cone " << sl_polygon->at(j).id()
-                  << " s=" << (sl_polygon->at(j).MinS() + sl_polygon->at(j).MaxS()) * 0.5
-                  << " l=" << mid_l << " distL=" << dist_to_left << " distR=" << dist_to_right
-                  << " → LEFT_NUDGE";
+                  << " s=" << (sl_polygon->at(j).MinS() + sl_polygon->at(j).MaxS()) * 0.5 << " l=" << mid_l
+                  << " distL=" << dist_to_left << " distR=" << dist_to_right << " → LEFT_NUDGE";
         }
     }
 }
