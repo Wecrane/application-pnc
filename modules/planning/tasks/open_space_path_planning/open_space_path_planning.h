@@ -64,6 +64,10 @@ class OpenSpacePathPlanning : public TrajectoryOptimizer {
   void PathPlanning();
   void GeneratePathThread();
   void LoadResult(DiscretizedTrajectory* const trajectory_data);
+  bool GenerateParallelParkingFallback(
+      double start_x, double start_y, double start_theta,
+      double end_x, double end_y, double end_theta,
+      HybridAStartResult* result);
   OpenSpacePathPlanningConfig config_;
   OpenSpacePathPlanningThreadData thread_data_;
   std::future<void> task_future_;

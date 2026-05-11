@@ -175,8 +175,7 @@ apollo::common::Status LaneBorrowPath::Process(Frame* frame, ReferenceLineInfo* 
     // （倒车路径 s 递减，IsValidRegularPath 可能因方向异常而拒绝）
     if (in_reverse_ && !candidate_path_data.empty()) {
         *reference_line_info->mutable_path_data() = candidate_path_data.front();
-        AINFO << "[REVERSE] Path set directly (bypass AssessPath), label="
-              << candidate_path_data.front().path_label();
+        AINFO << "[REVERSE] Path set directly (bypass AssessPath), label=" << candidate_path_data.front().path_label();
     } else if (AssessPath(&candidate_path_data, reference_line_info->mutable_path_data())) {
         ADEBUG << "lane borrow path success";
     }

@@ -44,9 +44,9 @@ using apollo::cyber::Clock;
 
 constexpr double kIntersectionClearanceDist = 20.0;
 constexpr double kJunctionClearanceDist = 15.0;
-constexpr double kLaneChangeWatchRearBuffer = 2.0;
+constexpr double kLaneChangeWatchRearBuffer = 4.0;
 constexpr double kLaneChangeWatchFrontBuffer = 0.2;
-constexpr double kLaneChangeWatchLateralBuffer = 0.5;
+constexpr double kLaneChangeWatchLateralBuffer = 0.8;
 constexpr double kLaneChangeHoldLateralHalfWidth = 0.5;
 
 bool LaneChangePath::Init(
@@ -296,7 +296,7 @@ void LaneChangePath::UpdateLaneChangeStatus() {
         is_clear_to_change_lane_ = IsClearToChangeLane(reference_line_info_);
         change_lane_id = reference_line_info_->Lanes().Id();
         double ego_speed = frame_->vehicle_state().linear_velocity();
-        constexpr double kMinLaneChangeSpeed = 25.0 / 3.6;  // 25 km/h
+        constexpr double kMinLaneChangeSpeed = 10.0 / 3.6;  // 10 km/h
 
         if (prev_status->status() == ChangeLaneStatus::CHANGE_LANE_FAILED) {
             double elapsed = now - prev_status->timestamp();

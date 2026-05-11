@@ -5,5 +5,6 @@ max_lat_error: 0.3
 max_lon_error: 0.15
 enable_station_pickup: true
 station_pickup_parking_spot_id: "ParkingSpace_92"
-station_pickup_range_to_start: 35.0
-station_pickup_direct_parking_distance: 25.0
+station_pickup_range_to_start: 60.0
+station_pickup_direct_parking_distance: 60.0
+enable_parallel_retry_parking: true

@@ -153,6 +153,67 @@ StageResult LaneFollowStage::PlanOnReferenceLine(
         const TrajectoryPoint& planning_start_point,
         Frame* frame,
         ReferenceLineInfo* reference_line_info) {
+    // ============================================================
+    // 赛题四：U-Turn 区域限速 4 km/h，出弯自动恢复 ~28 km/h
+    // 曲率检测，非对称缓冲：进弯 15m（减速），出弯 5m（快速解除）
+    // ============================================================
+    {
+        constexpr double kUTurnSpeedLimit = 4.0 / 3.6;      // 4 km/h -> 1.111 m/s
+        constexpr double kPreTurnBuffer = 15.0;              // 进弯前缓冲
+        constexpr double kPostTurnBuffer = 5.0;              // 出弯后缓冲
+        constexpr double kTightTurnKappaThreshold = 0.08;    // 曲率阈值
+        constexpr double kSampleStep = 0.5;
+
+        const double ref_length = reference_line_info->reference_line().Length();
+        const auto& ref_line = reference_line_info->reference_line();
+
+        bool in_tight_turn = false;
+        bool has_tight_turn = false;
+        double turn_start_s = 0.0;
+        double max_kappa_in_turn = 0.0;
+
+        for (double s = 0.0; s <= ref_length; s += kSampleStep) {
+            const double kappa = std::abs(ref_line.GetReferencePoint(s).kappa());
+            const bool is_tight = (kappa > kTightTurnKappaThreshold);
+
+            if (is_tight && !in_tight_turn) {
+                // 进入急弯区域
+                turn_start_s = std::max(0.0, s - kPreTurnBuffer);
+                in_tight_turn = true;
+                max_kappa_in_turn = kappa;
+            } else if (is_tight && in_tight_turn) {
+                // 仍在急弯中
+                max_kappa_in_turn = std::max(max_kappa_in_turn, kappa);
+            } else if (!is_tight && in_tight_turn) {
+                // 离开急弯区域，添加限速
+                const double turn_end_s = std::min(ref_length, s + kPostTurnBuffer);
+                reference_line_info->mutable_reference_line()->AddSpeedLimit(
+                    turn_start_s, turn_end_s, kUTurnSpeedLimit);
+                AINFO << "[UTURN_SPEED] Tight turn: ref_s=["
+                      << turn_start_s << ", " << turn_end_s << "]"
+                      << " max_kappa=" << max_kappa_in_turn
+                      << " speed=" << kUTurnSpeedLimit << " m/s (4 km/h)";
+                has_tight_turn = true;
+                in_tight_turn = false;
+                max_kappa_in_turn = 0.0;
+            }
+        }
+        if (in_tight_turn) {
+            // 急弯延伸到参考线末端
+            reference_line_info->mutable_reference_line()->AddSpeedLimit(
+                turn_start_s, ref_length, kUTurnSpeedLimit);
+            AINFO << "[UTURN_SPEED] Tight turn (tail): ref_s=["
+                  << turn_start_s << ", " << ref_length << "]"
+                  << " max_kappa=" << max_kappa_in_turn
+                  << " speed=" << kUTurnSpeedLimit << " m/s (4 km/h)";
+            has_tight_turn = true;
+        }
+        if (has_tight_turn) {
+            AINFO << "[UTURN_SPEED] Speed limits added (AddSpeedLimit only, no global cruise limit)";
+        }
+    }
+    // ============================================================
+
     if (!reference_line_info->IsChangeLanePath()) {
         reference_line_info->AddCost(kStraightForwardLineCost);
     }
