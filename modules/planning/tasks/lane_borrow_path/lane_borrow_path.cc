@@ -171,7 +171,13 @@ apollo::common::Status LaneBorrowPath::Process(Frame* frame, ReferenceLineInfo* 
         }
         AWARN << "Failed to generate borrow hold path, continue assessing borrow candidates.";
     }
-    if (AssessPath(&candidate_path_data, reference_line_info->mutable_path_data())) {
+    // 倒车模式：直接使用生成的倒车路径，不走 AssessPath
+    // （倒车路径 s 递减，IsValidRegularPath 可能因方向异常而拒绝）
+    if (in_reverse_ && !candidate_path_data.empty()) {
+        *reference_line_info->mutable_path_data() = candidate_path_data.front();
+        AINFO << "[REVERSE] Path set directly (bypass AssessPath), label="
+              << candidate_path_data.front().path_label();
+    } else if (AssessPath(&candidate_path_data, reference_line_info->mutable_path_data())) {
         ADEBUG << "lane borrow path success";
     }
 
@@ -249,8 +255,7 @@ bool LaneBorrowPath::DecidePathBounds(std::vector<PathBoundary>* boundary) {
     const double adc_x = frame_->vehicle_state().x();
     const double adc_y = frame_->vehicle_state().y();
     const double adc_heading = frame_->vehicle_state().heading();
-    if (construct_zone && construct_zone_farthest_cone_x_ > 0.0
-        && !IsEduConstructionZoneXY(adc_x, adc_y)
+    if (construct_zone && construct_zone_farthest_cone_x_ > 0.0 && !IsEduConstructionZoneXY(adc_x, adc_y)
         && std::hypot(adc_x - construct_zone_farthest_cone_x_, adc_y - construct_zone_farthest_cone_y_) > 150.0) {
         construct_zone = false;
         zone_left_base = zone_right_base = 0.0;
@@ -293,8 +298,7 @@ bool LaneBorrowPath::DecidePathBounds(std::vector<PathBoundary>* boundary) {
                 }
                 small_obs_count++;
                 farthest_cone_s_this_frame = std::max(farthest_cone_s_this_frame, obs_s);
-                const double cone_rel_s = (cx - adc_x) * std::cos(adc_heading)
-                        + (cy - adc_y) * std::sin(adc_heading);
+                const double cone_rel_s = (cx - adc_x) * std::cos(adc_heading) + (cy - adc_y) * std::sin(adc_heading);
                 const double saved_cone_rel_s = (construct_zone_farthest_cone_x_ - adc_x) * std::cos(adc_heading)
                         + (construct_zone_farthest_cone_y_ - adc_y) * std::sin(adc_heading);
                 if (construct_zone_farthest_cone_x_ < 0.0 || cone_rel_s > saved_cone_rel_s) {
@@ -377,8 +381,7 @@ bool LaneBorrowPath::DecidePathBounds(std::vector<PathBoundary>* boundary) {
             construct_zone_farthest_cone_s_ = -1.0;
             construct_zone_farthest_cone_x_ = -1.0;
             construct_zone_farthest_cone_y_ = 0.0;
-            AINFO << "[WALL] EXIT construct_zone by low cone count after "
-                  << kLowConeExitThreshold << " frames";
+            AINFO << "[WALL] EXIT construct_zone by low cone count after " << kLowConeExitThreshold << " frames";
         }
     } else {
         // 1~2 个锥桶：保持上一帧状态不变，重置低锥桶计数器
@@ -779,6 +782,7 @@ bool LaneBorrowPath::OptimizePath(
                     opt_l, opt_dl, opt_ddl, path_boundary.delta_s(), path_boundary.start_s());
 
             // 倒车路径：反转 s 方向 + 恢复 dl/ddl 符号
+            // 保持 s 递减（与官方 reverse_path 行为一致），不排序
             if (is_reverse_path) {
                 double start_s = path_boundary.start_s();
                 for (auto& point : frenet_frame_path) {
@@ -787,10 +791,6 @@ bool LaneBorrowPath::OptimizePath(
                     point.set_dl(-point.dl());
                     point.set_ddl(-point.ddl());
                 }
-                // 按 s 升序排列（倒车路径 s 从大到小，反转后从小到大）
-                std::sort(frenet_frame_path.begin(), frenet_frame_path.end(), [](const auto& a, const auto& b) {
-                    return a.s() < b.s();
-                });
             }
 
             lastframe_ = std::make_unique<PathData>();
@@ -808,31 +808,24 @@ bool LaneBorrowPath::OptimizePath(
             }
             candidate_path_data->push_back(*lastframe_);
         } else if (is_reverse_path) {
-            // 倒车 OSQP 优化失败时的直线兜底：沿当前 l 匀速后退
-            double delta_s = std::fabs(path_boundary.delta_s());
-            double start_s = path_boundary.start_s();
+            // 倒车路径：OSQP 总是 primal infeasible（边界太窄/方向冲突），
+            // 直接生成直线后退路径（s 递减：start_s → end_s）。
+            // 与官方 reverse_path 任务一致：路径 s 递减 + is_reverse_path=true，
+            // 速度规划/Control 据此以负速度沿路径后退。
+            double start_s = path_boundary.start_s();          // ADC 当前位置 s（路径起点，高 s）
+            double end_s = path_boundary.back().s;             // 后方目标 s（路径终点，低 s）
+            double step = std::fabs(path_boundary.delta_s());  // 采样步长
+            double lat = init_sl_state_.second[0];             // 保持当前横向位置不变
+
             FrenetFramePath fallback_frenet;
-            for (size_t i = 0; i < path_boundary.size(); ++i) {
+            for (double s = start_s; s >= end_s - 1e-6; s -= step) {
                 common::FrenetFramePoint pt;
-                double cur_s = start_s - delta_s * i;
-                double cur_l = init_sl_state_.second[0] + init_sl_state_.second[1] * (-delta_s) * i;
-                // 夹紧到边界内
-                if (i < path_boundary.size()) {
-                    cur_l = std::max(path_boundary[i].l_lower.l, std::min(path_boundary[i].l_upper.l, cur_l));
-                }
-                pt.set_s(cur_s);
-                pt.set_l(cur_l);
-                pt.set_dl(-init_sl_state_.second[1]);
+                pt.set_s(s);
+                pt.set_l(lat);
+                pt.set_dl(0.0);
                 pt.set_ddl(0.0);
                 fallback_frenet.push_back(pt);
             }
-            // 反转 s 使递增
-            for (auto& pt : fallback_frenet) {
-                pt.set_s(start_s + (start_s - pt.s()));
-            }
-            std::sort(fallback_frenet.begin(), fallback_frenet.end(), [](const auto& a, const auto& b) {
-                return a.s() < b.s();
-            });
 
             lastframe_ = std::make_unique<PathData>();
             lastframe_->SetReferenceLine(&reference_line);
@@ -841,7 +834,7 @@ bool LaneBorrowPath::OptimizePath(
             lastframe_->set_blocking_obstacle_id(path_boundary.blocking_obstacle_id());
             lastframe_->set_is_reverse_path(true);
             candidate_path_data->push_back(*lastframe_);
-            AINFO << "[REVERSE] OSQP failed, using linear fallback path";
+            AINFO << "[REVERSE] Direct backward path (skip OSQP), s=[" << start_s << "->" << end_s << "]";
         } else if (lastframe_ != nullptr) {
             candidate_path_data->push_back(*lastframe_);
         }
@@ -1642,10 +1635,11 @@ void LaneBorrowPath::ComputeConstructZoneBoundary(
         }
 
         auto prune_xy_points = [&in_current_zone_xy](std::vector<std::pair<double, double>>& pts) {
-            pts.erase(std::remove_if(
-                              pts.begin(),
-                              pts.end(),
-                              [&in_current_zone_xy](const auto& p) { return !in_current_zone_xy(p.first, p.second); }),
+            pts.erase(
+                    std::remove_if(
+                            pts.begin(),
+                            pts.end(),
+                            [&in_current_zone_xy](const auto& p) { return !in_current_zone_xy(p.first, p.second); }),
                     pts.end());
         };
         const size_t old_left_xy = classified_left_xy_.size();
