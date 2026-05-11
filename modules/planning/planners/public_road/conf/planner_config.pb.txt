@@ -8,7 +8,7 @@ scenario {
 }
 scenario {
     name: "VALET_PARKING"
-    type: "ValetParkingScenario"
+    type: "ValetParkingParkScenario"
 }
 scenario {
     name: "BARE_INTERSECTION_UNPROTECTED"

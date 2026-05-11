@@ -38,7 +38,9 @@ struct ValetParkingContext : public ScenarioContext {
   std::string target_parking_spot_id;
   bool pre_stop_rightaway_flag = false;
   hdmap::MapPathPoint pre_stop_rightaway_point;
-  int command_sequence_num; 
+  int command_sequence_num = -1;
+  bool station_pickup_mode = false;
+  bool station_pickup_finished = false;
 };
 
 class ValetParkingParkScenario : public Scenario {

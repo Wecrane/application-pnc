@@ -16,4 +16,11 @@ message ScenarioValetParkingParkConfig {
   // If greater than the threshold go to parking_retry
   optional double max_lon_error = 5 [default = 0.1];  // meter
   optional bool enable_parallel_retry_parking = 6 [default = false];
+  // Station pickup in xh_2026: the first and third parking spaces are occupied,
+  // so planning should enter open-space parking toward the middle space.
+  optional bool enable_station_pickup = 7 [default = true];
+  optional string station_pickup_parking_spot_id = 8
+      [default = "ParkingSpace_92"];
+  optional double station_pickup_range_to_start = 9 [default = 35.0];
+  optional double station_pickup_direct_parking_distance = 10 [default = 25.0];
 }

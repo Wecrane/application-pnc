@@ -50,6 +50,33 @@ using apollo::common::math::Vec2d;
 constexpr double kIntersectionClearanceDist = 20.0;
 constexpr double kJunctionClearanceDist = 15.0;
 
+namespace {
+bool IsEduConstructionZoneXY(double x, double y) {
+    // 赛题五施工区锥桶位于地图南侧直路，S弯赛题在 y≈4438460，
+    // 两者相距很远。用宽松包围盒给施工区模式加一道场景门，避免跨赛题误触发。
+    return x > 423990.0 && x < 424210.0 && y > 4437580.0 && y < 4437650.0;
+}
+
+bool GetObstacleCenterXY(const Obstacle* obs, double* cx, double* cy) {
+    if (!obs || !cx || !cy) {
+        return false;
+    }
+    const auto& pts = obs->PerceptionPolygon().points();
+    if (pts.empty()) {
+        return false;
+    }
+    *cx = 0.0;
+    *cy = 0.0;
+    for (const auto& p : pts) {
+        *cx += p.x();
+        *cy += p.y();
+    }
+    *cx /= pts.size();
+    *cy /= pts.size();
+    return true;
+}
+}  // namespace
+
 bool LaneBorrowPath::Init(
         const std::string& config_dir,
         const std::string& name,
@@ -87,6 +114,10 @@ apollo::common::Status LaneBorrowPath::Process(Frame* frame, ReferenceLineInfo* 
             if (!obs || obs->IsVirtual())
                 continue;
             if (obs->PerceptionPolygon().area() >= 0.5)
+                continue;
+            double cx = 0.0;
+            double cy = 0.0;
+            if (!GetObstacleCenterXY(obs, &cx, &cy) || !IsEduConstructionZoneXY(cx, cy))
                 continue;
             const auto& sl = obs->PerceptionSLBoundary();
             // 锥桶在主车前方 100m 范围内
@@ -215,6 +246,28 @@ bool LaneBorrowPath::DecidePathBounds(std::vector<PathBoundary>* boundary) {
 
     // 1. 清理主车后方远距离的历史记录，避免无限增长
     double adc_start_s = reference_line_info_->AdcSlBoundary().start_s();
+    const double adc_x = frame_->vehicle_state().x();
+    const double adc_y = frame_->vehicle_state().y();
+    const double adc_heading = frame_->vehicle_state().heading();
+    if (construct_zone && construct_zone_farthest_cone_x_ > 0.0
+        && !IsEduConstructionZoneXY(adc_x, adc_y)
+        && std::hypot(adc_x - construct_zone_farthest_cone_x_, adc_y - construct_zone_farthest_cone_y_) > 150.0) {
+        construct_zone = false;
+        zone_left_base = zone_right_base = 0.0;
+        construct_decision.clear();
+        left_wall_.clear();
+        right_wall_.clear();
+        cone_history_.clear();
+        cone_wall_memory_.clear();
+        classified_left_xy_.clear();
+        classified_right_xy_.clear();
+        low_cone_counter_ = 0;
+        no_cone_counter_ = 0;
+        construct_zone_farthest_cone_s_ = -1.0;
+        construct_zone_farthest_cone_x_ = -1.0;
+        construct_zone_farthest_cone_y_ = 0.0;
+        AINFO << "[WALL] EXIT construct_zone by leaving construction map area";
+    }
     cone_history_.erase(
             std::remove_if(
                     cone_history_.begin(),
@@ -226,13 +279,28 @@ bool LaneBorrowPath::DecidePathBounds(std::vector<PathBoundary>* boundary) {
 
     // 2. 统计当前可见锥桶 + 记录到历史
     int small_obs_count = 0;
+    double farthest_cone_s_this_frame = -1.0;
     for (const auto* obs : reference_line_info_->path_decision()->obstacles().Items()) {
         if (obs && !obs->IsVirtual() && obs->PerceptionPolygon().area() < 0.5) {
             const auto& sl = obs->PerceptionSLBoundary();
             double obs_s = sl.end_s();
             double obs_l = (sl.start_l() + sl.end_l()) * 0.5;
             if (obs_s > adc_start_s && sl.start_s() - reference_line_info_->AdcSlBoundary().end_s() < 100.0) {
+                double cx = 0.0;
+                double cy = 0.0;
+                if (!GetObstacleCenterXY(obs, &cx, &cy) || !IsEduConstructionZoneXY(cx, cy)) {
+                    continue;
+                }
                 small_obs_count++;
+                farthest_cone_s_this_frame = std::max(farthest_cone_s_this_frame, obs_s);
+                const double cone_rel_s = (cx - adc_x) * std::cos(adc_heading)
+                        + (cy - adc_y) * std::sin(adc_heading);
+                const double saved_cone_rel_s = (construct_zone_farthest_cone_x_ - adc_x) * std::cos(adc_heading)
+                        + (construct_zone_farthest_cone_y_ - adc_y) * std::sin(adc_heading);
+                if (construct_zone_farthest_cone_x_ < 0.0 || cone_rel_s > saved_cone_rel_s) {
+                    construct_zone_farthest_cone_x_ = cx;
+                    construct_zone_farthest_cone_y_ = cy;
+                }
                 // 记录位置（去重：相邻1m内的不重复记录）
                 bool already_recorded = false;
                 for (const auto& h : cone_history_) {
@@ -254,20 +322,46 @@ bool LaneBorrowPath::DecidePathBounds(std::vector<PathBoundary>* boundary) {
     for (const auto& h : cone_history_) {
         if (h.first > adc_end_s && h.first - adc_end_s < 100.0) {
             history_cone_ahead++;
+            farthest_cone_s_this_frame = std::max(farthest_cone_s_this_frame, h.first);
         }
+    }
+    if (farthest_cone_s_this_frame > 0.0) {
+        construct_zone_farthest_cone_s_ = std::max(construct_zone_farthest_cone_s_, farthest_cone_s_this_frame);
     }
 
     // 4. 综合判断：当前可见 + 历史记忆 ≥ 3 即视为施工区域
     //    滞回：一旦激活，需要锥桶完全消失（total<1）才退出，避免末尾锥桶
     //    数量波动导致 construct_zone 反复切换致规划模式跳变。
+    constexpr double kExitPastLastConeDist = 15.0;
     int total_cone_estimate = small_obs_count + history_cone_ahead;
+    const bool should_hold_construct_zone_by_s = construct_zone && construct_zone_farthest_cone_s_ > 0.0
+            && adc_end_s < construct_zone_farthest_cone_s_ + kExitPastLastConeDist;
+    const double last_cone_rel_s = (construct_zone_farthest_cone_x_ - adc_x) * std::cos(adc_heading)
+            + (construct_zone_farthest_cone_y_ - adc_y) * std::sin(adc_heading);
+    const bool should_hold_construct_zone_by_xy = construct_zone && construct_zone_farthest_cone_x_ > 0.0
+            && last_cone_rel_s > -kExitPastLastConeDist
+            && std::hypot(adc_x - construct_zone_farthest_cone_x_, adc_y - construct_zone_farthest_cone_y_) < 80.0;
+    bool should_hold_construct_zone = should_hold_construct_zone_by_s || should_hold_construct_zone_by_xy;
+    if (construct_zone && total_cone_estimate < 3 && should_hold_construct_zone) {
+        AINFO << "[WALL] HOLD construct_zone tail|total=" << total_cone_estimate
+              << "|by_s=" << should_hold_construct_zone_by_s << "|by_xy=" << should_hold_construct_zone_by_xy
+              << "|last_xy=(" << construct_zone_farthest_cone_x_ << "," << construct_zone_farthest_cone_y_
+              << ")|adc_xy=(" << adc_x << "," << adc_y << ")|rel_s=" << last_cone_rel_s;
+    }
     if (total_cone_estimate >= 3) {
         construct_zone = true;
         low_cone_counter_ = 0;
     } else if (total_cone_estimate < 1) {
-        // 滞回：需连续 kLowConeExitThreshold 帧锥桶极少才退出，
-        // 防止感知闪烁或车辆移动导致 SL 投影变化使锥桶暂时"消失"
-        low_cone_counter_++;
+        // 尾段保活：还没驶过最后已知锥桶，就算短暂看不到锥桶也不能退出。
+        // 否则最后 2~3 个锥桶会触发"退出→重进→冷启动误分类"。
+        if (should_hold_construct_zone) {
+            low_cone_counter_ = 0;
+            no_cone_counter_ = 0;
+        } else {
+            // 滞回：需连续 kLowConeExitThreshold 帧锥桶极少才退出，
+            // 防止感知闪烁或车辆移动导致 SL 投影变化使锥桶暂时"消失"
+            low_cone_counter_++;
+        }
         if (low_cone_counter_ > kLowConeExitThreshold) {
             construct_zone = false;
             zone_left_base = zone_right_base = 0.0;
@@ -280,6 +374,9 @@ bool LaneBorrowPath::DecidePathBounds(std::vector<PathBoundary>* boundary) {
             classified_right_xy_.clear();
             low_cone_counter_ = 0;
             no_cone_counter_ = 0;
+            construct_zone_farthest_cone_s_ = -1.0;
+            construct_zone_farthest_cone_x_ = -1.0;
+            construct_zone_farthest_cone_y_ = 0.0;
             AINFO << "[WALL] EXIT construct_zone by low cone count after "
                   << kLowConeExitThreshold << " frames";
         }
@@ -294,7 +391,11 @@ bool LaneBorrowPath::DecidePathBounds(std::vector<PathBoundary>* boundary) {
     // cone_history_ 因 SL 投影变化导致同一锥桶多帧重复记录而膨胀。
     constexpr int kEmptyFramesThreshold = 50;  // 5秒 @ 10Hz
     if (construct_zone && small_obs_count == 0) {
-        no_cone_counter_++;
+        if (should_hold_construct_zone || total_cone_estimate > 0) {
+            no_cone_counter_ = 0;
+        } else {
+            no_cone_counter_++;
+        }
         if (no_cone_counter_ > kEmptyFramesThreshold) {
             construct_zone = false;
             zone_left_base = zone_right_base = 0.0;
@@ -307,6 +408,9 @@ bool LaneBorrowPath::DecidePathBounds(std::vector<PathBoundary>* boundary) {
             classified_right_xy_.clear();
             no_cone_counter_ = 0;
             low_cone_counter_ = 0;
+            construct_zone_farthest_cone_s_ = -1.0;
+            construct_zone_farthest_cone_x_ = -1.0;
+            construct_zone_farthest_cone_y_ = 0.0;
             AINFO << "[WALL] EXIT construct_zone after " << kEmptyFramesThreshold << " empty frames";
         }
     } else if (small_obs_count > 0) {
@@ -323,14 +427,19 @@ bool LaneBorrowPath::DecidePathBounds(std::vector<PathBoundary>* boundary) {
         // 策略：检测卡死状态 → 倒车拉开距离 → 自动切回前向施工区绕行。
         if (in_reverse_) {
             reverse_frame_count_++;
-            double backed_dist = reverse_start_s_ - adc_s;
-            if (backed_dist > kReverseDistance || reverse_frame_count_ > kReverseMaxFrames) {
+            const double backed_dist_s = reverse_start_s_ - adc_s;
+            const double backed_dist_xy = std::hypot(adc_x - reverse_start_x_, adc_y - reverse_start_y_);
+            const bool backed_enough = reverse_frame_count_ >= kReverseMinFrames && backed_dist_xy > kReverseDistance;
+            const bool reverse_timeout = reverse_frame_count_ > kReverseMaxFrames;
+            if (backed_enough || reverse_timeout) {
                 // 倒车到位或超时，切回前向模式
                 in_reverse_ = false;
+                AINFO << "[REVERSE] Complete: backed_xy=" << backed_dist_xy << "m, backed_s=" << backed_dist_s
+                      << "m, frames=" << reverse_frame_count_ << (reverse_timeout ? ", timeout" : "");
                 reverse_frame_count_ = 0;
-                AINFO << "[REVERSE] Complete: backed=" << backed_dist << "m, frames=" << reverse_frame_count_;
             } else {
-                AINFO << "[REVERSE] Active: frame=" << reverse_frame_count_ << ", backed=" << backed_dist << "m";
+                AINFO << "[REVERSE] Active: frame=" << reverse_frame_count_ << ", backed_xy=" << backed_dist_xy
+                      << "m, backed_s=" << backed_dist_s << "m";
                 PathBoundary reverse_bound;
                 if (!GenerateReversePathBoundary(&reverse_bound)) {
                     return false;
@@ -340,18 +449,24 @@ bool LaneBorrowPath::DecidePathBounds(std::vector<PathBoundary>* boundary) {
             }
         } else {
             // 卡死检测：速度极低 + 位移极小 + 持续多帧
-            if (adc_speed < kStuckSpeedThreshold && std::fabs(adc_s - last_adc_s_for_stuck_) < 0.3) {
+            const double adc_move_xy = std::hypot(adc_x - last_adc_x_for_stuck_, adc_y - last_adc_y_for_stuck_);
+            if (adc_speed < kStuckSpeedThreshold && adc_move_xy < 0.3) {
                 reverse_frame_count_++;
             } else {
                 reverse_frame_count_ = 0;
             }
             last_adc_s_for_stuck_ = adc_s;
+            last_adc_x_for_stuck_ = adc_x;
+            last_adc_y_for_stuck_ = adc_y;
 
             if (reverse_frame_count_ >= kStuckFrameThreshold) {
                 in_reverse_ = true;
                 reverse_start_s_ = adc_s;
+                reverse_start_x_ = adc_x;
+                reverse_start_y_ = adc_y;
                 reverse_frame_count_ = 0;
-                AINFO << "[REVERSE] STUCK detected (speed=" << adc_speed << "), starting reverse from s=" << adc_s;
+                AINFO << "[REVERSE] STUCK detected (speed=" << adc_speed << "), starting reverse from s=" << adc_s
+                      << ", xy=(" << adc_x << "," << adc_y << ")";
                 PathBoundary reverse_bound;
                 if (!GenerateReversePathBoundary(&reverse_bound)) {
                     return false;
@@ -1317,18 +1432,12 @@ bool LaneBorrowPath::DecideConstructZoneBoundary(std::vector<PathBoundary>* boun
                 continue;
             if (sl.start_s() - adc_front_s > 100.0)
                 continue;
-            obs_sl_polygons.emplace_back(sl, obs->Id());
             // 计算XY中心
-            double cx = 0, cy = 0;
-            const auto& pts = obs->PerceptionPolygon().points();
-            for (const auto& p : pts) {
-                cx += p.x();
-                cy += p.y();
-            }
-            if (!pts.empty()) {
-                cx /= pts.size();
-                cy /= pts.size();
-            }
+            double cx = 0.0;
+            double cy = 0.0;
+            if (!GetObstacleCenterXY(obs, &cx, &cy) || !IsEduConstructionZoneXY(cx, cy))
+                continue;
+            obs_sl_polygons.emplace_back(sl, obs->Id());
             cone_xy[obs->Id()] = {cx, cy};
         }
         std::sort(obs_sl_polygons.begin(), obs_sl_polygons.end(), [](const SLPolygon& a, const SLPolygon& b) {
@@ -1494,6 +1603,64 @@ void LaneBorrowPath::ComputeConstructZoneBoundary(
     prune(left_wall_);
     prune(right_wall_);
 
+    // Limit XY classification memory to the currently observed construction zone.
+    // Without this, a previous construction area can keep voting in a later one.
+    if (!cone_xy.empty()) {
+        constexpr double kMemoryKeepXYPadding = 160.0;
+        double min_x = std::numeric_limits<double>::infinity();
+        double max_x = -std::numeric_limits<double>::infinity();
+        double min_y = std::numeric_limits<double>::infinity();
+        double max_y = -std::numeric_limits<double>::infinity();
+        for (const auto& kv : cone_xy) {
+            min_x = std::min(min_x, kv.second.first);
+            max_x = std::max(max_x, kv.second.first);
+            min_y = std::min(min_y, kv.second.second);
+            max_y = std::max(max_y, kv.second.second);
+        }
+        min_x -= kMemoryKeepXYPadding;
+        max_x += kMemoryKeepXYPadding;
+        min_y -= kMemoryKeepXYPadding;
+        max_y += kMemoryKeepXYPadding;
+
+        auto in_current_zone_xy = [min_x, max_x, min_y, max_y](double x, double y) {
+            return x >= min_x && x <= max_x && y >= min_y && y <= max_y;
+        };
+        auto hash_to_xy = [](uint64_t h) -> std::pair<double, double> {
+            int32_t ix = static_cast<int32_t>(h >> 32);
+            int32_t iy = static_cast<int32_t>(h & 0xffffffffu);
+            return {static_cast<double>(ix), static_cast<double>(iy)};
+        };
+
+        const size_t old_mem = cone_wall_memory_.size();
+        for (auto it = cone_wall_memory_.begin(); it != cone_wall_memory_.end();) {
+            const auto xy = hash_to_xy(it->first);
+            if (!in_current_zone_xy(xy.first, xy.second)) {
+                it = cone_wall_memory_.erase(it);
+            } else {
+                ++it;
+            }
+        }
+
+        auto prune_xy_points = [&in_current_zone_xy](std::vector<std::pair<double, double>>& pts) {
+            pts.erase(std::remove_if(
+                              pts.begin(),
+                              pts.end(),
+                              [&in_current_zone_xy](const auto& p) { return !in_current_zone_xy(p.first, p.second); }),
+                    pts.end());
+        };
+        const size_t old_left_xy = classified_left_xy_.size();
+        const size_t old_right_xy = classified_right_xy_.size();
+        prune_xy_points(classified_left_xy_);
+        prune_xy_points(classified_right_xy_);
+
+        if (old_mem != cone_wall_memory_.size() || old_left_xy != classified_left_xy_.size()
+            || old_right_xy != classified_right_xy_.size()) {
+            dbg("PRUNE|mem=" + std::to_string(old_mem) + "->" + std::to_string(cone_wall_memory_.size())
+                + "|lxy=" + std::to_string(old_left_xy) + "->" + std::to_string(classified_left_xy_.size())
+                + "|rxy=" + std::to_string(old_right_xy) + "->" + std::to_string(classified_right_xy_.size()));
+        }
+    }
+
     // ── 2. 墙插值 ──
     // wall_l_classify: 锥桶分类用，>20m间隙才视为无墙，容忍更大闪烁
     auto wall_l_classify = [](const std::vector<std::pair<double, double>>& w, double s) -> double {
@@ -1628,6 +1795,53 @@ void LaneBorrowPath::ComputeConstructZoneBoundary(
         return best;
     };
 
+    auto add_unique_xy = [](std::vector<std::pair<double, double>>& pts, double x, double y) {
+        for (const auto& p : pts) {
+            if (std::hypot(p.first - x, p.second - y) < 0.75) {
+                return;
+            }
+        }
+        pts.emplace_back(x, y);
+    };
+
+    auto remove_near_xy = [](std::vector<std::pair<double, double>>& pts, double x, double y) {
+        pts.erase(
+                std::remove_if(
+                        pts.begin(),
+                        pts.end(),
+                        [x, y](const auto& p) { return std::hypot(p.first - x, p.second - y) < 0.75; }),
+                pts.end());
+    };
+
+    // 尾段右墙保护：最后几颗右墙锥桶会贴近左侧道路边界，SL 墙预测经常变成 nan。
+    // 如果当前帧只剩少量锥桶，且能看到一个靠近右道路边界的尾段种子点，
+    // 则把它前方同一小簇锥桶固定为右墙，覆盖错误的旧记忆。
+    bool has_tail_right_seed = false;
+    double tail_right_seed_x = 0.0;
+    double tail_right_seed_y = 0.0;
+    if (left_wall_.size() >= 8 && right_wall_.size() >= 8 && cones.size() <= 6) {
+        double best_seed_x = -std::numeric_limits<double>::infinity();
+        for (const auto& c : cones) {
+            auto xy_it = cone_xy.find(c.id());
+            if (xy_it == cone_xy.end()) {
+                continue;
+            }
+            const double l = (c.MinL() + c.MaxL()) * 0.5;
+            if (l - road_right < 3.5 && xy_it->second.first > best_seed_x) {
+                best_seed_x = xy_it->second.first;
+                tail_right_seed_x = xy_it->second.first;
+                tail_right_seed_y = xy_it->second.second;
+                has_tail_right_seed = true;
+            }
+        }
+    }
+    auto in_tail_right_cluster = [has_tail_right_seed, tail_right_seed_x, tail_right_seed_y](double x, double y) {
+        constexpr double kTailRightClusterDist = 18.0;
+        return has_tail_right_seed && x + 1.0 >= tail_right_seed_x
+                && std::hypot(x - tail_right_seed_x, y - tail_right_seed_y) < kTailRightClusterDist;
+    };
+
+    std::unordered_map<std::string, bool> frame_wall_choice;
     for (const auto& c : cones) {
         double s = (c.MinS() + c.MaxS()) * 0.5;
         double l = (c.MinL() + c.MaxL()) * 0.5;
@@ -1641,12 +1855,31 @@ void LaneBorrowPath::ComputeConstructZoneBoundary(
         double pl = std::numeric_limits<double>::quiet_NaN();
         double pr = std::numeric_limits<double>::quiet_NaN();
         if (xy_it != cone_xy.end()) {
-            uint64_t h = hash_xy(xy_it->second.first, xy_it->second.second);
+            const double cx = xy_it->second.first;
+            const double cy = xy_it->second.second;
+            uint64_t h = hash_xy(cx, cy);
             auto mem_it = cone_wall_memory_.find(h);
-            if (mem_it != cone_wall_memory_.end()) {
+            if (in_tail_right_cluster(cx, cy)) {
+                to_left = false;
+                why = "tailR";
+                from_memory = true;
+            } else if (mem_it != cone_wall_memory_.end()) {
                 to_left = mem_it->second;
                 why = "mem";
                 from_memory = true;
+                if (!classified_left_xy_.empty() && !classified_right_xy_.empty()) {
+                    constexpr double kMemoryOverrideDist = 12.0;
+                    constexpr double kMemoryOverrideMargin = 1.0;
+                    const double nl = nearest_dist(cx, cy, classified_left_xy_);
+                    const double nr = nearest_dist(cx, cy, classified_right_xy_);
+                    if (to_left && nr < kMemoryOverrideDist && nr + kMemoryOverrideMargin < nl) {
+                        to_left = false;
+                        why = "memFixR";
+                    } else if (!to_left && nl < kMemoryOverrideDist && nl + kMemoryOverrideMargin < nr) {
+                        to_left = true;
+                        why = "memFixL";
+                    }
+                }
             }
         }
 
@@ -1746,15 +1979,18 @@ void LaneBorrowPath::ComputeConstructZoneBoundary(
                     why = buf;
                 }
             }
+        }
 
-            // 3) 记入 XY 位置记忆和近邻向量
-            if (xy_it != cone_xy.end()) {
-                uint64_t h = hash_xy(xy_it->second.first, xy_it->second.second);
-                cone_wall_memory_[h] = to_left;
-                if (to_left)
-                    classified_left_xy_.emplace_back(xy_it->second.first, xy_it->second.second);
-                else
-                    classified_right_xy_.emplace_back(xy_it->second.first, xy_it->second.second);
+        frame_wall_choice[c.id()] = to_left;
+        if (xy_it != cone_xy.end()) {
+            uint64_t h = hash_xy(xy_it->second.first, xy_it->second.second);
+            cone_wall_memory_[h] = to_left;
+            if (to_left) {
+                remove_near_xy(classified_right_xy_, xy_it->second.first, xy_it->second.second);
+                add_unique_xy(classified_left_xy_, xy_it->second.first, xy_it->second.second);
+            } else {
+                remove_near_xy(classified_left_xy_, xy_it->second.first, xy_it->second.second);
+                add_unique_xy(classified_right_xy_, xy_it->second.first, xy_it->second.second);
             }
         }
 
@@ -1779,6 +2015,12 @@ void LaneBorrowPath::ComputeConstructZoneBoundary(
     }
     // 分配nudge：左墙→RIGHT_NUDGE，右墙→LEFT_NUDGE
     for (auto& c : cones) {
+        const auto frame_choice = frame_wall_choice.find(c.id());
+        if (frame_choice != frame_wall_choice.end()) {
+            c.SetNudgeInfo(frame_choice->second ? SLPolygon::RIGHT_NUDGE : SLPolygon::LEFT_NUDGE);
+            continue;
+        }
+
         double s = (c.MinS() + c.MaxS()) * 0.5;
         double l = (c.MinL() + c.MaxL()) * 0.5;
         double pl = wall_l_classify(left_wall_, s);

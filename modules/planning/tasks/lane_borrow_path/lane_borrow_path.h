@@ -148,7 +148,7 @@ private:
     std::vector<SidePassDirection> decided_side_pass_direction_;
     int use_self_lane_;
     std::string blocking_obstacle_id_;
-    bool construct_zone;
+    bool construct_zone = false;
     // 锥桶位置记忆：记录所有出现过的锥桶 (s, l) 坐标，用于闪烁容错
     std::vector<std::pair<double, double>> cone_history_;
     // 锥桶墙追踪：S 弯两侧锥桶分别形成"左墙"和"右墙"，
@@ -176,15 +176,25 @@ private:
     int no_cone_counter_ = 0;
     // 施工区退出滞回：total_cone_estimate < 1 的连续帧计数，防止锥桶闪烁导致中途退出
     int low_cone_counter_ = 0;
+    // 施工区最后已知锥桶 s，用于尾段保活，避免只剩最后几个锥桶时退出后重进
+    double construct_zone_farthest_cone_s_ = -1.0;
+    // 施工区最后已知锥桶 XY。尾段 SL 投影会跳变，用真实 XY 再做一层保活。
+    double construct_zone_farthest_cone_x_ = -1.0;
+    double construct_zone_farthest_cone_y_ = 0.0;
     static constexpr int kLowConeExitThreshold = 30;  // 3秒@10Hz，锥桶持续消失才退出
 
     // ── 倒车恢复：车辆起始位置被锥桶卡死无法前进时，先倒车拉开距离 ──
     bool in_reverse_ = false;                            // 当前处于倒车模式
     int reverse_frame_count_ = 0;                        // 倒车已执行帧数 / 卡死帧计数
     double reverse_start_s_ = 0.0;                       // 倒车起始 s 坐标
+    double reverse_start_x_ = 0.0;                       // 倒车起始真实 x 坐标
+    double reverse_start_y_ = 0.0;                       // 倒车起始真实 y 坐标
     double last_adc_s_for_stuck_ = 0.0;                  // 上一帧 ADC s 坐标，用于检测位移
+    double last_adc_x_for_stuck_ = 0.0;                  // 上一帧 ADC x 坐标，用于检测真实位移
+    double last_adc_y_for_stuck_ = 0.0;                  // 上一帧 ADC y 坐标，用于检测真实位移
     static constexpr double kReverseDistance = 8.0;      // 倒车目标距离 (m)
-    static constexpr int kReverseMaxFrames = 120;        // 倒车最大帧数 (12s @ 10Hz)
+    static constexpr int kReverseMinFrames = 10;         // 防止定位/启动瞬间抖动导致倒车刚开始就结束
+    static constexpr int kReverseMaxFrames = 250;        // 倒车最大帧数 (25s @ 10Hz)
     static constexpr double kStuckSpeedThreshold = 0.3;  // 判定"卡死"的速度阈值 (m/s)
     static constexpr int kStuckFrameThreshold = 15;      // 连续低速帧数阈值
 

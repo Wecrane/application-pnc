@@ -30,6 +30,10 @@ StageResult StageParkingRetryPark::Process(
   if (arrive_parking_spot_) {
     AINFO << "Stage Parking finish";
     frame->mutable_open_space_info()->set_openspace_planning_finish(true);
+    auto scenario_context = GetContextAs<ValetParkingContext>();
+    if (scenario_context->station_pickup_mode) {
+      scenario_context->station_pickup_finished = true;
+    }
     return StageResult(StageStatusType::FINISHED);
   }
   auto scenario_context = GetContextAs<ValetParkingContext>();
@@ -44,6 +48,9 @@ StageResult StageParkingRetryPark::Process(
 	if (frame->open_space_info().destination_reached()) {
 		frame->mutable_open_space_info()->set_openspace_planning_finish(true);
     CheckParkingAccuracy(frame);
+    if (scenario_context->station_pickup_mode) {
+      scenario_context->station_pickup_finished = true;
+    }
     arrive_parking_spot_ = true;
 		return result.SetStageStatus(StageStatusType::FINISHED);
 	}

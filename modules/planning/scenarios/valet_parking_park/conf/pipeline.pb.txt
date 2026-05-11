@@ -73,7 +73,7 @@ stage: {
   }
   task {
     name: "OPEN_SPACE_ROI_DECIDER"
-    type: "OpenSpaceRoiDecider"
+    type: "OpenSpaceRoiDeciderPark"
   }
   task {
     name: "OPEN_SPACE_PATH_PLANNING"
@@ -102,7 +102,7 @@ stage: {
   }
   task {
     name: "OPEN_SPACE_ROI_DECIDER"
-    type: "OpenSpaceRoiDecider"
+    type: "OpenSpaceRoiDeciderPark"
   }
   task {
     name: "OPEN_SPACE_PATH_PLANNING"

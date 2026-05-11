@@ -57,16 +57,21 @@ bool ValetParkingParkScenario::Init(std::shared_ptr<DependencyInjector> injector
 
 bool ValetParkingParkScenario::IsTransferable(const Scenario* const other_scenario,
                                           const Frame& frame) {
-  // TODO(all) Implement available parking spot detection by preception results
-  if (!frame.local_view().planning_command->has_parking_command()) {
-    AINFO << "No parking command from routing";
-    return false;
-  }
   if (other_scenario == nullptr || frame.reference_line_info().empty()) {
     AINFO << "Other scenario is null or no reference line";
     return false;
   }
+
+  if (frame.local_view().planning_command == nullptr) {
+    AINFO << "No planning command";
+    return false;
+  }
+
   std::string target_parking_spot_id;
+  bool station_pickup_mode = false;
+  double parking_spot_range_to_start =
+      context_.scenario_config.parking_spot_range_to_start();
+
   if (frame.local_view().planning_command->has_parking_command() &&
       frame.local_view()
           .planning_command->parking_command()
@@ -75,11 +80,31 @@ bool ValetParkingParkScenario::IsTransferable(const Scenario* const other_scenar
                                  .planning_command->parking_command()
                                  .parking_spot_id();
   } else {
-    AINFO << "No parking space id from routing";
-    return false;
+    if (!context_.scenario_config.enable_station_pickup() ||
+        !frame.local_view().planning_command->has_lane_follow_command()) {
+      AINFO << "No parking space id from routing";
+      return false;
+    }
+    target_parking_spot_id =
+        context_.scenario_config.station_pickup_parking_spot_id();
+    parking_spot_range_to_start =
+        context_.scenario_config.station_pickup_range_to_start();
+    station_pickup_mode = true;
   }
 
   if (target_parking_spot_id.empty()) {
+    return false;
+  }
+
+  const int command_sequence_num =
+      frame.local_view().planning_command->header().sequence_num();
+  if (station_pickup_mode &&
+      context_.command_sequence_num != command_sequence_num) {
+    context_.station_pickup_finished = false;
+  }
+  if (station_pickup_mode && context_.station_pickup_finished) {
+    AINFO << "Station pickup parking already finished for command "
+          << command_sequence_num;
     return false;
   }
 
@@ -96,8 +121,6 @@ bool ValetParkingParkScenario::IsTransferable(const Scenario* const other_scenar
            << target_parking_spot_id;
     return false;
   }
-  double parking_spot_range_to_start =
-      context_.scenario_config.parking_spot_range_to_start();
   if (!CheckDistanceToParkingSpot(frame, vehicle_state, nearby_path,
                                   parking_spot_range_to_start,
                                   parking_space_overlap)) {
@@ -108,7 +131,10 @@ bool ValetParkingParkScenario::IsTransferable(const Scenario* const other_scenar
   }
 
   context_.target_parking_spot_id = target_parking_spot_id;
-  context_.command_sequence_num = frame.local_view().planning_command->header().sequence_num();
+  context_.command_sequence_num = command_sequence_num;
+  context_.station_pickup_mode = station_pickup_mode;
+  AINFO << "Valet parking park target: " << target_parking_spot_id
+        << ", station_pickup_mode: " << station_pickup_mode;
   return true;
 }
 

@@ -35,6 +35,9 @@ StageResult StageParkingPark::Process(
   if (arrive_parking_spot_) {
     AINFO << "Stage Parking finish";
     frame->mutable_open_space_info()->set_openspace_planning_finish(true);
+    if (scenario_context->station_pickup_mode) {
+      scenario_context->station_pickup_finished = true;
+    }
     return StageResult(StageStatusType::FINISHED);
   }
 
@@ -57,6 +60,9 @@ StageResult StageParkingPark::Process(
 			frame->mutable_open_space_info()->set_openspace_planning_finish(true);
       AINFO << "Stage Parking finish";
       parking_mission_info_.status = ParkingMissionStatus::DONE;
+      if (scenario_context->station_pickup_mode) {
+        scenario_context->station_pickup_finished = true;
+      }
 			return result.SetStageStatus(StageStatusType::FINISHED);
 		}
 	}
