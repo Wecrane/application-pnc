@@ -31,6 +31,7 @@
 #include "modules/planning/planning_interface_base/task_base/common/path_util/path_assessment_decider_util.h"
 #include "modules/planning/planning_interface_base/task_base/common/path_util/path_bounds_decider_util.h"
 #include "modules/planning/planning_interface_base/task_base/common/path_util/path_optimizer_util.h"
+#include "modules/planning/planning_base/common/contest_scenario_status.h"
 #include "modules/planning/tasks/contest_lane_change_path/contest_lane_change_path_helper.h"
 
 namespace apollo {
@@ -59,6 +60,14 @@ apollo::common::Status ContestLaneChangePath::Process(Frame* frame, ReferenceLin
     ADEBUG << "[LC_PROCESS] called, is_change_lane=" << reference_line_info->IsChangeLanePath()
            << " path_reusable=" << reference_line_info->path_reusable()
            << " ref_line_count=" << frame->reference_line_info().size();
+    if (contest::IsCurrentScenario(injector_, contest::kUTurnScenario)) {
+        const auto& change_lane_status = injector_->planning_context()->planning_status().change_lane();
+        if (!change_lane_status.has_status()
+            || change_lane_status.status() == ChangeLaneStatus::IN_CHANGE_LANE) {
+            UpdateStatus(Clock::NowInSeconds(), ChangeLaneStatus::CHANGE_LANE_FINISHED, "");
+        }
+        return Status::OK();
+    }
     UpdateLaneChangeStatus();
 
     const bool is_contest_lane_change = IsContestLaneChangeScenario(injector_);

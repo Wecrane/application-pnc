@@ -52,16 +52,36 @@ bool ContestLaneChangeScenario::IsTransferable(const Scenario* other_scenario, c
 }
 
 bool ContestSCurveScenario::IsTransferable(const Scenario* other_scenario, const Frame& frame) {
+    if (other_scenario != nullptr && IsReferenceLineReady(frame)
+        && contest::IsContestUTurn(frame.reference_line_info().front(), GetContext()->scenario_config)) {
+        return false;
+    }
     return other_scenario != nullptr && IsReferenceLineReady(frame)
             && contest::IsContestSCurve(frame.reference_line_info().front(), GetContext()->scenario_config);
 }
 
 bool ContestUTurnScenario::IsTransferable(const Scenario* other_scenario, const Frame& frame) {
-    return other_scenario != nullptr && IsReferenceLineReady(frame)
-            && contest::IsContestUTurn(frame.reference_line_info().front(), GetContext()->scenario_config);
+    if (other_scenario == nullptr || !IsReferenceLineReady(frame)) {
+        return false;
+    }
+    auto* ctx = GetContext();
+    const bool u_turn_ahead = contest::IsContestUTurn(frame.reference_line_info().front(), ctx->scenario_config);
+    if (!u_turn_ahead) {
+        ctx->u_turn_active = false;
+        ctx->u_turn_completed = false;
+        return false;
+    }
+    return !ctx->u_turn_completed;
 }
 
 bool ContestConstructionZoneScenario::IsTransferable(const Scenario* other_scenario, const Frame& frame) {
+    if (other_scenario != nullptr && IsReferenceLineReady(frame)) {
+        const auto& reference_line_info = frame.reference_line_info().front();
+        if (contest::IsContestUTurn(reference_line_info, GetContext()->scenario_config)
+            || contest::IsContestSCurve(reference_line_info, GetContext()->scenario_config)) {
+            return false;
+        }
+    }
     return other_scenario != nullptr && IsReferenceLineReady(frame)
             && contest::IsContestConstructionZone(frame.reference_line_info().front(), GetContext()->scenario_config);
 }

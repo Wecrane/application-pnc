@@ -22,22 +22,33 @@
 
 #include <memory>
 #include <string>
+#include <unordered_set>
+#include <vector>
 
 #include "modules/common_msgs/map_msgs/map_id.pb.h"
 #include "modules/planning/scenarios/valet_parking/proto/valet_parking.pb.h"
 #include "cyber/plugin_manager/plugin_manager.h"
+#include "modules/common/math/box2d.h"
 #include "modules/map/hdmap/hdmap_util.h"
 #include "modules/map/pnc_map/path.h"
+#include "modules/common/util/point_factory.h"
 #include "modules/planning/planning_interface_base/scenario_base/scenario.h"
 
 namespace apollo {
 namespace planning {
+
+class Frame;
 
 struct ValetParkingContext : public ScenarioContext {
   ScenarioValetParkingConfig scenario_config;
   std::string target_parking_spot_id;
   bool pre_stop_rightaway_flag = false;
   hdmap::MapPathPoint pre_stop_rightaway_point;
+  bool bay_service_done = false;
+  std::vector<common::math::Box2d> remembered_static_boxes;
+
+  void RememberStaticBarriers(const Frame& frame, const std::string& source);
+  void RestoreRememberedBarriers(Frame* frame) const;
 };
 
 class ValetParkingScenario : public Scenario {
@@ -61,11 +72,17 @@ class ValetParkingScenario : public Scenario {
       const Frame& frame, const common::VehicleState& vehicle_state,
       const hdmap::Path& nearby_path, const double parking_start_range,
       const hdmap::PathOverlap& parking_space_overlap);
+  bool SearchForNearbyCandidate(
+      const Frame& frame,
+      const hdmap::Path& nearby_path,
+      hdmap::PathOverlap* parking_space_overlap);
 
  private:
   bool init_ = false;
   ValetParkingContext context_;
   const hdmap::HDMap* hdmap_ = nullptr;
+  std::unordered_set<std::string> blocked_parking_spot_ids_;
+  std::unordered_set<std::string> occupied_parking_spot_ids_;
 };
 
 CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(apollo::planning::ValetParkingScenario,

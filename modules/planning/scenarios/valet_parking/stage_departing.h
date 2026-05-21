@@ -1,5 +1,5 @@
 /******************************************************************************
- * Copyright 2023 The Apollo Authors. All Rights Reserved.
+ * Copyright 2019 The Apollo Authors. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,33 +14,35 @@
  * limitations under the License.
  *****************************************************************************/
 
+/**
+ * @file
+ **/
+
 #pragma once
 
-#include "modules/planning/planning_interface_base/scenario_base/scenario.h"
-#include "modules/planning/scenarios/contest/proto/contest.pb.h"
+#include <memory>
+
+#include "cyber/plugin_manager/plugin_manager.h"
+#include "modules/planning/planning_interface_base/scenario_base/stage.h"
+#include "modules/planning/scenarios/valet_parking/valet_parking_scenario.h"
 
 namespace apollo {
 namespace planning {
 
-enum class ContestScenarioKind {
-    LANE_CHANGE = 0,
-    S_CURVE = 1,
-    U_TURN = 2,
-    CONSTRUCTION_ZONE = 3,
-    STATION_SHUTTLE = 4,
+class StageDeparting : public Stage {
+ public:
+  StageResult Process(const common::TrajectoryPoint& planning_init_point,
+                      Frame* frame) override;
+
+ private:
+  void InitDepartingStatus(Frame* frame);
+  void LogDepartingRoiDiagnostics(const Frame& frame) const;
+  bool CheckReadyToReturnLaneFollow(const Frame& frame) const;
+
+  bool departing_status_initialized_ = false;
 };
 
-struct ContestScenarioContext : public ScenarioContext {
-    ScenarioContestConfig scenario_config;
-    ContestScenarioKind kind = ContestScenarioKind::LANE_CHANGE;
-    // 站点接驳状态
-    bool shuttle_arrived_at_station = false;
-    double shuttle_dwell_start_time = 0.0;
-    bool shuttle_departed = false;
-    bool u_turn_active = false;
-    bool u_turn_completed = false;
-    double u_turn_entry_heading = 0.0;
-};
+CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(apollo::planning::StageDeparting, Stage)
 
 }  // namespace planning
 }  // namespace apollo

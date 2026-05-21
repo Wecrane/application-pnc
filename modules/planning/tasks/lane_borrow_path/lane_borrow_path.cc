@@ -17,6 +17,8 @@
 #include "modules/planning/tasks/lane_borrow_path/lane_borrow_path.h"
 
 #include <algorithm>
+#include <array>
+#include <cmath>
 #include <functional>
 #include <memory>
 #include <string>
@@ -25,6 +27,8 @@
 #include <vector>
 
 #include "modules/common/configs/vehicle_config_helper.h"
+#include "modules/planning/planning_base/common/contest_scenario_features.h"
+#include "modules/planning/planning_base/common/contest_scenario_status.h"
 #include "modules/planning/planning_base/common/obstacle_blocking_analyzer.h"
 #include "modules/planning/planning_base/common/planning_context.h"
 #include "modules/planning/planning_interface_base/task_base/common/path_generation.h"
@@ -55,6 +59,17 @@ bool LaneBorrowPath::Init(
 apollo::common::Status LaneBorrowPath::Process(Frame* frame, ReferenceLineInfo* reference_line_info) {
     if (!config_.is_allow_lane_borrowing() || reference_line_info->path_reusable()) {
         AINFO << "path reusable" << reference_line_info->path_reusable() << ",skip";
+        return Status::OK();
+    }
+    if (ShouldFollowReferenceLineOnCurve()) {
+        decided_side_pass_direction_.clear();
+        auto* mutable_path_decider_status
+                = injector_->planning_context()->mutable_planning_status()->mutable_path_decider();
+        mutable_path_decider_status->set_left_borrow(false);
+        mutable_path_decider_status->set_right_borrow(false);
+        mutable_path_decider_status->set_is_in_path_lane_borrow_scenario(false);
+        is_in_path_lane_borrow_scenario_ = false;
+        AINFO << "Skip lane borrow on curve; follow reference line.";
         return Status::OK();
     }
     if (!IsNecessaryToBorrowLane()) {
@@ -614,6 +629,32 @@ bool LaneBorrowPath::IsEnableNudge(const ReferenceLineInfo& reference_line_info)
     if (nudge_info.is_enable() && nudge_info.extra_nudge_key_points().size() > 1) {
         AINFO << "LaneBorrowPath::IsEnableNudge, Lane Nudge is enable";
         return true;
+    }
+    return false;
+}
+
+bool LaneBorrowPath::ShouldFollowReferenceLineOnCurve() const {
+    const std::string current_scenario = contest::CurrentScenarioName(injector_);
+    if (current_scenario == contest::kUTurnScenario) {
+        AINFO << "U-turn scenario uses reference-line path, not lane borrow.";
+        return true;
+    }
+    if (!current_scenario.empty()) {
+        return false;
+    }
+    const double adc_end_s = reference_line_info_->AdcSlBoundary().end_s();
+    if (reference_line_info_->GetPathTurnType(adc_end_s) == hdmap::Lane::U_TURN) {
+        AINFO << "U-turn lane ahead uses reference-line path, not lane borrow.";
+        return true;
+    }
+    const double ref_length = reference_line_info_->reference_line().Length();
+    for (double s = adc_end_s;
+         s < adc_end_s + contest::kDefaultUTurnLookForwardDistance && s < ref_length;
+         s += contest::kFeatureSampleStep) {
+        if (reference_line_info_->GetPathTurnType(s) == hdmap::Lane::U_TURN) {
+            AINFO << "U-turn lane ahead uses reference-line path, not lane borrow.";
+            return true;
+        }
     }
     return false;
 }

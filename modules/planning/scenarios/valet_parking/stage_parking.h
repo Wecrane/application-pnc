@@ -37,6 +37,9 @@ class StageParking : public Stage {
  private:
   StageResult FinishStage();
 
+  bool dwell_timer_active_ = false;
+  double dwell_start_sec_ = 0.0;
+
   ScenarioValetParkingConfig scenario_config_;
 };
 

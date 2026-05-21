@@ -288,8 +288,10 @@ void OpenSpaceRoiDecider::SetParkingSpotEndPose(const ParkingInfo &parking_info,
     Vec2d middle_left = (left_top + left_down) / 2.0;
     end_pt = middle_left +
              Vec2d::CreateUnitVec2d(parking_heading) *
-                 (vehicle_params_.back_edge_to_center() + parking_depth_buffer);
+                 (vehicle_params_.back_edge_to_center() + 0.5);
   }
+  parking_heading = common::math::NormalizeAngle(
+      parking_heading + config_.parking_end_heading_offset());
   auto *end_pose =
       frame->mutable_open_space_info()->mutable_open_space_end_pose();
   end_pose->push_back(end_pt.x());
@@ -325,7 +327,11 @@ void OpenSpaceRoiDecider::SetPullOverSpotEndPose(Frame *const frame) {
 
 void OpenSpaceRoiDecider::SetParkAndGoEndPose(Frame *const frame) {
   const double kSTargetBuffer = config_.end_pose_s_distance();
-  const double kSpeedRatio = 0.1;  // after adjust speed is 10% of speed limit
+  constexpr double kSpeedRatio = 0.1;  // after adjust speed is 10% of speed limit
+  constexpr double kStationDepartingMinEndDistance = 20.0;
+  constexpr double kStationDepartingMinLateralShift = 2.0;
+  constexpr double kStationDepartingSpeedRatio = 0.7;
+  constexpr double kStationDepartingMaxEndSpeed = 4.0;
   // get vehicle current location
   // get vehicle s,l info
   auto park_and_go_status = injector_->planning_context()
@@ -375,6 +381,9 @@ void OpenSpaceRoiDecider::SetParkAndGoEndPose(Frame *const frame) {
   // Normalize according to origin_point and origin_heading
   const auto &origin_point = frame->open_space_info().origin_point();
   const auto &origin_heading = frame->open_space_info().origin_heading();
+  Vec2d vehicle_xy(adc_init_x, adc_init_y);
+  vehicle_xy -= origin_point;
+  vehicle_xy.SelfRotate(-origin_heading);
   Vec2d center(target_x, target_y);
   center -= origin_point;
   center.SelfRotate(-origin_heading);
@@ -393,7 +402,25 @@ void OpenSpaceRoiDecider::SetParkAndGoEndPose(Frame *const frame) {
 
   // end pose velocity set to be speed limit
   double target_speed = reference_line.GetSpeedLimitFromS(target_s);
-  end_pose->push_back(kSpeedRatio * target_speed);
+  const bool use_station_departing_speed =
+      kSTargetBuffer > kStationDepartingMinEndDistance &&
+      std::fabs(center.y() - vehicle_xy.y()) >
+          kStationDepartingMinLateralShift;
+  const double end_pose_speed =
+      use_station_departing_speed
+          ? std::min(kStationDepartingMaxEndSpeed,
+                     kStationDepartingSpeedRatio * target_speed)
+          : kSpeedRatio * target_speed;
+  end_pose->push_back(end_pose_speed);
+  AINFO << "ParkAndGo end pose speed, target_s=" << target_s
+        << ", adc_l=" << adc_position_sl.l()
+        << ", speed_limit=" << target_speed
+        << ", end_pose_speed=" << end_pose_speed
+        << ", use_station_departing_speed=" << use_station_departing_speed
+        << ", end_pose_s_distance=" << kSTargetBuffer
+        << ", vehicle_xy=(" << vehicle_xy.x() << ", " << vehicle_xy.y()
+        << "), end_xy=(" << center.x() << ", " << center.y()
+        << "), roi_lateral_shift=" << std::fabs(center.y() - vehicle_xy.y());
 }
 
 void OpenSpaceRoiDecider::GetRoadBoundary(
@@ -769,6 +796,11 @@ bool OpenSpaceRoiDecider::GetParkingBoundary(
       right_lane_boundary[i].SelfRotate(-origin_heading);
     }
 
+    // 将道路边界往外推1m，给车辆留出进入停车位的空间
+    for (size_t i = 0; i < point_size; i++) {
+      right_lane_boundary[i].set_y(right_lane_boundary[i].y() - 1.0);
+    }
+
     auto point_left_to_left_top_connor_s = std::lower_bound(
         center_lane_s_right.begin(), center_lane_s_right.end(), left_top_s);
     size_t point_left_to_left_top_connor_index = std::distance(
@@ -935,6 +967,74 @@ bool OpenSpaceRoiDecider::GetParkingBoundary(
     }
   }
 
+  Vec2d vehicle_xy = Vec2d(vehicle_state_.x(), vehicle_state_.y());
+  vehicle_xy -= origin_point;
+  vehicle_xy.SelfRotate(-origin_heading);
+
+  auto raw_xminmax = std::minmax_element(
+      boundary_points.begin(), boundary_points.end(),
+      [](const Vec2d &a, const Vec2d &b) { return a.x() < b.x(); });
+  auto raw_yminmax = std::minmax_element(
+      boundary_points.begin(), boundary_points.end(),
+      [](const Vec2d &a, const Vec2d &b) { return a.y() < b.y(); });
+  const double raw_x_min = raw_xminmax.first->x();
+  const double raw_x_max = raw_xminmax.second->x();
+  const double raw_y_min = raw_yminmax.first->y();
+  const double raw_y_max = raw_yminmax.second->y();
+  const bool vehicle_outside_raw_roi =
+      vehicle_xy.x() < raw_x_min || vehicle_xy.x() > raw_x_max ||
+      vehicle_xy.y() < raw_y_min || vehicle_xy.y() > raw_y_max;
+
+  AINFO << "Parking ROI raw boundary check, vehicle_xy=(" << vehicle_xy.x()
+        << ", " << vehicle_xy.y() << "), average_l=" << average_l
+        << ", raw_x_range=[" << raw_x_min << ", " << raw_x_max
+        << "], raw_y_range=[" << raw_y_min << ", " << raw_y_max
+        << "], vehicle_outside_raw_roi=" << vehicle_outside_raw_roi;
+
+  if (vehicle_outside_raw_roi && vehicle_xy.y() > raw_y_max) {
+    constexpr double kRoiBackBuffer = 3.0;
+    constexpr double kRoiForwardBuffer = 10.0;
+    constexpr double kRoiParkingOuterBuffer = 1.0;
+    constexpr double kRoiVehicleLateralBuffer = 2.0;
+
+    std::vector<Vec2d> parking_corners{left_top, left_down, right_down,
+                                       right_top};
+    auto parking_xminmax = std::minmax_element(
+        parking_corners.begin(), parking_corners.end(),
+        [](const Vec2d &a, const Vec2d &b) { return a.x() < b.x(); });
+    auto parking_yminmax = std::minmax_element(
+        parking_corners.begin(), parking_corners.end(),
+        [](const Vec2d &a, const Vec2d &b) { return a.y() < b.y(); });
+
+    const double x_min =
+        std::min(parking_xminmax.first->x(), vehicle_xy.x()) - kRoiBackBuffer;
+    const double x_max =
+        std::max(parking_xminmax.second->x(), vehicle_xy.x()) +
+        kRoiForwardBuffer;
+    const double y_min =
+        parking_yminmax.first->y() - kRoiParkingOuterBuffer;
+    const double y_max = vehicle_xy.y() + kRoiVehicleLateralBuffer;
+
+    boundary_points = {{x_min, y_min},
+                       {x_max, y_min},
+                       {x_max, y_max},
+                       {x_min, y_max},
+                       {x_min, y_min}};
+
+    roi_parking_boundary->clear();
+    for (size_t i = 0; i + 1 < boundary_points.size(); ++i) {
+      roi_parking_boundary->push_back(
+          {boundary_points[i], boundary_points[i + 1]});
+    }
+
+    AINFO << "Use station shuttle expanded parking ROI, vehicle_xy=("
+          << vehicle_xy.x() << ", " << vehicle_xy.y()
+          << "), raw_x_range=[" << raw_x_min << ", " << raw_x_max
+          << "], raw_y_range=[" << raw_y_min << ", " << raw_y_max
+          << "], x_range=[" << x_min << ", " << x_max
+          << "], y_range=[" << y_min << ", " << y_max << "]";
+  }
+
   // Fuse line segments into convex contraints
   if (!FuseLineSegments(roi_parking_boundary)) {
     AERROR << "FuseLineSegments failed in parking ROI";
@@ -953,9 +1053,6 @@ bool OpenSpaceRoiDecider::GetParkingBoundary(
       frame->mutable_open_space_info()->mutable_ROI_xy_boundary();
   xy_boundary->assign(ROI_xy_boundary.begin(), ROI_xy_boundary.end());
 
-  Vec2d vehicle_xy = Vec2d(vehicle_state_.x(), vehicle_state_.y());
-  vehicle_xy -= origin_point;
-  vehicle_xy.SelfRotate(-origin_heading);
   if (vehicle_xy.x() < ROI_xy_boundary[0] ||
       vehicle_xy.x() > ROI_xy_boundary[1] ||
       vehicle_xy.y() < ROI_xy_boundary[2] ||
@@ -1156,6 +1253,127 @@ bool OpenSpaceRoiDecider::GetParkAndGoBoundary(
     roi_parking_boundary->push_back(segment);
   }
 
+  auto raw_xminmax = std::minmax_element(
+      boundary_points.begin(), boundary_points.end(),
+      [](const Vec2d &a, const Vec2d &b) { return a.x() < b.x(); });
+  auto raw_yminmax = std::minmax_element(
+      boundary_points.begin(), boundary_points.end(),
+      [](const Vec2d &a, const Vec2d &b) { return a.y() < b.y(); });
+  const double raw_x_min = raw_xminmax.first->x();
+  const double raw_x_max = raw_xminmax.second->x();
+  const double raw_y_min = raw_yminmax.first->y();
+  const double raw_y_max = raw_yminmax.second->y();
+
+  Vec2d vehicle_xy(adc_init_x, adc_init_y);
+  vehicle_xy -= origin_point;
+  vehicle_xy.SelfRotate(-origin_heading);
+
+  double adc_s = 0.0;
+  double adc_l = 0.0;
+  const bool has_adc_projection =
+      nearby_path.GetProjection(adc_init_position, &adc_s, &adc_l);
+  Vec2d target_xy = vehicle_xy;
+  std::vector<Vec2d> target_corners_xy;
+  if (has_adc_projection) {
+    const double target_s = adc_s + config_.end_pose_s_distance();
+    const auto target_point = nearby_path.GetSmoothPoint(target_s);
+    const Vec2d target_position(target_point.x(), target_point.y());
+    Box2d target_box(target_position, target_point.heading(), adc_length,
+                     adc_width);
+    target_box.GetAllCorners(&target_corners_xy);
+    target_xy = target_position;
+    target_xy -= origin_point;
+    target_xy.SelfRotate(-origin_heading);
+    for (auto &corner : target_corners_xy) {
+      corner -= origin_point;
+      corner.SelfRotate(-origin_heading);
+    }
+  }
+
+  // Departing from the station bay needs a connected operation area from the
+  // bay to the main road. The map road-boundary strip can be too tight around
+  // the parked start pose, causing Hybrid A* to reject the start node.
+  constexpr double kStationDepartingMinEndDistance = 20.0;
+  constexpr double kStationDepartingMinLateralShift = 2.0;
+  const bool use_station_departing_roi =
+      has_adc_projection &&
+      config_.end_pose_s_distance() > kStationDepartingMinEndDistance &&
+      std::fabs(target_xy.y() - vehicle_xy.y()) >
+          kStationDepartingMinLateralShift;
+  AINFO << "ParkAndGo ROI raw boundary check, vehicle_xy=(" << vehicle_xy.x()
+        << ", " << vehicle_xy.y() << "), target_xy=(" << target_xy.x()
+        << ", " << target_xy.y() << "), adc_l=" << adc_l
+        << ", end_pose_s_distance=" << config_.end_pose_s_distance()
+        << ", raw_x_range=[" << raw_x_min << ", " << raw_x_max
+        << "], raw_y_range=[" << raw_y_min << ", " << raw_y_max
+        << "], use_station_departing_roi=" << use_station_departing_roi;
+
+  if (use_station_departing_roi) {
+    constexpr double kRoiForwardBuffer = 3.0;
+    constexpr double kMainRoadLateralBuffer = 2.0;
+    const double map_boundary_buffer =
+        config_.station_departing_map_boundary_buffer();
+    const double reverse_buffer = config_.station_departing_reverse_buffer();
+
+    std::vector<Vec2d> roi_support_points = boundary_points;
+    double vehicle_x_min = std::numeric_limits<double>::infinity();
+    double vehicle_x_max = -std::numeric_limits<double>::infinity();
+    double vehicle_y_min = std::numeric_limits<double>::infinity();
+    double vehicle_y_max = -std::numeric_limits<double>::infinity();
+    for (auto corner : adc_corners) {
+      corner -= origin_point;
+      corner.SelfRotate(-origin_heading);
+      vehicle_x_min = std::min(vehicle_x_min, corner.x());
+      vehicle_x_max = std::max(vehicle_x_max, corner.x());
+      vehicle_y_min = std::min(vehicle_y_min, corner.y());
+      vehicle_y_max = std::max(vehicle_y_max, corner.y());
+      roi_support_points.push_back(corner);
+    }
+    roi_support_points.insert(roi_support_points.end(),
+                              target_corners_xy.begin(),
+                              target_corners_xy.end());
+
+    auto support_xminmax = std::minmax_element(
+        roi_support_points.begin(), roi_support_points.end(),
+        [](const Vec2d &a, const Vec2d &b) { return a.x() < b.x(); });
+    auto support_yminmax = std::minmax_element(
+        roi_support_points.begin(), roi_support_points.end(),
+        [](const Vec2d &a, const Vec2d &b) { return a.y() < b.y(); });
+
+    const double old_x_min = support_xminmax.first->x();
+    const double x_min = vehicle_x_min - reverse_buffer;
+    const double x_max = support_xminmax.second->x() + kRoiForwardBuffer;
+    const double y_min = vehicle_y_min - map_boundary_buffer;
+    const double y_max =
+        support_yminmax.second->y() + kMainRoadLateralBuffer;
+
+    boundary_points = {{x_min, y_min},
+                       {x_max, y_min},
+                       {x_max, y_max},
+                       {x_min, y_max},
+                       {x_min, y_min}};
+
+    roi_parking_boundary->clear();
+    for (size_t i = 0; i + 1 < boundary_points.size(); ++i) {
+      roi_parking_boundary->push_back(
+          {boundary_points[i], boundary_points[i + 1]});
+    }
+
+    AINFO << "Use station shuttle expanded departing ROI, vehicle_xy=("
+          << vehicle_xy.x() << ", " << vehicle_xy.y() << "), target_xy=("
+          << target_xy.x() << ", " << target_xy.y()
+          << "), x_range=[" << x_min << ", " << x_max
+          << "], y_range=[" << y_min << ", " << y_max
+          << "], raw_x_range=[" << raw_x_min << ", " << raw_x_max
+          << "], raw_y_range=[" << raw_y_min << ", " << raw_y_max
+          << "], vehicle_x_range=[" << vehicle_x_min << ", "
+          << vehicle_x_max << "], vehicle_y_range=[" << vehicle_y_min << ", "
+          << vehicle_y_max << "], old_x_min=" << old_x_min
+          << ", reverse_buffer=" << reverse_buffer << ", map_boundary_buffer="
+          << map_boundary_buffer << ", main_road_buffer="
+          << kMainRoadLateralBuffer;
+  }
+
   PrintCurves print_curves;
   for (auto it : *roi_parking_boundary) {
     for (auto pt : it) {
@@ -1189,7 +1407,7 @@ bool OpenSpaceRoiDecider::GetParkAndGoBoundary(
       frame->mutable_open_space_info()->mutable_ROI_xy_boundary();
   xy_boundary->assign(ROI_xy_boundary.begin(), ROI_xy_boundary.end());
 
-  Vec2d vehicle_xy = Vec2d(vehicle_state_.x(), vehicle_state_.y());
+  vehicle_xy = Vec2d(vehicle_state_.x(), vehicle_state_.y());
   vehicle_xy -= origin_point;
   vehicle_xy.SelfRotate(-origin_heading);
   if (vehicle_xy.x() < ROI_xy_boundary[0] ||
@@ -1411,16 +1629,16 @@ bool OpenSpaceRoiDecider::LoadObstacleInVertices(
   }
 
   if (config_.enable_perception_obstacles()) {
-    if (perception_obstacles_num == 0) {
-      ADEBUG << "no obstacle given by perception";
-    }
-
     // load vertices for perception obstacles(repeat the first vertice at the
     // last to form closed convex hull)
     const auto &origin_point = open_space_info.origin_point();
     const auto &origin_heading = open_space_info.origin_heading();
+    size_t perception_obstacles_total = 0;
+    size_t perception_obstacles_filtered = 0;
     for (const auto &obstacle : obstacles_by_frame_->Items()) {
+      ++perception_obstacles_total;
       if (FilterOutObstacle(*frame, *obstacle)) {
+        ++perception_obstacles_filtered;
         continue;
       }
       ++perception_obstacles_num;
@@ -1459,6 +1677,18 @@ bool OpenSpaceRoiDecider::LoadObstacleInVertices(
       // to inequality constraint
       vertices_cw.push_back(vertices_cw.front());
       obstacles_vertices_vec->push_back(vertices_cw);
+      AINFO << "Open space perception obstacle included, id="
+            << obstacle->Id() << ", perception_id="
+            << obstacle->PerceptionId()
+            << ", vertices_num=" << vertices_cw.size();
+    }
+
+    AINFO << "Open space perception obstacles summary, total="
+          << perception_obstacles_total
+          << ", filtered=" << perception_obstacles_filtered
+          << ", included=" << perception_obstacles_num;
+    if (perception_obstacles_num == 0) {
+      AINFO << "No perception obstacle loaded into open space constraints";
     }
 
     // obstacle boundary box is used, thus the edges are set to be 4
@@ -1485,24 +1715,59 @@ bool OpenSpaceRoiDecider::LoadObstacleInVertices(
 
 bool OpenSpaceRoiDecider::FilterOutObstacle(const Frame &frame,
                                             const Obstacle &obstacle) {
-  if (obstacle.IsVirtual() || !obstacle.IsStatic()) {
+  constexpr char kLatchedStaticObstaclePrefix[] = "valet_latched_static_";
+  const bool is_latched_static_obstacle =
+      obstacle.Id().rfind(kLatchedStaticObstaclePrefix, 0) == 0;
+  if ((obstacle.IsVirtual() && !is_latched_static_obstacle) ||
+      !obstacle.IsStatic()) {
+    ADEBUG << "Open space perception obstacle filtered by type, id="
+           << obstacle.Id() << ", is_virtual=" << obstacle.IsVirtual()
+           << ", is_static=" << obstacle.IsStatic();
     return true;
+  }
+  if (is_latched_static_obstacle) {
+    AINFO << "Open space use latched static obstacle, id=" << obstacle.Id()
+          << ", perception_id=" << obstacle.PerceptionId();
   }
 
   const auto &open_space_info = frame.open_space_info();
   const auto &origin_point = open_space_info.origin_point();
   const auto &origin_heading = open_space_info.origin_heading();
   const auto &obstacle_box = obstacle.PerceptionBoundingBox();
-  auto obstacle_center_xy = obstacle_box.center();
 
   // xy_boundary in xmin, xmax, ymin, ymax.
   const auto &roi_xy_boundary = open_space_info.ROI_xy_boundary();
-  obstacle_center_xy -= origin_point;
-  obstacle_center_xy.SelfRotate(-origin_heading);
-  if (obstacle_center_xy.x() < roi_xy_boundary[0] ||
-      obstacle_center_xy.x() > roi_xy_boundary[1] ||
-      obstacle_center_xy.y() < roi_xy_boundary[2] ||
-      obstacle_center_xy.y() > roi_xy_boundary[3]) {
+  if (roi_xy_boundary.size() < 4U) {
+    AERROR << "Open space ROI xy boundary is invalid, size="
+           << roi_xy_boundary.size();
+    return true;
+  }
+
+  const auto obstacle_corners = obstacle_box.GetAllCorners();
+  double obstacle_x_min = std::numeric_limits<double>::infinity();
+  double obstacle_x_max = -std::numeric_limits<double>::infinity();
+  double obstacle_y_min = std::numeric_limits<double>::infinity();
+  double obstacle_y_max = -std::numeric_limits<double>::infinity();
+  for (auto obstacle_corner : obstacle_corners) {
+    obstacle_corner -= origin_point;
+    obstacle_corner.SelfRotate(-origin_heading);
+    obstacle_x_min = std::min(obstacle_x_min, obstacle_corner.x());
+    obstacle_x_max = std::max(obstacle_x_max, obstacle_corner.x());
+    obstacle_y_min = std::min(obstacle_y_min, obstacle_corner.y());
+    obstacle_y_max = std::max(obstacle_y_max, obstacle_corner.y());
+  }
+  if (obstacle_x_max < roi_xy_boundary[0] ||
+      obstacle_x_min > roi_xy_boundary[1] ||
+      obstacle_y_max < roi_xy_boundary[2] ||
+      obstacle_y_min > roi_xy_boundary[3]) {
+    AINFO << "Open space perception obstacle filtered outside ROI, id="
+          << obstacle.Id() << ", perception_id=" << obstacle.PerceptionId()
+          << ", obstacle_x_range=[" << obstacle_x_min << ", "
+          << obstacle_x_max << "], obstacle_y_range=[" << obstacle_y_min
+          << ", " << obstacle_y_max << "], roi_x_range=["
+          << roi_xy_boundary[0] << ", " << roi_xy_boundary[1]
+          << "], roi_y_range=[" << roi_xy_boundary[2] << ", "
+          << roi_xy_boundary[3] << "]";
     return true;
   }
 
@@ -1524,6 +1789,11 @@ bool OpenSpaceRoiDecider::FilterOutObstacle(const Frame &frame,
       config_.perception_obstacle_filtering_distance();
   if (vehicle_center_to_obstacle > filtering_distance &&
       end_pose_center_to_obstacle > filtering_distance) {
+    AINFO << "Open space perception obstacle filtered by distance, id="
+          << obstacle.Id() << ", perception_id=" << obstacle.PerceptionId()
+          << ", vehicle_distance=" << vehicle_center_to_obstacle
+          << ", end_pose_distance=" << end_pose_center_to_obstacle
+          << ", filtering_distance=" << filtering_distance;
     return true;
   }
   return false;

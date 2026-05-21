@@ -228,6 +228,13 @@ Status SpeedDecider::MakeObjectDecision(
     auto* mutable_obstacle = path_decision->Find(obstacle->Id());
     const auto& boundary = mutable_obstacle->path_st_boundary();
 
+    if (ShouldIgnoreDynamicObstacleInChangeLane(*mutable_obstacle, boundary)) {
+      AINFO << "Append ignore decision for dynamic obstacle["
+            << mutable_obstacle->Id() << "] in change lane";
+      mutable_obstacle->EraseDecision();
+      AppendIgnoreDecision(mutable_obstacle);
+      continue;
+    }
     if (boundary.IsEmpty() || boundary.max_s() < 0.0 ||
         boundary.max_t() < 0.0 ||
         boundary.min_t() >= speed_profile.back().t()) {
@@ -278,6 +285,15 @@ Status SpeedDecider::MakeObjectDecision(
                                                       stop_decision);
           }
         } else if (obstacle->IsStatic()) {
+          if (config_.ignore_static_obstacle_stop_without_decision() &&
+              !obstacle->IsVirtual()) {
+            AINFO << "Ignore static obstacle stop without upstream decision, id: "
+                  << obstacle->Id() << ", min_s: " << boundary.min_s()
+                  << ", max_s: " << boundary.max_s()
+                  << ", min_t: " << boundary.min_t()
+                  << ", max_t: " << boundary.max_t();
+            break;
+          }
           // stop for static obstacle
           ObjectDecisionType stop_decision;
           if (CreateStopDecision(*mutable_obstacle, &stop_decision,
@@ -347,6 +363,68 @@ Status SpeedDecider::MakeObjectDecision(
   }
 
   return Status::OK();
+}
+
+bool SpeedDecider::ShouldIgnoreDynamicObstacleInChangeLane(
+    const Obstacle& obstacle, const STBoundary& boundary) const {
+  if (!config_.ignore_dynamic_obstacles_in_change_lane()) {
+    return false;
+  }
+  const auto* planning_status = injector_->planning_context()
+                                    ->mutable_planning_status()
+                                    ->mutable_change_lane();
+  if (!planning_status->has_status() ||
+      planning_status->status() != ChangeLaneStatus::IN_CHANGE_LANE) {
+    return false;
+  }
+  if (obstacle.IsStatic() || obstacle.IsVirtual()) {
+    return false;
+  }
+  const auto& obstacle_sl = obstacle.PerceptionSLBoundary();
+  if (obstacle_sl.start_s() <= adc_sl_boundary_.end_s() &&
+      obstacle_sl.end_s() >= adc_sl_boundary_.start_s()) {
+    return false;
+  }
+  if (obstacle_sl.start_s() > adc_sl_boundary_.end_s() &&
+      config_.ignore_front_dynamic_obstacles_in_change_lane()) {
+    AINFO << "Ignore front dynamic obstacle[" << obstacle.Id()
+          << "] speed decision in change lane, gap: "
+          << obstacle_sl.start_s() - adc_sl_boundary_.end_s()
+          << ", min_t: " << (boundary.IsEmpty() ? -1.0 : boundary.min_t())
+          << ", min_s: " << (boundary.IsEmpty() ? -1.0 : boundary.min_s());
+    return true;
+  }
+  if (obstacle_sl.end_s() < adc_sl_boundary_.start_s()) {
+    const double rear_gap = adc_sl_boundary_.start_s() - obstacle_sl.end_s();
+    if (rear_gap > config_.change_lane_keep_rear_dynamic_obstacle_gap()) {
+      AINFO << "Ignore rear dynamic obstacle[" << obstacle.Id()
+            << "] speed decision in change lane, gap: " << rear_gap
+            << ", min_t: " << (boundary.IsEmpty() ? -1.0 : boundary.min_t())
+            << ", min_s: " << (boundary.IsEmpty() ? -1.0 : boundary.min_s());
+      return true;
+    }
+    AINFO << "Keep near rear dynamic obstacle[" << obstacle.Id()
+          << "] speed decision in change lane, gap: " << rear_gap
+          << ", min_t: " << (boundary.IsEmpty() ? -1.0 : boundary.min_t())
+          << ", min_s: " << (boundary.IsEmpty() ? -1.0 : boundary.min_s());
+    return false;
+  }
+  if (obstacle.IsBlockingObstacle()) {
+    return false;
+  }
+  if (boundary.IsEmpty()) {
+    return false;
+  }
+  if (boundary.min_t() <=
+          config_.change_lane_keep_dynamic_obstacle_min_t() ||
+      boundary.min_s() <=
+          config_.change_lane_keep_dynamic_obstacle_min_s()) {
+    return false;
+  }
+  return boundary.min_t() >
+             config_.change_lane_ignore_dynamic_obstacle_min_t() ||
+         boundary.min_s() >
+             config_.change_lane_ignore_dynamic_obstacle_min_s();
 }
 
 void SpeedDecider::AppendIgnoreDecision(Obstacle* obstacle) const {

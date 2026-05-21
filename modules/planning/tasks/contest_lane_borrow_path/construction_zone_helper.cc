@@ -482,18 +482,12 @@ void UpdateConstructionZoneTrackingState(
     const double adc_x = frame->vehicle_state().x();
     const double adc_y = frame->vehicle_state().y();
     const double adc_heading = frame->vehicle_state().heading();
+    (void)low_cone_exit_threshold;
 
     auto reset_state = [construction_zone](const std::string& reason) {
         AINFO << "[WALL] EXIT construct_zone by " << reason;
         construction_zone->Reset();
     };
-
-    if (construction_zone->active && construction_zone->farthest_cone_x > 0.0
-        && !contest::IsDefaultConstructionZoneXY(adc_x, adc_y)
-        && std::hypot(adc_x - construction_zone->farthest_cone_x, adc_y - construction_zone->farthest_cone_y)
-                   > 150.0) {
-        reset_state("leaving construction map area");
-    }
 
     construction_zone->cone_history.erase(
             std::remove_if(
@@ -517,21 +511,19 @@ void UpdateConstructionZoneTrackingState(
             continue;
         }
 
-        double cx = 0.0;
-        double cy = 0.0;
-        if (!contest::GetObstacleCenterXY(obstacle, &cx, &cy) || !contest::IsDefaultConstructionZoneXY(cx, cy)) {
-            continue;
-        }
-
         ++small_obs_count;
         farthest_cone_s_this_frame = std::max(farthest_cone_s_this_frame, obs_s);
 
-        const double cone_rel_s = (cx - adc_x) * std::cos(adc_heading) + (cy - adc_y) * std::sin(adc_heading);
-        const double saved_cone_rel_s = (construction_zone->farthest_cone_x - adc_x) * std::cos(adc_heading)
-                + (construction_zone->farthest_cone_y - adc_y) * std::sin(adc_heading);
-        if (construction_zone->farthest_cone_x < 0.0 || cone_rel_s > saved_cone_rel_s) {
-            construction_zone->farthest_cone_x = cx;
-            construction_zone->farthest_cone_y = cy;
+        double cx = 0.0;
+        double cy = 0.0;
+        if (contest::GetObstacleCenterXY(obstacle, &cx, &cy)) {
+            const double cone_rel_s = (cx - adc_x) * std::cos(adc_heading) + (cy - adc_y) * std::sin(adc_heading);
+            const double saved_cone_rel_s = (construction_zone->farthest_cone_x - adc_x) * std::cos(adc_heading)
+                    + (construction_zone->farthest_cone_y - adc_y) * std::sin(adc_heading);
+            if (construction_zone->farthest_cone_x < 0.0 || cone_rel_s > saved_cone_rel_s) {
+                construction_zone->farthest_cone_x = cx;
+                construction_zone->farthest_cone_y = cy;
+            }
         }
 
         const double obs_l = (sl.start_l() + sl.end_l()) * 0.5;
@@ -577,19 +569,9 @@ void UpdateConstructionZoneTrackingState(
               << ")|rel_s=" << last_cone_rel_s;
     }
 
-    if (total_cone_estimate >= 3) {
+    if (total_cone_estimate > 0) {
         construction_zone->active = true;
         construction_zone->low_cone_counter = 0;
-    } else if (total_cone_estimate < 1) {
-        if (should_hold) {
-            construction_zone->low_cone_counter = 0;
-            construction_zone->no_cone_counter = 0;
-        } else {
-            ++construction_zone->low_cone_counter;
-        }
-        if (construction_zone->low_cone_counter > low_cone_exit_threshold) {
-            reset_state("low cone count");
-        }
     } else {
         construction_zone->low_cone_counter = 0;
     }

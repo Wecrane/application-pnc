@@ -1,1 +1,2 @@
 total_time: 7.0
+static_obstacle_stop_requires_decision: true

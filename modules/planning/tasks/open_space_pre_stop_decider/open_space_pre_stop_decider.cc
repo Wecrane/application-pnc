@@ -20,6 +20,7 @@
 
 #include "modules/planning/tasks/open_space_pre_stop_decider/open_space_pre_stop_decider.h"
 
+#include <cmath>
 #include <memory>
 #include <string>
 #include <vector>
@@ -37,6 +38,29 @@ using apollo::common::Status;
 using apollo::common::VehicleState;
 using apollo::common::math::Vec2d;
 using apollo::hdmap::ParkingSpaceInfoConstPtr;
+
+namespace {
+
+bool ParkingSpaceCenter(const ParkingSpaceInfoConstPtr& parking_space,
+                        Vec2d* center) {
+  if (parking_space == nullptr || center == nullptr) {
+    return false;
+  }
+  const auto& points = parking_space->polygon().points();
+  if (points.size() < 4) {
+    return false;
+  }
+  *center = (points[0] + points[1] + points[2] + points[3]) / 4.0;
+  return true;
+}
+
+double LongitudinalOffsetAlongHeading(const Vec2d& from, const Vec2d& to,
+                                      const double heading) {
+  return (to.x() - from.x()) * std::cos(heading) +
+         (to.y() - from.y()) * std::sin(heading);
+}
+
+}  // namespace
 
 bool OpenSpacePreStopDecider::Init(
     const std::string& config_dir, const std::string& name,
@@ -62,6 +86,11 @@ Status OpenSpacePreStopDecider::Process(
         const std::string msg = "Checking parking spot pre stop fails";
         AERROR << msg;
         return Status(ErrorCode::PLANNING_ERROR, msg);
+      }
+      // 车辆距离停车位太远时不生成 stop fence，避免提前减速
+      if (target_s > 15.0) {
+        AINFO << "Parking spot too far (s=" << target_s << "), skip stop fence";
+        break;
       }
       SetParkingSpotStopFence(target_s, frame, reference_line_info);
       break;
@@ -121,19 +150,41 @@ bool OpenSpacePreStopDecider::CheckParkingSpotPreStop(
       hdmap::Id id;
       id.set_id(parking_overlap.object_id);
       target_parking_spot_ptr = hdmap->GetParkingSpaceById(id);
-      Vec2d left_bottom_point =
-          target_parking_spot_ptr->polygon().points().at(0);
-      Vec2d right_bottom_point =
-          target_parking_spot_ptr->polygon().points().at(1);
-      Vec2d right_up_point = target_parking_spot_ptr->polygon().points().at(2);
-      Vec2d left_up_point = target_parking_spot_ptr->polygon().points().at(3);
-      Vec2d center_point = (left_bottom_point + right_bottom_point +
-                            right_up_point + left_up_point) /
-                           4.0;
+      Vec2d center_point;
+      if (!ParkingSpaceCenter(target_parking_spot_ptr, &center_point)) {
+        continue;
+      }
       double center_l;
       nearby_path.GetNearestPoint(center_point, &target_area_center_s,
                                   &center_l);
       target_area_found = true;
+    }
+  }
+
+  if (!target_area_found) {
+    hdmap::Id id;
+    id.set_id(target_parking_spot_id);
+    auto spot_ptr = hdmap->GetParkingSpaceById(id);
+    Vec2d center_point;
+    if (ParkingSpaceCenter(spot_ptr, &center_point)) {
+      double vehicle_s = 0.0;
+      double vehicle_l = 0.0;
+      Vec2d vehicle_pos(frame->vehicle_state().x(), frame->vehicle_state().y());
+      nearby_path.GetNearestPoint(vehicle_pos, &vehicle_s, &vehicle_l);
+      double center_l;
+      double center_s;
+      nearby_path.GetNearestPoint(center_point, &center_s, &center_l);
+      if (std::fabs(center_l) > 3.0) {
+        target_area_center_s =
+            vehicle_s + LongitudinalOffsetAlongHeading(
+                            vehicle_pos, center_point,
+                            frame->vehicle_state().heading());
+      } else {
+        target_area_center_s = center_s;
+      }
+      target_area_found = true;
+      AINFO << "Pre-stop target projected from map, s=" << target_area_center_s
+            << ", l=" << center_l << ", adc_s=" << vehicle_s;
     }
   }
 
@@ -150,33 +201,22 @@ void OpenSpacePreStopDecider::SetParkingSpotStopFence(
     ReferenceLineInfo* const reference_line_info) {
   const auto& nearby_path = reference_line_info->reference_line().map_path();
   const double adc_front_edge_s = reference_line_info->AdcSlBoundary().end_s();
-  const VehicleState& vehicle_state = frame->vehicle_state();
+  const double front_edge_to_center = common::VehicleConfigHelper::Instance()
+                                          ->GetConfig()
+                                          .vehicle_param()
+                                          .front_edge_to_center();
   double stop_line_s = 0.0;
-  double stop_distance_to_target = config_.stop_distance_to_target();
-  double static_linear_velocity_epsilon = 1.0e-2;
-  CHECK_GE(stop_distance_to_target, 1.0e-8);
-  double target_vehicle_offset = target_s - adc_front_edge_s;
-  if (target_vehicle_offset > stop_distance_to_target) {
-    stop_line_s = target_s - stop_distance_to_target;
-  } else {
-    if (!frame->open_space_info().pre_stop_rightaway_flag()) {
-      stop_line_s = adc_front_edge_s + config_.rightaway_stop_distance();
-      if (std::abs(vehicle_state.linear_velocity()) <
-          static_linear_velocity_epsilon) {
-        stop_line_s = adc_front_edge_s;
-      }
-      *(frame->mutable_open_space_info()->mutable_pre_stop_rightaway_point()) =
-          nearby_path.GetSmoothPoint(stop_line_s);
-      frame->mutable_open_space_info()->set_pre_stop_rightaway_flag(true);
-    } else {
-      double stop_point_s = 0.0;
-      double stop_point_l = 0.0;
-      nearby_path.GetNearestPoint(
-          frame->open_space_info().pre_stop_rightaway_point(), &stop_point_s,
-          &stop_point_l);
-      stop_line_s = stop_point_s;
-    }
-  }
+  CHECK_GE(config_.stop_distance_to_target(), 1.0e-8);
+  const double parking_spot_pre_stop_distance =
+      config_.parking_spot_pre_stop_distance();
+  CHECK_GE(parking_spot_pre_stop_distance, 0.0);
+  stop_line_s =
+      target_s + front_edge_to_center + parking_spot_pre_stop_distance;
+  AINFO << "Set parking spot pre-stop fence, target_s=" << target_s
+        << ", front_edge_to_center=" << front_edge_to_center
+        << ", parking_spot_pre_stop_distance="
+        << parking_spot_pre_stop_distance << ", stop_line_s=" << stop_line_s
+        << ", adc_front_edge_s=" << adc_front_edge_s;
   const std::string stop_wall_id = OPEN_SPACE_STOP_ID;
   std::vector<std::string> wait_for_obstacles;
   frame->mutable_open_space_info()->set_open_space_pre_stop_fence_s(

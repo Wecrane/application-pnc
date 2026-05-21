@@ -21,4 +21,18 @@ message SpeedBoundsDeciderConfig {
   optional double lane_change_obstacle_nudge_l_buffer = 11 [default = 0.3];
   // (unit: meter) max possible trajectory length
   optional double max_trajectory_len = 12 [default = 1000.0];
+  optional bool ignore_dynamic_obstacles_in_change_lane = 13 [default = false];
+  optional double change_lane_ignore_dynamic_obstacle_min_t = 14
+      [default = 2.0];
+  optional double change_lane_ignore_dynamic_obstacle_min_s = 15
+      [default = 10.0];
+  optional double change_lane_keep_dynamic_obstacle_min_t = 16
+      [default = 1.0];
+  optional double change_lane_keep_dynamic_obstacle_min_s = 17
+      [default = 5.0];
+  optional bool ignore_front_dynamic_obstacles_in_change_lane = 18
+      [default = false];
+  optional double change_lane_keep_rear_dynamic_obstacle_gap = 19
+      [default = 3.0];
+  optional double static_front_obstacle_nudge_l_buffer = 20 [default = 0.05];
 }

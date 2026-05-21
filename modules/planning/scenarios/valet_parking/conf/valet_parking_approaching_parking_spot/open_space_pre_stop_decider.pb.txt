@@ -1,1 +1,2 @@
 stop_type: PARKING
+parking_spot_pre_stop_distance: 10

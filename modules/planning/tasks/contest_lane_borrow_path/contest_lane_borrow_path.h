@@ -157,14 +157,18 @@ private:
     static constexpr int kLowConeExitThreshold = 30;  // 3秒@10Hz，锥桶持续消失才退出
 
     ReverseRecoveryState reverse_recovery_;
-    static constexpr double kReverseDistance = 8.0;      // 倒车目标距离 (m)
+    static constexpr double kReverseDistance = 8.0;            // 倒车目标距离 (m)
+    static constexpr double kMinReverseDistance = 0.5;         // 倒车目标距离配置下限
+    // 倒车完成：沿固定参考线剩余距离小于此阈值即视为到位
+    static constexpr double kReverseTargetRemainThreshold = 0.7;
+    static constexpr double kMinReverseTargetRemainThreshold = 0.05;
     // 防止定位/启动瞬间抖动导致倒车刚开始就结束。
     static constexpr int kReverseMinFrames = 10;
     static constexpr int kReverseMaxFrames = 250;        // 倒车最大帧数 (25s @ 10Hz)
     static constexpr double kStuckSpeedThreshold = 0.3;  // 判定"卡死"的速度阈值 (m/s)
     static constexpr int kStuckFrameThreshold = 15;      // 连续低速帧数阈值
 
-    // 倒车路径生成：生成一条向后直线倒车路径
+    // 倒车路径生成：生成一条向后直线倒车路径（已废弃，改用缓存机制）
     bool GenerateReversePathBoundary(PathBoundary* boundary);
 };
 

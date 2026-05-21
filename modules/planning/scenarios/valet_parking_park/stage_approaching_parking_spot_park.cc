@@ -18,7 +18,6 @@
  * @file
  **/
 
-#include <cmath>
 #include <string>
 #include "modules/common/configs/vehicle_config_helper.h"
 #include "modules/common/vehicle_state/vehicle_state_provider.h"
@@ -75,9 +74,7 @@ StageResult StageApproachingParkingSpotPark::Process(const common::TrajectoryPoi
     scenario_context->pre_stop_rightaway_flag = frame->open_space_info().pre_stop_rightaway_flag();
     scenario_context->pre_stop_rightaway_point = frame->open_space_info().pre_stop_rightaway_point();
 
-    const bool ready_for_station_open_space
-            = scenario_context->station_pickup_mode && CheckADCNearTargetParkingSpot(*frame);
-    if (CheckADCStop(*frame) && (CheckADCInParkingRange(*frame) || ready_for_station_open_space)) {
+    if (CheckADCStop(*frame) && CheckADCInParkingRange(*frame)) {
         next_stage_ = "VALET_PARKING_PARKING_PARK";
         return StageResult(StageStatusType::FINISHED);
     }
@@ -109,41 +106,25 @@ double StageApproachingParkingSpotPark::GetTargetS(const Frame& frame) {
     }
 
     double target_area_center_s = 0.0;
-    Vec2d center_point;
-    if (!GetTargetParkingSpotCenter(frame, &center_point)) {
-        return 0.0;
-    }
     const auto& parking_space_overlaps = nearby_path.parking_space_overlaps();
+    ParkingSpaceInfoConstPtr target_parking_spot_ptr;
+    const hdmap::HDMap* hdmap = hdmap::HDMapUtil::BaseMapPtr();
     for (const auto& parking_overlap : parking_space_overlaps) {
         if (parking_overlap.object_id == target_parking_spot_id) {
+            hdmap::Id id;
+            id.set_id(parking_overlap.object_id);
+            target_parking_spot_ptr = hdmap->GetParkingSpaceById(id);
+            Vec2d left_bottom_point = target_parking_spot_ptr->polygon().points().at(0);
+            Vec2d right_bottom_point = target_parking_spot_ptr->polygon().points().at(1);
+            Vec2d right_up_point = target_parking_spot_ptr->polygon().points().at(2);
+            Vec2d left_up_point = target_parking_spot_ptr->polygon().points().at(3);
+            Vec2d center_point = (left_bottom_point + right_bottom_point + right_up_point + left_up_point) / 4.0;
             double center_l;
             nearby_path.GetNearestPoint(center_point, &target_area_center_s, &center_l);
             break;
         }
     }
     return target_area_center_s;
-}
-
-bool StageApproachingParkingSpotPark::GetTargetParkingSpotCenter(const Frame& frame, Vec2d* center_point) {
-    if (center_point == nullptr) {
-        return false;
-    }
-    const auto& target_parking_spot_id = frame.open_space_info().target_parking_spot_id();
-    if (target_parking_spot_id.empty()) {
-        AERROR << "no target parking spot id found";
-        return false;
-    }
-    hdmap::Id id;
-    id.set_id(target_parking_spot_id);
-    const hdmap::HDMap* hdmap = hdmap::HDMapUtil::BaseMapPtr();
-    ParkingSpaceInfoConstPtr target_parking_spot_ptr = hdmap->GetParkingSpaceById(id);
-    if (target_parking_spot_ptr == nullptr || target_parking_spot_ptr->polygon().points().size() < 4) {
-        AERROR << "failed to get target parking spot from map: " << target_parking_spot_id;
-        return false;
-    }
-    const auto& points = target_parking_spot_ptr->polygon().points();
-    *center_point = (points.at(0) + points.at(1) + points.at(2) + points.at(3)) / 4.0;
-    return true;
 }
 
 bool StageApproachingParkingSpotPark::CheckADCInParkingRange(const Frame& frame) {
@@ -157,26 +138,6 @@ bool StageApproachingParkingSpotPark::CheckADCInParkingRange(const Frame& frame)
         return true;
     }
     return false;
-}
-
-bool StageApproachingParkingSpotPark::CheckADCNearTargetParkingSpot(const Frame& frame) {
-    const double target_s = GetTargetS(frame);
-    if (target_s <= 0.0) {
-        return false;
-    }
-    const double adc_front_edge_s = frame.reference_line_info().front().AdcSlBoundary().end_s();
-    const double distance_to_target = target_s - adc_front_edge_s;
-    AINFO << "station pickup distance_to_target: " << distance_to_target;
-    Vec2d target_center;
-    if (!GetTargetParkingSpotCenter(frame, &target_center)) {
-        return false;
-    }
-    const Vec2d adc_position(injector_->vehicle_state()->x(), injector_->vehicle_state()->y());
-    const double xy_distance_to_target = adc_position.DistanceTo(target_center);
-    AINFO << "station pickup xy_distance_to_target: " << xy_distance_to_target;
-    const double direct_parking_distance = scenario_config_.station_pickup_direct_parking_distance();
-    return std::fabs(distance_to_target) <= direct_parking_distance
-            && xy_distance_to_target <= direct_parking_distance + 5.0;
 }
 
 }  // namespace planning

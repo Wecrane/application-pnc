@@ -21,6 +21,7 @@
 #include <vector>
 
 #include "cyber/time/clock.h"
+#include "modules/common/math/math_utils.h"
 #include "modules/planning/planning_base/common/frame.h"
 #include "modules/planning/planning_base/common/util/common.h"
 #include "modules/planning/scenarios/contest/context.h"
@@ -132,16 +133,41 @@ bool ContestLaneFollowStage::StillInScenario(const Frame& frame) const {
     if (frame.reference_line_info().empty()) {
         return false;
     }
-    const auto* context = GetContextAs<ContestScenarioContext>();
+    auto* context = GetContextAs<ContestScenarioContext>();
     switch (context->kind) {
     case ContestScenarioKind::LANE_CHANGE:
         return contest::IsContestLaneChange(frame);
     case ContestScenarioKind::S_CURVE:
+        if (contest::IsContestUTurn(frame.reference_line_info().front(), context->scenario_config)) {
+            return false;
+        }
         return contest::IsContestSCurve(frame.reference_line_info().front(), context->scenario_config);
     case ContestScenarioKind::U_TURN:
-        return contest::IsContestUTurn(frame.reference_line_info().front(), context->scenario_config);
+        if (!context->u_turn_active) {
+            context->u_turn_active = true;
+            context->u_turn_completed = false;
+            context->u_turn_entry_heading = frame.vehicle_state().heading();
+            AINFO << "[UTURN] enter, entry_heading=" << context->u_turn_entry_heading;
+            return true;
+        }
+        if (std::fabs(common::math::NormalizeAngle(
+                    frame.vehicle_state().heading() - context->u_turn_entry_heading))
+            > context->scenario_config.u_turn_heading_change_threshold()) {
+            context->u_turn_active = false;
+            context->u_turn_completed = true;
+            AINFO << "[UTURN] exit after vehicle heading reversed.";
+            return false;
+        }
+        return true;
     case ContestScenarioKind::CONSTRUCTION_ZONE:
-        return contest::IsContestConstructionZone(frame.reference_line_info().front(), context->scenario_config);
+        if (contest::IsContestUTurn(frame.reference_line_info().front(), context->scenario_config)
+            || contest::IsContestSCurve(frame.reference_line_info().front(), context->scenario_config)) {
+            return false;
+        }
+        return contest::CountContestConstructionConesAhead(
+                       frame.reference_line_info().front(),
+                       context->scenario_config.construction_look_forward_distance())
+                > 0;
     case ContestScenarioKind::STATION_SHUTTLE:
         return !context->shuttle_departed;
     }

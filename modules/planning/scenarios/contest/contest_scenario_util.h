@@ -27,6 +27,7 @@ namespace contest {
 bool IsContestLaneChange(const Frame& frame);
 bool IsContestSCurve(const ReferenceLineInfo& reference_line_info, const ScenarioContestConfig& config);
 bool IsContestUTurn(const ReferenceLineInfo& reference_line_info, const ScenarioContestConfig& config);
+int CountContestConstructionConesAhead(const ReferenceLineInfo& reference_line_info, double look_forward_distance);
 bool IsContestConstructionZone(const ReferenceLineInfo& reference_line_info, const ScenarioContestConfig& config);
 bool IsContestStationShuttle(
         const ReferenceLineInfo& reference_line_info,

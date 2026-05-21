@@ -62,7 +62,9 @@ Status SpeedBoundsDecider::Process(
   auto time1 = std::chrono::system_clock::now();
   STBoundaryMapper boundary_mapper(config_, reference_line, path_data,
                                    path_data.discretized_path().Length(),
-                                   config_.total_time(), injector_);
+                                   config_.total_time(),
+                                   reference_line_info->AdcSlBoundary(),
+                                   injector_);
 
   if (!FLAGS_use_st_drivable_boundary) {
     path_decision->EraseStBoundaries();

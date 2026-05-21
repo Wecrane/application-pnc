@@ -14,11 +14,13 @@ apollo_plugin(
     name = "libvalet_parking_scenario.so",
     srcs = [
         "stage_approaching_parking_spot.cc",
+        "stage_departing.cc",
         "stage_parking.cc",
         "valet_parking_scenario.cc",
     ],
     hdrs = [
         "stage_approaching_parking_spot.h",
+        "stage_departing.h",
         "stage_parking.h",
         "valet_parking_scenario.h",
     ],

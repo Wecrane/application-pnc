@@ -7,7 +7,7 @@ message ScenarioContestConfig {
   optional double construction_max_x = 2 [default = 424210.0];
   optional double construction_min_y = 3 [default = 4437580.0];
   optional double construction_max_y = 4 [default = 4437650.0];
-  optional int32 construction_min_cone_count = 5 [default = 3];
+  optional int32 construction_min_cone_count = 5 [default = 30];
   optional double construction_look_forward_distance = 6 [default = 100.0];
 
   optional int32 s_curve_min_cone_count = 7 [default = 4];
@@ -15,12 +15,11 @@ message ScenarioContestConfig {
   optional double s_curve_look_forward_distance = 9 [default = 90.0];
   optional double s_curve_max_obstacle_abs_l = 10 [default = 3.5];
 
-  optional double u_turn_look_forward_distance = 11 [default = 30.0];
+  optional double u_turn_look_forward_distance = 11 [default = 60.0];
   optional double u_turn_kappa_threshold = 12 [default = 0.12];
-  optional double u_turn_heading_change_threshold = 13 [default = 2.0];
+  optional double u_turn_heading_change_threshold = 13 [default = 2.7];
 
   optional double station_shuttle_look_forward_distance = 14 [default = 80.0];
   optional double station_shuttle_dwell_time_sec = 15 [default = 5.0];
   optional double station_shuttle_speed_limit = 16 [default = 8.33];
 }
-

@@ -2,7 +2,7 @@ construction_min_x: 423990.0
 construction_max_x: 424210.0
 construction_min_y: 4437580.0
 construction_max_y: 4437650.0
-construction_min_cone_count: 3
+construction_min_cone_count: 30
 construction_look_forward_distance: 100.0
 
 s_curve_min_cone_count: 4
@@ -10,11 +10,10 @@ s_curve_min_abs_kappa: 0.015
 s_curve_look_forward_distance: 90.0
 s_curve_max_obstacle_abs_l: 3.5
 
-u_turn_look_forward_distance: 30.0
+u_turn_look_forward_distance: 60.0
 u_turn_kappa_threshold: 0.12
-u_turn_heading_change_threshold: 2.0
+u_turn_heading_change_threshold: 2.7
 
 station_shuttle_look_forward_distance: 80.0
 station_shuttle_dwell_time_sec: 5.0
 station_shuttle_speed_limit: 8.33
-

@@ -80,8 +80,7 @@ ContestLaneFollowPathContext BuildContestLaneFollowPathContext(
     context.lane_change = contest::IsCurrentScenario(injector, contest::kLaneChangeScenario);
     context.dense_s_curve = contest::IsCurrentScenario(injector, contest::kSCurveScenario)
             && contest::IsDefaultDenseConeSCurve(reference_line_info);
-    context.u_turn = contest::IsCurrentScenario(injector, contest::kUTurnScenario)
-            && contest::HasDefaultUTurnLaneInPath(reference_line_info);
+    context.u_turn = false;
     return context;
 }
 

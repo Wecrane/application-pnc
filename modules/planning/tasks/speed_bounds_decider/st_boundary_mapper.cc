@@ -53,10 +53,12 @@ STBoundaryMapper::STBoundaryMapper(
     const SpeedBoundsDeciderConfig& config, const ReferenceLine& reference_line,
     const PathData& path_data, const double planning_distance,
     const double planning_time,
+    const SLBoundary& adc_sl_boundary,
     const std::shared_ptr<DependencyInjector>& injector)
     : speed_bounds_config_(config),
       reference_line_(reference_line),
       path_data_(path_data),
+      adc_sl_boundary_(adc_sl_boundary),
       vehicle_param_(common::VehicleConfigHelper::GetConfig().vehicle_param()),
       planning_max_distance_(planning_distance),
       planning_max_time_(planning_time),
@@ -84,6 +86,12 @@ Status STBoundaryMapper::ComputeSTBoundary(PathDecision* path_decision) const {
     // If no longitudinal decision has been made, then plot it onto ST-graph.
     if (!ptr_obstacle->HasLongitudinalDecision()) {
       ComputeSTBoundary(ptr_obstacle);
+      const auto& boundary = ptr_obstacle->path_st_boundary();
+      if (ShouldIgnoreDynamicObstacleInChangeLane(*ptr_obstacle, boundary)) {
+        AINFO << "Erase ignored dynamic obstacle[" << ptr_obstacle->Id()
+              << "] ST boundary in change lane";
+        ptr_obstacle->EraseStBoundary();
+      }
       continue;
     }
 
@@ -106,6 +114,12 @@ Status STBoundaryMapper::ComputeSTBoundary(PathDecision* path_decision) const {
       // 2. Depending on the longitudinal overtake/yield decision,
       //    fine-tune the upper/lower st-boundary of related obstacles.
       ComputeSTBoundaryWithDecision(ptr_obstacle, decision);
+      const auto& boundary = ptr_obstacle->path_st_boundary();
+      if (ShouldIgnoreDynamicObstacleInChangeLane(*ptr_obstacle, boundary)) {
+        AINFO << "Erase ignored dynamic obstacle[" << ptr_obstacle->Id()
+              << "] ST boundary with decision in change lane";
+        ptr_obstacle->EraseStBoundary();
+      }
     } else if (!decision.has_ignore()) {
       // 3. Ignore those unrelated obstacles.
       AWARN << "No mapping for decision: " << decision.DebugString();
@@ -121,6 +135,66 @@ Status STBoundaryMapper::ComputeSTBoundary(PathDecision* path_decision) const {
   }
 
   return Status::OK();
+}
+
+bool STBoundaryMapper::ShouldIgnoreDynamicObstacleInChangeLane(
+    const Obstacle& obstacle, const STBoundary& boundary) const {
+  if (!speed_bounds_config_.ignore_dynamic_obstacles_in_change_lane()) {
+    return false;
+  }
+  const auto* planning_status = injector_->planning_context()
+                                    ->mutable_planning_status()
+                                    ->mutable_change_lane();
+  if (!planning_status->has_status() ||
+      planning_status->status() != ChangeLaneStatus::IN_CHANGE_LANE) {
+    return false;
+  }
+  if (obstacle.IsStatic() || obstacle.IsVirtual() || boundary.IsEmpty()) {
+    return false;
+  }
+  const auto& obstacle_sl = obstacle.PerceptionSLBoundary();
+  if (obstacle_sl.start_s() <= adc_sl_boundary_.end_s() &&
+      obstacle_sl.end_s() >= adc_sl_boundary_.start_s()) {
+    return false;
+  }
+  if (obstacle_sl.start_s() > adc_sl_boundary_.end_s() &&
+      speed_bounds_config_.ignore_front_dynamic_obstacles_in_change_lane()) {
+    AINFO << "Ignore front dynamic obstacle[" << obstacle.Id()
+          << "] ST boundary in change lane, gap: "
+          << obstacle_sl.start_s() - adc_sl_boundary_.end_s()
+          << ", min_t: " << boundary.min_t()
+          << ", min_s: " << boundary.min_s();
+    return true;
+  }
+  if (obstacle_sl.end_s() < adc_sl_boundary_.start_s()) {
+    const double rear_gap = adc_sl_boundary_.start_s() - obstacle_sl.end_s();
+    if (rear_gap >
+        speed_bounds_config_.change_lane_keep_rear_dynamic_obstacle_gap()) {
+      AINFO << "Ignore rear dynamic obstacle[" << obstacle.Id()
+            << "] ST boundary in change lane, gap: " << rear_gap
+            << ", min_t: " << boundary.min_t()
+            << ", min_s: " << boundary.min_s();
+      return true;
+    }
+    AINFO << "Keep near rear dynamic obstacle[" << obstacle.Id()
+          << "] ST boundary in change lane, gap: " << rear_gap
+          << ", min_t: " << boundary.min_t()
+          << ", min_s: " << boundary.min_s();
+    return false;
+  }
+  if (obstacle.IsBlockingObstacle()) {
+    return false;
+  }
+  if (boundary.min_t() <=
+          speed_bounds_config_.change_lane_keep_dynamic_obstacle_min_t() ||
+      boundary.min_s() <=
+          speed_bounds_config_.change_lane_keep_dynamic_obstacle_min_s()) {
+    return false;
+  }
+  return boundary.min_t() >
+             speed_bounds_config_.change_lane_ignore_dynamic_obstacle_min_t() ||
+         boundary.min_s() >
+             speed_bounds_config_.change_lane_ignore_dynamic_obstacle_min_s();
 }
 
 bool STBoundaryMapper::MapStopDecision(
@@ -209,6 +283,18 @@ bool STBoundaryMapper::GetOverlapBoundaryPoints(
       planning_status->status() == ChangeLaneStatus::IN_CHANGE_LANE
           ? speed_bounds_config_.lane_change_obstacle_nudge_l_buffer()
           : FLAGS_nonstatic_obstacle_nudge_l_buffer;
+  if (planning_status->status() != ChangeLaneStatus::IN_CHANGE_LANE &&
+      obstacle.IsStatic() && !obstacle.IsVirtual() &&
+      obstacle.PerceptionSLBoundary().end_s() >= adc_sl_boundary_.start_s()) {
+    const double static_front_obstacle_nudge_l_buffer =
+        speed_bounds_config_.static_front_obstacle_nudge_l_buffer();
+    AINFO << "static front/overlap obstacle l_buffer override: " << l_buffer
+          << " -> " << static_front_obstacle_nudge_l_buffer
+          << ", obstacle_id=" << obstacle.Id()
+          << ", obstacle_end_s=" << obstacle.PerceptionSLBoundary().end_s()
+          << ", adc_start_s=" << adc_sl_boundary_.start_s();
+    l_buffer = static_front_obstacle_nudge_l_buffer;
+  }
 
   // Draw the given obstacle on the ST-graph.
   const auto& trajectory = obstacle.Trajectory();

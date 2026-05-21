@@ -73,6 +73,17 @@ bool IsContestUTurn(const ReferenceLineInfo& reference_line_info, const Scenario
     const double adc_end_s = reference_line_info.AdcSlBoundary().end_s();
     const auto& reference_line = reference_line_info.reference_line();
     const double ref_length = reference_line.Length();
+    const double window_end = std::min(adc_end_s + config.u_turn_look_forward_distance(), ref_length - 1.0);
+
+    if (window_end - adc_end_s >= 10.0) {
+        const double heading_change = std::fabs(
+                common::math::NormalizeAngle(
+                        reference_line.GetReferencePoint(window_end).heading()
+                        - reference_line.GetReferencePoint(adc_end_s).heading()));
+        if (heading_change > config.u_turn_heading_change_threshold()) {
+            return true;
+        }
+    }
 
     for (double s = adc_end_s; s < adc_end_s + config.u_turn_look_forward_distance() && s < ref_length;
          s += kFeatureSampleStep) {
@@ -83,31 +94,10 @@ bool IsContestUTurn(const ReferenceLineInfo& reference_line_info, const Scenario
     if (reference_line_info.GetPathTurnType(adc_end_s) == hdmap::Lane::U_TURN) {
         return true;
     }
-
-    double high_kappa_s = -1.0;
-    for (double s = adc_end_s + 5.0; s + kFeatureSampleStep < ref_length; s += kFeatureSampleStep) {
-        if (std::fabs(reference_line.GetReferencePoint(s).kappa()) > config.u_turn_kappa_threshold()) {
-            high_kappa_s = s;
-            break;
-        }
-    }
-    if (high_kappa_s < 0.0) {
-        return false;
-    }
-
-    const double window_start = std::max(0.0, high_kappa_s - kDefaultUTurnHeadingWindowRadius);
-    const double window_end = std::min(ref_length - 1.0, high_kappa_s + kDefaultUTurnHeadingWindowRadius);
-    if (window_end - window_start < 10.0) {
-        return false;
-    }
-    const double heading_change = std::fabs(
-            common::math::NormalizeAngle(
-                    reference_line.GetReferencePoint(window_end).heading()
-                    - reference_line.GetReferencePoint(window_start).heading()));
-    return heading_change > config.u_turn_heading_change_threshold();
+    return false;
 }
 
-bool IsContestConstructionZone(const ReferenceLineInfo& reference_line_info, const ScenarioContestConfig& config) {
+int CountContestConstructionConesAhead(const ReferenceLineInfo& reference_line_info, double look_forward_distance) {
     const double adc_back_s = reference_line_info.AdcSlBoundary().start_s();
     const double adc_end_s = reference_line_info.AdcSlBoundary().end_s();
     int cone_count = 0;
@@ -117,11 +107,22 @@ bool IsContestConstructionZone(const ReferenceLineInfo& reference_line_info, con
         }
         const auto& sl = obstacle->PerceptionSLBoundary();
         // 只统计主车前方范围内的锥桶，不依赖XY硬编码区域
-        if (sl.start_s() > adc_back_s - 3.0 && sl.start_s() - adc_end_s < config.construction_look_forward_distance()) {
+        if (sl.start_s() > adc_back_s - 3.0 && sl.start_s() - adc_end_s < look_forward_distance) {
             ++cone_count;
         }
     }
-    return cone_count >= config.construction_min_cone_count();
+    return cone_count;
+}
+
+bool IsContestConstructionZone(const ReferenceLineInfo& reference_line_info, const ScenarioContestConfig& config) {
+    if (IsContestUTurn(reference_line_info, config) || IsContestSCurve(reference_line_info, config)) {
+        return false;
+    }
+    // Entry is intentionally strict: S-curve cones can be dense locally, but the
+    // construction task has a long 100 m cone field. Use "more than N" so the
+    // config remains a strict entry gate.
+    return CountContestConstructionConesAhead(reference_line_info, config.construction_look_forward_distance())
+            > config.construction_min_cone_count();
 }
 
 bool IsContestStationShuttle(

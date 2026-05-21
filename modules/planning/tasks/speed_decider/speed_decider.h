@@ -102,6 +102,9 @@ class SpeedDecider : public Task {
 
   void AppendIgnoreDecision(Obstacle* obstacle) const;
 
+  bool ShouldIgnoreDynamicObstacleInChangeLane(
+      const Obstacle& obstacle, const STBoundary& boundary) const;
+
   /**
    * @brief "too close" is determined by whether ego vehicle will hit the front
    * obstacle if the obstacle drive at current speed and ego vehicle use some

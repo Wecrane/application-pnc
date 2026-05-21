@@ -49,6 +49,26 @@ using apollo::common::VehicleConfigHelper;
 constexpr double kIntersectionClearanceDist = 20.0;
 constexpr double kJunctionClearanceDist = 15.0;
 
+namespace {
+
+int CountConstructionConesAhead(const ReferenceLineInfo& reference_line_info, double look_forward_distance) {
+    const double adc_back_s = reference_line_info.AdcSlBoundary().start_s();
+    const double adc_end_s = reference_line_info.AdcSlBoundary().end_s();
+    int cone_count = 0;
+    for (const auto* obstacle : reference_line_info.path_decision().obstacles().Items()) {
+        if (!contest::IsSmallRealObstacle(obstacle)) {
+            continue;
+        }
+        const auto& sl = obstacle->PerceptionSLBoundary();
+        if (sl.start_s() > adc_back_s - 3.0 && sl.start_s() - adc_end_s < look_forward_distance) {
+            ++cone_count;
+        }
+    }
+    return cone_count;
+}
+
+}  // namespace
+
 bool ContestLaneBorrowPath::Init(
         const std::string& config_dir,
         const std::string& name,
@@ -62,6 +82,16 @@ bool ContestLaneBorrowPath::Init(
 apollo::common::Status ContestLaneBorrowPath::Process(Frame* frame, ReferenceLineInfo* reference_line_info) {
     // 赛题二：变道 reference_line 上不跑 lane_borrow，避免干扰变道
     if (reference_line_info->IsChangeLanePath()) {
+        return Status::OK();
+    }
+    if (contest::IsCurrentScenario(injector_, contest::kUTurnScenario)) {
+        decided_side_pass_direction_.clear();
+        auto* mutable_path_decider_status
+                = injector_->planning_context()->mutable_planning_status()->mutable_path_decider();
+        mutable_path_decider_status->set_left_borrow(false);
+        mutable_path_decider_status->set_right_borrow(false);
+        mutable_path_decider_status->set_is_in_path_lane_borrow_scenario(false);
+        AINFO << "Contest U-turn scenario uses reference-line path, skip lane borrow.";
         return Status::OK();
     }
     config_.mutable_path_optimizer_config()->set_l_weight(3.0);
@@ -80,18 +110,19 @@ apollo::common::Status ContestLaneBorrowPath::Process(Frame* frame, ReferenceLin
     // 赛题五第二个场景中，车辆起始位置前方紧贴锥桶，path_decider 可能
     // 不将其识别为阻塞障碍物（障碍物太小/太近），导致 IsNecessaryToBorrowLane
     // 因 front_static_obstacle_id 为空而返回 false。
-    // 这里做一次独立计数，≥3 个锥桶即强制进入借道模式。
-    const int early_cone_count =
-            is_contest_construction ? contest::CountDefaultConstructionConesAhead(*reference_line_info) : 0;
+    // 这里做一次独立计数；进入施工区后只要前方仍有锥桶，就保持借道模式。
+    const int early_cone_count = is_contest_construction
+            ? CountConstructionConesAhead(*reference_line_info, contest::kDefaultConstructionLookForwardDistance)
+            : 0;
 
-    if (is_contest_construction && early_cone_count >= 3) {
+    if (is_contest_construction && early_cone_count > 0) {
         ForceConstructionLaneBorrow(early_cone_count);
     }
 
     // 施工区锥桶检测优先：跳过 IsNecessaryToBorrowLane() 中 use_self_lane_ 的退出逻辑，
     // 防止刚被强制打开的借道模式又被 UpdateSelfPathInfo → use_self_lane_≥6 关掉，
     // 导致 Force lane borrow → Switch to SELF-LANE → Force lane borrow 的死循环振荡。
-    if (!is_contest_construction || early_cone_count < 3) {
+    if (!is_contest_construction || early_cone_count <= 0) {
         if (!IsNecessaryToBorrowLane()) {
             ADEBUG << "No need to borrow lane";
             return Status::OK();
@@ -390,6 +421,76 @@ bool ContestLaneBorrowPath::OptimizePath(
     const ReferenceLine& reference_line = reference_line_info_->reference_line();
 
     for (const auto& path_boundary : path_boundaries) {
+        const bool is_reverse_path = (path_boundary.label().find("reverse_path") != std::string::npos);
+        if (is_reverse_path) {
+            if (!reverse_recovery_.path_initialized || path_boundary.empty()
+                || reverse_recovery_.reference_line_cache == nullptr) {
+                AERROR << "[CZ][REVERSE] skip invalid fixed reverse path, initialized="
+                       << reverse_recovery_.path_initialized << ", boundary_empty=" << path_boundary.empty()
+                       << ", has_straight_ref=" << (reverse_recovery_.reference_line_cache != nullptr);
+                continue;
+            }
+            const double step = std::fabs(path_boundary.delta_s());
+            if (step < 1e-6 || reverse_recovery_.fixed_start_s <= reverse_recovery_.fixed_end_s) {
+                AERROR << "[CZ][REVERSE] invalid fixed reverse path range, start_s="
+                       << reverse_recovery_.fixed_start_s << ", end_s=" << reverse_recovery_.fixed_end_s
+                       << ", step=" << step;
+                continue;
+            }
+
+            double current_reverse_s = reverse_recovery_.fixed_start_s;
+            common::SLPoint current_reverse_sl;
+            const common::math::Vec2d adc_xy(frame_->vehicle_state().x(), frame_->vehicle_state().y());
+            if (reverse_recovery_.reference_line_cache->XYToSL(adc_xy, &current_reverse_sl)) {
+                current_reverse_s = current_reverse_sl.s();
+            } else {
+                const double dx = frame_->vehicle_state().x() - reverse_recovery_.fixed_start_x;
+                const double dy = frame_->vehicle_state().y() - reverse_recovery_.fixed_start_y;
+                current_reverse_s = reverse_recovery_.fixed_start_s
+                        + dx * std::cos(reverse_recovery_.fixed_heading)
+                        + dy * std::sin(reverse_recovery_.fixed_heading);
+                AWARN << "[CZ][REVERSE] failed to project ADC to fixed reverse reference, fallback_s="
+                      << current_reverse_s;
+            }
+            current_reverse_s = std::min(
+                    reverse_recovery_.fixed_start_s,
+                    std::max(reverse_recovery_.fixed_end_s, current_reverse_s));
+            const double total_reverse_length = current_reverse_s - reverse_recovery_.fixed_end_s;
+            if (total_reverse_length <= 1e-3) {
+                AERROR << "[CZ][REVERSE] skip reverse path because current_s already reaches target, current_s="
+                       << current_reverse_s << ", end_s=" << reverse_recovery_.fixed_end_s;
+                continue;
+            }
+
+            FrenetFramePath reverse_frenet;
+            for (double traveled = 0.0; traveled <= total_reverse_length + 1e-6; traveled += step) {
+                common::FrenetFramePoint pt;
+                pt.set_s(current_reverse_s - traveled);
+                pt.set_l(reverse_recovery_.fixed_l);
+                pt.set_dl(0.0);
+                pt.set_ddl(0.0);
+                reverse_frenet.push_back(pt);
+            }
+
+            last_frame_ = std::make_unique<PathData>();
+            last_frame_->SetReferenceLine(reverse_recovery_.reference_line_cache.get());
+            if (!last_frame_->SetFrenetPath(std::move(reverse_frenet))) {
+                AERROR << "[CZ][REVERSE] failed to set fixed straight reverse path.";
+                continue;
+            }
+            last_frame_->set_path_label(path_boundary.label());
+            last_frame_->set_blocking_obstacle_id(path_boundary.blocking_obstacle_id());
+            last_frame_->set_is_reverse_path(true);
+            candidate_path_data->push_back(*last_frame_);
+            AINFO << "[CZ][REVERSE] fixed straight reference reverse path, length="
+                  << total_reverse_length << ", path_s=[" << current_reverse_s
+                  << "->" << reverse_recovery_.fixed_end_s << "], heading="
+                  << reverse_recovery_.fixed_heading << ", l=" << reverse_recovery_.fixed_l
+                  << ", adc_xy=(" << frame_->vehicle_state().x() << ","
+                  << frame_->vehicle_state().y() << ")";
+            continue;
+        }
+
         std::vector<double> opt_l, opt_dl, opt_ddl;
         std::vector<std::pair<double, double>> ddl_bounds;
         PathOptimizerUtil::CalculateAccBound(path_boundary, reference_line, &ddl_bounds);
@@ -412,25 +513,15 @@ bool ContestLaneBorrowPath::OptimizePath(
             PathOptimizerUtil::UpdatePathRefWithBound(path_boundary, ref_weight, &ref_l, &weight_ref_l);
         }
 
-        // 施工区域：路径终点不应强制归零，使用边界中点作为目标终点
         std::array<double, 3> end_state = {0.0, 0.0, 0.0};
-        bool is_reverse_path = (path_boundary.label().find("reverse_path") != std::string::npos);
+        // 施工区域：路径终点不应强制归零，使用边界中点作为目标终点
         if (path_boundary.label().find("construct_zone") != std::string::npos) {
             const auto& last_pt = path_boundary.back();
             double end_l = (last_pt.l_lower.l + last_pt.l_upper.l) * 0.5;
             end_state = {end_l, 0.0, 0.0};
         }
-        if (is_reverse_path) {
-            // 倒车路径：终点横向保持当前 l，不强制归零
-            end_state = {init_sl_state_.second[0], 0.0, 0.0};
-        }
 
-        // 倒车路径：反转初始运动方向（dl, ddl 取负），让优化器沿参考线反向规划
         SLState opt_init_state = init_sl_state_;
-        if (is_reverse_path) {
-            opt_init_state.second[1] = -opt_init_state.second[1];
-            opt_init_state.second[2] = -opt_init_state.second[2];
-        }
 
         bool res_opt = PathOptimizerUtil::OptimizePath(
                 opt_init_state,
@@ -448,18 +539,6 @@ bool ContestLaneBorrowPath::OptimizePath(
             auto frenet_frame_path = PathOptimizerUtil::ToPiecewiseJerkPath(
                     opt_l, opt_dl, opt_ddl, path_boundary.delta_s(), path_boundary.start_s());
 
-            // 倒车路径：反转 s 方向 + 恢复 dl/ddl 符号
-            // 保持 s 递减（与官方 reverse_path 行为一致），不排序
-            if (is_reverse_path) {
-                double start_s = path_boundary.start_s();
-                for (auto& point : frenet_frame_path) {
-                    double frenet_delta_s = point.s() - start_s;
-                    point.set_s(start_s - frenet_delta_s);
-                    point.set_dl(-point.dl());
-                    point.set_ddl(-point.ddl());
-                }
-            }
-
             last_frame_ = std::make_unique<PathData>();
             last_frame_->SetReferenceLine(&reference_line);
             last_frame_->SetFrenetPath(std::move(frenet_frame_path));
@@ -470,38 +549,7 @@ bool ContestLaneBorrowPath::OptimizePath(
             }
             last_frame_->set_path_label(path_boundary.label());
             last_frame_->set_blocking_obstacle_id(path_boundary.blocking_obstacle_id());
-            if (is_reverse_path) {
-                last_frame_->set_is_reverse_path(true);
-            }
             candidate_path_data->push_back(*last_frame_);
-        } else if (is_reverse_path) {
-            // 倒车路径：OSQP 总是 primal infeasible（边界太窄/方向冲突），
-            // 直接生成直线后退路径（s 递减：start_s → end_s）。
-            // 与官方 reverse_path 任务一致：路径 s 递减 + is_reverse_path=true，
-            // 速度规划/Control 据此以负速度沿路径后退。
-            double start_s = path_boundary.start_s();          // ADC 当前位置 s（路径起点，高 s）
-            double end_s = path_boundary.back().s;             // 后方目标 s（路径终点，低 s）
-            double step = std::fabs(path_boundary.delta_s());  // 采样步长
-            double lat = init_sl_state_.second[0];             // 保持当前横向位置不变
-
-            FrenetFramePath fallback_frenet;
-            for (double s = start_s; s >= end_s - 1e-6; s -= step) {
-                common::FrenetFramePoint pt;
-                pt.set_s(s);
-                pt.set_l(lat);
-                pt.set_dl(0.0);
-                pt.set_ddl(0.0);
-                fallback_frenet.push_back(pt);
-            }
-
-            last_frame_ = std::make_unique<PathData>();
-            last_frame_->SetReferenceLine(&reference_line);
-            last_frame_->SetFrenetPath(std::move(fallback_frenet));
-            last_frame_->set_path_label(path_boundary.label());
-            last_frame_->set_blocking_obstacle_id(path_boundary.blocking_obstacle_id());
-            last_frame_->set_is_reverse_path(true);
-            candidate_path_data->push_back(*last_frame_);
-            AINFO << "[REVERSE] Direct backward path (skip OSQP), s=[" << start_s << "->" << end_s << "]";
         } else if (last_frame_ != nullptr && last_frame_->path_label() == path_boundary.label()) {
             candidate_path_data->push_back(*last_frame_);
         }
@@ -708,32 +756,65 @@ bool ContestLaneBorrowPath::MaybeGenerateReverseRecoveryBoundary(std::vector<Pat
     const double adc_s = reference_line_info_->AdcSlBoundary().start_s();
     const double adc_x = frame_->vehicle_state().x();
     const double adc_y = frame_->vehicle_state().y();
+    const double adc_heading = frame_->vehicle_state().heading();
 
+    // ── 倒车执行中 ──
     if (reverse_recovery_.active) {
         reverse_recovery_.frame_count++;
         const double backed_dist_s = reverse_recovery_.start_s - adc_s;
         const double backed_dist_xy = std::hypot(adc_x - reverse_recovery_.start_x, adc_y - reverse_recovery_.start_y);
-        const bool backed_enough =
-                reverse_recovery_.frame_count >= kReverseMinFrames && backed_dist_xy > kReverseDistance;
+
+        // 计算沿固定参考线的剩余距离（heading 投影法，避免 XYToSL 依赖）
+        double reverse_target_remain = std::numeric_limits<double>::infinity();
+        if (reverse_recovery_.path_initialized && reverse_recovery_.reference_line_cache != nullptr) {
+            const double dx = adc_x - reverse_recovery_.fixed_start_x;
+            const double dy = adc_y - reverse_recovery_.fixed_start_y;
+            const double current_reverse_s = reverse_recovery_.fixed_start_s
+                    + dx * std::cos(reverse_recovery_.fixed_heading)
+                    + dy * std::sin(reverse_recovery_.fixed_heading);
+            reverse_target_remain = std::max(0.0, current_reverse_s - reverse_recovery_.fixed_end_s);
+        }
+
+        const double reverse_distance = std::max(kMinReverseDistance, kReverseDistance);
+        const double reverse_target_remain_threshold =
+                std::max(kMinReverseTargetRemainThreshold, kReverseTargetRemainThreshold);
+        const bool backed_enough_by_xy = backed_dist_xy > reverse_distance;
+        const bool backed_enough_by_ref = reverse_target_remain <= reverse_target_remain_threshold;
+        const bool backed_enough = reverse_recovery_.frame_count >= kReverseMinFrames
+                && (backed_enough_by_xy || backed_enough_by_ref);
         const bool reverse_timeout = reverse_recovery_.frame_count > kReverseMaxFrames;
+
         if (backed_enough || reverse_timeout) {
-            reverse_recovery_.active = false;
-            AINFO << "[REVERSE] Complete: backed_xy=" << backed_dist_xy << "m, backed_s=" << backed_dist_s
-                  << "m, frames=" << reverse_recovery_.frame_count << (reverse_timeout ? ", timeout" : "");
-            reverse_recovery_.frame_count = 0;
+            const std::string reason = reverse_timeout
+                    ? "timeout"
+                    : (backed_enough_by_xy ? "distance" : "ref_target");
+            AINFO << "[CZ][REVERSE] complete: reason=" << reason
+                  << ", backed_xy=" << backed_dist_xy << "m, backed_s=" << backed_dist_s
+                  << "m, target_remain=" << reverse_target_remain
+                  << "m, target_threshold=" << reverse_target_remain_threshold
+                  << "m, reverse_distance=" << reverse_distance
+                  << "m, frames=" << reverse_recovery_.frame_count;
+            reverse_recovery_.Reset();
             return false;
         }
 
-        AINFO << "[REVERSE] Active: frame=" << reverse_recovery_.frame_count << ", backed_xy=" << backed_dist_xy
-              << "m, backed_s=" << backed_dist_s << "m";
-        PathBoundary reverse_bound;
-        if (!GenerateReversePathBoundary(&reverse_bound)) {
-            return true;
+        // 缓存有效性检查
+        if (!reverse_recovery_.path_initialized || reverse_recovery_.boundary_cache.empty()) {
+            AERROR << "[CZ][REVERSE] fixed reverse path cache is empty, abort reverse session.";
+            reverse_recovery_.Reset();
+            return false;
         }
-        boundary->push_back(reverse_bound);
+
+        if (reverse_recovery_.frame_count % 10 == 1) {
+            AINFO << "[CZ][REVERSE] reuse fixed reverse path: frame=" << reverse_recovery_.frame_count
+                  << ", backed_xy=" << backed_dist_xy << "m, target_remain=" << reverse_target_remain
+                  << "m, points=" << reverse_recovery_.boundary_cache.size();
+        }
+        boundary->push_back(reverse_recovery_.boundary_cache);
         return true;
     }
 
+    // ── 卡死检测（未进入倒车）──
     const double adc_move_xy = std::hypot(adc_x - reverse_recovery_.last_adc_x, adc_y - reverse_recovery_.last_adc_y);
     if (adc_speed < kStuckSpeedThreshold && adc_move_xy < 0.3) {
         reverse_recovery_.frame_count++;
@@ -748,19 +829,34 @@ bool ContestLaneBorrowPath::MaybeGenerateReverseRecoveryBoundary(std::vector<Pat
         return false;
     }
 
+    // ── 进入倒车模式：构建固定直线参考线 + 缓存边界 ──
     reverse_recovery_.active = true;
     reverse_recovery_.start_s = adc_s;
     reverse_recovery_.start_x = adc_x;
     reverse_recovery_.start_y = adc_y;
     reverse_recovery_.frame_count = 0;
-    AINFO << "[REVERSE] STUCK detected (speed=" << adc_speed << "), starting reverse from s=" << adc_s << ", xy=("
-          << adc_x << "," << adc_y << ")";
+    reverse_recovery_.path_initialized = false;
+    reverse_recovery_.boundary_cache.clear();
+    reverse_recovery_.reference_line_cache.reset();
 
-    PathBoundary reverse_bound;
-    if (!GenerateReversePathBoundary(&reverse_bound)) {
+    AINFO << "[CZ][REVERSE] stuck detected (speed=" << adc_speed << "), start_xy=("
+          << adc_x << "," << adc_y << "), heading=" << adc_heading;
+
+    const double reverse_distance = std::max(kMinReverseDistance, kReverseDistance);
+    if (!BuildReverseStraightReferenceLine(&reverse_recovery_, adc_x, adc_y, adc_heading, reverse_distance)) {
+        AERROR << "[CZ][REVERSE] failed to build reverse straight reference line.";
+        reverse_recovery_.Reset();
         return true;
     }
-    boundary->push_back(reverse_bound);
+
+    if (!GenerateCachedReversePathBoundary(reverse_recovery_, &reverse_recovery_.boundary_cache)) {
+        AERROR << "[CZ][REVERSE] failed to generate cached reverse boundary.";
+        reverse_recovery_.Reset();
+        return true;
+    }
+
+    reverse_recovery_.path_initialized = true;
+    boundary->push_back(reverse_recovery_.boundary_cache);
     return true;
 }
 

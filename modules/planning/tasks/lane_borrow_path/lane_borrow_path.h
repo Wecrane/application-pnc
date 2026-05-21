@@ -93,6 +93,8 @@ private:
     void UpdateSelfPathInfo();
 
     bool IsNudgeFinish();
+
+    bool ShouldFollowReferenceLineOnCurve() const;
     /**
      * @brief Check whether neighbor lane is borrowable
      * @param reference_line_info is input reference line info

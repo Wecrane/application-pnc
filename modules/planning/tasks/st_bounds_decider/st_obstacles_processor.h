@@ -50,6 +50,7 @@ class STObstaclesProcessor {
   STObstaclesProcessor() {}
 
   void Init(const double planning_distance, const double planning_time,
+            const bool static_obstacle_stop_requires_decision,
             const PathData& path_data, PathDecision* const path_decision,
             History* const history);
 
@@ -195,6 +196,7 @@ class STObstaclesProcessor {
  private:
   double planning_time_;
   double planning_distance_;
+  bool static_obstacle_stop_requires_decision_ = false;
   PathData path_data_;
   common::VehicleParam vehicle_param_;
   double adc_path_init_s_;

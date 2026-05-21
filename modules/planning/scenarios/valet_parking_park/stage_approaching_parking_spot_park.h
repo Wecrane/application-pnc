@@ -24,7 +24,6 @@
 #include <string>
 
 #include "cyber/plugin_manager/plugin_manager.h"
-#include "modules/common/math/vec2d.h"
 #include "modules/planning/planning_interface_base/scenario_base/stage.h"
 #include "modules/planning/scenarios/valet_parking_park/valet_parking_scenario.h"
 
@@ -41,11 +40,8 @@ class StageApproachingParkingSpotPark : public Stage {
 
  private:
   bool CheckADCStop(const Frame& frame);
-  bool GetTargetParkingSpotCenter(const Frame& frame,
-                                  common::math::Vec2d* center_point);
   double GetTargetS(const Frame& frame);
   bool CheckADCInParkingRange(const Frame& frame);
-  bool CheckADCNearTargetParkingSpot(const Frame& frame);
 
   ScenarioValetParkingParkConfig scenario_config_;
 };
