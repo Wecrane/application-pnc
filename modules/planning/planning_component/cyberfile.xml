@@ -33,9 +33,13 @@
   <depend repo_name="planning-scenario-valet-parking" type="binary">planning-scenario-valet-parking</depend>
   <depend repo_name="planning-scenario-valet-parking-park" type="binary">planning-scenario-valet-parking-park</depend>
   <depend repo_name="planning-scenario-yield-sign" type="binary">planning-scenario-yield-sign</depend>
+  <depend repo_name="planning-scenario-contest" type="binary">planning-scenario-contest</depend>
 
   <depend repo_name="planning-task-fallback-path" type="binary">planning-task-fallback-path</depend>
   <depend repo_name="planning-task-fast-stop-trajectory-fallback" type="binary">planning-task-fast-stop-trajectory-fallback</depend>
+  <depend repo_name="planning-task-contest-lane-change-path" type="binary">planning-task-contest-lane-change-path</depend>
+  <depend repo_name="planning-task-contest-lane-follow-path" type="binary">planning-task-contest-lane-follow-path</depend>
+  <depend repo_name="planning-task-contest-lane-borrow-path" type="binary">planning-task-contest-lane-borrow-path</depend>
   <depend repo_name="planning-task-lane-borrow-path" type="binary">planning-task-lane-borrow-path</depend>
   <depend repo_name="planning-task-lane-change-path" type="binary">planning-task-lane-change-path</depend>
   <depend repo_name="planning-task-lane-follow-path" type="binary">planning-task-lane-follow-path</depend>

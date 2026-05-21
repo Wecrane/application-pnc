@@ -20,6 +20,7 @@
 
 #include "modules/planning/scenarios/lane_follow/lane_follow_stage.h"
 
+#include <string>
 #include <utility>
 
 #include "cyber/common/log.h"
@@ -30,6 +31,7 @@
 #include "modules/common/vehicle_state/vehicle_state_provider.h"
 #include "modules/map/hdmap/hdmap.h"
 #include "modules/map/hdmap/hdmap_common.h"
+#include "modules/planning/planning_base/common/contest_scenario_status.h"
 #include "modules/planning/planning_base/common/ego_info.h"
 #include "modules/planning/planning_base/common/frame.h"
 #include "modules/planning/planning_base/common/speed_profile_generator.h"
@@ -50,6 +52,25 @@ using apollo::cyber::Clock;
 namespace {
 constexpr double kStraightForwardLineCost = 10.0;
 }  // namespace
+
+bool LaneFollowStage::IsContestLaneChangeScenario() const {
+    return contest::IsCurrentScenario(injector_, contest::kLaneChangeScenario);
+}
+
+bool LaneFollowStage::ShouldPlanReferenceLine(
+        bool has_drivable_reference_line,
+        const ReferenceLineInfo& reference_line_info) const {
+    if (!has_drivable_reference_line) {
+        return true;
+    }
+    return IsContestLaneChangeScenario() && reference_line_info.IsChangeLanePath();
+}
+
+bool LaneFollowStage::ShouldAcceptChangeLaneReferenceLine(const ReferenceLineInfo& reference_line_info) const {
+    const bool is_in_change_lane = injector_->planning_context()->planning_status().change_lane().status()
+            == ChangeLaneStatus::IN_CHANGE_LANE;
+    return reference_line_info.Cost() < kStraightForwardLineCost || is_in_change_lane;
+}
 
 void LaneFollowStage::RecordObstacleDebugInfo(ReferenceLineInfo* reference_line_info) {
     if (!FLAGS_enable_record_debug) {
@@ -88,61 +109,37 @@ StageResult LaneFollowStage::Process(const TrajectoryPoint& planning_start_point
 
     unsigned int count = 0;
     StageResult result;
-    AINFO << "[STAGE_LOG] ===== Frame start, ref_line count=" << frame->mutable_reference_line_info()->size()
-          << " =====";
+    ADEBUG << "[STAGE_LOG] Frame start, ref_line count=" << frame->mutable_reference_line_info()->size();
     for (auto& reference_line_info : *frame->mutable_reference_line_info()) {
-        // TODO(SHU): need refactor
         if (count++ == frame->mutable_reference_line_info()->size()) {
             break;
         }
-        AINFO << "[STAGE_LOG] iter=" << (count - 1) << " is_change_lane=" << reference_line_info.IsChangeLanePath()
-              << " has_drivable=" << has_drivable_reference_line << " id=" << reference_line_info.Lanes().Id();
 
-        if (has_drivable_reference_line) {
-            // 如果已经有 drivable ref_line 且当前不是变道路径，则跳过
-            // 但变道路径仍需处理，防止 lane-follow 抢先后 lane-change 被丢弃
-            if (!reference_line_info.IsChangeLanePath()) {
-                AINFO << "[STAGE_LOG] SKIP: already have drivable, this is lane-follow, marking NOT drivable and "
-                         "breaking";
-                reference_line_info.SetDrivable(false);
-                break;
-            }
-            AINFO << "[STAGE_LOG] has drivable but this is lane-change, still processing";
+        if (!ShouldPlanReferenceLine(has_drivable_reference_line, reference_line_info)) {
+            reference_line_info.SetDrivable(false);
+            break;
         }
 
-        AINFO << "[STAGE_LOG] calling PlanOnReferenceLine for iter=" << (count - 1);
         result = PlanOnReferenceLine(planning_start_point, frame, &reference_line_info);
-        AINFO << "[STAGE_LOG] PlanOnReferenceLine done, has_error=" << result.HasError()
-              << " cost=" << reference_line_info.Cost();
 
         if (!result.HasError()) {
             if (!reference_line_info.IsChangeLanePath()) {
-                AINFO << "[STAGE_LOG] WIN: lane-follow ref_line drivable, continue to next";
                 has_drivable_reference_line = true;
                 continue;
             }
-            // 变道期间即使 cost 高（如 speed fallback 加了 20000）也不淘汰 lane-change 路径
-            // 否则 lane-follow 会反复接管，导致"退出又进入"
-            bool is_in_change_lane = injector_->planning_context()->planning_status().change_lane().status()
-                    == ChangeLaneStatus::IN_CHANGE_LANE;
-            if (reference_line_info.Cost() < kStraightForwardLineCost || is_in_change_lane) {
-                AINFO << "[STAGE_LOG] WIN: lane-change ref_line drivable (cost=" << reference_line_info.Cost()
-                      << " threshold=" << kStraightForwardLineCost << " in_change_lane=" << is_in_change_lane << ")";
+            if (ShouldAcceptChangeLaneReferenceLine(reference_line_info)) {
                 if (!has_drivable_reference_line) {
                     has_drivable_reference_line = true;
                 }
                 reference_line_info.SetDrivable(true);
             } else {
-                AINFO << "[STAGE_LOG] LOSE: lane-change cost too high (cost=" << reference_line_info.Cost()
-                      << " >= " << kStraightForwardLineCost << ")";
                 reference_line_info.SetDrivable(false);
             }
         } else {
-            AINFO << "[STAGE_LOG] ERROR: PlanOnReferenceLine failed";
             reference_line_info.SetDrivable(false);
         }
     }
-    AINFO << "[STAGE_LOG] ===== Frame end, has_drivable=" << has_drivable_reference_line << " =====";
+    ADEBUG << "[STAGE_LOG] Frame end, has_drivable=" << has_drivable_reference_line;
 
     return has_drivable_reference_line ? result.SetStageStatus(StageStatusType::RUNNING)
                                        : result.SetStageStatus(StageStatusType::ERROR);

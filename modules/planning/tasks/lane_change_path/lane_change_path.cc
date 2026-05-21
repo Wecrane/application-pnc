@@ -17,6 +17,8 @@
 #include "modules/planning/tasks/lane_change_path/lane_change_path.h"
 
 #include <algorithm>
+#include <array>
+#include <cmath>
 #include <limits>
 #include <memory>
 #include <string>
@@ -25,6 +27,8 @@
 
 #include "cyber/time/clock.h"
 #include "modules/common/configs/vehicle_config_helper.h"
+#include "modules/common/math/math_utils.h"
+#include "modules/common_msgs/chassis_msgs/chassis.pb.h"
 #include "modules/planning/planning_base/common/planning_context.h"
 #include "modules/planning/planning_interface_base/task_base/common/path_generation.h"
 #include "modules/planning/planning_interface_base/task_base/common/path_util/path_assessment_decider_util.h"
@@ -37,17 +41,10 @@ namespace planning {
 using apollo::common::ErrorCode;
 using apollo::common::Status;
 using apollo::common::VehicleConfigHelper;
-using apollo::common::math::Box2d;
-using apollo::common::math::Polygon2d;
-using apollo::common::math::Vec2d;
 using apollo::cyber::Clock;
 
 constexpr double kIntersectionClearanceDist = 20.0;
 constexpr double kJunctionClearanceDist = 15.0;
-constexpr double kLaneChangeWatchRearBuffer = 4.0;
-constexpr double kLaneChangeWatchFrontBuffer = 0.2;
-constexpr double kLaneChangeWatchLateralBuffer = 0.8;
-constexpr double kLaneChangeHoldLateralHalfWidth = 0.5;
 
 bool LaneChangePath::Init(
         const std::string& config_dir,
@@ -61,57 +58,41 @@ bool LaneChangePath::Init(
 }
 
 apollo::common::Status LaneChangePath::Process(Frame* frame, ReferenceLineInfo* reference_line_info) {
-    AINFO << "[LC_PROCESS] called, is_change_lane=" << reference_line_info->IsChangeLanePath()
-          << " path_reusable=" << reference_line_info->path_reusable()
-          << " ref_line_count=" << frame->reference_line_info().size();
+    ADEBUG << "[LC_PROCESS] called, is_change_lane=" << reference_line_info->IsChangeLanePath()
+           << " path_reusable=" << reference_line_info->path_reusable()
+           << " ref_line_count=" << frame->reference_line_info().size();
     UpdateLaneChangeStatus();
-
-    // 赛题二：变道及变完后全程限速 29 km/h (8.06 m/s)
-    // 放在 IsChangeLanePath 判断之前，确保变道完成后仍有限速
-    constexpr double kLaneChangeSpeedLimit = 29.0 / 3.6;
-    reference_line_info->mutable_reference_line()->AddSpeedLimit(
-            reference_line_info->AdcSlBoundary().start_s(),
-            reference_line_info->reference_line().Length(),
-            kLaneChangeSpeedLimit);
 
     const auto& status = injector_->planning_context()->mutable_planning_status()->mutable_change_lane()->status();
     if (!reference_line_info->IsChangeLanePath() || reference_line_info->path_reusable()) {
-        AINFO << "[LC_PROCESS] SKIP: not change_lane or path reusable, returning OK";
+        ADEBUG << "[LC_PROCESS] SKIP: not change_lane or path reusable, returning OK";
         return Status::OK();
     }
+    if (status != ChangeLaneStatus::IN_CHANGE_LANE) {
+        AINFO << injector_->planning_context()->mutable_planning_status()->mutable_change_lane()->DebugString();
+        return Status(ErrorCode::PLANNING_ERROR, "Not satisfy lane change conditions");
+    }
 
-    AINFO << "[LC_PROCESS] GENERATING lane change path, status=" << status
-          << " clear=" << is_clear_to_change_lane_;
+    ADEBUG << "[LC_PROCESS] GENERATING lane change path, status=" << status
+           << " clear=" << is_clear_to_change_lane_;
     // 始终规划路径：无车时继续往目标车道挪，有车时锁住当前横向位置直行
     std::vector<PathBoundary> candidate_path_boundaries;
     std::vector<PathData> candidate_path_data;
 
     GetStartPointSLState();
     if (!DecidePathBounds(&candidate_path_boundaries)) {
-        AINFO << "[LC_PROCESS] FAIL: DecidePathBounds failed";
+        ADEBUG << "[LC_PROCESS] FAIL: DecidePathBounds failed";
         return Status(ErrorCode::PLANNING_ERROR, "lane change path bounds failed");
     }
     if (!OptimizePath(candidate_path_boundaries, &candidate_path_data)) {
-        AINFO << "[LC_PROCESS] FAIL: OptimizePath failed";
+        ADEBUG << "[LC_PROCESS] FAIL: OptimizePath failed";
         return Status(ErrorCode::PLANNING_ERROR, "lane change path optimize failed");
     }
     if (!AssessPath(&candidate_path_data, reference_line_info->mutable_path_data())) {
-        AINFO << "[LC_PROCESS] FAIL: AssessPath failed, no valid path";
+        ADEBUG << "[LC_PROCESS] FAIL: AssessPath failed, no valid path";
         return Status(ErrorCode::PLANNING_ERROR, "No valid lane change path");
     }
-    AINFO << "[LC_PROCESS] SUCCESS: lane change path generated";
-
-    // 赛题二：变道路径一旦生成，就不让后续 stop/follow 逻辑把它截断
-    {
-        for (auto& obs : reference_line_info->path_decision()->obstacles().Items()) {
-            ObjectDecisionType object_decision;
-            object_decision.mutable_ignore();
-            reference_line_info->path_decision()->AddLongitudinalDecision(
-                    "LaneChangePath/ignore-all", obs->Id(), object_decision);
-            reference_line_info->path_decision()->AddLateralDecision(
-                    "LaneChangePath/ignore-all", obs->Id(), object_decision);
-        }
-    }
+    ADEBUG << "[LC_PROCESS] SUCCESS: lane change path generated";
 
     return Status::OK();
 }
@@ -145,33 +126,17 @@ bool LaneChangePath::DecidePathBounds(std::vector<PathBoundary>* boundary) {
     PathBound temp_path_bound = path_bound;
     std::string blocking_obstacle_id;
     std::vector<SLPolygon> obs_sl_polygons;
-    if (!is_clear_to_change_lane_) {
-        // 有车就把整条路径压成“当前横向位置直线保持”
-        const double current_l = init_sl_state_.second[0];
-        AINFO << "[LC_BOUNDS] HOLD current_l=" << current_l;
-        for (size_t i = 0; i < path_bound.size(); ++i) {
-            auto& low = path_bound[i].l_lower.l;
-            auto& high = path_bound[i].l_upper.l;
-            low = std::max(low, current_l - kLaneChangeHoldLateralHalfWidth);
-            high = std::min(high, current_l + kLaneChangeHoldLateralHalfWidth);
-            if (low >= high) {
-                low = current_l - kLaneChangeHoldLateralHalfWidth;
-                high = current_l + kLaneChangeHoldLateralHalfWidth;
-            }
-        }
-    } else {
-        PathBoundsDeciderUtil::GetSLPolygons(*reference_line_info_, &obs_sl_polygons, init_sl_state_);
-        if (!PathBoundsDeciderUtil::GetBoundaryFromStaticObstacles(
-                    *reference_line_info_,
-                    &obs_sl_polygons,
-                    init_sl_state_,
-                    &path_bound,
-                    &blocking_obstacle_id,
-                    &path_narrowest_width)) {
-            AERROR << "Failed to decide fine tune the boundaries after "
-                      "taking into consideration all static obstacles.";
-            return false;
-        }
+    PathBoundsDeciderUtil::GetSLPolygons(*reference_line_info_, &obs_sl_polygons, init_sl_state_);
+    if (!PathBoundsDeciderUtil::GetBoundaryFromStaticObstacles(
+                *reference_line_info_,
+                &obs_sl_polygons,
+                init_sl_state_,
+                &path_bound,
+                &blocking_obstacle_id,
+                &path_narrowest_width)) {
+        AERROR << "Failed to decide fine tune the boundaries after "
+                  "taking into consideration all static obstacles.";
+        return false;
     }
 
     // Append some extra path bound points to avoid zero-length path data.
@@ -190,14 +155,7 @@ bool LaneChangePath::OptimizePath(
         std::vector<PathData>* candidate_path_data) {
     const auto& config = config_.path_optimizer_config();
     const ReferenceLine& reference_line = reference_line_info_->reference_line();
-    const bool should_hold_laterally = !is_clear_to_change_lane_;
-    AINFO << "[LC_OPT] hold_laterally=" << should_hold_laterally
-          << " current_l=" << init_sl_state_.second[0];
-    std::array<double, 3> end_state = {
-        should_hold_laterally ? init_sl_state_.second[0] : 0.0,
-        0.0,
-        0.0
-    };
+    std::array<double, 3> end_state = {0.0, 0.0, 0.0};
     for (const auto& path_boundary : path_boundaries) {
         size_t path_boundary_size = path_boundary.boundary().size();
         if (path_boundary_size <= 1U) {
@@ -208,10 +166,8 @@ bool LaneChangePath::OptimizePath(
         std::vector<std::pair<double, double>> ddl_bounds;
         PathOptimizerUtil::CalculateAccBound(path_boundary, reference_line, &ddl_bounds);
         const double jerk_bound = PathOptimizerUtil::EstimateJerkBoundary(std::fmax(init_sl_state_.first[1], 1e-12));
-        std::vector<double> ref_l(
-                path_boundary_size, should_hold_laterally ? init_sl_state_.second[0] : 0.0);
-        std::vector<double> weight_ref_l(
-                path_boundary_size, should_hold_laterally ? config.path_reference_l_weight() : 0.0);
+        std::vector<double> ref_l(path_boundary_size, 0.0);
+        std::vector<double> weight_ref_l(path_boundary_size, 0.0);
 
         bool res_opt = PathOptimizerUtil::OptimizePath(
                 init_sl_state_,
@@ -293,16 +249,19 @@ void LaneChangePath::UpdateLaneChangeStatus() {
     }
     // has change lane
     if (reference_line_info_->IsChangeLanePath()) {
+        const auto* history_frame = injector_->frame_history()->Latest();
+        if (!CheckLastFrameSucceed(history_frame)) {
+            UpdateStatus(now, ChangeLaneStatus::CHANGE_LANE_FAILED, change_lane_id);
+            is_exist_lane_change_start_position_ = false;
+            return;
+        }
         is_clear_to_change_lane_ = IsClearToChangeLane(reference_line_info_);
         change_lane_id = reference_line_info_->Lanes().Id();
         double ego_speed = frame_->vehicle_state().linear_velocity();
-        constexpr double kMinLaneChangeSpeed = 10.0 / 3.6;  // 10 km/h
 
         if (prev_status->status() == ChangeLaneStatus::CHANGE_LANE_FAILED) {
             double elapsed = now - prev_status->timestamp();
-            if (elapsed > config_.change_lane_fail_freeze_time()
-                && ego_speed >= kMinLaneChangeSpeed
-                && is_clear_to_change_lane_) {
+            if (elapsed > config_.change_lane_fail_freeze_time()) {
                 AINFO << "[LC_STATUS] RETRY: FAILED -> IN_CHANGE_LANE, elapsed=" << elapsed
                       << " freeze=" << config_.change_lane_fail_freeze_time()
                       << " speed=" << ego_speed * 3.6;
@@ -310,15 +269,6 @@ void LaneChangePath::UpdateLaneChangeStatus() {
             }
             return;
         } else if (prev_status->status() == ChangeLaneStatus::CHANGE_LANE_FINISHED) {
-            // 赛题二：先提速到 25 km/h 再开始找变道窗口
-            if (ego_speed < kMinLaneChangeSpeed) {
-                AINFO << "[LC_STATUS] WAIT: speed=" << ego_speed * 3.6 << " km/h < 25, waiting to accelerate";
-                return;
-            }
-            if (!is_clear_to_change_lane_) {
-                AINFO << "[LC_STATUS] WAIT: speed ok but window not clear, waiting";
-                return;
-            }
             double elapsed = now - prev_status->timestamp();
             if (elapsed > config_.change_lane_success_freeze_time()) {
                 AINFO << "[LC_STATUS] START: FINISHED -> IN_CHANGE_LANE, elapsed=" << elapsed
@@ -339,44 +289,84 @@ void LaneChangePath::UpdateLaneChangeStatus() {
 }
 
 bool LaneChangePath::IsClearToChangeLane(ReferenceLineInfo* reference_line_info) {
-    const auto& adc_sl_boundary = reference_line_info->AdcSlBoundary();
-    const double check_start_s = adc_sl_boundary.start_s() - kLaneChangeWatchRearBuffer;
-    const double check_end_s = adc_sl_boundary.end_s() + kLaneChangeWatchFrontBuffer;
-    const double ego_min_l = std::min(adc_sl_boundary.start_l(), adc_sl_boundary.end_l());
-    const double ego_max_l = std::max(adc_sl_boundary.start_l(), adc_sl_boundary.end_l());
+    double ego_start_s = reference_line_info->AdcSlBoundary().start_s();
+    double ego_end_s = reference_line_info->AdcSlBoundary().end_s();
+    double ego_v = std::abs(reference_line_info->vehicle_state().linear_velocity());
 
     for (const auto* obstacle : reference_line_info->path_decision()->obstacles().Items()) {
         if (obstacle->IsVirtual() || obstacle->IsStatic()) {
+            ADEBUG << "skip one virtual or static obstacle";
             continue;
         }
 
-        double obs_start_s = std::numeric_limits<double>::max();
-        double obs_end_s = -std::numeric_limits<double>::max();
-        double obs_min_l = std::numeric_limits<double>::max();
-        double obs_max_l = -std::numeric_limits<double>::max();
+        double start_s = std::numeric_limits<double>::max();
+        double end_s = -std::numeric_limits<double>::max();
+        double start_l = std::numeric_limits<double>::max();
+        double end_l = -std::numeric_limits<double>::max();
 
         for (const auto& p : obstacle->PerceptionPolygon().points()) {
             apollo::common::SLPoint sl_point;
             reference_line_info->reference_line().XYToSL(p, &sl_point);
-            obs_start_s = std::fmin(obs_start_s, sl_point.s());
-            obs_end_s = std::fmax(obs_end_s, sl_point.s());
-            obs_min_l = std::fmin(obs_min_l, sl_point.l());
-            obs_max_l = std::fmax(obs_max_l, sl_point.l());
+            start_s = std::fmin(start_s, sl_point.s());
+            end_s = std::fmax(end_s, sl_point.s());
+            start_l = std::fmin(start_l, sl_point.l());
+            end_l = std::fmax(end_l, sl_point.l());
         }
 
-        // 只关心车头前方 0.2m 到车尾后方 2m 的窗口
-        if (obs_end_s < check_start_s || obs_start_s > check_end_s) {
-            continue;
+        if (reference_line_info->IsChangeLanePath()) {
+            double left_width = 0.0;
+            double right_width = 0.0;
+            reference_line_info->mutable_reference_line()->GetLaneWidth(
+                    (start_s + end_s) * 0.5, &left_width, &right_width);
+            if (end_l < -right_width || start_l > left_width) {
+                continue;
+            }
         }
 
-        const double lateral_gap = std::max(ego_min_l - obs_max_l, obs_min_l - ego_max_l);
-        AINFO << "[LC_CLEAR] obs=" << obstacle->Id() << " ego_l=[" << ego_min_l << "," << ego_max_l
-              << "] obs_l=[" << obs_min_l << "," << obs_max_l << "] gap=" << lateral_gap
-              << " s=[" << check_start_s << "," << check_end_s << "]";
-        if (lateral_gap < kLaneChangeWatchLateralBuffer) {
-            ADEBUG << "Lane change blocked: lateral_gap=" << lateral_gap << " obstacle=" << obstacle->Id();
+        bool same_direction = true;
+        if (obstacle->HasTrajectory()) {
+            double obstacle_moving_direction = obstacle->Trajectory().trajectory_point(0).path_point().theta();
+            const auto& vehicle_state = reference_line_info->vehicle_state();
+            double vehicle_moving_direction = vehicle_state.heading();
+            if (vehicle_state.gear() == canbus::Chassis::GEAR_REVERSE) {
+                vehicle_moving_direction = common::math::NormalizeAngle(vehicle_moving_direction + M_PI);
+            }
+            double heading_difference
+                    = std::abs(common::math::NormalizeAngle(obstacle_moving_direction - vehicle_moving_direction));
+            same_direction = heading_difference < (M_PI / 2.0);
+        }
+
+        constexpr double kSafeTimeOnSameDirection = 3.0;
+        constexpr double kSafeTimeOnOppositeDirection = 5.0;
+        constexpr double kForwardMinSafeDistanceOnSameDirection = 10.0;
+        constexpr double kBackwardMinSafeDistanceOnSameDirection = 10.0;
+        constexpr double kForwardMinSafeDistanceOnOppositeDirection = 50.0;
+        constexpr double kBackwardMinSafeDistanceOnOppositeDirection = 1.0;
+        constexpr double kDistanceBuffer = 0.5;
+
+        double kForwardSafeDistance = 0.0;
+        double kBackwardSafeDistance = 0.0;
+        if (same_direction) {
+            kForwardSafeDistance = std::fmax(
+                    kForwardMinSafeDistanceOnSameDirection, (ego_v - obstacle->speed()) * kSafeTimeOnSameDirection);
+            kBackwardSafeDistance = std::fmax(
+                    kBackwardMinSafeDistanceOnSameDirection, (obstacle->speed() - ego_v) * kSafeTimeOnSameDirection);
+        } else {
+            kForwardSafeDistance = std::fmax(
+                    kForwardMinSafeDistanceOnOppositeDirection,
+                    (ego_v + obstacle->speed()) * kSafeTimeOnOppositeDirection);
+            kBackwardSafeDistance = kBackwardMinSafeDistanceOnOppositeDirection;
+        }
+
+        if (HysteresisFilter(
+                    ego_start_s - end_s, kBackwardSafeDistance, kDistanceBuffer, obstacle->IsLaneChangeBlocking())
+            && HysteresisFilter(
+                    start_s - ego_end_s, kForwardSafeDistance, kDistanceBuffer, obstacle->IsLaneChangeBlocking())) {
+            reference_line_info->path_decision()->Find(obstacle->Id())->SetLaneChangeBlocking(true);
+            ADEBUG << "Lane Change is blocked by obstacle" << obstacle->Id();
             return false;
         }
+        reference_line_info->path_decision()->Find(obstacle->Id())->SetLaneChangeBlocking(false);
     }
     return true;
 }
@@ -512,7 +502,17 @@ void LaneChangePath::SetPathInfo(PathData* const path_data) {
 }
 
 bool LaneChangePath::CheckLastFrameSucceed(const apollo::planning::Frame* const last_frame) {
-    // 赛题二：不做失败检测，始终直线保持等机会
+    if (last_frame) {
+        for (const auto& reference_line_info : last_frame->reference_line_info()) {
+            if (!reference_line_info.IsChangeLanePath()) {
+                continue;
+            }
+            const auto history_trajectory_type = reference_line_info.trajectory_type();
+            if (history_trajectory_type == ADCTrajectory::SPEED_FALLBACK) {
+                return false;
+            }
+        }
+    }
     return true;
 }
 

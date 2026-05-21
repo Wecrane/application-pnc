@@ -1,0 +1,8 @@
+<library path="modules/planning/scenarios/contest/libcontest_scenario.so">
+    <class type="apollo::planning::ContestLaneChangeScenario" base_class="apollo::planning::Scenario"></class>
+    <class type="apollo::planning::ContestSCurveScenario" base_class="apollo::planning::Scenario"></class>
+    <class type="apollo::planning::ContestUTurnScenario" base_class="apollo::planning::Scenario"></class>
+    <class type="apollo::planning::ContestConstructionZoneScenario" base_class="apollo::planning::Scenario"></class>
+    <class type="apollo::planning::ContestLaneFollowStage" base_class="apollo::planning::Stage"></class>
+</library>
+

@@ -53,6 +53,14 @@ class LaneFollowStage : public Stage {
                             const ReferenceLine& reference_line) const;
 
   void RecordObstacleDebugInfo(ReferenceLineInfo* reference_line_info);
+
+ private:
+  bool IsContestLaneChangeScenario() const;
+  bool ShouldPlanReferenceLine(
+      bool has_drivable_reference_line,
+      const ReferenceLineInfo& reference_line_info) const;
+  bool ShouldAcceptChangeLaneReferenceLine(
+      const ReferenceLineInfo& reference_line_info) const;
 };
 
 CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(apollo::planning::LaneFollowStage, Stage)

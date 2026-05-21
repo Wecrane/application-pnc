@@ -23,6 +23,22 @@ scenario {
     type: "YieldSignScenario"
 }
 scenario {
+    name: "CONTEST_CONSTRUCTION_ZONE"
+    type: "ContestConstructionZoneScenario"
+}
+scenario {
+    name: "CONTEST_LANE_CHANGE"
+    type: "ContestLaneChangeScenario"
+}
+scenario {
+    name: "CONTEST_S_CURVE"
+    type: "ContestSCurveScenario"
+}
+scenario {
+    name: "CONTEST_U_TURN"
+    type: "ContestUTurnScenario"
+}
+scenario {
     name: "TRAFFIC_LIGHT_UNPROTECTED_LEFT_TURN"
     type: "TrafficLightUnprotectedLeftTurnScenario"
 }
