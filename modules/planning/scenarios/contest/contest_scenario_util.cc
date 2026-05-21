@@ -18,6 +18,8 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
+#include <string>
 
 #include "modules/common/math/math_utils.h"
 #include "modules/planning/planning_base/common/contest_scenario_features.h"
@@ -25,15 +27,6 @@
 namespace apollo {
 namespace planning {
 namespace contest {
-namespace {
-
-bool IsInConstructionBox(double x, double y,
-                         const ScenarioContestConfig& config) {
-  return x > config.construction_min_x() && x < config.construction_max_x() &&
-         y > config.construction_min_y() && y < config.construction_max_y();
-}
-
-}  // namespace
 
 bool IsContestLaneChange(const Frame& frame) {
   return frame.local_view().planning_command != nullptr &&
@@ -139,19 +132,50 @@ bool IsContestConstructionZone(const ReferenceLineInfo& reference_line_info,
     if (!IsSmallRealObstacle(obstacle)) {
       continue;
     }
-    double cx = 0.0;
-    double cy = 0.0;
-    if (!GetObstacleCenterXY(obstacle, &cx, &cy) ||
-        !IsInConstructionBox(cx, cy, config)) {
-      continue;
-    }
     const auto& sl = obstacle->PerceptionSLBoundary();
+    // 只统计主车前方范围内的锥桶，不依赖XY硬编码区域
     if (sl.start_s() > adc_back_s - 3.0 &&
         sl.start_s() - adc_end_s < config.construction_look_forward_distance()) {
       ++cone_count;
     }
   }
   return cone_count >= config.construction_min_cone_count();
+}
+
+bool IsContestStationShuttle(const ReferenceLineInfo& reference_line_info,
+                             const ScenarioContestConfig& config,
+                             std::string* out_parking_spot_id) {
+  if (out_parking_spot_id == nullptr) {
+    return false;
+  }
+  const double adc_end_s = reference_line_info.AdcSlBoundary().end_s();
+  const auto& nearby_path =
+      reference_line_info.reference_line().map_path();
+  const double look_forward = config.station_shuttle_look_forward_distance();
+
+  // 遍历 reference line 上的 parking space overlap，找前方最近的泊车位
+  double best_distance = std::numeric_limits<double>::max();
+  std::string best_spot_id;
+
+  for (const auto& overlap : nearby_path.parking_space_overlaps()) {
+    if (overlap.start_s <= adc_end_s) {
+      continue;  // 已驶过的泊车位
+    }
+    const double dist = overlap.start_s - adc_end_s;
+    if (dist > look_forward) {
+      continue;  // 超出探测范围
+    }
+    if (dist < best_distance) {
+      best_distance = dist;
+      best_spot_id = overlap.object_id;
+    }
+  }
+
+  if (best_spot_id.empty()) {
+    return false;
+  }
+  *out_parking_spot_id = best_spot_id;
+  return true;
 }
 
 }  // namespace contest

@@ -78,6 +78,15 @@ class ContestConstructionZoneScenario : public ContestScenarioBase {
                       const Frame& frame) override;
 };
 
+class ContestStationShuttleScenario : public ContestScenarioBase {
+ public:
+  ContestStationShuttleScenario()
+      : ContestScenarioBase(ContestScenarioKind::STATION_SHUTTLE) {}
+
+  bool IsTransferable(const Scenario* other_scenario,
+                      const Frame& frame) override;
+};
+
 CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(apollo::planning::ContestLaneChangeScenario,
                                      apollo::planning::Scenario)
 CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(apollo::planning::ContestSCurveScenario,
@@ -86,6 +95,9 @@ CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(apollo::planning::ContestUTurnScenario,
                                      apollo::planning::Scenario)
 CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(
     apollo::planning::ContestConstructionZoneScenario,
+    apollo::planning::Scenario)
+CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(
+    apollo::planning::ContestStationShuttleScenario,
     apollo::planning::Scenario)
 
 }  // namespace planning

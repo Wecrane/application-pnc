@@ -16,6 +16,8 @@
 
 #include "modules/planning/scenarios/contest/contest_scenarios.h"
 
+#include <string>
+
 #include "modules/planning/planning_base/common/frame.h"
 #include "modules/planning/scenarios/contest/contest_scenario_util.h"
 #include "modules/planning/scenarios/contest/stage_contest_lane_follow.h"
@@ -73,6 +75,27 @@ bool ContestConstructionZoneScenario::IsTransferable(
   return other_scenario != nullptr && IsReferenceLineReady(frame) &&
          contest::IsContestConstructionZone(frame.reference_line_info().front(),
                                             GetContext()->scenario_config);
+}
+
+bool ContestStationShuttleScenario::IsTransferable(
+    const Scenario* other_scenario, const Frame& frame) {
+  if (other_scenario == nullptr || !IsReferenceLineReady(frame)) {
+    return false;
+  }
+  auto* ctx = GetContext();
+  if (ctx->shuttle_departed) {
+    return false;
+  }
+  std::string parking_spot_id;
+  const bool found = contest::IsContestStationShuttle(
+      frame.reference_line_info().front(),
+      ctx->scenario_config,
+      &parking_spot_id);
+  if (found) {
+    ctx->shuttle_arrived_at_station = false;
+    ctx->shuttle_dwell_start_time = 0.0;
+  }
+  return found;
 }
 
 }  // namespace planning

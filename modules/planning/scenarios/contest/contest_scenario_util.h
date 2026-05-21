@@ -31,6 +31,9 @@ bool IsContestUTurn(const ReferenceLineInfo& reference_line_info,
                     const ScenarioContestConfig& config);
 bool IsContestConstructionZone(const ReferenceLineInfo& reference_line_info,
                                const ScenarioContestConfig& config);
+bool IsContestStationShuttle(const ReferenceLineInfo& reference_line_info,
+                             const ScenarioContestConfig& config,
+                             std::string* out_parking_spot_id);
 
 }  // namespace contest
 }  // namespace planning

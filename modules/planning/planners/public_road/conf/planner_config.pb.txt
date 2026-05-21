@@ -39,6 +39,10 @@ scenario {
     type: "ContestUTurnScenario"
 }
 scenario {
+    name: "CONTEST_STATION_SHUTTLE"
+    type: "ContestStationShuttleScenario"
+}
+scenario {
     name: "TRAFFIC_LIGHT_UNPROTECTED_LEFT_TURN"
     type: "TrafficLightUnprotectedLeftTurnScenario"
 }

@@ -2,6 +2,17 @@
 
 本项目为百度 Apollo 星火自动驾驶大赛 PnC（Planning & Control）赛道的赛事工程。
 
+## 技能 (Skills)
+
+Claude Code 专属技能位于 `.claude/skills/`，提供 Planning 模块的深度代码导航和赛题分析：
+
+| Skill | 路径 | 用途 |
+|-------|------|------|
+| Planning 模块导航 | `.claude/skills/planning-module-navigator/SKILL.md` | Planning 架构、17 个 Scenario、10 个 TrafficRule、30+ Task 的代码导航 |
+| 参考文档 | `.claude/skills/planning-module-navigator/references/` | 7 份技术参考：架构总览、场景详解、交通规则、任务插件、算法原理、环境配置、赛题说明 |
+
+当用户提出 Planning 代码导航、插件开发、赛题分析等问题时，优先检索 `.claude/skills/planning-module-navigator/references/`。
+
 ## 知识库
 
 Apollo EDU 赛事知识库位于 `.claude/apollo-knowledge/`，共 61 个文档，覆盖 9 个领域。当用户提出 Apollo 相关问题时，优先检索该知识库。
@@ -58,11 +69,12 @@ Apollo EDU 赛事知识库位于 `.claude/apollo-knowledge/`，共 61 个文档�
 
 ## 重要约束
 
+- **🚫 禁止编译！**：**绝对不要执行任何编译命令**（`buildtool build`、`bazel build` 等），用户手动编译。你只负责代码编写和修改，编译由用户自行完成。
 - **sudo 操作必须确认**：所有涉及 `sudo` 的命令须先展示给用户
 - **不跳过步骤**：安装流程严格按顺序
 - **幂等性**：每步执行前先检测是否已完成
 - **PnC 赛道专注**：不需要 GPU，不涉及感知/定位模块
-- **编译后恢复 profile**：提醒用户执行 `aem profile use default`
+- **编译后恢复 profile**：提醒用户编译后自行执行 `aem profile use default`
 
 ## 环境检测脚本
 

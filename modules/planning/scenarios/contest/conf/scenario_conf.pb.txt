@@ -14,3 +14,7 @@ u_turn_look_forward_distance: 30.0
 u_turn_kappa_threshold: 0.12
 u_turn_heading_change_threshold: 2.0
 
+station_shuttle_look_forward_distance: 80.0
+station_shuttle_dwell_time_sec: 5.0
+station_shuttle_speed_limit: 8.33
+

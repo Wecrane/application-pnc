@@ -69,8 +69,8 @@ inline bool GetObstacleCenterXY(const Obstacle* obstacle, double* cx, double* cy
 }
 
 inline bool IsDefaultConstructionZoneXY(double x, double y) {
-    return x > kDefaultConstructionMinX && x < kDefaultConstructionMaxX
-            && y > kDefaultConstructionMinY && y < kDefaultConstructionMaxY;
+    return x > kDefaultConstructionMinX && x < kDefaultConstructionMaxX && y > kDefaultConstructionMinY
+            && y < kDefaultConstructionMaxY;
 }
 
 inline int CountDefaultConstructionConesAhead(const ReferenceLineInfo& reference_line_info) {
@@ -87,8 +87,7 @@ inline int CountDefaultConstructionConesAhead(const ReferenceLineInfo& reference
             continue;
         }
         const auto& sl = obstacle->PerceptionSLBoundary();
-        if (sl.start_s() > adc_back_s - 3.0
-            && sl.start_s() - adc_end_s < kDefaultConstructionLookForwardDistance) {
+        if (sl.start_s() > adc_back_s - 3.0 && sl.start_s() - adc_end_s < kDefaultConstructionLookForwardDistance) {
             ++cone_count;
         }
     }
@@ -101,8 +100,7 @@ inline bool IsDefaultDenseConeSCurve(const ReferenceLineInfo& reference_line_inf
     const double adc_end_s = reference_line_info.AdcSlBoundary().end_s();
 
     double max_abs_kappa = 0.0;
-    for (double s = adc_start_s;
-         s < adc_start_s + kDefaultSCurveLookForwardDistance && s < reference_line.Length();
+    for (double s = adc_start_s; s < adc_start_s + kDefaultSCurveLookForwardDistance && s < reference_line.Length();
          s += kFeatureSampleStep) {
         max_abs_kappa = std::max(max_abs_kappa, std::fabs(reference_line.GetReferencePoint(s).kappa()));
     }
@@ -136,8 +134,7 @@ inline bool HasDefaultUTurnLaneInPath(const ReferenceLineInfo& reference_line_in
     const auto& reference_line = reference_line_info.reference_line();
     const double ref_length = reference_line.Length();
 
-    for (double s = adc_end_s;
-         s < adc_end_s + kDefaultUTurnLookForwardDistance && s < ref_length;
+    for (double s = adc_end_s; s < adc_end_s + kDefaultUTurnLookForwardDistance && s < ref_length;
          s += kFeatureSampleStep) {
         if (reference_line_info.GetPathTurnType(s) == hdmap::Lane::U_TURN) {
             return true;
@@ -163,9 +160,10 @@ inline bool HasDefaultUTurnLaneInPath(const ReferenceLineInfo& reference_line_in
     if (window_end - window_start < 10.0) {
         return false;
     }
-    const double heading_change = std::fabs(common::math::NormalizeAngle(
-            reference_line.GetReferencePoint(window_end).heading()
-            - reference_line.GetReferencePoint(window_start).heading()));
+    const double heading_change = std::fabs(
+            common::math::NormalizeAngle(
+                    reference_line.GetReferencePoint(window_end).heading()
+                    - reference_line.GetReferencePoint(window_start).heading()));
     return heading_change > kDefaultUTurnHeadingChangeThreshold;
 }
 

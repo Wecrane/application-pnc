@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include <string>
+
 #include "cyber/plugin_manager/plugin_manager.h"
 #include "modules/planning/scenarios/lane_follow/lane_follow_stage.h"
 
@@ -29,6 +31,7 @@ class ContestLaneFollowStage : public LaneFollowStage {
 
  private:
   bool StillInScenario(const Frame& frame) const;
+  void InjectStationShuttleStop(Frame* frame);
 };
 
 CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(apollo::planning::ContestLaneFollowStage,
