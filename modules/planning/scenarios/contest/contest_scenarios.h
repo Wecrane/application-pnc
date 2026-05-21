@@ -27,78 +27,64 @@ namespace apollo {
 namespace planning {
 
 class ContestScenarioBase : public Scenario {
- public:
-  bool Init(std::shared_ptr<DependencyInjector> injector,
-            const std::string& name) override;
+public:
+    bool Init(std::shared_ptr<DependencyInjector> injector, const std::string& name) override;
 
-  ContestScenarioContext* GetContext() override { return &context_; }
+    ContestScenarioContext* GetContext() override {
+        return &context_;
+    }
 
- protected:
-  explicit ContestScenarioBase(ContestScenarioKind kind) : kind_(kind) {}
+protected:
+    explicit ContestScenarioBase(ContestScenarioKind kind) : kind_(kind) {}
 
-  bool IsReferenceLineReady(const Frame& frame) const;
+    bool IsReferenceLineReady(const Frame& frame) const;
 
- private:
-  bool init_ = false;
-  ContestScenarioKind kind_;
-  ContestScenarioContext context_;
+private:
+    bool init_ = false;
+    ContestScenarioKind kind_;
+    ContestScenarioContext context_;
 };
 
 class ContestLaneChangeScenario : public ContestScenarioBase {
- public:
-  ContestLaneChangeScenario()
-      : ContestScenarioBase(ContestScenarioKind::LANE_CHANGE) {}
+public:
+    ContestLaneChangeScenario() : ContestScenarioBase(ContestScenarioKind::LANE_CHANGE) {}
 
-  bool IsTransferable(const Scenario* other_scenario,
-                      const Frame& frame) override;
+    bool IsTransferable(const Scenario* other_scenario, const Frame& frame) override;
 };
 
 class ContestSCurveScenario : public ContestScenarioBase {
- public:
-  ContestSCurveScenario() : ContestScenarioBase(ContestScenarioKind::S_CURVE) {}
+public:
+    ContestSCurveScenario() : ContestScenarioBase(ContestScenarioKind::S_CURVE) {}
 
-  bool IsTransferable(const Scenario* other_scenario,
-                      const Frame& frame) override;
+    bool IsTransferable(const Scenario* other_scenario, const Frame& frame) override;
 };
 
 class ContestUTurnScenario : public ContestScenarioBase {
- public:
-  ContestUTurnScenario() : ContestScenarioBase(ContestScenarioKind::U_TURN) {}
+public:
+    ContestUTurnScenario() : ContestScenarioBase(ContestScenarioKind::U_TURN) {}
 
-  bool IsTransferable(const Scenario* other_scenario,
-                      const Frame& frame) override;
+    bool IsTransferable(const Scenario* other_scenario, const Frame& frame) override;
 };
 
 class ContestConstructionZoneScenario : public ContestScenarioBase {
- public:
-  ContestConstructionZoneScenario()
-      : ContestScenarioBase(ContestScenarioKind::CONSTRUCTION_ZONE) {}
+public:
+    ContestConstructionZoneScenario() : ContestScenarioBase(ContestScenarioKind::CONSTRUCTION_ZONE) {}
 
-  bool IsTransferable(const Scenario* other_scenario,
-                      const Frame& frame) override;
+    bool IsTransferable(const Scenario* other_scenario, const Frame& frame) override;
 };
 
 class ContestStationShuttleScenario : public ContestScenarioBase {
- public:
-  ContestStationShuttleScenario()
-      : ContestScenarioBase(ContestScenarioKind::STATION_SHUTTLE) {}
+public:
+    ContestStationShuttleScenario() : ContestScenarioBase(ContestScenarioKind::STATION_SHUTTLE) {}
 
-  bool IsTransferable(const Scenario* other_scenario,
-                      const Frame& frame) override;
+    bool IsTransferable(const Scenario* other_scenario, const Frame& frame) override;
 };
 
-CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(apollo::planning::ContestLaneChangeScenario,
-                                     apollo::planning::Scenario)
-CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(apollo::planning::ContestSCurveScenario,
-                                     apollo::planning::Scenario)
-CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(apollo::planning::ContestUTurnScenario,
-                                     apollo::planning::Scenario)
-CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(
-    apollo::planning::ContestConstructionZoneScenario,
-    apollo::planning::Scenario)
-CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(
-    apollo::planning::ContestStationShuttleScenario,
-    apollo::planning::Scenario)
+CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(apollo::planning::ContestLaneChangeScenario, apollo::planning::Scenario)
+CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(apollo::planning::ContestSCurveScenario, apollo::planning::Scenario)
+CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(apollo::planning::ContestUTurnScenario, apollo::planning::Scenario)
+CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(apollo::planning::ContestConstructionZoneScenario, apollo::planning::Scenario)
+CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(apollo::planning::ContestStationShuttleScenario, apollo::planning::Scenario)
 
 }  // namespace planning
 }  // namespace apollo

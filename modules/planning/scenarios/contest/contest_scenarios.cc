@@ -25,77 +25,63 @@
 namespace apollo {
 namespace planning {
 
-bool ContestScenarioBase::Init(std::shared_ptr<DependencyInjector> injector,
-                               const std::string& name) {
-  if (init_) {
+bool ContestScenarioBase::Init(std::shared_ptr<DependencyInjector> injector, const std::string& name) {
+    if (init_) {
+        return true;
+    }
+    if (!Scenario::Init(injector, name)) {
+        AERROR << "failed to init scenario " << Name();
+        return false;
+    }
+    if (!Scenario::LoadConfig<ScenarioContestConfig>(&context_.scenario_config)) {
+        AERROR << "failed to load contest scenario config for " << Name();
+        return false;
+    }
+    context_.kind = kind_;
+    init_ = true;
     return true;
-  }
-  if (!Scenario::Init(injector, name)) {
-    AERROR << "failed to init scenario " << Name();
-    return false;
-  }
-  if (!Scenario::LoadConfig<ScenarioContestConfig>(
-          &context_.scenario_config)) {
-    AERROR << "failed to load contest scenario config for " << Name();
-    return false;
-  }
-  context_.kind = kind_;
-  init_ = true;
-  return true;
 }
 
 bool ContestScenarioBase::IsReferenceLineReady(const Frame& frame) const {
-  return frame.local_view().planning_command != nullptr &&
-         frame.local_view().planning_command->has_lane_follow_command() &&
-         !frame.reference_line_info().empty();
+    return frame.local_view().planning_command != nullptr
+            && frame.local_view().planning_command->has_lane_follow_command() && !frame.reference_line_info().empty();
 }
 
-bool ContestLaneChangeScenario::IsTransferable(const Scenario* other_scenario,
-                                               const Frame& frame) {
-  return other_scenario != nullptr && IsReferenceLineReady(frame) &&
-         contest::IsContestLaneChange(frame);
+bool ContestLaneChangeScenario::IsTransferable(const Scenario* other_scenario, const Frame& frame) {
+    return other_scenario != nullptr && IsReferenceLineReady(frame) && contest::IsContestLaneChange(frame);
 }
 
-bool ContestSCurveScenario::IsTransferable(const Scenario* other_scenario,
-                                           const Frame& frame) {
-  return other_scenario != nullptr && IsReferenceLineReady(frame) &&
-         contest::IsContestSCurve(frame.reference_line_info().front(),
-                                  GetContext()->scenario_config);
+bool ContestSCurveScenario::IsTransferable(const Scenario* other_scenario, const Frame& frame) {
+    return other_scenario != nullptr && IsReferenceLineReady(frame)
+            && contest::IsContestSCurve(frame.reference_line_info().front(), GetContext()->scenario_config);
 }
 
-bool ContestUTurnScenario::IsTransferable(const Scenario* other_scenario,
-                                          const Frame& frame) {
-  return other_scenario != nullptr && IsReferenceLineReady(frame) &&
-         contest::IsContestUTurn(frame.reference_line_info().front(),
-                                 GetContext()->scenario_config);
+bool ContestUTurnScenario::IsTransferable(const Scenario* other_scenario, const Frame& frame) {
+    return other_scenario != nullptr && IsReferenceLineReady(frame)
+            && contest::IsContestUTurn(frame.reference_line_info().front(), GetContext()->scenario_config);
 }
 
-bool ContestConstructionZoneScenario::IsTransferable(
-    const Scenario* other_scenario, const Frame& frame) {
-  return other_scenario != nullptr && IsReferenceLineReady(frame) &&
-         contest::IsContestConstructionZone(frame.reference_line_info().front(),
-                                            GetContext()->scenario_config);
+bool ContestConstructionZoneScenario::IsTransferable(const Scenario* other_scenario, const Frame& frame) {
+    return other_scenario != nullptr && IsReferenceLineReady(frame)
+            && contest::IsContestConstructionZone(frame.reference_line_info().front(), GetContext()->scenario_config);
 }
 
-bool ContestStationShuttleScenario::IsTransferable(
-    const Scenario* other_scenario, const Frame& frame) {
-  if (other_scenario == nullptr || !IsReferenceLineReady(frame)) {
-    return false;
-  }
-  auto* ctx = GetContext();
-  if (ctx->shuttle_departed) {
-    return false;
-  }
-  std::string parking_spot_id;
-  const bool found = contest::IsContestStationShuttle(
-      frame.reference_line_info().front(),
-      ctx->scenario_config,
-      &parking_spot_id);
-  if (found) {
-    ctx->shuttle_arrived_at_station = false;
-    ctx->shuttle_dwell_start_time = 0.0;
-  }
-  return found;
+bool ContestStationShuttleScenario::IsTransferable(const Scenario* other_scenario, const Frame& frame) {
+    if (other_scenario == nullptr || !IsReferenceLineReady(frame)) {
+        return false;
+    }
+    auto* ctx = GetContext();
+    if (ctx->shuttle_departed) {
+        return false;
+    }
+    std::string parking_spot_id;
+    const bool found = contest::IsContestStationShuttle(
+            frame.reference_line_info().front(), ctx->scenario_config, &parking_spot_id);
+    if (found) {
+        ctx->shuttle_arrived_at_station = false;
+        ctx->shuttle_dwell_start_time = 0.0;
+    }
+    return found;
 }
 
 }  // namespace planning

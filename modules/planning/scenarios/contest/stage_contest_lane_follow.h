@@ -25,17 +25,15 @@ namespace apollo {
 namespace planning {
 
 class ContestLaneFollowStage : public LaneFollowStage {
- public:
-  StageResult Process(const common::TrajectoryPoint& planning_init_point,
-                      Frame* frame) override;
+public:
+    StageResult Process(const common::TrajectoryPoint& planning_init_point, Frame* frame) override;
 
- private:
-  bool StillInScenario(const Frame& frame) const;
-  void InjectStationShuttleStop(Frame* frame);
+private:
+    bool StillInScenario(const Frame& frame) const;
+    void InjectStationShuttleStop(Frame* frame);
 };
 
-CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(apollo::planning::ContestLaneFollowStage,
-                                     apollo::planning::Stage)
+CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(apollo::planning::ContestLaneFollowStage, apollo::planning::Stage)
 
 }  // namespace planning
 }  // namespace apollo

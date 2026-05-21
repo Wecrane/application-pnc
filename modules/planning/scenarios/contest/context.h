@@ -23,20 +23,20 @@ namespace apollo {
 namespace planning {
 
 enum class ContestScenarioKind {
-  LANE_CHANGE = 0,
-  S_CURVE = 1,
-  U_TURN = 2,
-  CONSTRUCTION_ZONE = 3,
-  STATION_SHUTTLE = 4,
+    LANE_CHANGE = 0,
+    S_CURVE = 1,
+    U_TURN = 2,
+    CONSTRUCTION_ZONE = 3,
+    STATION_SHUTTLE = 4,
 };
 
 struct ContestScenarioContext : public ScenarioContext {
-  ScenarioContestConfig scenario_config;
-  ContestScenarioKind kind = ContestScenarioKind::LANE_CHANGE;
-  // 站点接驳状态
-  bool shuttle_arrived_at_station = false;
-  double shuttle_dwell_start_time = 0.0;
-  bool shuttle_departed = false;
+    ScenarioContestConfig scenario_config;
+    ContestScenarioKind kind = ContestScenarioKind::LANE_CHANGE;
+    // 站点接驳状态
+    bool shuttle_arrived_at_station = false;
+    double shuttle_dwell_start_time = 0.0;
+    bool shuttle_departed = false;
 };
 
 }  // namespace planning
