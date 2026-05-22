@@ -143,9 +143,7 @@ void ApplyContestLaneChangeBoundaryOverride(
     }
 }
 
-void ApplyContestUTurnBoundaryExpansion(
-        const ContestLaneFollowPathContext& context,
-        PathBoundary* path_bound) {
+void ApplyContestUTurnBoundaryExpansion(const ContestLaneFollowPathContext& context, PathBoundary* path_bound) {
     if (path_bound == nullptr || !context.u_turn) {
         return;
     }
@@ -199,8 +197,7 @@ void ApplyContestLaneFollowPathReference(
         // U 弯模式：不强拉向固定 l=-0.8，改用 corridor 中点 + 零参考权重
         // 让优化器在扩展后的宽边界内自由寻找平滑曲线
         for (size_t i = 0; i < ref_l->size(); ++i) {
-            const double corridor_center =
-                    (path_boundary[i].l_lower.l + path_boundary[i].l_upper.l) * 0.5;
+            const double corridor_center = (path_boundary[i].l_lower.l + path_boundary[i].l_upper.l) * 0.5;
             ref_l->at(i) = corridor_center;
             weight_ref_l->at(i) = 0.0;
         }

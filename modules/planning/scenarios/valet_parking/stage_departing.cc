@@ -41,8 +41,8 @@ StageResult StageDeparting::Process(
   }
 
   auto scenario_context = GetContextAs<ValetParkingContext>();
-  scenario_context->RememberStaticBarriers(*frame, "departing");
-  scenario_context->RestoreRememberedBarriers(frame);
+  scenario_context->LatchStaticObstacles(*frame, "departing");
+  scenario_context->InjectLatchedStaticObstacles(frame);
   frame->mutable_open_space_info()->set_is_on_open_space_trajectory(true);
   result = ExecuteTaskOnOpenSpace(frame);
   LogDepartingRoiDiagnostics(*frame);
@@ -75,7 +75,7 @@ StageResult StageDeparting::Process(
   const bool close_to_end = distance_to_end < kMaxEarlyReturnDistanceToEnd;
   const bool early_return = !open_space_finished && ready_to_return &&
                             adc_speed > kMinEarlyReturnSpeed && close_to_end;
-  AINFO << "Bay departure finish check, open_space_finished="
+  AINFO << "Valet departing finish check, open_space_finished="
         << open_space_finished << ", ready_to_return=" << ready_to_return
         << ", early_return=" << early_return << ", speed=" << adc_speed
         << ", min_early_return_speed=" << kMinEarlyReturnSpeed
@@ -89,8 +89,8 @@ StageResult StageDeparting::Process(
   if (open_space_finished || early_return) {
     frame->mutable_open_space_info()->set_openspace_planning_finish(false);
     if (ready_to_return) {
-      GetContextAs<ValetParkingContext>()->bay_service_done = true;
-      AINFO << "Finish bay departure, return to lane follow, early_return="
+      GetContextAs<ValetParkingContext>()->station_shuttle_completed = true;
+      AINFO << "Finish valet departing, return to lane follow, early_return="
             << early_return << ", speed=" << adc_speed;
       return FinishScenario();
     }
@@ -110,7 +110,7 @@ void StageDeparting::InitDepartingStatus(Frame* frame) {
   park_and_go_status->mutable_adc_init_position()->set_z(0.0);
   park_and_go_status->set_adc_init_heading(vehicle_state.heading());
   park_and_go_status->set_in_check_stage(false);
-  AINFO << "Init bay departure status, adc_init_x=" << vehicle_state.x()
+  AINFO << "Init valet departing status, adc_init_x=" << vehicle_state.x()
         << ", adc_init_y=" << vehicle_state.y()
         << ", adc_init_heading=" << vehicle_state.heading();
 }
@@ -142,7 +142,7 @@ void StageDeparting::LogDepartingRoiDiagnostics(const Frame& frame) const {
     }
   }
 
-  AINFO << "Bay departure ROI diagnostics, origin=(" << origin_point.x()
+  AINFO << "Valet departing ROI diagnostics, origin=(" << origin_point.x()
         << ", " << origin_point.y() << "), origin_heading=" << origin_heading
         << ", vehicle_xy=(" << vehicle_xy.x() << ", " << vehicle_xy.y()
         << "), xy_boundary_size=" << xy_boundary.size()
@@ -150,12 +150,12 @@ void StageDeparting::LogDepartingRoiDiagnostics(const Frame& frame) const {
         << ", end_pose_size=" << end_pose.size()
         << ", end_pose_inside_roi=" << end_pose_inside;
   if (xy_boundary.size() >= 4) {
-    AINFO << "Bay departure ROI xy_boundary, x_min=" << xy_boundary[0]
+    AINFO << "Valet departing ROI xy_boundary, x_min=" << xy_boundary[0]
           << ", x_max=" << xy_boundary[1] << ", y_min=" << xy_boundary[2]
           << ", y_max=" << xy_boundary[3];
   }
   if (end_pose.size() >= 4) {
-    AINFO << "Bay departure end_pose, x=" << end_pose[0]
+    AINFO << "Valet departing end_pose, x=" << end_pose[0]
           << ", y=" << end_pose[1] << ", theta=" << end_pose[2]
           << ", v=" << end_pose[3];
   }
@@ -163,7 +163,7 @@ void StageDeparting::LogDepartingRoiDiagnostics(const Frame& frame) const {
 
 bool StageDeparting::CheckReadyToReturnLaneFollow(const Frame& frame) const {
   if (frame.reference_line_info().empty()) {
-    AINFO << "Bay departure not ready: no reference line";
+    AINFO << "Valet departing not ready: no reference line";
     return false;
   }
 
@@ -180,7 +180,7 @@ bool StageDeparting::CheckReadyToReturnLaneFollow(const Frame& frame) const {
       vehicle_state.heading() - reference_point.heading()));
   const bool ready =
       std::fabs(adc_sl.l()) < kMaxReturnL && heading_diff < kMaxHeadingDiff;
-  AINFO << "Bay departure return check, adc_s=" << adc_sl.s()
+  AINFO << "Valet departing return check, adc_s=" << adc_sl.s()
         << ", adc_l=" << adc_sl.l()
         << ", vehicle_heading=" << vehicle_state.heading()
         << ", ref_heading=" << reference_point.heading()

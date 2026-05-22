@@ -1,5 +1,5 @@
 extend_adc_buffer: 0.5
-change_lane_success_freeze_time: 0.0
+change_lane_success_freeze_time: 3.0
 change_lane_fail_freeze_time: 0.5
 # 变道准备距离：设0，不预留禁止区，到手就直接变
 lane_change_prepare_length: 0.0

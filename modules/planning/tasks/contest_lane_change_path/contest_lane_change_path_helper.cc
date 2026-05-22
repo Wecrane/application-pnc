@@ -28,7 +28,6 @@ namespace apollo {
 namespace planning {
 namespace {
 
-constexpr double kLaneChangeWatchRearBuffer = 8.0;
 constexpr double kLaneChangeWatchFrontBuffer = 0.2;
 constexpr double kLaneChangeWatchLateralBuffer = 0.8;
 constexpr double kLaneChangeHoldLateralHalfWidth = 0.5;
@@ -50,10 +49,8 @@ bool IsContestLaneChangeWindowClear(ReferenceLineInfo* reference_line_info) {
         return false;
     }
     const auto& adc_sl_boundary = reference_line_info->AdcSlBoundary();
-    const double check_start_s = adc_sl_boundary.start_s() - kLaneChangeWatchRearBuffer;
+    const double check_start_s = adc_sl_boundary.start_s();
     const double check_end_s = adc_sl_boundary.end_s() + kLaneChangeWatchFrontBuffer;
-    const double ego_min_l = std::min(adc_sl_boundary.start_l(), adc_sl_boundary.end_l());
-    const double ego_max_l = std::max(adc_sl_boundary.start_l(), adc_sl_boundary.end_l());
 
     for (const auto* obstacle : reference_line_info->path_decision()->obstacles().Items()) {
         if (obstacle == nullptr || obstacle->IsVirtual() || obstacle->IsStatic()) {
@@ -74,17 +71,36 @@ bool IsContestLaneChangeWindowClear(ReferenceLineInfo* reference_line_info) {
             obs_max_l = std::fmax(obs_max_l, sl_point.l());
         }
 
-        if (obs_end_s < check_start_s || obs_start_s > check_end_s) {
+        double lane_left_width = 0.0;
+        double lane_right_width = 0.0;
+        reference_line_info->reference_line().GetLaneWidth(
+                (obs_start_s + obs_end_s) * 0.5, &lane_left_width, &lane_right_width);
+        if (obs_max_l < -lane_right_width - kLaneChangeWatchLateralBuffer
+            || obs_min_l > lane_left_width + kLaneChangeWatchLateralBuffer) {
             continue;
         }
 
-        const double lateral_gap = std::max(ego_min_l - obs_max_l, obs_min_l - ego_max_l);
-        ADEBUG << "[LC_CLEAR] obs=" << obstacle->Id() << " ego_l=[" << ego_min_l << "," << ego_max_l
-               << "] obs_l=[" << obs_min_l << "," << obs_max_l << "] gap=" << lateral_gap
-               << " s=[" << check_start_s << "," << check_end_s << "]";
-        if (lateral_gap < kLaneChangeWatchLateralBuffer) {
-            ADEBUG << "Lane change blocked: lateral_gap=" << lateral_gap << " obstacle=" << obstacle->Id();
-            return false;
+        if (obs_end_s < check_start_s || obs_start_s > check_end_s) {
+            ADEBUG << "[LC_CLEAR] ignore target-lane obs=" << obstacle->Id() << " obs_s=[" << obs_start_s << ","
+                   << obs_end_s << "] check_s=[" << check_start_s << "," << check_end_s << "]";
+            continue;
+        }
+
+        ADEBUG << "[LC_CLEAR] target lane occupied by obs=" << obstacle->Id() << " obs_s=[" << obs_start_s << ","
+               << obs_end_s << "] check_s=[" << check_start_s << "," << check_end_s << "] obs_l=[" << obs_min_l
+               << "," << obs_max_l << "] lane_l=[" << -lane_right_width << "," << lane_left_width << "]";
+        if (reference_line_info->path_decision()->Find(obstacle->Id()) != nullptr) {
+            reference_line_info->path_decision()->Find(obstacle->Id())->SetLaneChangeBlocking(true);
+        }
+        return false;
+    }
+
+    for (const auto* obstacle : reference_line_info->path_decision()->obstacles().Items()) {
+        if (obstacle == nullptr || obstacle->IsVirtual()) {
+            continue;
+        }
+        if (reference_line_info->path_decision()->Find(obstacle->Id()) != nullptr) {
+            reference_line_info->path_decision()->Find(obstacle->Id())->SetLaneChangeBlocking(false);
         }
     }
     return true;

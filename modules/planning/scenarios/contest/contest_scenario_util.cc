@@ -97,35 +97,40 @@ bool IsContestUTurn(const ReferenceLineInfo& reference_line_info, const Scenario
             continue;
         }
         route_s += seg_len;
-        if (route_s > adc_end_s + 150.0) break;
+        if (route_s > adc_end_s + 150.0)
+            break;
 
-        if (seg.lane == nullptr) continue;
+        if (seg.lane == nullptr)
+            continue;
         const auto& lane_pb = seg.lane->lane();
-        if (lane_pb.central_curve().segment().empty()) continue;
+        if (lane_pb.central_curve().segment().empty())
+            continue;
 
         std::vector<common::math::Vec2d> pts;
         for (const auto& curve_seg : lane_pb.central_curve().segment()) {
-            if (!curve_seg.has_line_segment()) continue;
+            if (!curve_seg.has_line_segment())
+                continue;
             for (const auto& pt : curve_seg.line_segment().point()) {
                 pts.emplace_back(pt.x(), pt.y());
             }
         }
-        if (pts.size() < 3) continue;
+        if (pts.size() < 3)
+            continue;
 
         double sum_abs_dh = 0.0;
         double prev_h = std::atan2(pts[1].y() - pts[0].y(), pts[1].x() - pts[0].x());
         for (size_t i = 2; i < pts.size(); ++i) {
-            double cur_h = std::atan2(pts[i].y() - pts[i-1].y(), pts[i].x() - pts[i-1].x());
+            double cur_h = std::atan2(pts[i].y() - pts[i - 1].y(), pts[i].x() - pts[i - 1].x());
             double dh = common::math::NormalizeAngle(cur_h - prev_h);
             sum_abs_dh += std::fabs(dh);
             prev_h = cur_h;
         }
-        double net_h = std::fabs(common::math::NormalizeAngle(
-                std::atan2(pts.back().y() - pts[pts.size()-2].y(),
-                           pts.back().x() - pts[pts.size()-2].x())
-                - std::atan2(pts[1].y() - pts[0].y(), pts[1].x() - pts[0].x())));
+        double net_h = std::fabs(
+                common::math::NormalizeAngle(
+                        std::atan2(pts.back().y() - pts[pts.size() - 2].y(), pts.back().x() - pts[pts.size() - 2].x())
+                        - std::atan2(pts[1].y() - pts[0].y(), pts[1].x() - pts[0].x())));
 
-        static constexpr double kMonotonicRatio = 0.5;
+        static constexpr double kMonotonicRatio = 0.6;
         double ratio = (sum_abs_dh > 1e-6) ? net_h / sum_abs_dh : 0.0;
         if (net_h > config.u_turn_heading_change_threshold() && ratio > kMonotonicRatio) {
             return true;
@@ -143,8 +148,9 @@ int CountContestConstructionConesAhead(const ReferenceLineInfo& reference_line_i
             continue;
         }
         const auto& sl = obstacle->PerceptionSLBoundary();
-        // 只统计主车前方范围内的锥桶，不依赖XY硬编码区域
-        if (sl.start_s() > adc_back_s - 3.0 && sl.start_s() - adc_end_s < look_forward_distance) {
+        // 只统计主车前方范围内的锥桶，不依赖XY硬编码区域。
+        // 用 SL 区间重叠判定，避免贴近车头或部分压到车身前缘的锥桶被漏掉。
+        if (sl.end_s() > adc_back_s - 6.0 && sl.start_s() < adc_end_s + look_forward_distance) {
             ++cone_count;
         }
     }

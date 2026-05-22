@@ -60,11 +60,116 @@ int CountConstructionConesAhead(const ReferenceLineInfo& reference_line_info, do
             continue;
         }
         const auto& sl = obstacle->PerceptionSLBoundary();
-        if (sl.start_s() > adc_back_s - 3.0 && sl.start_s() - adc_end_s < look_forward_distance) {
+        if (sl.end_s() > adc_back_s - 6.0 &&
+            sl.start_s() < adc_end_s + look_forward_distance) {
             ++cone_count;
         }
     }
     return cone_count;
+}
+
+bool HasCloseConstructionConeAhead(const ReferenceLineInfo& reference_line_info) {
+    constexpr double kCloseFrontS = 6.0;
+    constexpr double kCloseRearS = 1.5;
+    constexpr double kCloseLateral = 2.4;
+    const auto& adc_sl = reference_line_info.AdcSlBoundary();
+    for (const auto* obstacle : reference_line_info.path_decision().obstacles().Items()) {
+        if (!contest::IsSmallRealObstacle(obstacle)) {
+            continue;
+        }
+        const auto& sl = obstacle->PerceptionSLBoundary();
+        const double cone_l = (sl.start_l() + sl.end_l()) * 0.5;
+        const bool near_longitudinal =
+                sl.end_s() > adc_sl.start_s() - kCloseRearS &&
+                sl.start_s() < adc_sl.end_s() + kCloseFrontS;
+        if (near_longitudinal && std::fabs(cone_l) < kCloseLateral) {
+            return true;
+        }
+    }
+    return false;
+}
+
+double ClampLToPathBoundary(double target_l, const PathBoundPoint& point) {
+    constexpr double kBoundaryMargin = 0.25;
+    double lower = point.l_lower.l + kBoundaryMargin;
+    double upper = point.l_upper.l - kBoundaryMargin;
+    if (lower > upper) {
+        lower = point.l_lower.l;
+        upper = point.l_upper.l;
+    }
+    if (lower > upper) {
+        return 0.5 * (point.l_lower.l + point.l_upper.l);
+    }
+    return std::min(std::max(target_l, lower), upper);
+}
+
+void BuildUTurnLargeRadiusReference(
+        const ReferenceLine& reference_line,
+        const PathBoundary& path_boundary,
+        double ref_weight,
+        std::vector<double>* ref_l,
+        std::vector<double>* weight_ref_l) {
+    if (ref_l == nullptr || weight_ref_l == nullptr || path_boundary.empty()) {
+        return;
+    }
+
+    constexpr double kCurveKappaThreshold = 0.015;
+    constexpr double kPrepareDistance = 18.0;
+    constexpr double kReturnDistance = 28.0;
+    constexpr double kOuterLaneOffset = 2.8;
+
+    int curve_start_idx = -1;
+    int curve_end_idx = -1;
+    double dominant_kappa = 0.0;
+    for (size_t i = 0; i < path_boundary.size(); ++i) {
+        const double kappa = reference_line.GetNearestReferencePoint(path_boundary[i].s).kappa();
+        if (std::fabs(kappa) < kCurveKappaThreshold) {
+            continue;
+        }
+        if (curve_start_idx < 0) {
+            curve_start_idx = static_cast<int>(i);
+        }
+        curve_end_idx = static_cast<int>(i);
+        if (std::fabs(kappa) > std::fabs(dominant_kappa)) {
+            dominant_kappa = kappa;
+        }
+    }
+
+    ref_l->resize(path_boundary.size());
+    weight_ref_l->resize(path_boundary.size());
+    if (curve_start_idx < 0 || std::fabs(dominant_kappa) < 1e-6) {
+        for (size_t i = 0; i < path_boundary.size(); ++i) {
+            ref_l->at(i) = ClampLToPathBoundary(
+                    0.5 * (path_boundary[i].l_lower.l + path_boundary[i].l_upper.l),
+                    path_boundary[i]);
+            weight_ref_l->at(i) = ref_weight;
+        }
+        return;
+    }
+
+    // Positive kappa turns left; a larger turning radius is on the right side
+    // of the reference line (negative l). Negative kappa is mirrored.
+    const double outer_l = dominant_kappa > 0.0 ? -kOuterLaneOffset : kOuterLaneOffset;
+    const double curve_start_s = path_boundary[curve_start_idx].s;
+    const double curve_end_s = path_boundary[curve_end_idx].s;
+    for (size_t i = 0; i < path_boundary.size(); ++i) {
+        const double s = path_boundary[i].s;
+        double target_l = outer_l;
+        if (s < curve_start_s - kPrepareDistance) {
+            target_l = 0.0;
+        } else if (s < curve_start_s) {
+            const double ratio = (s - (curve_start_s - kPrepareDistance)) / kPrepareDistance;
+            target_l = outer_l * std::min(std::max(ratio, 0.0), 1.0);
+        } else if (s > curve_end_s) {
+            const double ratio = (s - curve_end_s) / kReturnDistance;
+            target_l = outer_l * (1.0 - std::min(std::max(ratio, 0.0), 1.0));
+        }
+        ref_l->at(i) = ClampLToPathBoundary(target_l, path_boundary[i]);
+        weight_ref_l->at(i) = ref_weight;
+    }
+    AINFO << "[UTURN] large-radius ref generated, outer_l=" << outer_l
+          << ", curve_s=[" << curve_start_s << "," << curve_end_s
+          << "], prepare=" << kPrepareDistance << ", return=" << kReturnDistance;
 }
 
 }  // namespace
@@ -130,6 +235,9 @@ apollo::common::Status ContestLaneBorrowPath::Process(Frame* frame, ReferenceLin
         // 直接使用优化后的路径，不走 AssessPath（可能因偏离参考线被拒绝）
         if (!candidate_path_data.empty()) {
             *reference_line_info->mutable_path_data() = candidate_path_data.front();
+            // 清除 blocking_obstacle_id，防止 RuleBasedStopDecider 因锥桶
+            // 障碍物注入 PATH_END stop 墙（"PATH END regular/uturn_wide STOP"）
+            reference_line_info->mutable_path_data()->set_blocking_obstacle_id("");
             AINFO << "[UTURN] path generated, label=" << candidate_path_data.front().path_label();
         }
 
@@ -216,11 +324,12 @@ apollo::common::Status ContestLaneBorrowPath::Process(Frame* frame, ReferenceLin
     if (reverse_recovery_.active && !candidate_path_data.empty()) {
         *reference_line_info->mutable_path_data() = candidate_path_data.front();
         AINFO << "[REVERSE] Path set directly (bypass AssessPath), label=" << candidate_path_data.front().path_label();
-        // 倒车加速：限速 3.0 m/s (≈10.8 km/h)，比默认更快
-        constexpr double kReverseSpeedLimit = 3.0;
+        // 倒车加速：限速 4.5 m/s，比默认更快
+        constexpr double kReverseSpeedLimit = 4.5;
         const double adc_s = reference_line_info->AdcSlBoundary().start_s();
         reference_line_info->mutable_reference_line()->AddSpeedLimit(
                 adc_s - kReverseDistance, adc_s, kReverseSpeedLimit);
+        reference_line_info->SetCruiseSpeed(kReverseSpeedLimit);
         AINFO << "[REVERSE] speed limit " << kReverseSpeedLimit << " m/s for reverse";
     } else if (AssessPath(&candidate_path_data, reference_line_info->mutable_path_data())) {
         ADEBUG << "contest lane borrow path success";
@@ -567,19 +676,23 @@ bool ContestLaneBorrowPath::OptimizePath(
         std::vector<double> ref_l;
         std::vector<double> weight_ref_l;
         double ref_weight = config.path_reference_l_weight();
-        // U 弯模式：零参考权重 + 以 corridor 中点为目标（不强制 l=0）
-        // 施工区模式同理，但保留非零 weight
+        // U 弯模式用外侧大半径参考；施工区继续用 corridor 中点。
         const bool use_corridor_center =
                 (path_boundary.label().find("construct_zone") != std::string::npos)
                 || (path_boundary.label().find("uturn_wide") != std::string::npos);
         if (!u_turn_construct_ && !use_corridor_center)
             ref_weight = 50;
         if (use_corridor_center) {
-            ref_l.resize(path_boundary.size());
-            weight_ref_l.resize(path_boundary.size());
-            for (size_t i = 0; i < path_boundary.size(); ++i) {
-                ref_l[i] = (path_boundary[i].l_lower.l + path_boundary[i].l_upper.l) * 0.5;
-                weight_ref_l[i] = ref_weight;
+            if (path_boundary.label().find("uturn_wide") != std::string::npos) {
+                BuildUTurnLargeRadiusReference(
+                        reference_line, path_boundary, ref_weight, &ref_l, &weight_ref_l);
+            } else {
+                ref_l.resize(path_boundary.size());
+                weight_ref_l.resize(path_boundary.size());
+                for (size_t i = 0; i < path_boundary.size(); ++i) {
+                    ref_l[i] = (path_boundary[i].l_lower.l + path_boundary[i].l_upper.l) * 0.5;
+                    weight_ref_l[i] = ref_weight;
+                }
             }
         } else {
             PathOptimizerUtil::UpdatePathRefWithBound(path_boundary, ref_weight, &ref_l, &weight_ref_l);
@@ -587,8 +700,7 @@ bool ContestLaneBorrowPath::OptimizePath(
 
         std::array<double, 3> end_state = {0.0, 0.0, 0.0};
         if (use_corridor_center) {
-            const auto& last_pt = path_boundary.back();
-            double end_l = (last_pt.l_lower.l + last_pt.l_upper.l) * 0.5;
+            double end_l = ref_l.empty() ? 0.0 : ref_l.back();
             end_state = {end_l, 0.0, 0.0};
         }
 
@@ -828,6 +940,10 @@ bool ContestLaneBorrowPath::MaybeGenerateReverseRecoveryBoundary(std::vector<Pat
     const double adc_x = frame_->vehicle_state().x();
     const double adc_y = frame_->vehicle_state().y();
     const double adc_heading = frame_->vehicle_state().heading();
+    const bool close_cone_ahead = HasCloseConstructionConeAhead(*reference_line_info_);
+    if (reverse_retrigger_hold_frames_ > 0) {
+        --reverse_retrigger_hold_frames_;
+    }
 
     // ── 倒车执行中 ──
     if (reverse_recovery_.active) {
@@ -866,6 +982,10 @@ bool ContestLaneBorrowPath::MaybeGenerateReverseRecoveryBoundary(std::vector<Pat
                   << "m, reverse_distance=" << reverse_distance
                   << "m, frames=" << reverse_recovery_.frame_count;
             reverse_recovery_.Reset();
+            construction_reverse_completed_ = true;
+            reverse_retrigger_hold_frames_ = kReverseRetriggerHoldFrames;
+            reverse_finish_x_ = adc_x;
+            reverse_finish_y_ = adc_y;
             return false;
         }
 
@@ -901,10 +1021,29 @@ bool ContestLaneBorrowPath::MaybeGenerateReverseRecoveryBoundary(std::vector<Pat
     reverse_recovery_.last_adc_x = adc_x;
     reverse_recovery_.last_adc_y = adc_y;
 
-    if (reverse_recovery_.frame_count < kStuckFrameThresholdFast) {
+    const double move_after_reverse =
+            std::hypot(adc_x - reverse_finish_x_, adc_y - reverse_finish_y_);
+    const bool first_reverse_allowed = !construction_reverse_completed_ && close_cone_ahead;
+    const bool repeat_reverse_allowed =
+            construction_reverse_completed_ &&
+            reverse_retrigger_hold_frames_ <= 0 &&
+            move_after_reverse > kReverseRetriggerMinMove &&
+            reverse_recovery_.frame_count >= kRepeatReverseStuckFrameThreshold;
+    if (!first_reverse_allowed && !repeat_reverse_allowed &&
+        reverse_recovery_.frame_count < kStuckFrameThresholdFast) {
+        return false;
+    }
+    if (construction_reverse_completed_ && !repeat_reverse_allowed) {
+        if (close_cone_ahead && reverse_retrigger_hold_frames_ % 20 == 0) {
+            AINFO << "[CZ][REVERSE] skip retrigger after completed reverse, hold_frames="
+                  << reverse_retrigger_hold_frames_ << ", moved_after_reverse="
+                  << move_after_reverse << ", stuck_frames="
+                  << reverse_recovery_.frame_count;
+        }
         return false;
     }
 
+    const int trigger_frame_count = reverse_recovery_.frame_count;
     // ── 进入倒车模式：构建固定直线参考线 + 缓存边界 ──
     reverse_recovery_.active = true;
     reverse_recovery_.start_s = adc_s;
@@ -915,7 +1054,9 @@ bool ContestLaneBorrowPath::MaybeGenerateReverseRecoveryBoundary(std::vector<Pat
     reverse_recovery_.boundary_cache.clear();
     reverse_recovery_.reference_line_cache.reset();
 
-    AINFO << "[CZ][REVERSE] stuck detected (speed=" << adc_speed << "), start_xy=("
+    AINFO << "[CZ][REVERSE] trigger, close_cone=" << close_cone_ahead
+          << ", stuck_frames=" << trigger_frame_count
+          << ", speed=" << adc_speed << ", start_xy=("
           << adc_x << "," << adc_y << "), heading=" << adc_heading;
 
     const double reverse_distance = std::max(kMinReverseDistance, kReverseDistance);
@@ -940,9 +1081,15 @@ void ContestLaneBorrowPath::ForceConstructionLaneBorrow(int cone_count) {
     auto* mutable_path_decider_status
             = injector_->planning_context()->mutable_planning_status()->mutable_path_decider();
     if (mutable_path_decider_status->is_in_path_lane_borrow_scenario()) {
+        construction_zone_.active = true;
+        construction_zone_.low_cone_counter = 0;
+        construction_zone_.no_cone_counter = 0;
         return;
     }
     mutable_path_decider_status->set_is_in_path_lane_borrow_scenario(true);
+    construction_zone_.active = true;
+    construction_zone_.low_cone_counter = 0;
+    construction_zone_.no_cone_counter = 0;
     if (decided_side_pass_direction_.empty()) {
         decided_side_pass_direction_.push_back(SidePassDirection::LEFT_BORROW);
         decided_side_pass_direction_.push_back(SidePassDirection::RIGHT_BORROW);
@@ -987,13 +1134,19 @@ void ContestLaneBorrowPath::IgnoreAllObstacles(ReferenceLineInfo* reference_line
         ObjectDecisionType object_decision;
         object_decision.mutable_ignore();
         reference_line_info->path_decision()->AddLongitudinalDecision(
-                "PathDecider/ignore-backward-obstacle", obs->Id(), object_decision);
+                "ContestLaneBorrowPath/ignore-uturn-obstacle", obs->Id(), object_decision);
+        reference_line_info->path_decision()->AddLateralDecision(
+                "ContestLaneBorrowPath/ignore-uturn-obstacle", obs->Id(), object_decision);
     }
 }
 
 void ContestLaneBorrowPath::ResetConstructZoneState(const std::string& reason) {
     construction_zone_.Reset();
     reverse_recovery_.Reset();
+    construction_reverse_completed_ = false;
+    reverse_retrigger_hold_frames_ = 0;
+    reverse_finish_x_ = 0.0;
+    reverse_finish_y_ = 0.0;
     AINFO << "[WALL] EXIT construct_zone by " << reason;
 }
 
@@ -1026,9 +1179,9 @@ bool ContestLaneBorrowPath::DecideUTurnPathBoundary(std::vector<PathBoundary>* b
     std::string right_type;
     GetBoundaryFromNeighborLane(SidePassDirection::RIGHT_BORROW, &path_bound, &right_type);
 
-    // 3. U 弯专用：强制走廊宽度 ≥ 6m (每侧 ≥ 3m)
-    //    NEOLIX 车宽 1.2m，需要足够空间做调头弧线
-    constexpr double kMinUTurnHalfWidth = 3.0;  // 单侧最小半宽
+    // 3. U 弯专用：强制走廊接近两车道宽度。
+    //    Lane_1955 的中心线半径很小，必须允许路径提前外抛到第二车道。
+    constexpr double kMinUTurnHalfWidth = 4.5;  // 单侧最小半宽
     int narrow_count = 0;
     for (size_t i = 0; i < path_bound.size(); ++i) {
         const double half_width = std::min(
@@ -1079,7 +1232,7 @@ bool ContestLaneBorrowPath::DecideUTurnPathBoundary(std::vector<PathBoundary>* b
         counter++;
     }
 
-    path_bound.set_label("regular/uturn_wide");
+    path_bound.set_label("regular/self/uturn_wide");
     path_bound.set_blocking_obstacle_id(blocking_obstacle_id);
     RecordDebugInfo(path_bound, path_bound.label(), reference_line_info_);
     boundary->push_back(path_bound);

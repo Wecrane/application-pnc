@@ -168,6 +168,15 @@ bool ContestLaneFollowStage::StillInScenario(const Frame& frame) const {
             const auto& rli = frame.reference_line_info().front();
             const auto& sl_bound = rli.AdcSlBoundary();
             const double adc_mid_l = (sl_bound.start_l() + sl_bound.end_l()) * 0.5;
+            const double distance_to_destination = rli.SDistanceToDestination();
+            static constexpr double kExitDestinationDistance = 8.0;
+            if (distance_to_destination > kExitDestinationDistance) {
+                AINFO << "[UTURN] heading reversed but destination is still ahead"
+                      << " (distance=" << distance_to_destination
+                      << "m, max=" << kExitDestinationDistance
+                      << "m), holding scenario";
+                return true;
+            }
             static constexpr double kExitMaxLateralOffset = 0.8;
             if (std::fabs(adc_mid_l) > kExitMaxLateralOffset) {
                 context->u_turn_exit_hold_frames++;
@@ -185,7 +194,8 @@ bool ContestLaneFollowStage::StillInScenario(const Frame& frame) const {
             context->u_turn_exit_hold_frames = 0;
             context->u_turn_active = false;
             context->u_turn_completed = true;
-            AINFO << "[UTURN] exit (heading reversed, mid_l=" << adc_mid_l << ")";
+            AINFO << "[UTURN] exit (heading reversed, mid_l=" << adc_mid_l
+                  << ", distance_to_destination=" << distance_to_destination << ")";
             return false;
         }
         return true;

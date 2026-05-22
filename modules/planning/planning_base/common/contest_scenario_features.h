@@ -87,7 +87,8 @@ inline int CountDefaultConstructionConesAhead(const ReferenceLineInfo& reference
             continue;
         }
         const auto& sl = obstacle->PerceptionSLBoundary();
-        if (sl.start_s() > adc_back_s - 3.0 && sl.start_s() - adc_end_s < kDefaultConstructionLookForwardDistance) {
+        if (sl.end_s() > adc_back_s - 6.0 &&
+            sl.start_s() < adc_end_s + kDefaultConstructionLookForwardDistance) {
             ++cone_count;
         }
     }

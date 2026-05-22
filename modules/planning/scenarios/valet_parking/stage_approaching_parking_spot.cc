@@ -33,56 +33,6 @@
 
 namespace apollo {
 namespace planning {
-namespace {
-
-constexpr double kPreviewPathLength = 200.0;
-constexpr double kPreviewSampleStep = 0.5;
-constexpr double kHeadingSampleGap = 0.5;
-constexpr double kHalfPi = 1.5707963267948966;
-constexpr double kPi = 3.1415926535897932;
-
-double SampledLaneHeading(const hdmap::LaneInfoConstPtr& lane,
-                          const double lane_s,
-                          const double fallback_heading) {
-  const double forward_s =
-      std::min(lane_s + kHeadingSampleGap, lane->total_length());
-  const double backward_s = std::max(lane_s - kHeadingSampleGap, 0.0);
-  if (forward_s <= backward_s) {
-    return fallback_heading;
-  }
-  const auto forward_point = lane->GetSmoothPoint(forward_s);
-  const auto backward_point = lane->GetSmoothPoint(backward_s);
-  return std::atan2(forward_point.y() - backward_point.y(),
-                    forward_point.x() - backward_point.x());
-}
-
-std::vector<ReferencePoint> BuildPreviewReferencePoints(
-    const hdmap::LaneInfoConstPtr& lane, const double projection_s,
-    const double anchor_x, const double anchor_y, const double anchor_heading,
-    const double adc_anchor_s) {
-  const double cos_heading = std::cos(anchor_heading);
-  const double sin_heading = std::sin(anchor_heading);
-  std::vector<ReferencePoint> points;
-  points.reserve(static_cast<size_t>(kPreviewPathLength /
-                                     kPreviewSampleStep + 1.0));
-  for (double offset = 0.0; offset <= kPreviewPathLength;
-       offset += kPreviewSampleStep) {
-    const double preview_s = adc_anchor_s + offset;
-    hdmap::MapPathPoint map_point(
-        {anchor_x + preview_s * cos_heading,
-         anchor_y + preview_s * sin_heading},
-        anchor_heading);
-    hdmap::LaneWaypoint waypoint;
-    waypoint.lane = lane;
-    waypoint.s = projection_s + offset;
-    map_point.add_lane_waypoint(waypoint);
-    points.emplace_back(map_point, 0.0, 0.0);
-  }
-  return points;
-}
-
-}  // namespace
-
 bool StageApproachingParkingSpot::Init(
     const StagePipeline& config,
     const std::shared_ptr<DependencyInjector>& injector,
@@ -92,7 +42,7 @@ bool StageApproachingParkingSpot::Init(
   }
   scenario_config_.CopyFrom(
       GetContextAs<ValetParkingContext>()->scenario_config);
-  main_road_seed_ready_ = false;
+  has_straight_reference_anchor_ = false;
   return true;
 }
 StageResult StageApproachingParkingSpot::Process(
@@ -101,7 +51,7 @@ StageResult StageApproachingParkingSpot::Process(
   CHECK_NOTNULL(frame);
   StageResult result;
   auto scenario_context = GetContextAs<ValetParkingContext>();
-  scenario_context->RememberStaticBarriers(*frame, "approach");
+  scenario_context->LatchStaticObstacles(*frame, "approach");
 
   if (scenario_context->target_parking_spot_id.empty()) {
     return result.SetStageStatus(StageStatusType::ERROR);
@@ -114,7 +64,147 @@ StageResult StageApproachingParkingSpot::Process(
   *(frame->mutable_open_space_info()->mutable_pre_stop_rightaway_point()) =
       scenario_context->pre_stop_rightaway_point;
 
-  InstallMainRoadPreview(frame);
+  // Rebuild the reference line info from a straight reference line. Replacing
+  // only ReferenceLine after ReferenceLineInfo::Init leaves obstacle SL/ST
+  // caches in the old reference frame.
+  {
+    const auto& vehicle_state = frame->vehicle_state();
+    const double vehicle_x = vehicle_state.x();
+    const double vehicle_y = vehicle_state.y();
+    auto* ref_lines = frame->mutable_reference_line_info();
+
+    hdmap::LaneInfoConstPtr main_lane;
+    double lane_s = 0.0;
+    double lane_l = 0.0;
+    auto adc_point = common::util::PointFactory::ToPointENU(vehicle_state);
+    hdmap::HDMapUtil::BaseMap().GetNearestLaneWithDistance(
+        adc_point, 5.0, &main_lane, &lane_s, &lane_l);
+
+    if (ref_lines->empty()) {
+      AINFO << "Skip straight ReferenceLineInfo rebuild: no reference line";
+    } else if (main_lane == nullptr) {
+      AINFO << "Skip straight ReferenceLineInfo rebuild: no nearby main lane";
+    } else {
+      double proj_s = 0.0;
+      double proj_l = 0.0;
+      if (!main_lane->GetProjection({vehicle_x, vehicle_y}, &proj_s,
+                                    &proj_l)) {
+        AINFO << "Skip straight ReferenceLineInfo rebuild: lane projection "
+                 "failed, lane_s="
+              << lane_s << ", lane_l=" << lane_l;
+      } else {
+        constexpr double kStraightReferenceLineLength = 200.0;
+        constexpr double kStraightReferenceLineStep = 0.5;
+
+        if (!has_straight_reference_anchor_) {
+          constexpr double kHalfPi = 1.5707963267948966;
+          constexpr double kPi = 3.1415926535897932;
+          constexpr double kLaneHeadingSampleDistance = 0.5;
+          const auto anchor_point = main_lane->GetSmoothPoint(proj_s);
+          const double heading_forward_s = std::min(
+              proj_s + kLaneHeadingSampleDistance, main_lane->total_length());
+          const double heading_backward_s =
+              std::max(proj_s - kLaneHeadingSampleDistance, 0.0);
+          const auto heading_forward_point =
+              main_lane->GetSmoothPoint(heading_forward_s);
+          const auto heading_backward_point =
+              main_lane->GetSmoothPoint(heading_backward_s);
+          double anchor_heading = vehicle_state.heading();
+          if (heading_forward_s > heading_backward_s) {
+            anchor_heading = std::atan2(
+                heading_forward_point.y() - heading_backward_point.y(),
+                heading_forward_point.x() - heading_backward_point.x());
+          }
+          if (std::fabs(common::math::NormalizeAngle(
+                  anchor_heading - vehicle_state.heading())) > kHalfPi) {
+            anchor_heading =
+                common::math::NormalizeAngle(anchor_heading + kPi);
+          }
+          straight_reference_anchor_x_ = anchor_point.x();
+          straight_reference_anchor_y_ = anchor_point.y();
+          straight_reference_anchor_heading_ = anchor_heading;
+          has_straight_reference_anchor_ = true;
+          AINFO << "Locked straight reference anchor for valet approach, "
+                << "anchor_x=" << straight_reference_anchor_x_
+                << ", anchor_y=" << straight_reference_anchor_y_
+                << ", anchor_heading=" << straight_reference_anchor_heading_
+                << ", vehicle_heading=" << vehicle_state.heading()
+                << ", proj_s=" << proj_s << ", proj_l=" << proj_l;
+        }
+
+        const double anchor_heading = straight_reference_anchor_heading_;
+        const double anchor_cos = std::cos(anchor_heading);
+        const double anchor_sin = std::sin(anchor_heading);
+        const double vehicle_anchor_s =
+            (vehicle_x - straight_reference_anchor_x_) * anchor_cos +
+            (vehicle_y - straight_reference_anchor_y_) * anchor_sin;
+        const double vehicle_anchor_l =
+            -(vehicle_x - straight_reference_anchor_x_) * anchor_sin +
+            (vehicle_y - straight_reference_anchor_y_) * anchor_cos;
+
+        std::vector<ReferencePoint> ref_points;
+        ref_points.reserve(static_cast<size_t>(
+            kStraightReferenceLineLength / kStraightReferenceLineStep + 1.0));
+
+        for (double dist = 0.0; dist <= kStraightReferenceLineLength;
+             dist += kStraightReferenceLineStep) {
+          const double ref_s = vehicle_anchor_s + dist;
+          const double px = straight_reference_anchor_x_ + ref_s * anchor_cos;
+          const double py = straight_reference_anchor_y_ + ref_s * anchor_sin;
+          hdmap::MapPathPoint map_point({px, py}, anchor_heading);
+          hdmap::LaneWaypoint lane_waypoint;
+          lane_waypoint.lane = main_lane;
+          lane_waypoint.s = proj_s + dist;
+          map_point.add_lane_waypoint(lane_waypoint);
+          ref_points.emplace_back(map_point, 0.0, 0.0);
+        }
+
+        if (ref_points.size() < 2) {
+          AINFO << "Skip straight ReferenceLineInfo rebuild: insufficient "
+                   "reference points";
+        } else {
+          ReferenceLine straight_ref_line(ref_points);
+          auto old_ref_iter = ref_lines->begin();
+          const auto old_index = old_ref_iter->index();
+          const auto old_base_cruise_speed =
+              old_ref_iter->GetBaseCruiseSpeed();
+          auto straight_ref_iter = ref_lines->emplace(
+              old_ref_iter, frame->vehicle_state(), frame->PlanningStartPoint(),
+              straight_ref_line, old_ref_iter->Lanes());
+          straight_ref_iter->set_index(old_index);
+          if (straight_ref_iter->Init(frame->obstacles(),
+                                      old_base_cruise_speed)) {
+            ref_lines->erase(old_ref_iter);
+            AINFO << "Rebuilt straight ReferenceLineInfo for valet approach, "
+                  << "points=" << ref_points.size()
+                  << ", anchor_heading=" << anchor_heading
+                  << ", vehicle_heading=" << vehicle_state.heading()
+                  << ", heading_delta="
+                  << common::math::NormalizeAngle(vehicle_state.heading() -
+                                                  anchor_heading)
+                  << ", anchor_s=" << vehicle_anchor_s
+                  << ", anchor_l=" << vehicle_anchor_l
+                  << ", proj_s=" << proj_s << ", proj_l=" << proj_l
+                  << ", obstacle_count=" << frame->obstacles().size();
+          } else {
+            ref_lines->erase(straight_ref_iter);
+            AINFO << "Failed to rebuild straight ReferenceLineInfo for valet "
+                     "approach, keep original reference line, points="
+                  << ref_points.size()
+                  << ", anchor_heading=" << anchor_heading
+                  << ", vehicle_heading=" << vehicle_state.heading()
+                  << ", heading_delta="
+                  << common::math::NormalizeAngle(vehicle_state.heading() -
+                                                  anchor_heading)
+                  << ", anchor_s=" << vehicle_anchor_s
+                  << ", anchor_l=" << vehicle_anchor_l
+                  << ", proj_s=" << proj_s << ", proj_l=" << proj_l
+                  << ", obstacle_count=" << frame->obstacles().size();
+          }
+        }
+      }
+    }
+  }
 
   auto* reference_lines = frame->mutable_reference_line_info();
   for (auto& reference_line : *reference_lines) {
@@ -152,101 +242,6 @@ StageResult StageApproachingParkingSpot::Process(
   return result.SetStageStatus(StageStatusType::RUNNING);
 }
 
-bool StageApproachingParkingSpot::InstallMainRoadPreview(
-    Frame* frame) {
-  auto* ref_lines = frame->mutable_reference_line_info();
-  if (ref_lines->empty()) {
-    AINFO << "Bus-bay main-road preview skipped: no reference line";
-    return false;
-  }
-
-  const auto& vehicle_state = frame->vehicle_state();
-  hdmap::LaneInfoConstPtr lane;
-  double lane_s = 0.0;
-  double lane_l = 0.0;
-  const auto adc_point = common::util::PointFactory::ToPointENU(vehicle_state);
-  hdmap::HDMapUtil::BaseMap().GetNearestLaneWithDistance(
-      adc_point, 5.0, &lane, &lane_s, &lane_l);
-  if (lane == nullptr) {
-    AINFO << "Bus-bay main-road preview skipped: lane lookup failed";
-    return false;
-  }
-
-  double projection_s = 0.0;
-  double projection_l = 0.0;
-  if (!lane->GetProjection({vehicle_state.x(), vehicle_state.y()},
-                           &projection_s, &projection_l)) {
-    AINFO << "Bus-bay main-road preview skipped: projection failed, near_s="
-          << lane_s << ", near_l=" << lane_l;
-    return false;
-  }
-
-  if (!main_road_seed_ready_) {
-    const auto anchor_point = lane->GetSmoothPoint(projection_s);
-    double anchor_heading =
-        SampledLaneHeading(lane, projection_s, vehicle_state.heading());
-    if (std::fabs(common::math::NormalizeAngle(anchor_heading -
-                                               vehicle_state.heading())) >
-        kHalfPi) {
-      anchor_heading = common::math::NormalizeAngle(anchor_heading + kPi);
-    }
-    main_road_seed_x_ = anchor_point.x();
-    main_road_seed_y_ = anchor_point.y();
-    main_road_seed_heading_ = anchor_heading;
-    main_road_seed_ready_ = true;
-    AINFO << "Bus-bay main-road preview anchor fixed, x="
-          << main_road_seed_x_
-          << ", y=" << main_road_seed_y_
-          << ", heading=" << main_road_seed_heading_
-          << ", adc_heading=" << vehicle_state.heading()
-          << ", lane_s=" << projection_s << ", lane_l=" << projection_l;
-  }
-
-  const double heading = main_road_seed_heading_;
-  const double cos_heading = std::cos(heading);
-  const double sin_heading = std::sin(heading);
-  const double adc_anchor_s =
-      (vehicle_state.x() - main_road_seed_x_) * cos_heading +
-      (vehicle_state.y() - main_road_seed_y_) * sin_heading;
-  const double adc_anchor_l =
-      -(vehicle_state.x() - main_road_seed_x_) * sin_heading +
-      (vehicle_state.y() - main_road_seed_y_) * cos_heading;
-  auto points = BuildPreviewReferencePoints(
-      lane, projection_s, main_road_seed_x_,
-      main_road_seed_y_, heading, adc_anchor_s);
-  if (points.size() < 2) {
-    AINFO << "Bus-bay main-road preview skipped: too few points";
-    return false;
-  }
-
-  ReferenceLine preview_line(points);
-  auto source_iter = ref_lines->begin();
-  const auto source_index = source_iter->index();
-  const auto cruise_speed = source_iter->GetBaseCruiseSpeed();
-  auto preview_iter = ref_lines->emplace(
-      source_iter, frame->vehicle_state(), frame->PlanningStartPoint(),
-      preview_line, source_iter->Lanes());
-  preview_iter->set_index(source_index);
-  if (!preview_iter->Init(frame->obstacles(), cruise_speed)) {
-    ref_lines->erase(preview_iter);
-    AINFO << "Bus-bay main-road preview rebuild failed, point_count="
-          << points.size() << ", heading=" << heading
-          << ", adc_s=" << adc_anchor_s << ", adc_l=" << adc_anchor_l
-          << ", obstacle_count=" << frame->obstacles().size();
-    return false;
-  }
-
-  ref_lines->erase(source_iter);
-  AINFO << "Bus-bay main-road preview reference ready, point_count="
-        << points.size() << ", heading=" << heading
-        << ", heading_delta="
-        << common::math::NormalizeAngle(vehicle_state.heading() - heading)
-        << ", adc_s=" << adc_anchor_s << ", adc_l=" << adc_anchor_l
-        << ", lane_s=" << projection_s << ", lane_l=" << projection_l
-        << ", obstacle_count=" << frame->obstacles().size();
-  return true;
-}
-
 bool StageApproachingParkingSpot::CheckADCStop(const Frame& frame) {
   const auto& reference_line_info = frame.reference_line_info().front();
   const double adc_speed = injector_->vehicle_state()->linear_velocity();
@@ -267,7 +262,7 @@ bool StageApproachingParkingSpot::CheckADCStop(const Frame& frame) {
   constexpr double kNearStopFenceLogDistance = 5.0;
 
   if (stop_fence_start_s <= 1.0e-6) {
-    ADEBUG << "Bus-bay approach stop check skipped: no pre-stop fence, speed="
+    ADEBUG << "Valet approach stop check skipped: no pre-stop fence, speed="
            << adc_speed << ", adc_front_edge_s=" << adc_front_edge_s;
     return false;
   }
@@ -282,7 +277,7 @@ bool StageApproachingParkingSpot::CheckADCStop(const Frame& frame) {
       distance_stop_line_to_adc_front_edge >= -kRollingHandoffPastFenceBuffer;
   if (distance_stop_line_to_adc_front_edge < kNearStopFenceLogDistance ||
       rolling_handoff || stopped_close_enough) {
-    AINFO << "Bus-bay approach pre-stop handoff check, speed=" << adc_speed
+    AINFO << "Valet approach pre-stop handoff check, speed=" << adc_speed
           << ", max_stop_speed=" << max_adc_stop_speed
           << ", stop_fence_s=" << stop_fence_start_s
           << ", adc_front_edge_s=" << adc_front_edge_s
@@ -300,7 +295,7 @@ bool StageApproachingParkingSpot::CheckADCStop(const Frame& frame) {
   if (!stopped_close_enough && !rolling_handoff) {
     return false;
   }
-  AINFO << "Finish bus-bay approach pre-stop, switch to parking, "
+  AINFO << "Finish valet approach pre-stop, switch to parking, "
         << "stopped_close_enough=" << stopped_close_enough
         << ", rolling_handoff=" << rolling_handoff
         << ", speed=" << adc_speed

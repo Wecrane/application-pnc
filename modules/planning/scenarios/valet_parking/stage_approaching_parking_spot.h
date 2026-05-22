@@ -39,13 +39,12 @@ class StageApproachingParkingSpot : public Stage {
                       Frame* frame) override;
 
  private:
-  bool InstallMainRoadPreview(Frame* frame);
   bool CheckADCStop(const Frame& frame);
 
-  bool main_road_seed_ready_ = false;
-  double main_road_seed_x_ = 0.0;
-  double main_road_seed_y_ = 0.0;
-  double main_road_seed_heading_ = 0.0;
+  bool has_straight_reference_anchor_ = false;
+  double straight_reference_anchor_x_ = 0.0;
+  double straight_reference_anchor_y_ = 0.0;
+  double straight_reference_anchor_heading_ = 0.0;
 
   ScenarioValetParkingConfig scenario_config_;
 };

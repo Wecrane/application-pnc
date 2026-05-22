@@ -20,7 +20,6 @@
 
 #include "modules/planning/tasks/open_space_pre_stop_decider/open_space_pre_stop_decider.h"
 
-#include <cmath>
 #include <memory>
 #include <string>
 #include <vector>
@@ -38,29 +37,6 @@ using apollo::common::Status;
 using apollo::common::VehicleState;
 using apollo::common::math::Vec2d;
 using apollo::hdmap::ParkingSpaceInfoConstPtr;
-
-namespace {
-
-bool ParkingSpaceCenter(const ParkingSpaceInfoConstPtr& parking_space,
-                        Vec2d* center) {
-  if (parking_space == nullptr || center == nullptr) {
-    return false;
-  }
-  const auto& points = parking_space->polygon().points();
-  if (points.size() < 4) {
-    return false;
-  }
-  *center = (points[0] + points[1] + points[2] + points[3]) / 4.0;
-  return true;
-}
-
-double LongitudinalOffsetAlongHeading(const Vec2d& from, const Vec2d& to,
-                                      const double heading) {
-  return (to.x() - from.x()) * std::cos(heading) +
-         (to.y() - from.y()) * std::sin(heading);
-}
-
-}  // namespace
 
 bool OpenSpacePreStopDecider::Init(
     const std::string& config_dir, const std::string& name,
@@ -150,10 +126,15 @@ bool OpenSpacePreStopDecider::CheckParkingSpotPreStop(
       hdmap::Id id;
       id.set_id(parking_overlap.object_id);
       target_parking_spot_ptr = hdmap->GetParkingSpaceById(id);
-      Vec2d center_point;
-      if (!ParkingSpaceCenter(target_parking_spot_ptr, &center_point)) {
-        continue;
-      }
+      Vec2d left_bottom_point =
+          target_parking_spot_ptr->polygon().points().at(0);
+      Vec2d right_bottom_point =
+          target_parking_spot_ptr->polygon().points().at(1);
+      Vec2d right_up_point = target_parking_spot_ptr->polygon().points().at(2);
+      Vec2d left_up_point = target_parking_spot_ptr->polygon().points().at(3);
+      Vec2d center_point = (left_bottom_point + right_bottom_point +
+                            right_up_point + left_up_point) /
+                           4.0;
       double center_l;
       nearby_path.GetNearestPoint(center_point, &target_area_center_s,
                                   &center_l);
@@ -162,11 +143,15 @@ bool OpenSpacePreStopDecider::CheckParkingSpotPreStop(
   }
 
   if (!target_area_found) {
+    // 直参考线没有 parking_space_overlaps，直接从 hdmap 获取停车位坐标
     hdmap::Id id;
     id.set_id(target_parking_spot_id);
     auto spot_ptr = hdmap->GetParkingSpaceById(id);
-    Vec2d center_point;
-    if (ParkingSpaceCenter(spot_ptr, &center_point)) {
+    if (spot_ptr) {
+      const auto& pts = spot_ptr->polygon().points();
+      Vec2d center_point = (pts[0] + pts[1] + pts[2] + pts[3]) / 4.0;
+      // 直参考线从车辆位置开始，GetNearestPoint 会返回 s=0
+      // 改用投影计算：车辆在参考线上的 s + 车辆到停车位的纵向距离
       double vehicle_s = 0.0;
       double vehicle_l = 0.0;
       Vec2d vehicle_pos(frame->vehicle_state().x(), frame->vehicle_state().y());
@@ -174,17 +159,22 @@ bool OpenSpacePreStopDecider::CheckParkingSpotPreStop(
       double center_l;
       double center_s;
       nearby_path.GetNearestPoint(center_point, &center_s, &center_l);
+      // 用停车位在参考线上的投影 s 作为 target_s
+      // 如果停车位在车辆侧面（l 很大），center_s 可能不准
+      // 此时用车辆 s + 纵向偏移
       if (std::fabs(center_l) > 3.0) {
-        target_area_center_s =
-            vehicle_s + LongitudinalOffsetAlongHeading(
-                            vehicle_pos, center_point,
-                            frame->vehicle_state().heading());
+        // 停车位在车辆侧面，计算纵向距离
+        double dx = center_point.x() - vehicle_pos.x();
+        double dy = center_point.y() - vehicle_pos.y();
+        double heading = frame->vehicle_state().heading();
+        double longitudinal_dist = dx * std::cos(heading) + dy * std::sin(heading);
+        target_area_center_s = vehicle_s + longitudinal_dist;
       } else {
         target_area_center_s = center_s;
       }
       target_area_found = true;
-      AINFO << "Pre-stop target projected from map, s=" << target_area_center_s
-            << ", l=" << center_l << ", adc_s=" << vehicle_s;
+      AINFO << "Found parking spot from hdmap, s=" << target_area_center_s << " l=" << center_l
+            << " vehicle_s=" << vehicle_s;
     }
   }
 
@@ -205,11 +195,17 @@ void OpenSpacePreStopDecider::SetParkingSpotStopFence(
                                           ->GetConfig()
                                           .vehicle_param()
                                           .front_edge_to_center();
+  double ego_s = adc_front_edge_s - front_edge_to_center;
+  const VehicleState& vehicle_state = frame->vehicle_state();
   double stop_line_s = 0.0;
-  CHECK_GE(config_.stop_distance_to_target(), 1.0e-8);
+  double stop_distance_to_target = config_.stop_distance_to_target();
+  double static_linear_velocity_epsilon = 1.0e-2;
+  static constexpr double kStopBuffer = 0.2;
+  CHECK_GE(stop_distance_to_target, 1.0e-8);
   const double parking_spot_pre_stop_distance =
       config_.parking_spot_pre_stop_distance();
   CHECK_GE(parking_spot_pre_stop_distance, 0.0);
+  // 在停车位中心前方一定距离处停车，给车辆留出倒车空间。
   stop_line_s =
       target_s + front_edge_to_center + parking_spot_pre_stop_distance;
   AINFO << "Set parking spot pre-stop fence, target_s=" << target_s

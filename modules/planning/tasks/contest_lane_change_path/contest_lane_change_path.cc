@@ -44,6 +44,7 @@ using apollo::cyber::Clock;
 
 constexpr double kIntersectionClearanceDist = 20.0;
 constexpr double kJunctionClearanceDist = 15.0;
+constexpr double kContestLaneChangeSuccessCooldown = 3.0;
 
 bool ContestLaneChangePath::Init(
         const std::string& config_dir,
@@ -62,8 +63,7 @@ apollo::common::Status ContestLaneChangePath::Process(Frame* frame, ReferenceLin
            << " ref_line_count=" << frame->reference_line_info().size();
     if (contest::IsCurrentScenario(injector_, contest::kUTurnScenario)) {
         const auto& change_lane_status = injector_->planning_context()->planning_status().change_lane();
-        if (!change_lane_status.has_status()
-            || change_lane_status.status() == ChangeLaneStatus::IN_CHANGE_LANE) {
+        if (!change_lane_status.has_status() || change_lane_status.status() == ChangeLaneStatus::IN_CHANGE_LANE) {
             UpdateStatus(Clock::NowInSeconds(), ChangeLaneStatus::CHANGE_LANE_FINISHED, "");
         }
         return Status::OK();
@@ -74,6 +74,12 @@ apollo::common::Status ContestLaneChangePath::Process(Frame* frame, ReferenceLin
     ApplyContestLaneChangeSpeedLimit(is_contest_lane_change, reference_line_info);
 
     const auto& status = injector_->planning_context()->mutable_planning_status()->mutable_change_lane()->status();
+    if (is_contest_lane_change && reference_line_info->IsChangeLanePath()
+        && status != ChangeLaneStatus::IN_CHANGE_LANE) {
+        reference_line_info->set_path_reusable(false);
+        reference_line_info->SetDrivable(false);
+        return Status(ErrorCode::PLANNING_ERROR, "Contest lane change is cooling down or not triggered");
+    }
     if (!reference_line_info->IsChangeLanePath() || reference_line_info->path_reusable()) {
         ADEBUG << "[LC_PROCESS] SKIP: not change_lane or path reusable, returning OK";
         return Status::OK();
@@ -83,8 +89,7 @@ apollo::common::Status ContestLaneChangePath::Process(Frame* frame, ReferenceLin
         return Status(ErrorCode::PLANNING_ERROR, "Not satisfy lane change conditions");
     }
 
-    ADEBUG << "[LC_PROCESS] GENERATING lane change path, status=" << status
-           << " clear=" << is_clear_to_change_lane_;
+    ADEBUG << "[LC_PROCESS] GENERATING lane change path, status=" << status << " clear=" << is_clear_to_change_lane_;
     // 始终规划路径：无车时继续往目标车道挪，有车时锁住当前横向位置直行
     std::vector<PathBoundary> candidate_path_boundaries;
     std::vector<PathData> candidate_path_data;
@@ -141,8 +146,8 @@ bool ContestLaneChangePath::DecidePathBounds(std::vector<PathBoundary>* boundary
     PathBound temp_path_bound = path_bound;
     std::string blocking_obstacle_id;
     std::vector<SLPolygon> obs_sl_polygons;
-    const bool should_hold_laterally =
-            ShouldHoldLateralInContestLaneChange(IsContestLaneChangeScenario(injector_), is_clear_to_change_lane_);
+    const bool should_hold_laterally
+            = ShouldHoldLateralInContestLaneChange(IsContestLaneChangeScenario(injector_), is_clear_to_change_lane_);
     if (should_hold_laterally) {
         ApplyContestLaneChangeHoldBoundary(init_sl_state_.second[0], &path_bound);
     } else {
@@ -176,15 +181,10 @@ bool ContestLaneChangePath::OptimizePath(
         std::vector<PathData>* candidate_path_data) {
     const auto& config = config_.path_optimizer_config();
     const ReferenceLine& reference_line = reference_line_info_->reference_line();
-    const bool should_hold_laterally =
-            ShouldHoldLateralInContestLaneChange(IsContestLaneChangeScenario(injector_), is_clear_to_change_lane_);
-    ADEBUG << "[LC_OPT] hold_laterally=" << should_hold_laterally
-           << " current_l=" << init_sl_state_.second[0];
-    std::array<double, 3> end_state = {
-        should_hold_laterally ? init_sl_state_.second[0] : 0.0,
-        0.0,
-        0.0
-    };
+    const bool should_hold_laterally
+            = ShouldHoldLateralInContestLaneChange(IsContestLaneChangeScenario(injector_), is_clear_to_change_lane_);
+    ADEBUG << "[LC_OPT] hold_laterally=" << should_hold_laterally << " current_l=" << init_sl_state_.second[0];
+    std::array<double, 3> end_state = {should_hold_laterally ? init_sl_state_.second[0] : 0.0, 0.0, 0.0};
     for (const auto& path_boundary : path_boundaries) {
         size_t path_boundary_size = path_boundary.boundary().size();
         if (path_boundary_size <= 1U) {
@@ -195,8 +195,7 @@ bool ContestLaneChangePath::OptimizePath(
         std::vector<std::pair<double, double>> ddl_bounds;
         PathOptimizerUtil::CalculateAccBound(path_boundary, reference_line, &ddl_bounds);
         const double jerk_bound = PathOptimizerUtil::EstimateJerkBoundary(std::fmax(init_sl_state_.first[1], 1e-12));
-        std::vector<double> ref_l(
-                path_boundary_size, should_hold_laterally ? init_sl_state_.second[0] : 0.0);
+        std::vector<double> ref_l(path_boundary_size, should_hold_laterally ? init_sl_state_.second[0] : 0.0);
         std::vector<double> weight_ref_l(
                 path_boundary_size, should_hold_laterally ? config.path_reference_l_weight() : 0.0);
 
@@ -267,7 +266,7 @@ void ContestLaneChangePath::UpdateLaneChangeStatus() {
     // Init lane change status
     if (!prev_status->has_status()) {
         AINFO << "[LC_STATUS] INIT: no prev status, setting FINISHED";
-        UpdateStatus(now, ChangeLaneStatus::CHANGE_LANE_FINISHED, "");
+        UpdateStatus(now - kContestLaneChangeSuccessCooldown, ChangeLaneStatus::CHANGE_LANE_FINISHED, "");
         return;
     }
     bool has_change_lane = frame_->reference_line_info().size() > 1;
@@ -277,63 +276,126 @@ void ContestLaneChangePath::UpdateLaneChangeStatus() {
                   << "), was IN_CHANGE_LANE -> FINISHED";
             UpdateStatus(now, ChangeLaneStatus::CHANGE_LANE_FINISHED, prev_status->path_id());
         }
+        consecutive_clear_count_ = 0;
+        consecutive_occupied_count_ = 0;
+        lane_change_window_armed_ = false;
+        lane_change_window_open_count_ = 0;
+        consecutive_empty_frames_ = 0;
         return;
     }
     // has change lane
     if (reference_line_info_->IsChangeLanePath()) {
-        is_clear_to_change_lane_ = IsContestLaneChangeWindowClear(reference_line_info_);
+        const bool raw_window_clear = IsContestLaneChangeWindowClear(reference_line_info_);
+        is_clear_to_change_lane_ = raw_window_clear;
+        if (is_contest_lane_change && prev_status->status() != ChangeLaneStatus::IN_CHANGE_LANE) {
+            if (raw_window_clear) {
+                consecutive_occupied_count_ = 0;
+                if (lane_change_window_armed_) {
+                    ++consecutive_clear_count_;
+                    if (consecutive_clear_count_ >= kRequiredConsecutiveClearFrames
+                        && lane_change_window_open_count_ < kLaneChangeWindowHoldFrames) {
+                        is_clear_to_change_lane_ = true;
+                        ++lane_change_window_open_count_;
+                    } else {
+                        is_clear_to_change_lane_ = false;
+                        if (lane_change_window_open_count_ >= kLaneChangeWindowHoldFrames) {
+                            lane_change_window_armed_ = false;
+                        }
+                    }
+                } else {
+                    // 无车通过但窗口持续为空：累计空帧数，超时自动触发
+                    consecutive_clear_count_ = 0;
+                    ++consecutive_empty_frames_;
+                    if (consecutive_empty_frames_ >= kEmptyLaneAutoArmFrames) {
+                        lane_change_window_armed_ = true;
+                        consecutive_empty_frames_ = 0;
+                        AINFO << "[LC_STATUS] lane empty for " << kEmptyLaneAutoArmFrames
+                              << " frames, auto-arming window";
+                    }
+                    is_clear_to_change_lane_ = false;
+                }
+            } else {
+                consecutive_clear_count_ = 0;
+                lane_change_window_open_count_ = 0;
+                consecutive_empty_frames_ = 0;  // 有车进入，重置空帧计数
+                ++consecutive_occupied_count_;
+                if (consecutive_occupied_count_ >= kRequiredConsecutiveOccupiedFrames) {
+                    lane_change_window_armed_ = true;
+                }
+                is_clear_to_change_lane_ = false;
+            }
+            AINFO << "[LC_STATUS] window raw_clear=" << raw_window_clear
+                  << " occupied_frames=" << consecutive_occupied_count_
+                  << " clear_frames=" << consecutive_clear_count_ << " armed=" << lane_change_window_armed_
+                  << " open_frames=" << lane_change_window_open_count_
+                  << " trigger=" << is_clear_to_change_lane_;
+        }
         change_lane_id = reference_line_info_->Lanes().Id();
         double ego_speed = frame_->vehicle_state().linear_velocity();
         const double min_lane_change_speed = ContestLaneChangeMinStartSpeed();
 
-        // 连续安全帧计数：防止感知闪烁导致误判
-        if (is_contest_lane_change) {
-            if (is_clear_to_change_lane_) {
-                ++consecutive_clear_count_;
-            } else {
-                consecutive_clear_count_ = 0;
-            }
-        }
-
         if (prev_status->status() == ChangeLaneStatus::CHANGE_LANE_FAILED) {
             double elapsed = now - prev_status->timestamp();
-            if (elapsed > config_.change_lane_fail_freeze_time()
-                && ego_speed >= min_lane_change_speed
+            if (elapsed > config_.change_lane_fail_freeze_time() && ego_speed >= min_lane_change_speed
                 && is_clear_to_change_lane_
-                && consecutive_clear_count_ >= kRequiredConsecutiveClearFrames) {
+                && (!is_contest_lane_change || consecutive_clear_count_ >= kRequiredConsecutiveClearFrames)) {
                 AINFO << "[LC_STATUS] RETRY: FAILED -> IN_CHANGE_LANE, elapsed=" << elapsed
-                      << " freeze=" << config_.change_lane_fail_freeze_time()
-                      << " speed=" << ego_speed * 3.6
+                      << " freeze=" << config_.change_lane_fail_freeze_time() << " speed=" << ego_speed * 3.6
                       << " clear_frames=" << consecutive_clear_count_;
                 UpdateStatus(now, ChangeLaneStatus::IN_CHANGE_LANE, change_lane_id);
+                return;
             }
+            is_clear_to_change_lane_ = false;
             return;
         } else if (prev_status->status() == ChangeLaneStatus::CHANGE_LANE_FINISHED) {
+            const double elapsed = now - prev_status->timestamp();
+            const double success_freeze_time = is_contest_lane_change
+                    ? std::max(config_.change_lane_success_freeze_time(), kContestLaneChangeSuccessCooldown)
+                    : config_.change_lane_success_freeze_time();
+            if (elapsed <= success_freeze_time) {
+                AINFO << "[LC_STATUS] WAIT: cooldown elapsed=" << elapsed << " freeze=" << success_freeze_time;
+                is_clear_to_change_lane_ = false;
+                if (raw_window_clear) {
+                    consecutive_clear_count_ = 0;
+                    lane_change_window_armed_ = false;
+                    lane_change_window_open_count_ = 0;
+                    consecutive_empty_frames_ = 0;
+                }
+                return;
+            }
+            if (is_contest_lane_change && !is_clear_to_change_lane_) {
+                AINFO << "[LC_STATUS] WAIT: no debounced pass-by window";
+                return;
+            }
             // 赛题二：先提速到最低变道速度，再开始找变道窗口。
             if (is_contest_lane_change && ego_speed < min_lane_change_speed) {
-                AINFO << "[LC_STATUS] WAIT: speed=" << ego_speed * 3.6 << " km/h < "
-                      << min_lane_change_speed * 3.6 << ", waiting to accelerate";
+                AINFO << "[LC_STATUS] WAIT: speed=" << ego_speed * 3.6 << " km/h < " << min_lane_change_speed * 3.6
+                      << ", waiting to accelerate";
                 return;
             }
             // 连续安全帧确认：需连续 kRequiredConsecutiveClearFrames 帧安全
             if (is_contest_lane_change && consecutive_clear_count_ < kRequiredConsecutiveClearFrames) {
-                AINFO << "[LC_STATUS] WAIT: clear_frames=" << consecutive_clear_count_
-                      << "/" << kRequiredConsecutiveClearFrames << ", waiting for stable safety";
+                AINFO << "[LC_STATUS] WAIT: clear_frames=" << consecutive_clear_count_ << "/"
+                      << kRequiredConsecutiveClearFrames << ", waiting for stable safety";
                 return;
             }
-            double elapsed = now - prev_status->timestamp();
-            if (elapsed > config_.change_lane_success_freeze_time()) {
-                AINFO << "[LC_STATUS] START: FINISHED -> IN_CHANGE_LANE, elapsed=" << elapsed
-                      << " speed=" << ego_speed * 3.6 << " km/h id=" << change_lane_id
-                      << " clear_frames=" << consecutive_clear_count_;
-                UpdateStatus(now, ChangeLaneStatus::IN_CHANGE_LANE, change_lane_id);
-            }
+            AINFO << "[LC_STATUS] START: FINISHED -> IN_CHANGE_LANE, elapsed=" << elapsed
+                  << " speed=" << ego_speed * 3.6 << " km/h id=" << change_lane_id
+                  << " clear_frames=" << consecutive_clear_count_;
+            UpdateStatus(now, ChangeLaneStatus::IN_CHANGE_LANE, change_lane_id);
         } else if (prev_status->status() == ChangeLaneStatus::IN_CHANGE_LANE) {
             if (prev_status->path_id() != change_lane_id) {
-                AINFO << "[LC_STATUS] SWITCH: IN_CHANGE_LANE but id changed (prev="
-                      << prev_status->path_id() << " now=" << change_lane_id << ") -> FINISHED";
+                AINFO << "[LC_STATUS] SWITCH: IN_CHANGE_LANE but id changed (prev=" << prev_status->path_id()
+                      << " now=" << change_lane_id << ") -> FINISHED";
                 UpdateStatus(now, ChangeLaneStatus::CHANGE_LANE_FINISHED, prev_status->path_id());
+                is_clear_to_change_lane_ = false;
+                consecutive_clear_count_ = 0;
+                consecutive_occupied_count_ = 0;
+                lane_change_window_armed_ = false;
+                lane_change_window_open_count_ = 0;
+                consecutive_empty_frames_ = 0;
             } else {
+                is_clear_to_change_lane_ = true;
                 AINFO << "[LC_STATUS] CONTINUE: IN_CHANGE_LANE, clear=" << is_clear_to_change_lane_
                       << " id=" << change_lane_id;
             }
@@ -411,7 +473,10 @@ void ContestLaneChangePath::GetBoundaryFromLaneChangeForbiddenZone(PathBoundary*
     }
 }
 
-void ContestLaneChangePath::UpdateStatus(double timestamp, ChangeLaneStatus::Status status_code, const std::string& path_id) {
+void ContestLaneChangePath::UpdateStatus(
+        double timestamp,
+        ChangeLaneStatus::Status status_code,
+        const std::string& path_id) {
     auto* lane_change_status = injector_->planning_context()->mutable_planning_status()->mutable_change_lane();
     AINFO << "lane change update from" << lane_change_status->DebugString() << "to";
     lane_change_status->set_timestamp(timestamp);

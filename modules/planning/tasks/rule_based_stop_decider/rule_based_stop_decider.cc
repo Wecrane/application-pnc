@@ -75,7 +75,9 @@ bool IsTightUTurnLikeShortPath(const PathData& path_data) {
 bool IsSuppressibleUTurnPathEndStop(
     const ReferenceLineInfo& reference_line_info, const PathData& path_data,
     const double path_start_s, const double path_end_s) {
-  if (path_data.path_label().find("self") == std::string::npos ||
+  // "self" 或 "uturn" 标签均可：赛题U型弯路径 label="regular/self/uturn_wide"
+  if ((path_data.path_label().find("self") == std::string::npos &&
+       path_data.path_label().find("uturn") == std::string::npos) ||
       !path_data.blocking_obstacle_id().empty()) {
     return false;
   }

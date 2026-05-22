@@ -44,11 +44,11 @@ struct ValetParkingContext : public ScenarioContext {
   std::string target_parking_spot_id;
   bool pre_stop_rightaway_flag = false;
   hdmap::MapPathPoint pre_stop_rightaway_point;
-  bool bay_service_done = false;
-  std::vector<common::math::Box2d> remembered_static_boxes;
+  bool station_shuttle_completed = false;
+  std::vector<common::math::Box2d> latched_static_obstacle_boxes;
 
-  void RememberStaticBarriers(const Frame& frame, const std::string& source);
-  void RestoreRememberedBarriers(Frame* frame) const;
+  void LatchStaticObstacles(const Frame& frame, const std::string& source);
+  void InjectLatchedStaticObstacles(Frame* frame) const;
 };
 
 class ValetParkingScenario : public Scenario {
@@ -63,6 +63,8 @@ class ValetParkingScenario : public Scenario {
 
   bool IsTransferable(const Scenario* const other_scenario,
                       const Frame& frame) override;
+
+  bool Enter(Frame* frame) override;
 
  private:
   static bool SearchTargetParkingSpotOnPath(
@@ -81,8 +83,8 @@ class ValetParkingScenario : public Scenario {
   bool init_ = false;
   ValetParkingContext context_;
   const hdmap::HDMap* hdmap_ = nullptr;
-  std::unordered_set<std::string> blocked_parking_spot_ids_;
-  std::unordered_set<std::string> occupied_parking_spot_ids_;
+  std::unordered_set<std::string> forbiden;
+  std::unordered_set<std::string> occupied_parking_spots_;
 };
 
 CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(apollo::planning::ValetParkingScenario,

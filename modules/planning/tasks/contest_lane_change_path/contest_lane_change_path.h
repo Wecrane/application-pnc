@@ -34,75 +34,81 @@ namespace apollo {
 namespace planning {
 
 class ContestLaneChangePath : public PathGeneration {
- public:
-  bool Init(const std::string& config_dir, const std::string& name,
+public:
+    bool Init(
+            const std::string& config_dir,
+            const std::string& name,
             const std::shared_ptr<DependencyInjector>& injector) override;
 
- private:
-  apollo::common::Status Process(
-      Frame* frame, ReferenceLineInfo* reference_line_info) override;
+private:
+    apollo::common::Status Process(Frame* frame, ReferenceLineInfo* reference_line_info) override;
 
-  /**
-   * @brief Calculate all path boundaries
-   * @param boundary is calculated path boundaries
-   */
-  bool DecidePathBounds(std::vector<PathBoundary>* boundary);
-  /**
-   * @brief Optimize paths for each path boundary
-   * @param path_boundaries is input path boundaries
-   * @param candidate_path_data is output paths
-   */
-  bool OptimizePath(const std::vector<PathBoundary>& path_boundaries,
-                    std::vector<PathData>* candidate_path_data);
-  /**
-   * @brief Assess the feasibility of each path and select the best one
-   * @param candidate_path_data is input paths
-   * @param final_path is output the best path
-   */
-  bool AssessPath(std::vector<PathData>* candidate_path_data,
-                  PathData* final_path);
-  /**
-   * @brief Update lane change status
-   */
-  void UpdateLaneChangeStatus();
-  /**
-   * @brief Correct the boundary based on the starting point of lane change
-   * @param path_bound is input path bound
-   */
-  void GetBoundaryFromLaneChangeForbiddenZone(PathBoundary* const path_bound);
-  /**
-   * @brief Calculate starting point of lane change
-   * @param adc_frenet_s is adc current position
-   * @param start_xy is output starting point of lane change
-   */
-  void GetLaneChangeStartPoint(const ReferenceLine& reference_line,
-                               double adc_frenet_s,
-                               common::math::Vec2d* start_xy);
-  /**
-   * @brief Update Planning context lane change status
-   */
-  void UpdateStatus(double timestamp, ChangeLaneStatus::Status status_code,
-                    const std::string& path_id);
-  /**
-   * @brief Determine whether the obstacle meets the safe distance
-   */
-  bool HysteresisFilter(const double obstacle_distance,
-                        const double safe_distance,
-                        const double distance_buffer,
-                        const bool is_obstacle_blocking);
-  void SetPathInfo(PathData* const path_data);
+    /**
+     * @brief Calculate all path boundaries
+     * @param boundary is calculated path boundaries
+     */
+    bool DecidePathBounds(std::vector<PathBoundary>* boundary);
+    /**
+     * @brief Optimize paths for each path boundary
+     * @param path_boundaries is input path boundaries
+     * @param candidate_path_data is output paths
+     */
+    bool OptimizePath(const std::vector<PathBoundary>& path_boundaries, std::vector<PathData>* candidate_path_data);
+    /**
+     * @brief Assess the feasibility of each path and select the best one
+     * @param candidate_path_data is input paths
+     * @param final_path is output the best path
+     */
+    bool AssessPath(std::vector<PathData>* candidate_path_data, PathData* final_path);
+    /**
+     * @brief Update lane change status
+     */
+    void UpdateLaneChangeStatus();
+    /**
+     * @brief Correct the boundary based on the starting point of lane change
+     * @param path_bound is input path bound
+     */
+    void GetBoundaryFromLaneChangeForbiddenZone(PathBoundary* const path_bound);
+    /**
+     * @brief Calculate starting point of lane change
+     * @param adc_frenet_s is adc current position
+     * @param start_xy is output starting point of lane change
+     */
+    void GetLaneChangeStartPoint(
+            const ReferenceLine& reference_line,
+            double adc_frenet_s,
+            common::math::Vec2d* start_xy);
+    /**
+     * @brief Update Planning context lane change status
+     */
+    void UpdateStatus(double timestamp, ChangeLaneStatus::Status status_code, const std::string& path_id);
+    /**
+     * @brief Determine whether the obstacle meets the safe distance
+     */
+    bool HysteresisFilter(
+            const double obstacle_distance,
+            const double safe_distance,
+            const double distance_buffer,
+            const bool is_obstacle_blocking);
+    void SetPathInfo(PathData* const path_data);
 
-  bool CheckLastFrameSucceed(const apollo::planning::Frame* const last_frame);
+    bool CheckLastFrameSucceed(const apollo::planning::Frame* const last_frame);
 
- private:
-  ContestLaneChangePathConfig config_;
-  bool is_clear_to_change_lane_ = false;
-  bool is_exist_lane_change_start_position_ = false;
-  // 连续安全帧计数器：防止感知闪烁导致变道振荡
-  // 需连续 kRequiredConsecutiveClearFrames 帧确认安全后才启动变道
-  int consecutive_clear_count_ = 0;
-  static constexpr int kRequiredConsecutiveClearFrames = 5;
-  common::math::Vec2d lane_change_start_xy_;
+private:
+    ContestLaneChangePathConfig config_;
+    bool is_clear_to_change_lane_ = false;
+    bool is_exist_lane_change_start_position_ = false;
+    // 先连续确认目标车道被前车占用，再连续确认它刚离开，避免感知闪烁导致补变道。
+    int consecutive_clear_count_ = 0;
+    int consecutive_occupied_count_ = 0;
+    int lane_change_window_open_count_ = 0;
+    int consecutive_empty_frames_ = 0;       // 目标车道持续无车帧数
+    bool lane_change_window_armed_ = false;
+    static constexpr int kRequiredConsecutiveOccupiedFrames = 3;
+    static constexpr int kRequiredConsecutiveClearFrames = 3;
+    static constexpr int kLaneChangeWindowHoldFrames = 8;
+    static constexpr int kEmptyLaneAutoArmFrames = 30;   // 目标车道持续无车 3s 自动触发
+    common::math::Vec2d lane_change_start_xy_;
 };
 
 CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(apollo::planning::ContestLaneChangePath, Task)

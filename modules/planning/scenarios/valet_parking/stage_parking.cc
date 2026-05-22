@@ -42,8 +42,8 @@ StageResult StageParking::Process(
   // Open space planning doesn't use planning_init_point from upstream because
   // of different stitching strategy
   auto scenario_context = GetContextAs<ValetParkingContext>();
-  scenario_context->RememberStaticBarriers(*frame, "parking");
-  scenario_context->RestoreRememberedBarriers(frame);
+  scenario_context->LatchStaticObstacles(*frame, "parking");
+  scenario_context->InjectLatchedStaticObstacles(frame);
   frame->mutable_open_space_info()->set_is_on_open_space_trajectory(true);
   *(frame->mutable_open_space_info()->mutable_target_parking_spot_id()) =
       scenario_context->target_parking_spot_id;
@@ -53,7 +53,7 @@ StageResult StageParking::Process(
     return result.SetStageStatus(StageStatusType::ERROR);
   }
 
-  constexpr double kBayDwellSeconds = 5.0;
+  constexpr double kStationDwellTime = 5.0;
   const bool open_space_finished =
       frame->open_space_info().openspace_planning_finish();
   const double adc_speed = std::fabs(frame->vehicle_state().linear_velocity());
@@ -88,7 +88,7 @@ StageResult StageParking::Process(
         distance_to_end <= kParkingFallbackDistanceThreshold &&
         (heading_diff <= kParkingFallbackHeadingThreshold ||
          opposite_heading_diff <= kParkingFallbackHeadingThreshold);
-    AINFO << "Bay parking finish check, open_space_finished="
+    AINFO << "Station parking finish check, open_space_finished="
           << open_space_finished
           << ", fallback_finished=" << fallback_finished
           << ", distance_to_end=" << distance_to_end
@@ -101,37 +101,37 @@ StageResult StageParking::Process(
           << end_xy_world.x() << ", " << end_xy_world.y() << ", "
           << end_theta_world << ")";
     if (fallback_finished) {
-      AINFO << "Bay parking fallback finish accepted, distance_to_end="
+      AINFO << "Station parking fallback finish accepted, distance_to_end="
             << distance_to_end << ", heading_diff=" << heading_diff
             << ", opposite_heading_diff=" << opposite_heading_diff;
     }
   } else {
-    AINFO << "Bay parking fallback skipped, invalid open_space_end_pose "
+    AINFO << "Station parking fallback skipped, invalid open_space_end_pose "
           << "size=" << end_pose.size();
   }
 
   if (open_space_finished || fallback_finished) {
     frame->mutable_open_space_info()->set_openspace_planning_finish(false);
     if (adc_speed > max_adc_stop_speed) {
-      dwell_timer_active_ = false;
-      AINFO << "Bay parking reached open-space end but ADC not static, "
+      station_dwell_started_ = false;
+      AINFO << "Station parking reached open-space end but ADC not static, "
             << "speed=" << adc_speed
             << ", max_stop_speed=" << max_adc_stop_speed;
       return result.SetStageStatus(StageStatusType::RUNNING);
     }
 
     const double now = cyber::Clock::NowInSeconds();
-    if (!dwell_timer_active_) {
-      dwell_timer_active_ = true;
-      dwell_start_sec_ = now;
-      AINFO << "Parking reached, start bay dwell timer, target_wait_s="
-            << kBayDwellSeconds;
+    if (!station_dwell_started_) {
+      station_dwell_started_ = true;
+      station_dwell_start_time_ = now;
+      AINFO << "Parking reached, start station dwell timer, target_wait_s="
+            << kStationDwellTime;
     }
-    const double elapsed = now - dwell_start_sec_;
-    AINFO << "Bay dwell waiting, elapsed=" << elapsed
-          << ", target_wait_s=" << kBayDwellSeconds;
-    if (elapsed >= kBayDwellSeconds) {
-      AINFO << "Bay dwell complete, switch to bay departure stage";
+    const double elapsed = now - station_dwell_start_time_;
+    AINFO << "Station dwell waiting, elapsed=" << elapsed
+          << ", target_wait_s=" << kStationDwellTime;
+    if (elapsed >= kStationDwellTime) {
+      AINFO << "Station dwell complete, switch to valet departing stage";
       next_stage_ = "VALET_PARKING_DEPARTING";
       return result.SetStageStatus(StageStatusType::FINISHED);
     }
