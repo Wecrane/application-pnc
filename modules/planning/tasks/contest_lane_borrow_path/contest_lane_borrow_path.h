@@ -101,6 +101,10 @@ private:
     bool MaybeGenerateReverseRecoveryBoundary(std::vector<PathBoundary>* boundary);
     void ApplyConstructionZoneSpeedLimitAndLabel(ReferenceLineInfo* reference_line_info) const;
     void IgnoreAllObstacles(ReferenceLineInfo* reference_line_info) const;
+    void IgnoreStaticObstaclesForUTurn(ReferenceLineInfo* reference_line_info) const;
+    void IgnoreDynamicObstaclesForUTurnRelease(ReferenceLineInfo* reference_line_info) const;
+    void UpdateUTurnMergeState(const ReferenceLineInfo& reference_line_info);
+    void ResetUTurnMergeState();
     void ResetConstructZoneState(const std::string& reason);
 
     // U型弯专用：生成宽走廊路径（覆盖多车道路宽），避免紧贴小半径参考线
@@ -163,11 +167,20 @@ private:
     std::string blocking_obstacle_id_;
     ConstructionZoneState construction_zone_;
     bool u_turn_construct_ = false;
+    bool u_turn_inner_vehicle_confirmed_ = false;
+    bool u_turn_release_after_first_vehicle_ = false;
+    bool u_turn_merge_vehicle_confirmed_ = false;
+    bool u_turn_merge_release_ = false;
+    int u_turn_inner_vehicle_seen_frames_ = 0;
+    int u_turn_inner_vehicle_missing_frames_ = 0;
+    int u_turn_merge_vehicle_seen_frames_ = 0;
+    int u_turn_merge_vehicle_missing_frames_ = 0;
+    int u_turn_release_hold_frames_ = 0;
     std::unique_ptr<PathData> last_frame_;
     static constexpr int kLowConeExitThreshold = 30;  // 3秒@10Hz，锥桶持续消失才退出
 
     ReverseRecoveryState reverse_recovery_;
-    static constexpr double kReverseDistance = 12.0;    // 倒车目标距离 (m)，更长弧度绕过锥桶
+    static constexpr double kReverseDistance = 18.0;    // 倒车目标距离 (m)，更长弧度绕过锥桶
     static constexpr double kMinReverseDistance = 0.5;  // 倒车目标距离配置下限
     // 倒车完成：沿固定参考线剩余距离小于此阈值即视为到位
     static constexpr double kReverseTargetRemainThreshold = 0.7;

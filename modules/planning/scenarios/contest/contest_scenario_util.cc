@@ -19,10 +19,12 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <set>
 #include <string>
 
 #include "modules/common/math/math_utils.h"
 #include "modules/planning/planning_base/common/contest_scenario_features.h"
+#include "modules/planning/planning_base/common/frame.h"
 
 namespace apollo {
 namespace planning {
@@ -130,7 +132,7 @@ bool IsContestUTurn(const ReferenceLineInfo& reference_line_info, const Scenario
                         std::atan2(pts.back().y() - pts[pts.size() - 2].y(), pts.back().x() - pts[pts.size() - 2].x())
                         - std::atan2(pts[1].y() - pts[0].y(), pts[1].x() - pts[0].x())));
 
-        static constexpr double kMonotonicRatio = 0.6;
+        static constexpr double kMonotonicRatio = 0.5;
         double ratio = (sum_abs_dh > 1e-6) ? net_h / sum_abs_dh : 0.0;
         if (net_h > config.u_turn_heading_change_threshold() && ratio > kMonotonicRatio) {
             return true;
@@ -148,23 +150,50 @@ int CountContestConstructionConesAhead(const ReferenceLineInfo& reference_line_i
             continue;
         }
         const auto& sl = obstacle->PerceptionSLBoundary();
-        // 只统计主车前方范围内的锥桶，不依赖XY硬编码区域。
-        // 用 SL 区间重叠判定，避免贴近车头或部分压到车身前缘的锥桶被漏掉。
-        if (sl.end_s() > adc_back_s - 6.0 && sl.start_s() < adc_end_s + look_forward_distance) {
+        // 只统计主车前方范围内的锥桶，不依赖XY硬编码区域
+        if (sl.start_s() > adc_back_s - 3.0 && sl.start_s() - adc_end_s < look_forward_distance) {
             ++cone_count;
         }
     }
     return cone_count;
 }
 
+int CountContestConstructionConesAhead(const Frame& frame, const ReferenceLineInfo& self_rli, double look_forward_distance) {
+    // 跨所有参考线统计锥桶（施工区域赛题锥桶横跨三条车道），
+    // 去重后用 self_rli 的 SL 坐标判断纵向位置。
+    const double adc_back_s = self_rli.AdcSlBoundary().start_s();
+    const double adc_end_s = self_rli.AdcSlBoundary().end_s();
+    std::set<std::string> seen_ids;
+    int total = 0;
+    for (const auto& rli : frame.reference_line_info()) {
+        for (const auto* obstacle : rli.path_decision().obstacles().Items()) {
+            if (!IsSmallRealObstacle(obstacle))
+                continue;
+            if (!seen_ids.insert(obstacle->Id()).second)
+                continue;
+            const auto& sl = obstacle->PerceptionSLBoundary();
+            if (sl.start_s() > adc_back_s - 3.0 && sl.start_s() - adc_end_s < look_forward_distance) {
+                ++total;
+            }
+        }
+    }
+    return total;
+}
+
 bool IsContestConstructionZone(const ReferenceLineInfo& reference_line_info, const ScenarioContestConfig& config) {
     if (IsContestUTurn(reference_line_info, config) || IsContestSCurve(reference_line_info, config)) {
         return false;
     }
-    // Entry is intentionally strict: S-curve cones can be dense locally, but the
-    // construction task has a long 100 m cone field. Use "more than N" so the
-    // config remains a strict entry gate.
     return CountContestConstructionConesAhead(reference_line_info, config.construction_look_forward_distance())
+            > config.construction_min_cone_count();
+}
+
+bool IsContestConstructionZone(const Frame& frame, const ReferenceLineInfo& self_rli, const ScenarioContestConfig& config) {
+    if (IsContestUTurn(self_rli, config) || IsContestSCurve(self_rli, config)) {
+        return false;
+    }
+    // 使用跨三车道锥桶统计，确保施工区域入口判定覆盖全部锥桶
+    return CountContestConstructionConesAhead(frame, self_rli, config.construction_look_forward_distance())
             > config.construction_min_cone_count();
 }
 

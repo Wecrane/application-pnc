@@ -16,19 +16,26 @@
 
 #pragma once
 
-#include "modules/planning/planning_base/common/frame.h"
+#include <string>
+
 #include "modules/planning/planning_base/common/reference_line_info.h"
 #include "modules/planning/scenarios/contest/proto/contest.pb.h"
 
 namespace apollo {
 namespace planning {
+
+// 前向声明，避免引入 frame.h 导致循环依赖
+class Frame;
+
 namespace contest {
 
 bool IsContestLaneChange(const Frame& frame);
 bool IsContestSCurve(const ReferenceLineInfo& reference_line_info, const ScenarioContestConfig& config);
 bool IsContestUTurn(const ReferenceLineInfo& reference_line_info, const ScenarioContestConfig& config);
 int CountContestConstructionConesAhead(const ReferenceLineInfo& reference_line_info, double look_forward_distance);
+int CountContestConstructionConesAhead(const Frame& frame, const ReferenceLineInfo& self_rli, double look_forward_distance);
 bool IsContestConstructionZone(const ReferenceLineInfo& reference_line_info, const ScenarioContestConfig& config);
+bool IsContestConstructionZone(const Frame& frame, const ReferenceLineInfo& self_rli, const ScenarioContestConfig& config);
 bool IsContestStationShuttle(
         const ReferenceLineInfo& reference_line_info,
         const ScenarioContestConfig& config,

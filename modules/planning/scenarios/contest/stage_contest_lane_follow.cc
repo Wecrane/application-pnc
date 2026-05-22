@@ -149,18 +149,7 @@ bool ContestLaneFollowStage::StillInScenario(const Frame& frame) const {
         if (contest::IsContestUTurn(frame.reference_line_info().front(), context->scenario_config)) {
             return false;
         }
-        if (contest::IsContestSCurve(frame.reference_line_info().front(), context->scenario_config)) {
-            context->s_curve_exit_hold_frames = 0;
-            return true;
-        }
-        // 防抖：连续 N 帧不在 S 弯才退出，避免锥桶检测边界振荡
-        static constexpr int kSCurveExitHysteresisFrames = 10;
-        context->s_curve_exit_hold_frames++;
-        if (context->s_curve_exit_hold_frames < kSCurveExitHysteresisFrames) {
-            AINFO << "[S_CURVE] exit hold, frame=" << context->s_curve_exit_hold_frames;
-            return true;
-        }
-        return false;
+        return contest::IsContestSCurve(frame.reference_line_info().front(), context->scenario_config);
     case ContestScenarioKind::U_TURN:
         if (!context->u_turn_active) {
             context->u_turn_active = true;
@@ -180,11 +169,9 @@ bool ContestLaneFollowStage::StillInScenario(const Frame& frame) const {
             const auto& sl_bound = rli.AdcSlBoundary();
             const double adc_mid_l = (sl_bound.start_l() + sl_bound.end_l()) * 0.5;
             const double distance_to_destination = rli.SDistanceToDestination();
-            static constexpr double kExitDestinationDistance = 8.0;
-            if (distance_to_destination > kExitDestinationDistance) {
-                AINFO << "[UTURN] heading reversed but destination is still ahead"
-                      << " (distance=" << distance_to_destination << "m, max=" << kExitDestinationDistance
-                      << "m), holding scenario";
+            if (contest::IsContestUTurn(rli, context->scenario_config)) {
+                AINFO << "[UTURN] heading reversed but U-turn geometry is still ahead"
+                      << " (distance_to_destination=" << distance_to_destination << "m), holding scenario";
                 return true;
             }
             static constexpr double kExitMaxLateralOffset = 0.8;
@@ -212,7 +199,9 @@ bool ContestLaneFollowStage::StillInScenario(const Frame& frame) const {
             || contest::IsContestSCurve(frame.reference_line_info().front(), context->scenario_config)) {
             return false;
         }
+        // 跨所有参考线统计锥桶，确保施工区域模式不会因锥桶分布在邻车道而提前退出
         return contest::CountContestConstructionConesAhead(
+                       frame,
                        frame.reference_line_info().front(),
                        context->scenario_config.construction_look_forward_distance())
                 > 0;
