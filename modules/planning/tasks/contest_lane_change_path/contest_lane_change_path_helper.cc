@@ -87,8 +87,8 @@ bool IsContestLaneChangeWindowClear(ReferenceLineInfo* reference_line_info) {
         }
 
         ADEBUG << "[LC_CLEAR] target lane occupied by obs=" << obstacle->Id() << " obs_s=[" << obs_start_s << ","
-               << obs_end_s << "] check_s=[" << check_start_s << "," << check_end_s << "] obs_l=[" << obs_min_l
-               << "," << obs_max_l << "] lane_l=[" << -lane_right_width << "," << lane_left_width << "]";
+               << obs_end_s << "] check_s=[" << check_start_s << "," << check_end_s << "] obs_l=[" << obs_min_l << ","
+               << obs_max_l << "] lane_l=[" << -lane_right_width << "," << lane_left_width << "]";
         if (reference_line_info->path_decision()->Find(obstacle->Id()) != nullptr) {
             reference_line_info->path_decision()->Find(obstacle->Id())->SetLaneChangeBlocking(true);
         }

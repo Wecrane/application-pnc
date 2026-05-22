@@ -325,9 +325,8 @@ void ContestLaneChangePath::UpdateLaneChangeStatus() {
                 is_clear_to_change_lane_ = false;
             }
             AINFO << "[LC_STATUS] window raw_clear=" << raw_window_clear
-                  << " occupied_frames=" << consecutive_occupied_count_
-                  << " clear_frames=" << consecutive_clear_count_ << " armed=" << lane_change_window_armed_
-                  << " open_frames=" << lane_change_window_open_count_
+                  << " occupied_frames=" << consecutive_occupied_count_ << " clear_frames=" << consecutive_clear_count_
+                  << " armed=" << lane_change_window_armed_ << " open_frames=" << lane_change_window_open_count_
                   << " trigger=" << is_clear_to_change_lane_;
         }
         change_lane_id = reference_line_info_->Lanes().Id();

@@ -102,12 +102,12 @@ private:
     int consecutive_clear_count_ = 0;
     int consecutive_occupied_count_ = 0;
     int lane_change_window_open_count_ = 0;
-    int consecutive_empty_frames_ = 0;       // 目标车道持续无车帧数
+    int consecutive_empty_frames_ = 0;  // 目标车道持续无车帧数
     bool lane_change_window_armed_ = false;
     static constexpr int kRequiredConsecutiveOccupiedFrames = 3;
     static constexpr int kRequiredConsecutiveClearFrames = 3;
     static constexpr int kLaneChangeWindowHoldFrames = 8;
-    static constexpr int kEmptyLaneAutoArmFrames = 30;   // 目标车道持续无车 3s 自动触发
+    static constexpr int kEmptyLaneAutoArmFrames = 30;  // 目标车道持续无车 3s 自动触发
     common::math::Vec2d lane_change_start_xy_;
 };
 

@@ -21,6 +21,7 @@
 #include <cmath>
 #include <limits>
 #include <memory>
+#include <set>
 #include <string>
 #include <tuple>
 #include <unordered_map>
@@ -66,6 +67,27 @@ int CountConstructionConesAhead(const ReferenceLineInfo& reference_line_info, do
         }
     }
     return cone_count;
+}
+
+int CountConstructionConesAheadAllLanes(
+        const Frame& frame, const ReferenceLineInfo& self_rli, double look_forward_distance) {
+    // 跨所有参考线统计锥桶（施工区域赛题锥桶横跨三条车道）
+    const double adc_back_s = self_rli.AdcSlBoundary().start_s();
+    const double adc_end_s = self_rli.AdcSlBoundary().end_s();
+    std::set<int> seen_ids;
+    int total = 0;
+    for (const auto& rli : frame.reference_line_info()) {
+        for (const auto* obstacle : rli.path_decision().obstacles().Items()) {
+            if (!contest::IsSmallRealObstacle(obstacle)) continue;
+            if (!seen_ids.insert(obstacle->Id()).second) continue;  // 去重
+            const auto& sl = obstacle->PerceptionSLBoundary();
+            if (sl.end_s() > adc_back_s - 6.0 &&
+                sl.start_s() < adc_end_s + look_forward_distance) {
+                ++total;
+            }
+        }
+    }
+    return total;
 }
 
 bool HasCloseConstructionConeAhead(const ReferenceLineInfo& reference_line_info) {
@@ -116,7 +138,7 @@ void BuildUTurnLargeRadiusReference(
     constexpr double kCurveKappaThreshold = 0.015;
     constexpr double kPrepareDistance = 18.0;
     constexpr double kReturnDistance = 28.0;
-    constexpr double kOuterLaneOffset = 2.8;
+    constexpr double kOuterLaneOffset = 1.5;  // 外侧偏移(m)，不宜过大否则路径规划到邻车道
 
     int curve_start_idx = -1;
     int curve_end_idx = -1;
@@ -269,7 +291,13 @@ apollo::common::Status ContestLaneBorrowPath::Process(Frame* frame, ReferenceLin
     const bool is_contest_construction = IsContestConstructionScenario();
     const bool is_contest_u_turn = IsContestUTurnScenario();
     if (!is_contest_construction && construction_zone_.active) {
-        ResetConstructZoneState("leave construction scenario");
+        // 倒车中不退出施工区模式：倒车是为了绕过锥桶重新找路，
+        // 退出模式会导致路径生成逻辑切换，倒车中断。
+        if (!reverse_recovery_.active) {
+            ResetConstructZoneState("leave construction scenario");
+        } else {
+            AINFO << "[CONSTRUCT] reverse active, holding construction mode";
+        }
     }
 
     // ── 独立锥桶检测：不依赖 path_decider 的 blocking_obstacle_id ──
@@ -277,8 +305,10 @@ apollo::common::Status ContestLaneBorrowPath::Process(Frame* frame, ReferenceLin
     // 不将其识别为阻塞障碍物（障碍物太小/太近），导致 IsNecessaryToBorrowLane
     // 因 front_static_obstacle_id 为空而返回 false。
     // 这里做一次独立计数；进入施工区后只要前方仍有锥桶，就保持借道模式。
+    // 跨三条车道统计（施工区域锥桶横跨多车道）。
     const int early_cone_count = is_contest_construction
-            ? CountConstructionConesAhead(*reference_line_info, contest::kDefaultConstructionLookForwardDistance)
+            ? CountConstructionConesAheadAllLanes(*frame, *reference_line_info,
+                    contest::kDefaultConstructionLookForwardDistance)
             : 0;
 
     if (is_contest_construction && early_cone_count > 0) {
@@ -324,8 +354,8 @@ apollo::common::Status ContestLaneBorrowPath::Process(Frame* frame, ReferenceLin
     if (reverse_recovery_.active && !candidate_path_data.empty()) {
         *reference_line_info->mutable_path_data() = candidate_path_data.front();
         AINFO << "[REVERSE] Path set directly (bypass AssessPath), label=" << candidate_path_data.front().path_label();
-        // 倒车加速：限速 4.5 m/s，比默认更快
-        constexpr double kReverseSpeedLimit = 4.5;
+        // 倒车加速：限速 5.0 m/s (≈18 km/h)
+        constexpr double kReverseSpeedLimit = 5.0;
         const double adc_s = reference_line_info->AdcSlBoundary().start_s();
         reference_line_info->mutable_reference_line()->AddSpeedLimit(
                 adc_s - kReverseDistance, adc_s, kReverseSpeedLimit);

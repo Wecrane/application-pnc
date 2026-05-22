@@ -149,7 +149,18 @@ bool ContestLaneFollowStage::StillInScenario(const Frame& frame) const {
         if (contest::IsContestUTurn(frame.reference_line_info().front(), context->scenario_config)) {
             return false;
         }
-        return contest::IsContestSCurve(frame.reference_line_info().front(), context->scenario_config);
+        if (contest::IsContestSCurve(frame.reference_line_info().front(), context->scenario_config)) {
+            context->s_curve_exit_hold_frames = 0;
+            return true;
+        }
+        // 防抖：连续 N 帧不在 S 弯才退出，避免锥桶检测边界振荡
+        static constexpr int kSCurveExitHysteresisFrames = 10;
+        context->s_curve_exit_hold_frames++;
+        if (context->s_curve_exit_hold_frames < kSCurveExitHysteresisFrames) {
+            AINFO << "[S_CURVE] exit hold, frame=" << context->s_curve_exit_hold_frames;
+            return true;
+        }
+        return false;
     case ContestScenarioKind::U_TURN:
         if (!context->u_turn_active) {
             context->u_turn_active = true;
@@ -172,8 +183,7 @@ bool ContestLaneFollowStage::StillInScenario(const Frame& frame) const {
             static constexpr double kExitDestinationDistance = 8.0;
             if (distance_to_destination > kExitDestinationDistance) {
                 AINFO << "[UTURN] heading reversed but destination is still ahead"
-                      << " (distance=" << distance_to_destination
-                      << "m, max=" << kExitDestinationDistance
+                      << " (distance=" << distance_to_destination << "m, max=" << kExitDestinationDistance
                       << "m), holding scenario";
                 return true;
             }
@@ -184,12 +194,10 @@ bool ContestLaneFollowStage::StillInScenario(const Frame& frame) const {
                 if (context->u_turn_exit_hold_frames < kMaxExitHoldFrames) {
                     AINFO << "[UTURN] heading reversed but vehicle off-center"
                           << " (mid_l=" << adc_mid_l << ", max=" << kExitMaxLateralOffset
-                          << "), holding scenario, hold_frame="
-                          << context->u_turn_exit_hold_frames;
+                          << "), holding scenario, hold_frame=" << context->u_turn_exit_hold_frames;
                     return true;  // 保持场景活跃，Contest 管道继续运行
                 }
-                AWARN << "[UTURN] exit hold timeout after " << kMaxExitHoldFrames
-                      << " frames, forcing exit";
+                AWARN << "[UTURN] exit hold timeout after " << kMaxExitHoldFrames << " frames, forcing exit";
             }
             context->u_turn_exit_hold_frames = 0;
             context->u_turn_active = false;
