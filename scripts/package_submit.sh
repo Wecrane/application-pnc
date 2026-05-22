@@ -66,33 +66,36 @@ if [ "$HAS_SRC_CHANGE" = false ] && [ "$HAS_PROFILE_CHANGE" = false ]; then
     warn "未检测到任何改动，将打包当前所有内容"
 fi
 
-# 生成时间戳
-TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-ARCHIVE_NAME="submit_${TIMESTAMP}.tar.gz"
+# 生成时间戳 (格式: MMDD_HHMMSS)
+TIMESTAMP=$(date +%m%d_%H%M%S)
+OUTPUT_DIR="${WORKSPACE_DIR}/submit"
+mkdir -p "$OUTPUT_DIR"
+ARCHIVE_NAME="${TIMESTAMP}.tar.gz"
+ARCHIVE_PATH="${OUTPUT_DIR}/${ARCHIVE_NAME}"
 
 info "正在打包..."
 
 if [ "$HAS_SRC_CHANGE" = true ]; then
     # 改了源码 → 打包 modules/planning/ + profiles/
     info "打包方式：源码 + 配置"
-    tar -zcvf "$ARCHIVE_NAME" modules/planning/ "$PROFILE_DIR"
+    tar -zcvf "$ARCHIVE_PATH" modules/planning/ "$PROFILE_DIR"
 elif [ "$HAS_PROFILE_CHANGE" = true ]; then
     # 仅改配置 → 打包 profiles/
     info "打包方式：仅配置"
-    tar -zcvf "$ARCHIVE_NAME" "$PROFILE_DIR"
+    tar -zcvf "$ARCHIVE_PATH" "$PROFILE_DIR"
 else
     # 无检测到改动 → 打包全部
     info "打包方式：全量（源码 + 配置）"
-    tar -zcvf "$ARCHIVE_NAME" modules/planning/ "$PROFILE_DIR"
+    tar -zcvf "$ARCHIVE_PATH" modules/planning/ "$PROFILE_DIR"
 fi
 
 echo ""
 info "✅ 打包完成！"
-info "   文件: ${WORKSPACE_DIR}/${ARCHIVE_NAME}"
-info "   大小: $(du -h "$ARCHIVE_NAME" | cut -f1)"
+info "   文件: ${ARCHIVE_PATH}"
+info "   大小: $(du -h "$ARCHIVE_PATH" | cut -f1)"
 
 # 列出包内容概览
 echo ""
 info "包内容概览："
-tar -tvf "$ARCHIVE_NAME" | head -20
-echo "    ...（共 $(tar -tvf "$ARCHIVE_NAME" | wc -l) 个文件）"
+tar -tvf "$ARCHIVE_PATH" | head -20
+echo "    ...（共 $(tar -tvf "$ARCHIVE_PATH" | wc -l) 个文件）"

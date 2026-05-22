@@ -169,9 +169,11 @@ bool ContestLaneFollowStage::StillInScenario(const Frame& frame) const {
             const auto& sl_bound = rli.AdcSlBoundary();
             const double adc_mid_l = (sl_bound.start_l() + sl_bound.end_l()) * 0.5;
             const double distance_to_destination = rli.SDistanceToDestination();
-            if (contest::IsContestUTurn(rli, context->scenario_config)) {
-                AINFO << "[UTURN] heading reversed but U-turn geometry is still ahead"
-                      << " (distance_to_destination=" << distance_to_destination << "m), holding scenario";
+            static constexpr double kExitDestinationDistance = 8.0;
+            if (distance_to_destination > kExitDestinationDistance) {
+                AINFO << "[UTURN] heading reversed but destination is still ahead"
+                      << " (distance=" << distance_to_destination << "m, max=" << kExitDestinationDistance
+                      << "m), holding scenario";
                 return true;
             }
             static constexpr double kExitMaxLateralOffset = 0.8;
