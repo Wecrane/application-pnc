@@ -158,7 +158,10 @@ int CountContestConstructionConesAhead(const ReferenceLineInfo& reference_line_i
     return cone_count;
 }
 
-int CountContestConstructionConesAhead(const Frame& frame, const ReferenceLineInfo& self_rli, double look_forward_distance) {
+int CountContestConstructionConesAhead(
+        const Frame& frame,
+        const ReferenceLineInfo& self_rli,
+        double look_forward_distance) {
     // 跨所有参考线统计锥桶（施工区域赛题锥桶横跨三条车道），
     // 去重后用 self_rli 的 SL 坐标判断纵向位置。
     const double adc_back_s = self_rli.AdcSlBoundary().start_s();
@@ -188,7 +191,10 @@ bool IsContestConstructionZone(const ReferenceLineInfo& reference_line_info, con
             > config.construction_min_cone_count();
 }
 
-bool IsContestConstructionZone(const Frame& frame, const ReferenceLineInfo& self_rli, const ScenarioContestConfig& config) {
+bool IsContestConstructionZone(
+        const Frame& frame,
+        const ReferenceLineInfo& self_rli,
+        const ScenarioContestConfig& config) {
     if (IsContestUTurn(self_rli, config) || IsContestSCurve(self_rli, config)) {
         return false;
     }

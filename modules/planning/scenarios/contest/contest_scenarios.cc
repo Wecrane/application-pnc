@@ -83,7 +83,8 @@ bool ContestConstructionZoneScenario::IsTransferable(const Scenario* other_scena
         }
     }
     return other_scenario != nullptr && IsReferenceLineReady(frame)
-            && contest::IsContestConstructionZone(frame, frame.reference_line_info().front(), GetContext()->scenario_config);
+            && contest::IsContestConstructionZone(
+                    frame, frame.reference_line_info().front(), GetContext()->scenario_config);
 }
 
 bool ContestStationShuttleScenario::IsTransferable(const Scenario* other_scenario, const Frame& frame) {

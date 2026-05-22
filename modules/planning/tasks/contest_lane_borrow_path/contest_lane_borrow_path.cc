@@ -237,10 +237,9 @@ void BuildUTurnLargeRadiusReference(
     const double shift_start_s = curve_start_s + kInnerLaneCheckpointDistance;
     const bool inner_lane_blocked = CheckUTurnInnerLaneTraffic(reference_line_info).blocking;
     const bool wait_near_inner_lane = inner_lane_blocked && !release_after_first_vehicle;
-    const double target_turn_l = wait_near_inner_lane ? outer_l * kStandbyOffsetRatio
-            : outer_l;
+    const double target_turn_l = wait_near_inner_lane ? outer_l * kStandbyOffsetRatio : outer_l;
     const double hold_distance = wait_near_inner_lane ? kBlockedOuterHoldDistance
-            : (release_after_first_vehicle ? 0.0 : kOuterHoldDistance);
+                                                      : (release_after_first_vehicle ? 0.0 : kOuterHoldDistance);
     const double return_distance = merge_release ? kMergeReleaseReturnDistance : kReturnDistance;
     const double return_start_s = curve_end_s + hold_distance;
     for (size_t i = 0; i < path_boundary.size(); ++i) {
@@ -266,10 +265,10 @@ void BuildUTurnLargeRadiusReference(
     }
     AINFO << "[UTURN] large-radius ref generated, outer_l=" << outer_l << ", curve_s=[" << curve_start_s << ","
           << curve_end_s << "], inner_checkpoint_distance=" << kInnerLaneCheckpointDistance
-          << ", shift_after_checkpoint=" << kShiftAfterCurveStartDistance
-          << ", target_turn_l=" << target_turn_l << ", hold=" << hold_distance
-          << ", return=" << return_distance << ", inner_lane_blocked=" << inner_lane_blocked
-          << ", release=" << release_after_first_vehicle << ", merge_release=" << merge_release;
+          << ", shift_after_checkpoint=" << kShiftAfterCurveStartDistance << ", target_turn_l=" << target_turn_l
+          << ", hold=" << hold_distance << ", return=" << return_distance
+          << ", inner_lane_blocked=" << inner_lane_blocked << ", release=" << release_after_first_vehicle
+          << ", merge_release=" << merge_release;
 }
 
 }  // namespace
@@ -442,7 +441,8 @@ apollo::common::Status ContestLaneBorrowPath::Process(Frame* frame, ReferenceLin
         const double adc_s = reference_line_info->AdcSlBoundary().start_s();
         reference_line_info->mutable_reference_line()->AddSpeedLimit(
                 adc_s - kReverseDistance, adc_s, kReverseSpeedLimit);
-        AINFO << "[REVERSE] speed limit " << kReverseSpeedLimit << " m/s for reverse s=[" << (adc_s - kReverseDistance) << ", " << adc_s << "]";
+        AINFO << "[REVERSE] speed limit " << kReverseSpeedLimit << " m/s for reverse s=[" << (adc_s - kReverseDistance)
+              << ", " << adc_s << "]";
     } else if (AssessPath(&candidate_path_data, reference_line_info->mutable_path_data())) {
         ADEBUG << "contest lane borrow path success";
     }
@@ -1288,12 +1288,10 @@ void ContestLaneBorrowPath::UpdateUTurnMergeState(const ReferenceLineInfo& refer
     const auto traffic = CheckUTurnInnerLaneTraffic(reference_line_info);
     const double adc_end_s = reference_line_info.AdcSlBoundary().end_s();
     double near_max_kappa = 0.0;
-    for (double s = adc_end_s;
-         s <= std::min(reference_line_info.reference_line().Length(), adc_end_s + 18.0);
+    for (double s = adc_end_s; s <= std::min(reference_line_info.reference_line().Length(), adc_end_s + 18.0);
          s += 2.0) {
         near_max_kappa = std::max(
-                near_max_kappa,
-                std::fabs(reference_line_info.reference_line().GetNearestReferencePoint(s).kappa()));
+                near_max_kappa, std::fabs(reference_line_info.reference_line().GetNearestReferencePoint(s).kappa()));
     }
     const bool in_merge_phase = u_turn_release_after_first_vehicle_ && near_max_kappa < kMergePhaseKappaThreshold;
 
@@ -1334,8 +1332,7 @@ void ContestLaneBorrowPath::UpdateUTurnMergeState(const ReferenceLineInfo& refer
             ++u_turn_merge_vehicle_missing_frames_;
         }
         const bool has_pass_by_window = u_turn_merge_vehicle_confirmed_ || u_turn_inner_vehicle_confirmed_;
-        if (has_pass_by_window
-            && (traffic.passed || u_turn_merge_vehicle_missing_frames_ >= kMissingFramesToRelease)) {
+        if (has_pass_by_window && (traffic.passed || u_turn_merge_vehicle_missing_frames_ >= kMissingFramesToRelease)) {
             u_turn_merge_release_ = true;
             AINFO << "[UTURN][MERGE] inner-lane merge vehicle passed, merge now. passed=" << traffic.passed
                   << ", missing_frames=" << u_turn_merge_vehicle_missing_frames_;
@@ -1384,8 +1381,7 @@ void ContestLaneBorrowPath::UpdateUTurnMergeState(const ReferenceLineInfo& refer
     }
 
     AINFO << "[UTURN][MERGE] waiting: blocking=" << traffic.blocking << ", passed=" << traffic.passed
-          << ", confirmed=" << u_turn_inner_vehicle_confirmed_
-          << ", seen_frames=" << u_turn_inner_vehicle_seen_frames_
+          << ", confirmed=" << u_turn_inner_vehicle_confirmed_ << ", seen_frames=" << u_turn_inner_vehicle_seen_frames_
           << ", missing_frames=" << u_turn_inner_vehicle_missing_frames_;
 }
 
@@ -1509,9 +1505,9 @@ void ContestLaneBorrowPath::AddUTurnSpeedLimit(ReferenceLineInfo* reference_line
     constexpr double kUTurnCurveCruiseSpeed = 8.8 / 3.6;
     constexpr double kUTurnCurveSpeedLimit = 10.0 / 3.6;
     constexpr double kReleaseMergeSpeed = 29.0 / 3.6;  // 出弯回内侧最高 29km/h
-    constexpr double kTightKappa = 0.035;          // 紧弯曲率阈值
-    constexpr double kCurveRangeKappa = 0.015;     // U 弯限速区间识别阈值
-    constexpr double kCurveLookAhead = 28.0;       // 紧弯判定前探距离
+    constexpr double kTightKappa = 0.035;              // 紧弯曲率阈值
+    constexpr double kCurveRangeKappa = 0.015;         // U 弯限速区间识别阈值
+    constexpr double kCurveLookAhead = 28.0;           // 紧弯判定前探距离
     constexpr double kCurveRangeLookBack = 12.0;
     constexpr double kCurveRangeLookAhead = 190.0;
     constexpr double kCurveEntryBuffer = 4.0;
@@ -1530,8 +1526,8 @@ void ContestLaneBorrowPath::AddUTurnSpeedLimit(ReferenceLineInfo* reference_line
     bool near_uturn = false;
     const double near_end = std::min(ref_length, adc_end_s + kCurveLookAhead);
     for (double s = adc_end_s; s <= near_end; s += kStep) {
-        near_max_kappa = std::max(near_max_kappa,
-                std::fabs(reference_line_info->reference_line().GetNearestReferencePoint(s).kappa()));
+        near_max_kappa = std::max(
+                near_max_kappa, std::fabs(reference_line_info->reference_line().GetNearestReferencePoint(s).kappa()));
         if (!near_uturn && reference_line_info->GetPathTurnType(s) == hdmap::Lane::U_TURN) {
             near_uturn = true;
         }
@@ -1563,8 +1559,8 @@ void ContestLaneBorrowPath::AddUTurnSpeedLimit(ReferenceLineInfo* reference_line
             uturn_limit_start_s = std::max(0.0, adc_s - kSpeedLimitBuffer);
         }
     }
-    const bool should_limit_cruise_now =
-            near_tight_curve || (has_curve_range && adc_end_s + kSpeedLimitBuffer >= uturn_limit_start_s);
+    const bool should_limit_cruise_now
+            = near_tight_curve || (has_curve_range && adc_end_s + kSpeedLimitBuffer >= uturn_limit_start_s);
 
     // 2. 速度控制：U 弯使用外侧大半径路径，不再按原始急弯参考线曲率
     // 加硬限速，否则速度优化器会被 13m/180° 的参考线压到爬行速度。
@@ -1575,8 +1571,7 @@ void ContestLaneBorrowPath::AddUTurnSpeedLimit(ReferenceLineInfo* reference_line
                 std::min(ref_length, adc_end_s + kReleaseSpeedLimitForward),
                 kReleaseMergeSpeed);
         reference_line_info->SetCruiseSpeed(kReleaseMergeSpeed);
-        AINFO << "[UTURN] post-turn/merge speed target=" << kReleaseMergeSpeed
-              << ", after_curve=" << after_uturn_curve
+        AINFO << "[UTURN] post-turn/merge speed target=" << kReleaseMergeSpeed << ", after_curve=" << after_uturn_curve
               << ", hold_frames=" << u_turn_release_hold_frames_;
     } else if (u_turn_release_after_first_vehicle_) {
         reference_line_info->mutable_reference_line()->AddSpeedLimit(
@@ -1585,8 +1580,7 @@ void ContestLaneBorrowPath::AddUTurnSpeedLimit(ReferenceLineInfo* reference_line
                 kUTurnCurveSpeedLimit);
         reference_line_info->SetCruiseSpeed(kUTurnCurveCruiseSpeed);
         AINFO << "[UTURN] release launch speed target=" << kUTurnCurveCruiseSpeed
-              << ", speed_limit=" << kUTurnCurveSpeedLimit
-              << ", near_tight_curve=" << near_tight_curve
+              << ", speed_limit=" << kUTurnCurveSpeedLimit << ", near_tight_curve=" << near_tight_curve
               << ", hold_frames=" << u_turn_release_hold_frames_;
     } else {
         // 未进入 release 前，只给 U 弯本体加限速；场景提前触发时不锁死弯前巡航。
@@ -1600,13 +1594,10 @@ void ContestLaneBorrowPath::AddUTurnSpeedLimit(ReferenceLineInfo* reference_line
     }
     AINFO << "[UTURN] speed target: near_max_kappa=" << near_max_kappa << ", near_uturn=" << near_uturn
           << ", tight=" << near_tight_curve << ", curve_cruise=" << kUTurnCurveCruiseSpeed
-          << ", curve_limit=" << kUTurnCurveSpeedLimit
-          << ", release_merge_speed=" << kReleaseMergeSpeed
+          << ", curve_limit=" << kUTurnCurveSpeedLimit << ", release_merge_speed=" << kReleaseMergeSpeed
           << ", limit_s=[" << uturn_limit_start_s << "," << uturn_limit_end_s << "]"
-          << ", has_curve_range=" << has_curve_range
-          << ", should_limit_cruise_now=" << should_limit_cruise_now
-          << ", release=" << u_turn_release_after_first_vehicle_
-          << ", merge_release=" << u_turn_merge_release_;
+          << ", has_curve_range=" << has_curve_range << ", should_limit_cruise_now=" << should_limit_cruise_now
+          << ", release=" << u_turn_release_after_first_vehicle_ << ", merge_release=" << u_turn_merge_release_;
 }
 
 bool ContestLaneBorrowPath::HasUTurnGeometryAhead(const ReferenceLineInfo& reference_line_info) const {
