@@ -167,7 +167,7 @@ private:
     static constexpr int kLowConeExitThreshold = 30;  // 3秒@10Hz，锥桶持续消失才退出
 
     ReverseRecoveryState reverse_recovery_;
-    static constexpr double kReverseDistance = 12.0;     // 倒车目标距离 (m)，更长弧度绕过锥桶
+    static constexpr double kReverseDistance = 12.0;    // 倒车目标距离 (m)，更长弧度绕过锥桶
     static constexpr double kMinReverseDistance = 0.5;  // 倒车目标距离配置下限
     // 倒车完成：沿固定参考线剩余距离小于此阈值即视为到位
     static constexpr double kReverseTargetRemainThreshold = 0.7;
