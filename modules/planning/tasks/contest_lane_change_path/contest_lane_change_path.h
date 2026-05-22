@@ -98,6 +98,10 @@ class ContestLaneChangePath : public PathGeneration {
   ContestLaneChangePathConfig config_;
   bool is_clear_to_change_lane_ = false;
   bool is_exist_lane_change_start_position_ = false;
+  // 连续安全帧计数器：防止感知闪烁导致变道振荡
+  // 需连续 kRequiredConsecutiveClearFrames 帧确认安全后才启动变道
+  int consecutive_clear_count_ = 0;
+  static constexpr int kRequiredConsecutiveClearFrames = 5;
   common::math::Vec2d lane_change_start_xy_;
 };
 

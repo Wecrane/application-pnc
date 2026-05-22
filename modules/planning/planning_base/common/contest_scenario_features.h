@@ -39,10 +39,10 @@ constexpr double kDefaultSCurveLookForwardDistance = 90.0;
 constexpr double kDefaultSCurveMinAbsKappa = 0.015;
 constexpr double kDefaultSCurveMaxObstacleAbsL = 3.5;
 constexpr int kDefaultSCurveMinConeCount = 4;
-constexpr double kDefaultUTurnLookForwardDistance = 60.0;
+constexpr double kDefaultUTurnLookForwardDistance = 35.0;
 constexpr double kDefaultUTurnKappaThreshold = 0.12;
-constexpr double kDefaultUTurnHeadingChangeThreshold = 2.7;
-constexpr double kDefaultUTurnHeadingWindowRadius = 20.0;
+constexpr double kDefaultUTurnHeadingChangeThreshold = 2.0;
+constexpr double kDefaultUTurnHeadingWindowRadius = 17.0;
 
 inline bool IsSmallRealObstacle(const Obstacle* obstacle) {
     return obstacle != nullptr && !obstacle->IsVirtual()

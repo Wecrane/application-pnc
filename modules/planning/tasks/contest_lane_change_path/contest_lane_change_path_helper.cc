@@ -28,7 +28,7 @@ namespace apollo {
 namespace planning {
 namespace {
 
-constexpr double kLaneChangeWatchRearBuffer = 4.0;
+constexpr double kLaneChangeWatchRearBuffer = 8.0;
 constexpr double kLaneChangeWatchFrontBuffer = 0.2;
 constexpr double kLaneChangeWatchLateralBuffer = 0.8;
 constexpr double kLaneChangeHoldLateralHalfWidth = 0.5;

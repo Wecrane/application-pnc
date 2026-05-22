@@ -15,9 +15,9 @@ message ScenarioContestConfig {
   optional double s_curve_look_forward_distance = 9 [default = 90.0];
   optional double s_curve_max_obstacle_abs_l = 10 [default = 3.5];
 
-  optional double u_turn_look_forward_distance = 11 [default = 60.0];
+  optional double u_turn_look_forward_distance = 11 [default = 35.0];
   optional double u_turn_kappa_threshold = 12 [default = 0.12];
-  optional double u_turn_heading_change_threshold = 13 [default = 2.7];
+  optional double u_turn_heading_change_threshold = 13 [default = 2.0];
 
   optional double station_shuttle_look_forward_distance = 14 [default = 80.0];
   optional double station_shuttle_dwell_time_sec = 15 [default = 5.0];

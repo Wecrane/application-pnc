@@ -40,6 +40,7 @@ struct ContestScenarioContext : public ScenarioContext {
     bool u_turn_active = false;
     bool u_turn_completed = false;
     double u_turn_entry_heading = 0.0;
+    int u_turn_exit_hold_frames = 0;  // 退出保持计数器
 };
 
 }  // namespace planning

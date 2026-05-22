@@ -39,6 +39,14 @@ StageResult ContestLaneFollowStage::Process(const common::TrajectoryPoint& plann
         return result;
     }
     if (!StillInScenario(*frame)) {
+        // U 型弯退出清理：重置借道标志，防止原始 LaneBorrowPath 误触发
+        auto* ctx = GetContextAs<ContestScenarioContext>();
+        if (ctx->kind == ContestScenarioKind::U_TURN) {
+            injector_->planning_context()
+                    ->mutable_planning_status()
+                    ->mutable_path_decider()
+                    ->set_is_in_path_lane_borrow_scenario(false);
+        }
         return FinishScenario();
     }
     return result.SetStageStatus(StageStatusType::RUNNING);
@@ -150,12 +158,34 @@ bool ContestLaneFollowStage::StillInScenario(const Frame& frame) const {
             AINFO << "[UTURN] enter, entry_heading=" << context->u_turn_entry_heading;
             return true;
         }
-        if (std::fabs(common::math::NormalizeAngle(
-                    frame.vehicle_state().heading() - context->u_turn_entry_heading))
-            > context->scenario_config.u_turn_heading_change_threshold()) {
+        // 完成判定用比检测更高的阈值（至少 2.7 rad ≈ 155°），确保车辆基本完成掉头
+        static constexpr double kUTurnCompletionHeadingThreshold = 2.7;
+        if (std::fabs(common::math::NormalizeAngle(frame.vehicle_state().heading() - context->u_turn_entry_heading))
+            > kUTurnCompletionHeadingThreshold) {
+            // ── 退出保护：heading 反转后暂不退出，等待车辆回到车道中心 ──
+            // Contest 管道在场景退出后不再运行，所以必须在退出前完成恢复。
+            // 这里检查车辆 l 是否回到 ±0.8m 以内才允许退出，最多额外保持 50 帧。
+            const auto& rli = frame.reference_line_info().front();
+            const auto& sl_bound = rli.AdcSlBoundary();
+            const double adc_mid_l = (sl_bound.start_l() + sl_bound.end_l()) * 0.5;
+            static constexpr double kExitMaxLateralOffset = 0.8;
+            if (std::fabs(adc_mid_l) > kExitMaxLateralOffset) {
+                context->u_turn_exit_hold_frames++;
+                static constexpr int kMaxExitHoldFrames = 50;
+                if (context->u_turn_exit_hold_frames < kMaxExitHoldFrames) {
+                    AINFO << "[UTURN] heading reversed but vehicle off-center"
+                          << " (mid_l=" << adc_mid_l << ", max=" << kExitMaxLateralOffset
+                          << "), holding scenario, hold_frame="
+                          << context->u_turn_exit_hold_frames;
+                    return true;  // 保持场景活跃，Contest 管道继续运行
+                }
+                AWARN << "[UTURN] exit hold timeout after " << kMaxExitHoldFrames
+                      << " frames, forcing exit";
+            }
+            context->u_turn_exit_hold_frames = 0;
             context->u_turn_active = false;
             context->u_turn_completed = true;
-            AINFO << "[UTURN] exit after vehicle heading reversed.";
+            AINFO << "[UTURN] exit (heading reversed, mid_l=" << adc_mid_l << ")";
             return false;
         }
         return true;

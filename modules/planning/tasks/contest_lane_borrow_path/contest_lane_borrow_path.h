@@ -102,6 +102,16 @@ private:
     void ApplyConstructionZoneSpeedLimitAndLabel(ReferenceLineInfo* reference_line_info) const;
     void IgnoreAllObstacles(ReferenceLineInfo* reference_line_info) const;
     void ResetConstructZoneState(const std::string& reason);
+
+    // U型弯专用：生成宽走廊路径（覆盖多车道路宽），避免紧贴小半径参考线
+    bool DecideUTurnPathBoundary(std::vector<PathBoundary>* boundary);
+    void AddUTurnSpeedLimit(ReferenceLineInfo* reference_line_info) const;
+    /**
+     * @brief 检查前方是否仍有 U 型弯几何（用于退出 latch 判断）
+     * @param reference_line_info 当前参考线信息
+     * @return true 如果前方车道仍为 U_TURN 类型
+     */
+    bool HasUTurnGeometryAhead(const ReferenceLineInfo& reference_line_info) const;
     /**
      * @brief Check whether neighbor lane is borrowable
      * @param reference_line_info is input reference line info

@@ -84,14 +84,72 @@ apollo::common::Status ContestLaneBorrowPath::Process(Frame* frame, ReferenceLin
     if (reference_line_info->IsChangeLanePath()) {
         return Status::OK();
     }
-    if (contest::IsCurrentScenario(injector_, contest::kUTurnScenario)) {
-        decided_side_pass_direction_.clear();
-        auto* mutable_path_decider_status
-                = injector_->planning_context()->mutable_planning_status()->mutable_path_decider();
-        mutable_path_decider_status->set_left_borrow(false);
-        mutable_path_decider_status->set_right_borrow(false);
-        mutable_path_decider_status->set_is_in_path_lane_borrow_scenario(false);
-        AINFO << "Contest U-turn scenario uses reference-line path, skip lane borrow.";
+    if (contest::IsCurrentScenario(injector_, contest::kUTurnScenario) || u_turn_construct_) {
+        // U 型弯场景：生成宽走廊路径。
+        // 温和拉力 (l_weight=0.5, ref=5) 防止漂移，紧曲率段失败时回退零权重。
+        // u_turn_construct_ 在场景退出后作为 latch 提供一帧过渡保护。
+        if (!u_turn_construct_) {
+            AINFO << "[UTURN] generating wide-corridor path";
+        } else {
+            AINFO << "[UTURN] latch transition path (scenario already exited)";
+        }
+        u_turn_construct_ = true;
+
+        GetStartPointSLState();
+
+        // 温和拉力：不用零权重，防止车辆在弯道中持续漂移。
+        // l_weight=0.5 让优化器保持在 corridor 中点附近（不是 lane 中心），
+        // ref_weight=5 提供轻微参考，相比原值(3.0/10000)大幅降低。
+        // 这个值在 Lane_1955 的紧曲率半径(2.5m)下仍可行。
+        config_.mutable_path_optimizer_config()->set_path_reference_l_weight(5.0);
+        config_.mutable_path_optimizer_config()->set_l_weight(0.5);
+
+        std::vector<PathBoundary> candidate_path_boundaries;
+        std::vector<PathData> candidate_path_data;
+
+        if (!DecideUTurnPathBoundary(&candidate_path_boundaries)) {
+            AERROR << "[UTURN] failed to decide path boundary";
+            return Status::OK();
+        }
+        if (!OptimizePath(candidate_path_boundaries, &candidate_path_data)) {
+            // 温和拉力在极紧曲率下仍可能失败，回退到零权重重试
+            if (config_.path_optimizer_config().l_weight() > 0.0) {
+                AINFO << "[UTURN] gentle weight failed, retrying with zero weight";
+                config_.mutable_path_optimizer_config()->set_path_reference_l_weight(0.0);
+                config_.mutable_path_optimizer_config()->set_l_weight(0.0);
+                if (!OptimizePath(candidate_path_boundaries, &candidate_path_data)) {
+                    AERROR << "[UTURN] failed to optimize path (zero weight also failed)";
+                    return Status::OK();
+                }
+                AINFO << "[UTURN] path generated with zero weight fallback";
+            } else {
+                AERROR << "[UTURN] failed to optimize path";
+                return Status::OK();
+            }
+        }
+        // 直接使用优化后的路径，不走 AssessPath（可能因偏离参考线被拒绝）
+        if (!candidate_path_data.empty()) {
+            *reference_line_info->mutable_path_data() = candidate_path_data.front();
+            AINFO << "[UTURN] path generated, label=" << candidate_path_data.front().path_label();
+        }
+
+        AddUTurnSpeedLimit(reference_line_info);
+
+        // 标记为借道场景，防止 PathDecider 对 U 型弯内的障碍物
+        // 注入 STOP 决策（红色 stop 墙），导致路径被切断。
+        auto* mutable_path_decider_status = injector_->planning_context()
+                ->mutable_planning_status()->mutable_path_decider();
+        mutable_path_decider_status->set_is_in_path_lane_borrow_scenario(true);
+
+        IgnoreAllObstacles(reference_line_info);
+
+        // 场景退出后 u_turn_construct_ 提供一帧过渡：下一帧自动进入正常流程。
+        if (!contest::IsCurrentScenario(injector_, contest::kUTurnScenario)) {
+            u_turn_construct_ = false;
+            mutable_path_decider_status->set_is_in_path_lane_borrow_scenario(false);
+            AINFO << "[UTURN] latch consumed, returning to normal path generation";
+        }
+
         return Status::OK();
     }
     config_.mutable_path_optimizer_config()->set_l_weight(3.0);
@@ -135,9 +193,11 @@ apollo::common::Status ContestLaneBorrowPath::Process(Frame* frame, ReferenceLin
     if (!DecidePathBounds(&candidate_path_boundaries)) {
         return Status::OK();
     }
-    // 施工区模式：降低对中心线的拉力，让路径自由跟随可行通道中心
+    // 施工区模式：降中心线拉力到 0，让路径自由跟随可行通道中心
+    // 避免"回中心线趋势"把车拉向锥桶导致碰撞
     if (is_contest_construction && construction_zone_.active) {
-        config_.mutable_path_optimizer_config()->set_l_weight(1.0);
+        config_.mutable_path_optimizer_config()->set_l_weight(0.0);
+        config_.mutable_path_optimizer_config()->set_path_reference_l_weight(0.0);
     }
     if (!OptimizePath(candidate_path_boundaries, &candidate_path_data)) {
         return Status::OK();
@@ -156,6 +216,12 @@ apollo::common::Status ContestLaneBorrowPath::Process(Frame* frame, ReferenceLin
     if (reverse_recovery_.active && !candidate_path_data.empty()) {
         *reference_line_info->mutable_path_data() = candidate_path_data.front();
         AINFO << "[REVERSE] Path set directly (bypass AssessPath), label=" << candidate_path_data.front().path_label();
+        // 倒车加速：限速 3.0 m/s (≈10.8 km/h)，比默认更快
+        constexpr double kReverseSpeedLimit = 3.0;
+        const double adc_s = reference_line_info->AdcSlBoundary().start_s();
+        reference_line_info->mutable_reference_line()->AddSpeedLimit(
+                adc_s - kReverseDistance, adc_s, kReverseSpeedLimit);
+        AINFO << "[REVERSE] speed limit " << kReverseSpeedLimit << " m/s for reverse";
     } else if (AssessPath(&candidate_path_data, reference_line_info->mutable_path_data())) {
         ADEBUG << "contest lane borrow path success";
     }
@@ -170,7 +236,10 @@ apollo::common::Status ContestLaneBorrowPath::Process(Frame* frame, ReferenceLin
 
 bool ContestLaneBorrowPath::DecidePathBounds(std::vector<PathBoundary>* boundary) {
     const bool is_contest_construction = IsContestConstructionScenario();
-    u_turn_construct_ = ShouldUseUTurnConeNudge();
+    // 注意：u_turn_construct_ 不再在此处重置。
+    // 其生命周期由 U-turn fast path 管理：
+    // - 进入时设为 true
+    // - 退出时由 HasUTurnGeometryAhead() 判断后设为 false
     if (!is_contest_construction && construction_zone_.active) {
         ResetConstructZoneState("skip construction boundary outside construction scenario");
     }
@@ -498,11 +567,14 @@ bool ContestLaneBorrowPath::OptimizePath(
         std::vector<double> ref_l;
         std::vector<double> weight_ref_l;
         double ref_weight = config.path_reference_l_weight();
-        if (!u_turn_construct_)
+        // U 弯模式：零参考权重 + 以 corridor 中点为目标（不强制 l=0）
+        // 施工区模式同理，但保留非零 weight
+        const bool use_corridor_center =
+                (path_boundary.label().find("construct_zone") != std::string::npos)
+                || (path_boundary.label().find("uturn_wide") != std::string::npos);
+        if (!u_turn_construct_ && !use_corridor_center)
             ref_weight = 50;
-        // 施工区模式：参考目标用可行通道中心，而非 l=0 的中心线。
-        // 避免"回中心线趋势"把车拉向左侧锥桶导致卡在道路边界上。
-        if (path_boundary.label().find("construct_zone") != std::string::npos) {
+        if (use_corridor_center) {
             ref_l.resize(path_boundary.size());
             weight_ref_l.resize(path_boundary.size());
             for (size_t i = 0; i < path_boundary.size(); ++i) {
@@ -514,8 +586,7 @@ bool ContestLaneBorrowPath::OptimizePath(
         }
 
         std::array<double, 3> end_state = {0.0, 0.0, 0.0};
-        // 施工区域：路径终点不应强制归零，使用边界中点作为目标终点
-        if (path_boundary.label().find("construct_zone") != std::string::npos) {
+        if (use_corridor_center) {
             const auto& last_pt = path_boundary.back();
             double end_l = (last_pt.l_lower.l + last_pt.l_upper.l) * 0.5;
             end_state = {end_l, 0.0, 0.0};
@@ -816,7 +887,12 @@ bool ContestLaneBorrowPath::MaybeGenerateReverseRecoveryBoundary(std::vector<Pat
 
     // ── 卡死检测（未进入倒车）──
     const double adc_move_xy = std::hypot(adc_x - reverse_recovery_.last_adc_x, adc_y - reverse_recovery_.last_adc_y);
-    if (adc_speed < kStuckSpeedThreshold && adc_move_xy < 0.3) {
+    // 发车点前方有锥桶紧贴：降低触发门槛，加快倒车响应
+    // stuck_frame_threshold: 15→5 (0.5s @ 10Hz 即可触发)
+    // stuck_speed_threshold: 0.3→0.5 (稍微放宽速度判定)
+    static constexpr double kStuckSpeedThresholdFast = 0.5;
+    static constexpr int kStuckFrameThresholdFast = 5;
+    if (adc_speed < kStuckSpeedThresholdFast && adc_move_xy < 0.3) {
         reverse_recovery_.frame_count++;
     } else {
         reverse_recovery_.frame_count = 0;
@@ -825,7 +901,7 @@ bool ContestLaneBorrowPath::MaybeGenerateReverseRecoveryBoundary(std::vector<Pat
     reverse_recovery_.last_adc_x = adc_x;
     reverse_recovery_.last_adc_y = adc_y;
 
-    if (reverse_recovery_.frame_count < kStuckFrameThreshold) {
+    if (reverse_recovery_.frame_count < kStuckFrameThresholdFast) {
         return false;
     }
 
@@ -919,6 +995,134 @@ void ContestLaneBorrowPath::ResetConstructZoneState(const std::string& reason) {
     construction_zone_.Reset();
     reverse_recovery_.Reset();
     AINFO << "[WALL] EXIT construct_zone by " << reason;
+}
+
+bool ContestLaneBorrowPath::DecideUTurnPathBoundary(std::vector<PathBoundary>* boundary) {
+    // U 弯宽走廊策略:
+    // 参考线半径小 → 优化器需要更大的横向空间来找平滑曲线。
+    // 先用 road edge 扩展，若宽度不足则强制扩展到至少 ±3m (总宽 6m)。
+    if (boundary == nullptr) {
+        return false;
+    }
+    boundary->clear();
+
+    PathBoundary path_bound;
+    std::string blocking_obstacle_id = "";
+    double path_narrowest_width = 0;
+
+    // 1. 初始化基础边界
+    if (!PathBoundsDeciderUtil::InitPathBoundary(*reference_line_info_, &path_bound, init_sl_state_)) {
+        AERROR << "[UTURN] Failed to initialize path boundary";
+        return false;
+    }
+
+    // 2. 使用 road boundary 扩展（比 lane boundary 更宽，包含路肩等）
+    //    再叠加左右借道，确保覆盖到相邻车道
+    if (!PathBoundsDeciderUtil::GetBoundaryFromRoad(*reference_line_info_, init_sl_state_, &path_bound)) {
+        AWARN << "[UTURN] GetBoundaryFromRoad failed, trying lane-based expansion";
+    }
+    std::string left_type;
+    GetBoundaryFromNeighborLane(SidePassDirection::LEFT_BORROW, &path_bound, &left_type);
+    std::string right_type;
+    GetBoundaryFromNeighborLane(SidePassDirection::RIGHT_BORROW, &path_bound, &right_type);
+
+    // 3. U 弯专用：强制走廊宽度 ≥ 6m (每侧 ≥ 3m)
+    //    NEOLIX 车宽 1.2m，需要足够空间做调头弧线
+    constexpr double kMinUTurnHalfWidth = 3.0;  // 单侧最小半宽
+    int narrow_count = 0;
+    for (size_t i = 0; i < path_bound.size(); ++i) {
+        const double half_width = std::min(
+                std::fabs(path_bound[i].l_lower.l),
+                std::fabs(path_bound[i].l_upper.l));
+        if (half_width < kMinUTurnHalfWidth) {
+            ++narrow_count;
+        }
+        path_bound[i].l_lower.l = std::min(path_bound[i].l_lower.l, -kMinUTurnHalfWidth);
+        path_bound[i].l_upper.l = std::max(path_bound[i].l_upper.l, kMinUTurnHalfWidth);
+    }
+    AINFO << "[UTURN] enforced min half-width=" << kMinUTurnHalfWidth
+          << "m, narrow points=" << narrow_count << "/" << path_bound.size();
+
+    // 4. 障碍物避让（轻量：只避让大障碍物，小锥桶用 nudge）
+    PathBoundary temp_path_bound = path_bound;
+    std::vector<SLPolygon> obs_sl_polygons;
+    PathBoundsDeciderUtil::GetSLPolygons(*reference_line_info_, &obs_sl_polygons, init_sl_state_);
+    ApplyUTurnConeNudge(&obs_sl_polygons);
+
+    double saved_lat_buffer = FLAGS_obstacle_lat_buffer;
+    FLAGS_obstacle_lat_buffer = 0.1;  // 放宽障碍物横向缓冲
+    FLAGS_obstacle_lon_end_buffer_park = 5.0;
+    if (!PathBoundsDeciderUtil::GetBoundaryFromStaticObstacles(
+                *reference_line_info_,
+                &obs_sl_polygons,
+                init_sl_state_,
+                &path_bound,
+                &blocking_obstacle_id,
+                &path_narrowest_width)) {
+        FLAGS_obstacle_lat_buffer = saved_lat_buffer;
+        AWARN << "[UTURN] obstacle boundary refinement failed, using expanded boundary";
+        // 不 fatal：用扩展后的边界继续
+        path_bound = temp_path_bound;
+        // 重新强制最小宽度
+        for (size_t i = 0; i < path_bound.size(); ++i) {
+            path_bound[i].l_lower.l = std::min(path_bound[i].l_lower.l, -kMinUTurnHalfWidth);
+            path_bound[i].l_upper.l = std::max(path_bound[i].l_upper.l, kMinUTurnHalfWidth);
+        }
+    }
+    FLAGS_obstacle_lat_buffer = saved_lat_buffer;
+
+    // 5. 补尾点防止零长度路径
+    int counter = 0;
+    while (!blocking_obstacle_id.empty() && path_bound.size() < temp_path_bound.size()
+           && counter < FLAGS_num_extra_tail_bound_point) {
+        path_bound.push_back(temp_path_bound[path_bound.size()]);
+        counter++;
+    }
+
+    path_bound.set_label("regular/uturn_wide");
+    path_bound.set_blocking_obstacle_id(blocking_obstacle_id);
+    RecordDebugInfo(path_bound, path_bound.label(), reference_line_info_);
+    boundary->push_back(path_bound);
+
+    AINFO << "[UTURN] wide boundary generated, size=" << path_bound.size()
+          << ", label=" << path_bound.label();
+    return true;
+}
+
+void ContestLaneBorrowPath::AddUTurnSpeedLimit(ReferenceLineInfo* reference_line_info) const {
+    if (reference_line_info == nullptr) {
+        return;
+    }
+    // U 弯区域限速：从当前 ADC 位置起，覆盖整个 U 弯区域
+    // 限速 5.0 m/s (18 km/h)，适合低速调头
+    constexpr double kUTurnSpeedLimit = 5.0;     // m/s
+    constexpr double kUTurnSpeedBuffer = 20.0;   // 提前 20m 开始减速
+    const double adc_end_s = reference_line_info->AdcSlBoundary().end_s();
+    const double ref_length = reference_line_info->reference_line().Length();
+    const double limit_end_s = std::min(ref_length, adc_end_s + 80.0);
+    reference_line_info->mutable_reference_line()->AddSpeedLimit(
+            adc_end_s - kUTurnSpeedBuffer, limit_end_s, kUTurnSpeedLimit);
+    AINFO << "[UTURN] speed limit " << kUTurnSpeedLimit << " m/s from s="
+          << (adc_end_s - kUTurnSpeedBuffer) << " to " << limit_end_s;
+}
+
+bool ContestLaneBorrowPath::HasUTurnGeometryAhead(const ReferenceLineInfo& reference_line_info) const {
+    // 检查前方车道是否仍为 U_TURN 类型（用于 U 型弯退出 latch 判断）
+    const double adc_end_s = reference_line_info.AdcSlBoundary().end_s();
+    const double ref_length = reference_line_info.reference_line().Length();
+    static constexpr double kCheckForwardDistance = 60.0;
+    for (double s = adc_end_s;
+         s < adc_end_s + kCheckForwardDistance && s < ref_length;
+         s += 5.0) {
+        if (reference_line_info.GetPathTurnType(s) == hdmap::Lane::U_TURN) {
+            return true;
+        }
+    }
+    // 也检查当前位置（车辆可能刚好在 U_TURN 段上）
+    if (reference_line_info.GetPathTurnType(adc_end_s) == hdmap::Lane::U_TURN) {
+        return true;
+    }
+    return false;
 }
 
 bool ContestLaneBorrowPath::IsNecessaryToBorrowLane() {

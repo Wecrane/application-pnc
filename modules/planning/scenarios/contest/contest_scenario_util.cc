@@ -73,18 +73,8 @@ bool IsContestUTurn(const ReferenceLineInfo& reference_line_info, const Scenario
     const double adc_end_s = reference_line_info.AdcSlBoundary().end_s();
     const auto& reference_line = reference_line_info.reference_line();
     const double ref_length = reference_line.Length();
-    const double window_end = std::min(adc_end_s + config.u_turn_look_forward_distance(), ref_length - 1.0);
 
-    if (window_end - adc_end_s >= 10.0) {
-        const double heading_change = std::fabs(
-                common::math::NormalizeAngle(
-                        reference_line.GetReferencePoint(window_end).heading()
-                        - reference_line.GetReferencePoint(adc_end_s).heading()));
-        if (heading_change > config.u_turn_heading_change_threshold()) {
-            return true;
-        }
-    }
-
+    // 方法A: 地图 Lane Turn 属性快速检测（有 U_TURN 标注直接命中）
     for (double s = adc_end_s; s < adc_end_s + config.u_turn_look_forward_distance() && s < ref_length;
          s += kFeatureSampleStep) {
         if (reference_line_info.GetPathTurnType(s) == hdmap::Lane::U_TURN) {
@@ -93,6 +83,53 @@ bool IsContestUTurn(const ReferenceLineInfo& reference_line_info, const Scenario
     }
     if (reference_line_info.GetPathTurnType(adc_end_s) == hdmap::Lane::U_TURN) {
         return true;
+    }
+
+    // 方法B: 直接读路由中每条 lane 的原始几何 heading 变化
+    // 不依赖参考线平滑（平滑会稀释 heading 变化），
+    // 直接使用 lane 中心曲线原始数据。
+    // Lane_1955 heading 变化 ≈ 179°，车辆在 Lane_885 上即可提前检测。
+    double route_s = 0.0;
+    for (const auto& seg : reference_line_info.Lanes()) {
+        const double seg_len = seg.end_s - seg.start_s;
+        if (route_s + seg_len < adc_end_s) {
+            route_s += seg_len;
+            continue;
+        }
+        route_s += seg_len;
+        if (route_s > adc_end_s + 150.0) break;
+
+        if (seg.lane == nullptr) continue;
+        const auto& lane_pb = seg.lane->lane();
+        if (lane_pb.central_curve().segment().empty()) continue;
+
+        std::vector<common::math::Vec2d> pts;
+        for (const auto& curve_seg : lane_pb.central_curve().segment()) {
+            if (!curve_seg.has_line_segment()) continue;
+            for (const auto& pt : curve_seg.line_segment().point()) {
+                pts.emplace_back(pt.x(), pt.y());
+            }
+        }
+        if (pts.size() < 3) continue;
+
+        double sum_abs_dh = 0.0;
+        double prev_h = std::atan2(pts[1].y() - pts[0].y(), pts[1].x() - pts[0].x());
+        for (size_t i = 2; i < pts.size(); ++i) {
+            double cur_h = std::atan2(pts[i].y() - pts[i-1].y(), pts[i].x() - pts[i-1].x());
+            double dh = common::math::NormalizeAngle(cur_h - prev_h);
+            sum_abs_dh += std::fabs(dh);
+            prev_h = cur_h;
+        }
+        double net_h = std::fabs(common::math::NormalizeAngle(
+                std::atan2(pts.back().y() - pts[pts.size()-2].y(),
+                           pts.back().x() - pts[pts.size()-2].x())
+                - std::atan2(pts[1].y() - pts[0].y(), pts[1].x() - pts[0].x())));
+
+        static constexpr double kMonotonicRatio = 0.5;
+        double ratio = (sum_abs_dh > 1e-6) ? net_h / sum_abs_dh : 0.0;
+        if (net_h > config.u_turn_heading_change_threshold() && ratio > kMonotonicRatio) {
+            return true;
+        }
     }
     return false;
 }

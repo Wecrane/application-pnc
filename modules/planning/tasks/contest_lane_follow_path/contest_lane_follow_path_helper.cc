@@ -34,7 +34,7 @@ constexpr double kLaneChangeRearBuffer = 1.0;
 constexpr double kLaneChangeMinLateralGap = 0.2;
 constexpr double kLaneChangeHoldHalfWidth = 0.5;
 constexpr double kLaneChangeClearWindowLateralExpansion = 4.0;
-constexpr double kUTurnLateralExpansion = 0.5;
+constexpr double kUTurnLateralExpansion = 3.0;
 constexpr double kHighKappaForJerk = 0.12;
 constexpr double kJerkRelaxFactor = 2.5;
 constexpr double kUTurnRefL = -0.8;
@@ -80,7 +80,7 @@ ContestLaneFollowPathContext BuildContestLaneFollowPathContext(
     context.lane_change = contest::IsCurrentScenario(injector, contest::kLaneChangeScenario);
     context.dense_s_curve = contest::IsCurrentScenario(injector, contest::kSCurveScenario)
             && contest::IsDefaultDenseConeSCurve(reference_line_info);
-    context.u_turn = false;
+    context.u_turn = contest::IsCurrentScenario(injector, contest::kUTurnScenario);
     return context;
 }
 
@@ -196,11 +196,13 @@ void ApplyContestLaneFollowPathReference(
         UpdateDenseConeSCurvePathRef(path_boundary, path_reference_l_weight, ref_l, weight_ref_l);
     }
     if (context.u_turn) {
+        // U 弯模式：不强拉向固定 l=-0.8，改用 corridor 中点 + 零参考权重
+        // 让优化器在扩展后的宽边界内自由寻找平滑曲线
         for (size_t i = 0; i < ref_l->size(); ++i) {
-            if (ref_l->at(i) == 0.0) {
-                ref_l->at(i) = kUTurnRefL;
-                weight_ref_l->at(i) = path_reference_l_weight * 0.3 * kUTurnRefLWeightFactor;
-            }
+            const double corridor_center =
+                    (path_boundary[i].l_lower.l + path_boundary[i].l_upper.l) * 0.5;
+            ref_l->at(i) = corridor_center;
+            weight_ref_l->at(i) = 0.0;
         }
     } else if (final_jerk_bound > jerk_bound * 1.01) {
         for (double& weight : *weight_ref_l) {

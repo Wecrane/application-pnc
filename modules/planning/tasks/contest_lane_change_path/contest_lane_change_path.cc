@@ -286,14 +286,25 @@ void ContestLaneChangePath::UpdateLaneChangeStatus() {
         double ego_speed = frame_->vehicle_state().linear_velocity();
         const double min_lane_change_speed = ContestLaneChangeMinStartSpeed();
 
+        // 连续安全帧计数：防止感知闪烁导致误判
+        if (is_contest_lane_change) {
+            if (is_clear_to_change_lane_) {
+                ++consecutive_clear_count_;
+            } else {
+                consecutive_clear_count_ = 0;
+            }
+        }
+
         if (prev_status->status() == ChangeLaneStatus::CHANGE_LANE_FAILED) {
             double elapsed = now - prev_status->timestamp();
             if (elapsed > config_.change_lane_fail_freeze_time()
                 && ego_speed >= min_lane_change_speed
-                && is_clear_to_change_lane_) {
+                && is_clear_to_change_lane_
+                && consecutive_clear_count_ >= kRequiredConsecutiveClearFrames) {
                 AINFO << "[LC_STATUS] RETRY: FAILED -> IN_CHANGE_LANE, elapsed=" << elapsed
                       << " freeze=" << config_.change_lane_fail_freeze_time()
-                      << " speed=" << ego_speed * 3.6;
+                      << " speed=" << ego_speed * 3.6
+                      << " clear_frames=" << consecutive_clear_count_;
                 UpdateStatus(now, ChangeLaneStatus::IN_CHANGE_LANE, change_lane_id);
             }
             return;
@@ -304,14 +315,17 @@ void ContestLaneChangePath::UpdateLaneChangeStatus() {
                       << min_lane_change_speed * 3.6 << ", waiting to accelerate";
                 return;
             }
-            if (is_contest_lane_change && !is_clear_to_change_lane_) {
-                AINFO << "[LC_STATUS] WAIT: speed ok but window not clear, waiting";
+            // 连续安全帧确认：需连续 kRequiredConsecutiveClearFrames 帧安全
+            if (is_contest_lane_change && consecutive_clear_count_ < kRequiredConsecutiveClearFrames) {
+                AINFO << "[LC_STATUS] WAIT: clear_frames=" << consecutive_clear_count_
+                      << "/" << kRequiredConsecutiveClearFrames << ", waiting for stable safety";
                 return;
             }
             double elapsed = now - prev_status->timestamp();
             if (elapsed > config_.change_lane_success_freeze_time()) {
                 AINFO << "[LC_STATUS] START: FINISHED -> IN_CHANGE_LANE, elapsed=" << elapsed
-                      << " speed=" << ego_speed * 3.6 << " km/h id=" << change_lane_id;
+                      << " speed=" << ego_speed * 3.6 << " km/h id=" << change_lane_id
+                      << " clear_frames=" << consecutive_clear_count_;
                 UpdateStatus(now, ChangeLaneStatus::IN_CHANGE_LANE, change_lane_id);
             }
         } else if (prev_status->status() == ChangeLaneStatus::IN_CHANGE_LANE) {
