@@ -11,10 +11,6 @@ scenario {
     type: "ValetParkingScenario"
 }
 scenario {
-    name: "CONTEST_ROUNDABOUT"
-    type: "ContestRoundaboutScenario"
-}
-scenario {
     name: "BARE_INTERSECTION_UNPROTECTED"
     type: "BareIntersectionUnprotectedScenario"
 }
