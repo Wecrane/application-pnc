@@ -146,14 +146,20 @@ double SmoothStep(double ratio) {
 struct UTurnInnerLaneTraffic {
     bool blocking = false;
     bool passed = false;
+    std::string blocking_obstacle_id;
+    std::string passed_obstacle_id;
+    std::vector<std::string> passed_obstacle_ids;
 };
 
 UTurnInnerLaneTraffic CheckUTurnInnerLaneTraffic(const ReferenceLineInfo& reference_line_info) {
     constexpr double kInnerLaneHalfWidth = 1.8;
     constexpr double kLookForwardDistance = 70.0;
-    constexpr double kPassedBehindDistance = 3.0;
+    constexpr double kPassedBehindDistance = 1.0;
+    constexpr double kReleaseClearance = 1.0;
     const auto& adc_sl = reference_line_info.AdcSlBoundary();
     UTurnInnerLaneTraffic traffic;
+    double nearest_blocking_s = std::numeric_limits<double>::infinity();
+    double nearest_passed_s = std::numeric_limits<double>::infinity();
     for (const auto* obstacle : reference_line_info.path_decision().obstacles().Items()) {
         if (obstacle == nullptr || obstacle->IsVirtual() || obstacle->IsStatic()
             || obstacle->Perception().type() != apollo::perception::PerceptionObstacle::VEHICLE) {
@@ -164,16 +170,63 @@ UTurnInnerLaneTraffic CheckUTurnInnerLaneTraffic(const ReferenceLineInfo& refere
         if (std::fabs(center_l) > kInnerLaneHalfWidth) {
             continue;
         }
-        if (sl.end_s() < adc_sl.start_s() - kPassedBehindDistance) {
+        if (sl.end_s() < adc_sl.end_s() + kReleaseClearance) {
             traffic.passed = true;
+            traffic.passed_obstacle_ids.push_back(obstacle->Id());
+            if (sl.end_s() < nearest_passed_s) {
+                nearest_passed_s = sl.end_s();
+                traffic.passed_obstacle_id = obstacle->Id();
+            }
             continue;
         }
         if (sl.start_s() < adc_sl.end_s() + kLookForwardDistance
             && sl.end_s() > adc_sl.start_s() - kPassedBehindDistance) {
             traffic.blocking = true;
+            if (sl.start_s() < nearest_blocking_s) {
+                nearest_blocking_s = sl.start_s();
+                traffic.blocking_obstacle_id = obstacle->Id();
+            }
         }
     }
     return traffic;
+}
+
+bool HasUTurnInnerLaneRearApproachRisk(
+        const ReferenceLineInfo& reference_line_info,
+        const std::string& launch_window_vehicle_id,
+        const std::string& merge_window_vehicle_id) {
+    constexpr double kInnerLaneHalfWidth = 1.8;
+    constexpr double kHardRearGap = 8.0;
+    constexpr double kRearWatchGap = 20.0;
+    constexpr double kClosingSpeedThreshold = 1.0;
+    const auto& adc_sl = reference_line_info.AdcSlBoundary();
+    const double adc_speed = std::fabs(reference_line_info.vehicle_state().linear_velocity());
+    for (const auto* obstacle : reference_line_info.path_decision().obstacles().Items()) {
+        if (obstacle == nullptr || obstacle->IsVirtual() || obstacle->IsStatic()
+            || obstacle->Perception().type() != apollo::perception::PerceptionObstacle::VEHICLE) {
+            continue;
+        }
+        if (obstacle->Id() == launch_window_vehicle_id || obstacle->Id() == merge_window_vehicle_id) {
+            continue;
+        }
+        const auto& sl = obstacle->PerceptionSLBoundary();
+        const double center_l = 0.5 * (sl.start_l() + sl.end_l());
+        if (std::fabs(center_l) > kInnerLaneHalfWidth || sl.end_s() >= adc_sl.start_s()) {
+            continue;
+        }
+        const double rear_gap = adc_sl.start_s() - sl.end_s();
+        if (rear_gap > kRearWatchGap) {
+            continue;
+        }
+        const double closing_speed = obstacle->speed() - adc_speed;
+        if (rear_gap < kHardRearGap || closing_speed > kClosingSpeedThreshold) {
+            AINFO << "[UTURN][MERGE] rear approach risk, obs=" << obstacle->Id() << ", rear_gap=" << rear_gap
+                  << ", obs_speed=" << obstacle->speed() << ", adc_speed=" << adc_speed
+                  << ", closing_speed=" << closing_speed;
+            return true;
+        }
+    }
+    return false;
 }
 
 void BuildUTurnLargeRadiusReference(
@@ -197,7 +250,7 @@ void BuildUTurnLargeRadiusReference(
     constexpr double kReturnDistance = 32.0;
     constexpr double kMergeReleaseReturnDistance = 5.0;
     constexpr double kOuterLaneOffset = 3.2;
-    constexpr double kStandbyOffsetRatio = 0.78;
+    constexpr double kStandbyOffsetRatio = 0.66;
     constexpr double kMergeRefWeight = 30.0;
     constexpr double kReleaseRefWeight = 15.0;
 
@@ -352,6 +405,11 @@ apollo::common::Status ContestLaneBorrowPath::Process(Frame* frame, ReferenceLin
         IgnoreStaticObstaclesForUTurn(reference_line_info);
         if (u_turn_release_after_first_vehicle_ && !u_turn_merge_release_) {
             IgnoreDynamicObstaclesForUTurnRelease(reference_line_info);
+        }
+        if (u_turn_merge_release_) {
+            reference_line_info->mutable_path_data()->set_path_label("regular/self/uturn_wide/uturn_release_merge");
+        } else if (u_turn_release_after_first_vehicle_) {
+            reference_line_info->mutable_path_data()->set_path_label("regular/self/uturn_wide/uturn_release_launch");
         }
 
         // 场景退出后 u_turn_construct_ 提供一帧过渡：下一帧自动进入正常流程。
@@ -1280,11 +1338,14 @@ void ContestLaneBorrowPath::IgnoreDynamicObstaclesForUTurnRelease(ReferenceLineI
 
 void ContestLaneBorrowPath::UpdateUTurnMergeState(const ReferenceLineInfo& reference_line_info) {
     constexpr int kConfirmSeenFrames = 3;
-    constexpr int kMissingFramesToRelease = 3;
+    constexpr int kMissingFramesToRelease = 2;
     constexpr int kEmptyLanePreLaunchReleaseFrames = 30;
     constexpr int kEmptyLaneMergeReleaseFrames = 3;
+    constexpr int kPreLaunchStopWaitFrames = 30;
     constexpr int kReleaseHoldFrames = 120;
+    constexpr int kMergeAbortHoldFrames = 15;
     constexpr double kMergePhaseKappaThreshold = 0.035;
+    constexpr double kStoppedSpeed = 0.35;
     const auto traffic = CheckUTurnInnerLaneTraffic(reference_line_info);
     const double adc_end_s = reference_line_info.AdcSlBoundary().end_s();
     double near_max_kappa = 0.0;
@@ -1303,14 +1364,32 @@ void ContestLaneBorrowPath::UpdateUTurnMergeState(const ReferenceLineInfo& refer
         u_turn_release_after_first_vehicle_ = false;
         u_turn_merge_release_ = false;
         u_turn_inner_vehicle_confirmed_ = false;
+        u_turn_inner_vehicle_id_.clear();
         u_turn_inner_vehicle_seen_frames_ = 0;
         u_turn_inner_vehicle_missing_frames_ = 0;
+        u_turn_prelaunch_stop_wait_frames_ = 0;
+        u_turn_prelaunch_stop_wait_done_ = false;
         u_turn_merge_vehicle_confirmed_ = false;
+        u_turn_merge_vehicle_id_.clear();
         u_turn_merge_vehicle_seen_frames_ = 0;
         u_turn_merge_vehicle_missing_frames_ = 0;
+        u_turn_merge_abort_hold_frames_ = 0;
     }
 
     if (u_turn_merge_release_) {
+        if (HasUTurnInnerLaneRearApproachRisk(
+                    reference_line_info, u_turn_inner_vehicle_id_, u_turn_merge_vehicle_id_)) {
+            u_turn_merge_release_ = false;
+            u_turn_merge_vehicle_confirmed_ = false;
+            u_turn_merge_vehicle_id_.clear();
+            u_turn_merge_vehicle_seen_frames_ = 0;
+            u_turn_merge_vehicle_missing_frames_ = 0;
+            u_turn_merge_abort_hold_frames_ = kMergeAbortHoldFrames;
+            u_turn_release_hold_frames_ = std::max(u_turn_release_hold_frames_, kMergeAbortHoldFrames);
+            AINFO << "[UTURN][MERGE] abort active merge and hold outer lane, abort_hold_frames="
+                  << u_turn_merge_abort_hold_frames_;
+            return;
+        }
         AINFO << "[UTURN][MERGE] merge release active, hold_frames=" << u_turn_release_hold_frames_;
         return;
     }
@@ -1322,19 +1401,49 @@ void ContestLaneBorrowPath::UpdateUTurnMergeState(const ReferenceLineInfo& refer
     }
 
     if (in_merge_phase) {
-        if (traffic.blocking) {
+        if (u_turn_merge_abort_hold_frames_ > 0) {
+            --u_turn_merge_abort_hold_frames_;
+            u_turn_merge_vehicle_confirmed_ = false;
+            u_turn_merge_vehicle_id_.clear();
+            u_turn_merge_vehicle_seen_frames_ = 0;
+            u_turn_merge_vehicle_missing_frames_ = 0;
+            AINFO << "[UTURN][MERGE] abort hold outer lane before retry, abort_hold_frames="
+                  << u_turn_merge_abort_hold_frames_;
+            return;
+        }
+        const bool merge_tracked_blocking
+                = traffic.blocking && traffic.blocking_obstacle_id == u_turn_merge_vehicle_id_;
+        if (traffic.blocking && (!u_turn_merge_vehicle_confirmed_ || u_turn_merge_vehicle_id_.empty())) {
+            if (u_turn_merge_vehicle_id_ != traffic.blocking_obstacle_id) {
+                u_turn_merge_vehicle_id_ = traffic.blocking_obstacle_id;
+                u_turn_merge_vehicle_seen_frames_ = 0;
+                u_turn_merge_vehicle_missing_frames_ = 0;
+            }
             u_turn_merge_vehicle_seen_frames_ = std::min(u_turn_merge_vehicle_seen_frames_ + 1, kConfirmSeenFrames);
             u_turn_merge_vehicle_missing_frames_ = 0;
             if (u_turn_merge_vehicle_seen_frames_ >= kConfirmSeenFrames) {
                 u_turn_merge_vehicle_confirmed_ = true;
             }
-        } else {
+        } else if (u_turn_merge_vehicle_confirmed_ && !merge_tracked_blocking) {
+            ++u_turn_merge_vehicle_missing_frames_;
+        } else if (!traffic.blocking) {
             ++u_turn_merge_vehicle_missing_frames_;
         }
         const bool has_pass_by_window = u_turn_merge_vehicle_confirmed_ || u_turn_inner_vehicle_confirmed_;
-        if (has_pass_by_window && (traffic.passed || u_turn_merge_vehicle_missing_frames_ >= kMissingFramesToRelease)) {
+        const bool merge_tracked_passed
+                = u_turn_merge_vehicle_confirmed_ && traffic.passed
+                  && (u_turn_merge_vehicle_id_.empty()
+                      || std::find(
+                              traffic.passed_obstacle_ids.begin(),
+                              traffic.passed_obstacle_ids.end(),
+                              u_turn_merge_vehicle_id_)
+                              != traffic.passed_obstacle_ids.end());
+        if (has_pass_by_window
+            && (merge_tracked_passed || u_turn_merge_vehicle_missing_frames_ >= kMissingFramesToRelease)) {
             u_turn_merge_release_ = true;
-            AINFO << "[UTURN][MERGE] inner-lane merge vehicle passed, merge now. passed=" << traffic.passed
+            AINFO << "[UTURN][MERGE] inner-lane merge vehicle passed, merge now. tracked_id="
+                  << u_turn_merge_vehicle_id_ << ", passed=" << traffic.passed
+                  << ", passed_id=" << traffic.passed_obstacle_id
                   << ", missing_frames=" << u_turn_merge_vehicle_missing_frames_;
             return;
         }
@@ -1348,32 +1457,85 @@ void ContestLaneBorrowPath::UpdateUTurnMergeState(const ReferenceLineInfo& refer
         AINFO << "[UTURN][MERGE] holding outer lane before merge: blocking=" << traffic.blocking
               << ", passed=" << traffic.passed << ", confirmed=" << u_turn_merge_vehicle_confirmed_
               << ", inherited_pass_by=" << u_turn_inner_vehicle_confirmed_
+              << ", tracked_id=" << u_turn_merge_vehicle_id_ << ", blocking_id=" << traffic.blocking_obstacle_id
+              << ", passed_id=" << traffic.passed_obstacle_id
               << ", seen_frames=" << u_turn_merge_vehicle_seen_frames_
               << ", missing_frames=" << u_turn_merge_vehicle_missing_frames_;
         return;
     }
 
-    if (traffic.blocking) {
+    const bool inner_tracked_blocking = traffic.blocking && traffic.blocking_obstacle_id == u_turn_inner_vehicle_id_;
+    if (traffic.blocking && (!u_turn_inner_vehicle_confirmed_ || u_turn_inner_vehicle_id_.empty())) {
+        if (u_turn_inner_vehicle_id_ != traffic.blocking_obstacle_id) {
+            u_turn_inner_vehicle_id_ = traffic.blocking_obstacle_id;
+            u_turn_inner_vehicle_seen_frames_ = 0;
+            u_turn_inner_vehicle_missing_frames_ = 0;
+        }
         u_turn_inner_vehicle_seen_frames_ = std::min(u_turn_inner_vehicle_seen_frames_ + 1, kConfirmSeenFrames);
         u_turn_inner_vehicle_missing_frames_ = 0;
         if (u_turn_inner_vehicle_seen_frames_ >= kConfirmSeenFrames) {
             u_turn_inner_vehicle_confirmed_ = true;
         }
-    } else {
+    } else if (u_turn_inner_vehicle_confirmed_ && !inner_tracked_blocking) {
+        ++u_turn_inner_vehicle_missing_frames_;
+    } else if (!traffic.blocking) {
         ++u_turn_inner_vehicle_missing_frames_;
     }
 
+    const bool has_prelaunch_vehicle = traffic.blocking || u_turn_inner_vehicle_confirmed_;
+    if (has_prelaunch_vehicle && !u_turn_prelaunch_stop_wait_done_) {
+        const double adc_speed = std::fabs(init_sl_state_.first[1]);
+        if (adc_speed < kStoppedSpeed) {
+            u_turn_prelaunch_stop_wait_frames_ =
+                    std::min(u_turn_prelaunch_stop_wait_frames_ + 1, kPreLaunchStopWaitFrames);
+        } else {
+            u_turn_prelaunch_stop_wait_frames_ = 0;
+        }
+        if (u_turn_prelaunch_stop_wait_frames_ < kPreLaunchStopWaitFrames) {
+            AINFO << "[UTURN][MERGE] stopped before launch, dwelling: blocking=" << traffic.blocking
+                  << ", confirmed=" << u_turn_inner_vehicle_confirmed_
+                  << ", speed=" << adc_speed
+                  << ", wait_frames=" << u_turn_prelaunch_stop_wait_frames_
+                  << "/" << kPreLaunchStopWaitFrames;
+            return;
+        }
+        u_turn_prelaunch_stop_wait_done_ = true;
+        u_turn_inner_vehicle_confirmed_ = false;
+        u_turn_inner_vehicle_id_.clear();
+        u_turn_inner_vehicle_seen_frames_ = 0;
+        u_turn_inner_vehicle_missing_frames_ = 0;
+        AINFO << "[UTURN][MERGE] 3s stop dwell done, start detecting next pass-by window";
+        return;
+    }
+    if (!has_prelaunch_vehicle && !u_turn_prelaunch_stop_wait_done_) {
+        u_turn_prelaunch_stop_wait_frames_ = 0;
+    }
+
+    const bool inner_tracked_passed
+            = u_turn_inner_vehicle_confirmed_ && traffic.passed
+              && (u_turn_inner_vehicle_id_.empty()
+                  || std::find(
+                          traffic.passed_obstacle_ids.begin(),
+                          traffic.passed_obstacle_ids.end(),
+                          u_turn_inner_vehicle_id_)
+                          != traffic.passed_obstacle_ids.end());
     if (u_turn_inner_vehicle_confirmed_
-        && (traffic.passed || u_turn_inner_vehicle_missing_frames_ >= kMissingFramesToRelease)) {
+        && (inner_tracked_passed || u_turn_inner_vehicle_missing_frames_ >= kMissingFramesToRelease)) {
         u_turn_release_after_first_vehicle_ = true;
+        u_turn_prelaunch_stop_wait_frames_ = 0;
+        u_turn_prelaunch_stop_wait_done_ = false;
         u_turn_release_hold_frames_ = kReleaseHoldFrames;
-        AINFO << "[UTURN][MERGE] first inner-lane vehicle passed, release now. passed=" << traffic.passed
+        AINFO << "[UTURN][MERGE] first inner-lane vehicle passed, release now. tracked_id="
+              << u_turn_inner_vehicle_id_ << ", passed=" << traffic.passed
+              << ", passed_id=" << traffic.passed_obstacle_id
               << ", missing_frames=" << u_turn_inner_vehicle_missing_frames_;
         return;
     }
-    if (!u_turn_inner_vehicle_confirmed_ && !traffic.blocking
+    if (!u_turn_prelaunch_stop_wait_done_ && !u_turn_inner_vehicle_confirmed_ && !traffic.blocking
         && u_turn_inner_vehicle_missing_frames_ >= kEmptyLanePreLaunchReleaseFrames) {
         u_turn_release_after_first_vehicle_ = true;
+        u_turn_prelaunch_stop_wait_frames_ = 0;
+        u_turn_prelaunch_stop_wait_done_ = false;
         u_turn_release_hold_frames_ = kReleaseHoldFrames;
         u_turn_inner_vehicle_missing_frames_ = 0;
         AINFO << "[UTURN][MERGE] inner lane stayed empty, release without waiting vehicle.";
@@ -1382,7 +1544,11 @@ void ContestLaneBorrowPath::UpdateUTurnMergeState(const ReferenceLineInfo& refer
 
     AINFO << "[UTURN][MERGE] waiting: blocking=" << traffic.blocking << ", passed=" << traffic.passed
           << ", confirmed=" << u_turn_inner_vehicle_confirmed_ << ", seen_frames=" << u_turn_inner_vehicle_seen_frames_
-          << ", missing_frames=" << u_turn_inner_vehicle_missing_frames_;
+          << ", missing_frames=" << u_turn_inner_vehicle_missing_frames_
+          << ", tracked_id=" << u_turn_inner_vehicle_id_ << ", blocking_id=" << traffic.blocking_obstacle_id
+          << ", passed_id=" << traffic.passed_obstacle_id
+          << ", stop_wait_frames=" << u_turn_prelaunch_stop_wait_frames_
+          << ", stop_wait_done=" << u_turn_prelaunch_stop_wait_done_;
 }
 
 void ContestLaneBorrowPath::ResetUTurnMergeState() {
@@ -1390,11 +1556,16 @@ void ContestLaneBorrowPath::ResetUTurnMergeState() {
     u_turn_release_after_first_vehicle_ = false;
     u_turn_merge_vehicle_confirmed_ = false;
     u_turn_merge_release_ = false;
+    u_turn_inner_vehicle_id_.clear();
     u_turn_inner_vehicle_seen_frames_ = 0;
     u_turn_inner_vehicle_missing_frames_ = 0;
+    u_turn_prelaunch_stop_wait_frames_ = 0;
+    u_turn_prelaunch_stop_wait_done_ = false;
+    u_turn_merge_vehicle_id_.clear();
     u_turn_merge_vehicle_seen_frames_ = 0;
     u_turn_merge_vehicle_missing_frames_ = 0;
     u_turn_release_hold_frames_ = 0;
+    u_turn_merge_abort_hold_frames_ = 0;
 }
 
 void ContestLaneBorrowPath::ResetConstructZoneState(const std::string& reason) {

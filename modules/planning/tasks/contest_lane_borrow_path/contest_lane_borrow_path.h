@@ -171,11 +171,16 @@ private:
     bool u_turn_release_after_first_vehicle_ = false;
     bool u_turn_merge_vehicle_confirmed_ = false;
     bool u_turn_merge_release_ = false;
+    std::string u_turn_inner_vehicle_id_;
+    std::string u_turn_merge_vehicle_id_;
     int u_turn_inner_vehicle_seen_frames_ = 0;
     int u_turn_inner_vehicle_missing_frames_ = 0;
+    int u_turn_prelaunch_stop_wait_frames_ = 0;
+    bool u_turn_prelaunch_stop_wait_done_ = false;
     int u_turn_merge_vehicle_seen_frames_ = 0;
     int u_turn_merge_vehicle_missing_frames_ = 0;
     int u_turn_release_hold_frames_ = 0;
+    int u_turn_merge_abort_hold_frames_ = 0;
     std::unique_ptr<PathData> last_frame_;
     static constexpr int kLowConeExitThreshold = 30;  // 3秒@10Hz，锥桶持续消失才退出
 

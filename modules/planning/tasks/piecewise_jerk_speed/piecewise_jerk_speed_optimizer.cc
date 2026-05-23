@@ -19,12 +19,15 @@
  **/
 
 #include <algorithm>
+#include <cmath>
 
 #include <string>
 #include <utility>
 #include <vector>
 #include "modules/common_msgs/basic_msgs/pnc_point.pb.h"
+#include "modules/common/math/math_utils.h"
 #include "modules/common/vehicle_state/vehicle_state_provider.h"
+#include "modules/common_msgs/map_msgs/map_lane.pb.h"
 #include "modules/planning/planning_base/common/speed_profile_generator.h"
 #include "modules/planning/planning_base/common/st_graph_data.h"
 #include "modules/planning/planning_base/common/util/print_debug_info.h"
@@ -34,6 +37,57 @@
 
 namespace apollo {
 namespace planning {
+
+namespace {
+bool IsRoundaboutEntryLike(const ReferenceLineInfo* reference_line_info) {
+  if (reference_line_info == nullptr) {
+    return false;
+  }
+  constexpr double kEntryLookForward = 35.0;
+  constexpr double kInsideJunctionBuffer = 8.0;
+  constexpr double kCurveLookForward = 55.0;
+  constexpr double kMinMaxKappa = 0.025;
+  constexpr double kMinHeadingChange = 0.65;
+  constexpr double kUTurnHeadingChange = 1.8;
+  const double adc_end_s = reference_line_info->AdcSlBoundary().end_s();
+  bool near_pnc_junction = false;
+  for (const auto& overlap :
+       reference_line_info->reference_line().map_path().pnc_junction_overlaps()) {
+    if (overlap.end_s < adc_end_s - kInsideJunctionBuffer) {
+      continue;
+    }
+    if (overlap.start_s > adc_end_s + kEntryLookForward) {
+      continue;
+    }
+    near_pnc_junction = true;
+    break;
+  }
+  if (!near_pnc_junction) {
+    return false;
+  }
+
+  const auto& reference_line = reference_line_info->reference_line();
+  const double ref_length = reference_line.Length();
+  const double start_s = std::max(0.0, adc_end_s);
+  const double end_s = std::min(ref_length - 1.0, adc_end_s + kCurveLookForward);
+  if (end_s - start_s < 8.0) {
+    return false;
+  }
+  double max_abs_kappa = 0.0;
+  for (double s = start_s; s <= end_s; s += 2.0) {
+    if (reference_line_info->GetPathTurnType(s) == hdmap::Lane::U_TURN) {
+      return false;
+    }
+    max_abs_kappa =
+        std::max(max_abs_kappa, std::fabs(reference_line.GetReferencePoint(s).kappa()));
+  }
+  const double heading_change = std::fabs(common::math::NormalizeAngle(
+      reference_line.GetReferencePoint(end_s).heading() -
+      reference_line.GetReferencePoint(start_s).heading()));
+  return max_abs_kappa > kMinMaxKappa && heading_change > kMinHeadingChange &&
+         heading_change < kUTurnHeadingChange;
+}
+}  // namespace
 
 using apollo::common::ErrorCode;
 using apollo::common::PathPoint;
@@ -74,6 +128,17 @@ Status PiecewiseJerkSpeedOptimizer::Process(const PathData& path_data,
 
   std::array<double, 3> init_s = {0.0, st_graph_data.init_point().v(),
                                   st_graph_data.init_point().a()};
+  const bool window_release_launch =
+      init_s[1] < 1.0 &&
+      (path_data.path_label().find("uturn_release") != std::string::npos ||
+       IsRoundaboutEntryLike(reference_line_info_));
+  if (window_release_launch) {
+    init_s[2] = std::max(init_s[2], 2.0);
+    AINFO << "[WINDOW][Speed] release launch boost, label="
+          << path_data.path_label() << ", init_v=" << init_s[1]
+          << ", init_a=" << init_s[2]
+          << ", roundabout=" << IsRoundaboutEntryLike(reference_line_info_);
+  }
   const auto& vehicle_state = frame_->vehicle_state();
   if (vehicle_state.gear() == canbus::Chassis::GEAR_REVERSE) {
     init_s[1] = std::max(-init_s[1], 0.0);
@@ -158,8 +223,18 @@ Status PiecewiseJerkSpeedOptimizer::Process(const PathData& path_data,
         std::fmin(speed_limit.GetSpeedLimitByS(path_s), v_upper_bound);
     // 预留余量使有效限速 = 28.5 km/h，防止优化器在 jerk 最小化时略微超调
     constexpr double kSpeedLimitMargin = 1.5 / 3.6;  // 1.5 km/h → m/s
-    v_upper_bound = std::fmax(0.0, v_upper_bound - kSpeedLimitMargin);
-    dx_ref[i] = std::fmin(v_upper_bound, dx_ref[i]);
+    v_upper_bound = std::fmax(
+        0.0, v_upper_bound - (window_release_launch ? 0.0 : kSpeedLimitMargin));
+    if (window_release_launch && curr_t <= 3.0) {
+      constexpr double kLaunchAccelRef = 3.0;
+      dx_ref_weight[i] = std::max(dx_ref_weight[i], 80.0);
+      dx_ref[i] = v_upper_bound;
+      x_ref[i] = std::min(total_length,
+                          init_s[1] * curr_t +
+                              0.5 * kLaunchAccelRef * curr_t * curr_t);
+    } else {
+      dx_ref[i] = std::fmin(v_upper_bound, dx_ref[i]);
+    }
     s_dot_bounds.emplace_back(v_lower_bound, std::fmax(v_upper_bound, 0.0));
     print_debug.AddPoint("st_reference_line", curr_t, x_ref[i]);
     print_debug.AddPoint("st_penalty_dx", curr_t, penalty_dx.back());
@@ -192,8 +267,12 @@ Status PiecewiseJerkSpeedOptimizer::Process(const PathData& path_data,
   }
   PiecewiseJerkSpeedProblem piecewise_jerk_problem(num_of_knots, delta_t,
                                                    init_s);
-  piecewise_jerk_problem.set_weight_ddx(config_.acc_weight());
-  piecewise_jerk_problem.set_weight_dddx(config_.jerk_weight());
+  piecewise_jerk_problem.set_weight_ddx(
+      window_release_launch ? config_.acc_weight() * 0.08
+                            : config_.acc_weight());
+  piecewise_jerk_problem.set_weight_dddx(
+      window_release_launch ? config_.jerk_weight() * 0.02
+                            : config_.jerk_weight());
   piecewise_jerk_problem.set_scale_factor({1.0, 10.0, 100.0});
   piecewise_jerk_problem.set_x_bounds(0.0, total_length);
   piecewise_jerk_problem.set_ddx_bounds(veh_param.max_deceleration(),
