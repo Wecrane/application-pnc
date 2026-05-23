@@ -129,8 +129,7 @@ bool ContestRoundaboutScenario::IsTransferable(const Scenario* other_scenario, c
         ctx->roundabout_exit_x = 0.0;
         ctx->roundabout_exit_y = 0.0;
         AINFO << "[ROUNDABOUT][Scenario] re-entry allowed (far from exit)"
-              << ", dist=" << dist_from_exit
-              << ", adc_x=" << frame.vehicle_state().x()
+              << ", dist=" << dist_from_exit << ", adc_x=" << frame.vehicle_state().x()
               << ", adc_y=" << frame.vehicle_state().y();
     }
 
@@ -142,13 +141,12 @@ bool ContestRoundaboutScenario::IsTransferable(const Scenario* other_scenario, c
     const double adc_x = frame.vehicle_state().x();
     const double adc_y = frame.vehicle_state().y();
     const bool is_entry_roi = contest::IsContestRoundaboutEntry(frame, ctx->scenario_config);
-    const bool is_entry_geo = contest::IsContestRoundaboutEntry(
-            frame.reference_line_info().front(), ctx->scenario_config);
+    const bool is_entry_geo
+            = contest::IsContestRoundaboutEntry(frame.reference_line_info().front(), ctx->scenario_config);
     const bool is_entry = is_entry_roi || is_entry_geo;
     AINFO << "[ROUNDABOUT][Scenario] IsTransferable check"
-          << ", roi=" << is_entry_roi << ", geo=" << is_entry_geo
-          << ", other=" << other_name
-          << ", adc_x=" << adc_x << ", adc_y=" << adc_y;
+          << ", roi=" << is_entry_roi << ", geo=" << is_entry_geo << ", other=" << other_name << ", adc_x=" << adc_x
+          << ", adc_y=" << adc_y;
     if (!is_entry) {
         ctx->roundabout_committed = false;
         ctx->roundabout_entry_s = 0.0;
@@ -159,8 +157,7 @@ bool ContestRoundaboutScenario::IsTransferable(const Scenario* other_scenario, c
         AINFO << "[ROUNDABOUT][Scenario] first time entry detection, entry_s=" << ctx->roundabout_entry_s
               << ", adc_x=" << adc_x << ", adc_y=" << adc_y;
     }
-    AINFO << "[ROUNDABOUT][Scenario] transfer to CONTEST_ROUNDABOUT from "
-          << other_scenario->Name()
+    AINFO << "[ROUNDABOUT][Scenario] transfer to CONTEST_ROUNDABOUT from " << other_scenario->Name()
           << ", adc_x=" << adc_x << ", adc_y=" << adc_y;
     return true;
 }

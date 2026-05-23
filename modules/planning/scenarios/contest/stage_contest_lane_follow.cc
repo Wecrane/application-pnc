@@ -36,8 +36,7 @@ StageResult ContestLaneFollowStage::Process(const common::TrajectoryPoint& plann
         const double adc_x = frame->vehicle_state().x();
         const double adc_y = frame->vehicle_state().y();
         AINFO << "[ROUNDABOUT][Scenario] running CONTEST_ROUNDABOUT stage (one-shot)"
-              << ", committed=" << ctx->roundabout_committed
-              << ", adc_x=" << adc_x << ", adc_y=" << adc_y;
+              << ", committed=" << ctx->roundabout_committed << ", adc_x=" << adc_x << ", adc_y=" << adc_y;
         // 环岛入口阶段：只保留主参考线，禁止变道参考线
         // （one-shot 模式下没有分阶段概念，整个激活期间都禁用变道）
         for (auto& reference_line_info : *frame->mutable_reference_line_info()) {
@@ -260,8 +259,8 @@ bool ContestLaneFollowStage::StillInScenario(const Frame& frame) const {
             context->roundabout_exit_x = adc_x;
             context->roundabout_exit_y = adc_y;
             AINFO << "[ROUNDABOUT][Scenario] leave ROI, exit"
-                  << ", adc_x=" << adc_x << ", adc_y=" << adc_y
-                  << ", adc_s=" << adc_end_s << ", heading=" << adc_heading;
+                  << ", adc_x=" << adc_x << ", adc_y=" << adc_y << ", adc_s=" << adc_end_s
+                  << ", heading=" << adc_heading;
             return false;
         }
 
@@ -277,10 +276,8 @@ bool ContestLaneFollowStage::StillInScenario(const Frame& frame) const {
                 context->roundabout_exit_x = adc_x;
                 context->roundabout_exit_y = adc_y;
                 AINFO << "[ROUNDABOUT][Scenario] quick exit (XY distance)"
-                      << ", adc_x=" << adc_x << ", adc_y=" << adc_y
-                      << ", entry_x=" << context->roundabout_entry_x
-                      << ", entry_y=" << context->roundabout_entry_y
-                      << ", xy_dist=" << xy_dist
+                      << ", adc_x=" << adc_x << ", adc_y=" << adc_y << ", entry_x=" << context->roundabout_entry_x
+                      << ", entry_y=" << context->roundabout_entry_y << ", xy_dist=" << xy_dist
                       << ", adc_s=" << adc_end_s << ", v=" << adc_speed;
                 return false;
             }
@@ -293,9 +290,8 @@ bool ContestLaneFollowStage::StillInScenario(const Frame& frame) const {
             context->roundabout_entry_x = adc_x;
             context->roundabout_entry_y = adc_y;
             AINFO << "[ROUNDABOUT][Scenario] COMMIT, aggressive mode active"
-                  << ", adc_x=" << adc_x << ", adc_y=" << adc_y
-                  << ", adc_s=" << adc_end_s << ", entry_s=" << context->roundabout_entry_s
-                  << ", v=" << adc_speed << ", heading=" << adc_heading;
+                  << ", adc_x=" << adc_x << ", adc_y=" << adc_y << ", adc_s=" << adc_end_s
+                  << ", entry_s=" << context->roundabout_entry_s << ", v=" << adc_speed << ", heading=" << adc_heading;
         } else {
             context->roundabout_commit_hold_frames++;
         }
