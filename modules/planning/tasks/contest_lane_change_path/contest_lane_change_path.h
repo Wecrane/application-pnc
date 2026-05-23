@@ -107,7 +107,7 @@ private:
     static constexpr int kRequiredConsecutiveOccupiedFrames = 3;
     static constexpr int kRequiredConsecutiveClearFrames = 3;
     static constexpr int kLaneChangeWindowHoldFrames = 8;
-    static constexpr int kEmptyLaneAutoArmFrames = 30;  // 目标车道持续无车 3s 自动触发
+    static constexpr int kEmptyLaneAutoArmFrames = 10;  // 目标车道持续无车 1s 自动触发（环岛退出后快速变道）
     common::math::Vec2d lane_change_start_xy_;
 };
 
