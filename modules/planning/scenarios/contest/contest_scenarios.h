@@ -80,11 +80,19 @@ public:
     bool IsTransferable(const Scenario* other_scenario, const Frame& frame) override;
 };
 
+class ContestRoundaboutScenario : public ContestScenarioBase {
+public:
+    ContestRoundaboutScenario() : ContestScenarioBase(ContestScenarioKind::ROUNDABOUT) {}
+
+    bool IsTransferable(const Scenario* other_scenario, const Frame& frame) override;
+};
+
 CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(apollo::planning::ContestLaneChangeScenario, apollo::planning::Scenario)
 CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(apollo::planning::ContestSCurveScenario, apollo::planning::Scenario)
 CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(apollo::planning::ContestUTurnScenario, apollo::planning::Scenario)
 CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(apollo::planning::ContestConstructionZoneScenario, apollo::planning::Scenario)
 CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(apollo::planning::ContestStationShuttleScenario, apollo::planning::Scenario)
+CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(apollo::planning::ContestRoundaboutScenario, apollo::planning::Scenario)
 
 }  // namespace planning
 }  // namespace apollo

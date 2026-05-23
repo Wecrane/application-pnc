@@ -48,7 +48,14 @@ bool ContestScenarioBase::IsReferenceLineReady(const Frame& frame) const {
 }
 
 bool ContestLaneChangeScenario::IsTransferable(const Scenario* other_scenario, const Frame& frame) {
-    return other_scenario != nullptr && IsReferenceLineReady(frame) && contest::IsContestLaneChange(frame);
+    if (other_scenario == nullptr || !IsReferenceLineReady(frame)) {
+        return false;
+    }
+    if (contest::IsContestRoundaboutEntry(frame, GetContext()->scenario_config)) {
+        AINFO << "[ROUNDABOUT][Scenario] block CONTEST_LANE_CHANGE transfer near roundabout entry";
+        return false;
+    }
+    return contest::IsContestLaneChange(frame);
 }
 
 bool ContestSCurveScenario::IsTransferable(const Scenario* other_scenario, const Frame& frame) {
@@ -101,6 +108,20 @@ bool ContestStationShuttleScenario::IsTransferable(const Scenario* other_scenari
     if (found) {
         ctx->shuttle_arrived_at_station = false;
         ctx->shuttle_dwell_start_time = 0.0;
+    }
+    return found;
+}
+
+bool ContestRoundaboutScenario::IsTransferable(const Scenario* other_scenario, const Frame& frame) {
+    if (other_scenario == nullptr || !IsReferenceLineReady(frame)) {
+        return false;
+    }
+    const bool found = contest::IsContestRoundaboutEntry(frame, GetContext()->scenario_config)
+            || (contest::IsContestLaneChange(frame)
+                && contest::IsContestRoundaboutEntryRoi(frame));
+    if (found) {
+        AINFO << "[ROUNDABOUT][Scenario] transfer to CONTEST_ROUNDABOUT from "
+              << other_scenario->Name();
     }
     return found;
 }

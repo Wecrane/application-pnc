@@ -29,6 +29,7 @@ constexpr char kLaneChangeScenario[] = "CONTEST_LANE_CHANGE";
 constexpr char kSCurveScenario[] = "CONTEST_S_CURVE";
 constexpr char kUTurnScenario[] = "CONTEST_U_TURN";
 constexpr char kConstructionZoneScenario[] = "CONTEST_CONSTRUCTION_ZONE";
+constexpr char kRoundaboutScenario[] = "CONTEST_ROUNDABOUT";
 
 inline std::string CurrentScenarioName(
         const std::shared_ptr<DependencyInjector>& injector) {

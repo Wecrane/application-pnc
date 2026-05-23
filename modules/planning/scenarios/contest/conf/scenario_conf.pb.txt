@@ -17,3 +17,10 @@ u_turn_heading_change_threshold: 2.7
 station_shuttle_look_forward_distance: 80.0
 station_shuttle_dwell_time_sec: 5.0
 station_shuttle_speed_limit: 8.33
+
+roundabout_entry_look_forward_distance: 80.0
+roundabout_inside_junction_buffer: 25.0
+roundabout_curve_look_forward_distance: 55.0
+roundabout_min_abs_kappa: 0.025
+roundabout_min_heading_change: 0.65
+roundabout_max_heading_change: 1.8

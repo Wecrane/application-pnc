@@ -21,19 +21,20 @@
 #include "modules/planning/tasks/speed_bounds_decider/st_boundary_mapper.h"
 
 #include <algorithm>
+#include <cmath>
 #include <limits>
 #include <memory>
 #include <utility>
+#include <unordered_map>
 
-#include "modules/common_msgs/basic_msgs/pnc_point.pb.h"
+#include "modules/common_msgs/perception_msgs/perception_obstacle.pb.h"
 #include "modules/common_msgs/planning_msgs/decision.pb.h"
 
 #include "cyber/common/log.h"
+#include "cyber/time/clock.h"
 #include "modules/common/configs/vehicle_config_helper.h"
 #include "modules/common/math/line_segment2d.h"
-#include "modules/common/math/math_utils.h"
 #include "modules/common/math/vec2d.h"
-#include "modules/common_msgs/map_msgs/map_lane.pb.h"
 #include "modules/common/util/string_util.h"
 #include "modules/common/util/util.h"
 #include "modules/common/vehicle_state/vehicle_state_provider.h"
@@ -46,62 +47,21 @@ namespace planning {
 
 namespace {
 
-bool IsUTurnPath(const ReferenceLine& reference_line, const double start_s,
-                 const double end_s) {
-  std::vector<hdmap::LaneInfoConstPtr> lanes;
-  for (double s = start_s; s <= end_s; s += 2.0) {
-    lanes.clear();
-    reference_line.GetLaneFromS(s, &lanes);
-    for (const auto& lane : lanes) {
-      if (lane != nullptr && lane->lane().turn() == hdmap::Lane::U_TURN) {
-        return true;
-      }
-    }
-  }
-  return false;
-}
+constexpr char kContestRoundaboutScenarioName[] = "CONTEST_ROUNDABOUT";
+constexpr double kRoundaboutInnerLaneHoldSec = 1.0;
+constexpr double kRoundaboutCommitMinSpeed = 0.8;
+constexpr double kRoundaboutTargetLaneMaxCenterL = 1.8;
+constexpr double kRoundaboutCommitLookForward = 6.0;
+constexpr double kRoundaboutCommitLookBack = 3.0;
 
-bool IsRoundaboutEntryLike(const ReferenceLine& reference_line,
-                           const SLBoundary& adc_sl_boundary) {
-  constexpr double kEntryLookForward = 35.0;
-  constexpr double kInsideJunctionBuffer = 8.0;
-  constexpr double kCurveLookForward = 55.0;
-  constexpr double kMinMaxKappa = 0.025;
-  constexpr double kMinHeadingChange = 0.65;
-  constexpr double kUTurnHeadingChange = 1.8;
+std::unordered_map<std::string, double> roundabout_inner_lane_memory;
+bool roundabout_launch_committed = false;
 
-  const double adc_end_s = adc_sl_boundary.end_s();
-  bool near_pnc_junction = false;
-  for (const auto& overlap : reference_line.map_path().pnc_junction_overlaps()) {
-    if (overlap.end_s < adc_end_s - kInsideJunctionBuffer ||
-        overlap.start_s > adc_end_s + kEntryLookForward) {
-      continue;
-    }
-    near_pnc_junction = true;
-    break;
-  }
-  if (!near_pnc_junction) {
-    return false;
-  }
-
-  const double end_s =
-      std::min(reference_line.Length() - 1.0, adc_end_s + kCurveLookForward);
-  if (end_s - adc_end_s < 8.0 ||
-      IsUTurnPath(reference_line, adc_end_s, end_s)) {
-    return false;
-  }
-
-  double max_abs_kappa = 0.0;
-  for (double s = adc_end_s; s <= end_s; s += 2.0) {
-    max_abs_kappa =
-        std::max(max_abs_kappa, std::fabs(reference_line.GetReferencePoint(s).kappa()));
-  }
-  const double heading_change = std::fabs(common::math::NormalizeAngle(
-      reference_line.GetReferencePoint(end_s).heading() -
-      reference_line.GetReferencePoint(adc_end_s).heading()));
-  return max_abs_kappa > kMinMaxKappa &&
-         heading_change > kMinHeadingChange &&
-         heading_change < kUTurnHeadingChange;
+bool IsContestRoundaboutScenario(
+    const std::shared_ptr<DependencyInjector>& injector) {
+  return injector != nullptr && injector->planning_context() != nullptr &&
+         injector->planning_context()->planning_status().scenario().scenario_type() ==
+             kContestRoundaboutScenarioName;
 }
 
 bool IsRoundaboutNonTargetLaneVehicle(const Obstacle& obstacle) {
@@ -109,17 +69,60 @@ bool IsRoundaboutNonTargetLaneVehicle(const Obstacle& obstacle) {
       obstacle.Perception().type() != apollo::perception::PerceptionObstacle::VEHICLE) {
     return false;
   }
-  constexpr double kTargetLaneLateralRange = 2.2;
-  const auto& sl_boundary = obstacle.PerceptionSLBoundary();
-  const double nearest_l =
-      std::min(std::fabs(sl_boundary.start_l()), std::fabs(sl_boundary.end_l()));
-  const bool outside_target_lane = nearest_l > kTargetLaneLateralRange;
-  if (outside_target_lane) {
+  const double now = cyber::Clock::NowInSeconds();
+  const auto& sl = obstacle.PerceptionSLBoundary();
+  const double center_l = 0.5 * (sl.start_l() + sl.end_l());
+  if (std::fabs(center_l) > kRoundaboutTargetLaneMaxCenterL) {
+    roundabout_inner_lane_memory[obstacle.Id()] = now;
     AINFO << "[ROUNDABOUT][STBoundary] ignore non-target-lane vehicle, obs="
-          << obstacle.Id() << ", start_l=" << sl_boundary.start_l()
-          << ", end_l=" << sl_boundary.end_l();
+          << obstacle.Id() << ", start_l=" << sl.start_l()
+          << ", end_l=" << sl.end_l() << ", center_l=" << center_l;
+    return true;
   }
-  return outside_target_lane;
+  const auto iter = roundabout_inner_lane_memory.find(obstacle.Id());
+  if (iter != roundabout_inner_lane_memory.end() &&
+      now - iter->second < kRoundaboutInnerLaneHoldSec) {
+    AINFO << "[ROUNDABOUT][STBoundary] hold non-target-lane ignore for flicker, obs="
+          << obstacle.Id() << ", age=" << now - iter->second
+          << ", center_l=" << center_l;
+    return true;
+  }
+  return false;
+}
+
+bool IsRoundaboutCommitArea(
+    const ReferenceLine& reference_line, const SLBoundary& adc_sl_boundary) {
+  const double adc_end_s = adc_sl_boundary.end_s();
+  for (const auto& overlap : reference_line.map_path().pnc_junction_overlaps()) {
+    if (overlap.start_s <= adc_end_s + kRoundaboutCommitLookForward &&
+        overlap.end_s >= adc_end_s - kRoundaboutCommitLookBack) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool IsRoundaboutLaunchCommitted(
+    const std::shared_ptr<DependencyInjector>& injector,
+    const common::VehicleState& vehicle_state,
+    const ReferenceLine& reference_line,
+    const SLBoundary& adc_sl_boundary) {
+  if (!IsContestRoundaboutScenario(injector)) {
+    if (roundabout_launch_committed) {
+      AINFO << "[ROUNDABOUT][Launch] reset committed outside roundabout";
+    }
+    roundabout_launch_committed = false;
+    roundabout_inner_lane_memory.clear();
+    return false;
+  }
+  if (!roundabout_launch_committed &&
+      IsRoundaboutCommitArea(reference_line, adc_sl_boundary) &&
+      vehicle_state.linear_velocity() > kRoundaboutCommitMinSpeed) {
+    roundabout_launch_committed = true;
+    AINFO << "[ROUNDABOUT][Launch] committed in ST by junction feature"
+          << ", v=" << vehicle_state.linear_velocity();
+  }
+  return roundabout_launch_committed;
 }
 
 }  // namespace
@@ -165,8 +168,19 @@ Status STBoundaryMapper::ComputeSTBoundary(PathDecision* path_decision) const {
     Obstacle* ptr_obstacle = path_decision->Find(ptr_obstacle_item->Id());
     ACHECK(ptr_obstacle != nullptr);
 
-    if (IsRoundaboutEntryLike(reference_line_, adc_sl_boundary_) &&
+    if (IsContestRoundaboutScenario(injector_) &&
         IsRoundaboutNonTargetLaneVehicle(*ptr_obstacle)) {
+      ptr_obstacle->EraseStBoundary();
+      continue;
+    }
+    if (IsRoundaboutLaunchCommitted(
+            injector_, injector_->vehicle_state()->vehicle_state(),
+            reference_line_, adc_sl_boundary_) &&
+        !ptr_obstacle->IsVirtual() && !ptr_obstacle->IsStatic() &&
+        ptr_obstacle->Perception().type() ==
+            apollo::perception::PerceptionObstacle::VEHICLE) {
+      AINFO << "[ROUNDABOUT][Launch] erase dynamic ST after commit, obs="
+            << ptr_obstacle->Id();
       ptr_obstacle->EraseStBoundary();
       continue;
     }

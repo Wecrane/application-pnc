@@ -61,10 +61,17 @@ apollo::common::Status ContestLaneChangePath::Process(Frame* frame, ReferenceLin
     ADEBUG << "[LC_PROCESS] called, is_change_lane=" << reference_line_info->IsChangeLanePath()
            << " path_reusable=" << reference_line_info->path_reusable()
            << " ref_line_count=" << frame->reference_line_info().size();
-    if (contest::IsCurrentScenario(injector_, contest::kUTurnScenario)) {
+    if (contest::IsCurrentScenario(injector_, contest::kUTurnScenario)
+        || contest::IsCurrentScenario(injector_, contest::kRoundaboutScenario)) {
         const auto& change_lane_status = injector_->planning_context()->planning_status().change_lane();
         if (!change_lane_status.has_status() || change_lane_status.status() == ChangeLaneStatus::IN_CHANGE_LANE) {
             UpdateStatus(Clock::NowInSeconds(), ChangeLaneStatus::CHANGE_LANE_FINISHED, "");
+        }
+        if (contest::IsCurrentScenario(injector_, contest::kRoundaboutScenario)
+            && reference_line_info->IsChangeLanePath()) {
+            reference_line_info->SetDrivable(false);
+            AINFO << "[ROUNDABOUT][LaneChangePath] skip change-lane path, lane_id="
+                  << reference_line_info->Lanes().Id();
         }
         return Status::OK();
     }

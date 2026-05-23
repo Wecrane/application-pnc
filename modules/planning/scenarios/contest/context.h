@@ -28,6 +28,7 @@ enum class ContestScenarioKind {
     U_TURN = 2,
     CONSTRUCTION_ZONE = 3,
     STATION_SHUTTLE = 4,
+    ROUNDABOUT = 5,
 };
 
 struct ContestScenarioContext : public ScenarioContext {

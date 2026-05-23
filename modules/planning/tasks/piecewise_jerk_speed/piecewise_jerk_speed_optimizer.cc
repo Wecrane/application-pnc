@@ -24,13 +24,11 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include "modules/common_msgs/basic_msgs/pnc_point.pb.h"
-#include "modules/common/math/math_utils.h"
 #include "modules/common/vehicle_state/vehicle_state_provider.h"
-#include "modules/common_msgs/map_msgs/map_lane.pb.h"
 #include "modules/planning/planning_base/common/speed_profile_generator.h"
 #include "modules/planning/planning_base/common/st_graph_data.h"
 #include "modules/planning/planning_base/common/util/print_debug_info.h"
+#include "modules/planning/planning_base/common/planning_context.h"
 #include "modules/planning/planning_base/gflags/planning_gflags.h"
 #include "modules/planning/planning_base/math/piecewise_jerk/piecewise_jerk_speed_problem.h"
 #include "modules/planning/tasks/piecewise_jerk_speed/piecewise_jerk_speed_optimizer.h"
@@ -39,54 +37,33 @@ namespace apollo {
 namespace planning {
 
 namespace {
-bool IsRoundaboutEntryLike(const ReferenceLineInfo* reference_line_info) {
+
+constexpr char kContestRoundaboutScenarioName[] = "CONTEST_ROUNDABOUT";
+constexpr double kRoundaboutCommitLookForward = 6.0;
+constexpr double kRoundaboutCommitLookBack = 3.0;
+
+bool IsContestRoundaboutScenario(
+    const std::shared_ptr<DependencyInjector>& injector) {
+  return injector != nullptr && injector->planning_context() != nullptr &&
+         injector->planning_context()->planning_status().scenario().scenario_type() ==
+             kContestRoundaboutScenarioName;
+}
+
+bool IsRoundaboutCommitArea(const ReferenceLineInfo* reference_line_info) {
   if (reference_line_info == nullptr) {
     return false;
   }
-  constexpr double kEntryLookForward = 35.0;
-  constexpr double kInsideJunctionBuffer = 8.0;
-  constexpr double kCurveLookForward = 55.0;
-  constexpr double kMinMaxKappa = 0.025;
-  constexpr double kMinHeadingChange = 0.65;
-  constexpr double kUTurnHeadingChange = 1.8;
   const double adc_end_s = reference_line_info->AdcSlBoundary().end_s();
-  bool near_pnc_junction = false;
   for (const auto& overlap :
        reference_line_info->reference_line().map_path().pnc_junction_overlaps()) {
-    if (overlap.end_s < adc_end_s - kInsideJunctionBuffer) {
-      continue;
+    if (overlap.start_s <= adc_end_s + kRoundaboutCommitLookForward &&
+        overlap.end_s >= adc_end_s - kRoundaboutCommitLookBack) {
+      return true;
     }
-    if (overlap.start_s > adc_end_s + kEntryLookForward) {
-      continue;
-    }
-    near_pnc_junction = true;
-    break;
   }
-  if (!near_pnc_junction) {
-    return false;
-  }
-
-  const auto& reference_line = reference_line_info->reference_line();
-  const double ref_length = reference_line.Length();
-  const double start_s = std::max(0.0, adc_end_s);
-  const double end_s = std::min(ref_length - 1.0, adc_end_s + kCurveLookForward);
-  if (end_s - start_s < 8.0) {
-    return false;
-  }
-  double max_abs_kappa = 0.0;
-  for (double s = start_s; s <= end_s; s += 2.0) {
-    if (reference_line_info->GetPathTurnType(s) == hdmap::Lane::U_TURN) {
-      return false;
-    }
-    max_abs_kappa =
-        std::max(max_abs_kappa, std::fabs(reference_line.GetReferencePoint(s).kappa()));
-  }
-  const double heading_change = std::fabs(common::math::NormalizeAngle(
-      reference_line.GetReferencePoint(end_s).heading() -
-      reference_line.GetReferencePoint(start_s).heading()));
-  return max_abs_kappa > kMinMaxKappa && heading_change > kMinHeadingChange &&
-         heading_change < kUTurnHeadingChange;
+  return false;
 }
+
 }  // namespace
 
 using apollo::common::ErrorCode;
@@ -128,18 +105,21 @@ Status PiecewiseJerkSpeedOptimizer::Process(const PathData& path_data,
 
   std::array<double, 3> init_s = {0.0, st_graph_data.init_point().v(),
                                   st_graph_data.init_point().a()};
+  const auto& vehicle_state = frame_->vehicle_state();
+  const bool roundabout_launch_area =
+      IsContestRoundaboutScenario(injector_) &&
+      IsRoundaboutCommitArea(reference_line_info_);
   const bool window_release_launch =
       init_s[1] < 1.0 &&
       (path_data.path_label().find("uturn_release") != std::string::npos ||
-       IsRoundaboutEntryLike(reference_line_info_));
+       roundabout_launch_area);
   if (window_release_launch) {
     init_s[2] = std::max(init_s[2], 2.0);
     AINFO << "[WINDOW][Speed] release launch boost, label="
           << path_data.path_label() << ", init_v=" << init_s[1]
           << ", init_a=" << init_s[2]
-          << ", roundabout=" << IsRoundaboutEntryLike(reference_line_info_);
+          << ", roundabout=" << roundabout_launch_area;
   }
-  const auto& vehicle_state = frame_->vehicle_state();
   if (vehicle_state.gear() == canbus::Chassis::GEAR_REVERSE) {
     init_s[1] = std::max(-init_s[1], 0.0);
     init_s[2] = -init_s[2];

@@ -31,6 +31,17 @@ namespace apollo {
 namespace planning {
 
 StageResult ContestLaneFollowStage::Process(const common::TrajectoryPoint& planning_init_point, Frame* frame) {
+    auto* ctx = GetContextAs<ContestScenarioContext>();
+    if (ctx->kind == ContestScenarioKind::ROUNDABOUT) {
+        AINFO << "[ROUNDABOUT][Scenario] running CONTEST_ROUNDABOUT stage";
+        for (auto& reference_line_info : *frame->mutable_reference_line_info()) {
+            if (reference_line_info.IsChangeLanePath()) {
+                AINFO << "[ROUNDABOUT][Scenario] disable change-lane reference line, lane_id="
+                      << reference_line_info.Lanes().Id();
+                reference_line_info.SetDrivable(false);
+            }
+        }
+    }
     // 站点接驳：在 task 流水线执行前注入 stop fence 和限速
     InjectStationShuttleStop(frame);
 
@@ -40,7 +51,6 @@ StageResult ContestLaneFollowStage::Process(const common::TrajectoryPoint& plann
     }
     if (!StillInScenario(*frame)) {
         // U 型弯退出清理：重置借道标志，防止原始 LaneBorrowPath 误触发
-        auto* ctx = GetContextAs<ContestScenarioContext>();
         if (ctx->kind == ContestScenarioKind::U_TURN) {
             injector_->planning_context()
                     ->mutable_planning_status()
@@ -144,6 +154,11 @@ bool ContestLaneFollowStage::StillInScenario(const Frame& frame) const {
     auto* context = GetContextAs<ContestScenarioContext>();
     switch (context->kind) {
     case ContestScenarioKind::LANE_CHANGE:
+        if (contest::IsContestRoundaboutEntry(frame, context->scenario_config)
+            || contest::IsContestRoundaboutEntryRoi(frame)) {
+            AINFO << "[ROUNDABOUT][Scenario] exit CONTEST_LANE_CHANGE for roundabout entry";
+            return false;
+        }
         return contest::IsContestLaneChange(frame);
     case ContestScenarioKind::S_CURVE:
         if (contest::IsContestUTurn(frame.reference_line_info().front(), context->scenario_config)) {
@@ -209,6 +224,17 @@ bool ContestLaneFollowStage::StillInScenario(const Frame& frame) const {
                 > 0;
     case ContestScenarioKind::STATION_SHUTTLE:
         return !context->shuttle_departed;
+    case ContestScenarioKind::ROUNDABOUT:
+        if (!contest::IsContestRoundaboutEntryRoi(frame)) {
+            AINFO << "[ROUNDABOUT][Scenario] leave entry ROI, exit to lane follow";
+            return false;
+        }
+        if (contest::IsContestRoundaboutEntryPassed(
+                    frame.reference_line_info().front(), context->scenario_config)) {
+            AINFO << "[ROUNDABOUT][Scenario] entry passed, exit to lane follow";
+            return false;
+        }
+        return contest::IsContestRoundaboutEntry(frame, context->scenario_config);
     }
     return false;
 }

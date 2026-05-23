@@ -30,6 +30,42 @@ namespace apollo {
 namespace planning {
 namespace contest {
 
+namespace {
+
+constexpr double kRoundaboutExitPastEntryDistance = 8.0;
+constexpr double kRoundaboutLongGeometryLookForwardDistance = 180.0;
+constexpr double kRoundaboutMinLongGeometryHeadingChange = 0.75;
+constexpr double kRoundaboutMaxLongGeometryHeadingChange = 2.2;
+constexpr double kRoundaboutMinLongGeometryKappa = 0.018;
+constexpr double kRoundaboutNearUTurnHeadingChange = 2.2;
+constexpr double kRoundaboutRoiMinX = 423360.0;
+constexpr double kRoundaboutRoiMaxX = 423548.0;
+constexpr double kRoundaboutRoiMinY = 4437990.0;
+constexpr double kRoundaboutRoiMaxY = 4438072.0;
+constexpr double kRoundaboutPassedX = 423535.0;
+constexpr double kRoundaboutPassedY = 4438064.0;
+
+bool HasNearUTurnFeature(
+        const ReferenceLineInfo& reference_line_info,
+        const double start_s,
+        const double end_s) {
+    const auto& reference_line = reference_line_info.reference_line();
+    double max_abs_kappa = 0.0;
+    for (double s = start_s; s <= end_s; s += kFeatureSampleStep) {
+        if (reference_line_info.GetPathTurnType(s) == hdmap::Lane::U_TURN) {
+            return true;
+        }
+        max_abs_kappa = std::max(
+                max_abs_kappa, std::fabs(reference_line.GetReferencePoint(s).kappa()));
+    }
+    const double heading_change = std::fabs(common::math::NormalizeAngle(
+            reference_line.GetReferencePoint(end_s).heading()
+            - reference_line.GetReferencePoint(start_s).heading()));
+    return max_abs_kappa > 0.08 && heading_change > kRoundaboutNearUTurnHeadingChange;
+}
+
+}  // namespace
+
 bool IsContestLaneChange(const Frame& frame) {
     return frame.local_view().planning_command != nullptr
             && frame.local_view().planning_command->has_lane_follow_command() && frame.reference_line_info().size() > 1;
@@ -236,6 +272,154 @@ bool IsContestStationShuttle(
         return false;
     }
     *out_parking_spot_id = best_spot_id;
+    return true;
+}
+
+bool IsContestRoundaboutEntry(
+        const ReferenceLineInfo& reference_line_info,
+        const ScenarioContestConfig& config) {
+    const double adc_end_s = reference_line_info.AdcSlBoundary().end_s();
+    bool near_pnc_junction = false;
+    int pnc_junction_count = 0;
+    double nearest_overlap_start_s = std::numeric_limits<double>::max();
+    for (const auto& overlap :
+         reference_line_info.reference_line().map_path().pnc_junction_overlaps()) {
+        ++pnc_junction_count;
+        if (overlap.end_s < adc_end_s - config.roundabout_inside_junction_buffer()) {
+            continue;
+        }
+        if (overlap.start_s > adc_end_s + config.roundabout_entry_look_forward_distance()) {
+            continue;
+        }
+        near_pnc_junction = true;
+        nearest_overlap_start_s = std::min(nearest_overlap_start_s, overlap.start_s);
+        break;
+    }
+    if (near_pnc_junction
+        && adc_end_s > nearest_overlap_start_s + kRoundaboutExitPastEntryDistance) {
+        AINFO << "[ROUNDABOUT][Scenario] entry already passed, adc_s=" << adc_end_s
+              << ", entry_s=" << nearest_overlap_start_s;
+        return false;
+    }
+
+    const auto& reference_line = reference_line_info.reference_line();
+    const double start_s = std::max(0.0, adc_end_s);
+    const double end_s = std::min(
+            reference_line.Length() - 1.0,
+            adc_end_s + config.roundabout_curve_look_forward_distance());
+    if (end_s - start_s < 8.0) {
+        return false;
+    }
+    if (HasNearUTurnFeature(reference_line_info, start_s, end_s)) {
+        return false;
+    }
+
+    double max_abs_kappa = 0.0;
+    for (double s = start_s; s <= end_s; s += kFeatureSampleStep) {
+        if (reference_line_info.GetPathTurnType(s) == hdmap::Lane::U_TURN) {
+            return false;
+        }
+        max_abs_kappa = std::max(max_abs_kappa, std::fabs(reference_line.GetReferencePoint(s).kappa()));
+    }
+    const double heading_change = std::fabs(common::math::NormalizeAngle(
+            reference_line.GetReferencePoint(end_s).heading()
+            - reference_line.GetReferencePoint(start_s).heading()));
+    const bool curve_like_roundabout = max_abs_kappa > config.roundabout_min_abs_kappa()
+            && heading_change > config.roundabout_min_heading_change()
+            && heading_change < config.roundabout_max_heading_change();
+    const bool soft_curve_like_roundabout =
+            max_abs_kappa > config.roundabout_min_abs_kappa() * 0.6
+            && heading_change > config.roundabout_min_heading_change() * 0.5
+            && heading_change < config.roundabout_max_heading_change() + 0.3;
+    const double long_end_s = std::min(
+            reference_line.Length() - 1.0,
+            adc_end_s + kRoundaboutLongGeometryLookForwardDistance);
+    double long_max_abs_kappa = 0.0;
+    for (double s = start_s; s <= long_end_s; s += kFeatureSampleStep) {
+        if (reference_line_info.GetPathTurnType(s) == hdmap::Lane::U_TURN) {
+            return false;
+        }
+        long_max_abs_kappa = std::max(
+                long_max_abs_kappa, std::fabs(reference_line.GetReferencePoint(s).kappa()));
+    }
+    const double long_heading_change = std::fabs(common::math::NormalizeAngle(
+            reference_line.GetReferencePoint(long_end_s).heading()
+            - reference_line.GetReferencePoint(start_s).heading()));
+    const bool long_geometry_like_roundabout =
+            long_end_s - start_s > 45.0
+            && long_max_abs_kappa > kRoundaboutMinLongGeometryKappa
+            && long_heading_change > kRoundaboutMinLongGeometryHeadingChange
+            && long_heading_change < kRoundaboutMaxLongGeometryHeadingChange;
+    const bool roundabout = (near_pnc_junction
+                                && (curve_like_roundabout || soft_curve_like_roundabout))
+                            || long_geometry_like_roundabout;
+    if (!roundabout && (near_pnc_junction || pnc_junction_count > 0 || max_abs_kappa > 0.015
+                        || heading_change > 0.35 || long_geometry_like_roundabout
+                        || long_max_abs_kappa > kRoundaboutMinLongGeometryKappa)) {
+        AINFO << "[ROUNDABOUT][Scenario] probe miss, adc_s=" << adc_end_s
+              << ", pnc_count=" << pnc_junction_count
+              << ", near_pnc=" << near_pnc_junction
+              << ", max_abs_kappa=" << max_abs_kappa
+              << ", heading_change=" << heading_change
+              << ", long_max_abs_kappa=" << long_max_abs_kappa
+              << ", long_heading_change=" << long_heading_change
+              << ", ref_len=" << reference_line.Length();
+    }
+    if (roundabout) {
+        AINFO << "[ROUNDABOUT][Scenario] detected entry, adc_s=" << adc_end_s
+              << ", pnc_count=" << pnc_junction_count
+              << ", near_pnc=" << near_pnc_junction
+              << ", max_abs_kappa=" << max_abs_kappa
+              << ", heading_change=" << heading_change
+              << ", long_max_abs_kappa=" << long_max_abs_kappa
+              << ", long_heading_change=" << long_heading_change
+              << ", soft=" << soft_curve_like_roundabout;
+    }
+    return roundabout;
+}
+
+bool IsContestRoundaboutEntry(const Frame& frame, const ScenarioContestConfig&) {
+    if (frame.local_view().planning_command == nullptr
+        || !frame.local_view().planning_command->has_lane_follow_command()) {
+        return false;
+    }
+    return IsContestRoundaboutEntryRoi(frame);
+}
+
+bool IsContestRoundaboutEntryPassed(
+        const ReferenceLineInfo& reference_line_info,
+        const ScenarioContestConfig& config) {
+    const double adc_end_s = reference_line_info.AdcSlBoundary().end_s();
+    for (const auto& overlap :
+         reference_line_info.reference_line().map_path().pnc_junction_overlaps()) {
+        if (overlap.end_s < adc_end_s - config.roundabout_inside_junction_buffer()) {
+            continue;
+        }
+        if (overlap.start_s > adc_end_s + config.roundabout_entry_look_forward_distance()) {
+            continue;
+        }
+        return adc_end_s > overlap.start_s + kRoundaboutExitPastEntryDistance;
+    }
+    return false;
+}
+
+bool IsContestRoundaboutEntryRoi(const Frame& frame) {
+    if (frame.local_view().planning_command == nullptr
+        || !frame.local_view().planning_command->has_lane_follow_command()) {
+        return false;
+    }
+    const auto& vehicle_state = frame.vehicle_state();
+    const double x = vehicle_state.x();
+    const double y = vehicle_state.y();
+    if (x < kRoundaboutRoiMinX || x > kRoundaboutRoiMaxX
+        || y < kRoundaboutRoiMinY || y > kRoundaboutRoiMaxY) {
+        return false;
+    }
+    if (x > kRoundaboutPassedX && y > kRoundaboutPassedY) {
+        return false;
+    }
+    AINFO << "[ROUNDABOUT][Scenario] detected entry ROI, x=" << x
+          << ", y=" << y << ", heading=" << vehicle_state.heading();
     return true;
 }
 

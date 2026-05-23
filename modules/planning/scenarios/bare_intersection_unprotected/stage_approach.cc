@@ -20,13 +20,9 @@
 
 #include "modules/planning/scenarios/bare_intersection_unprotected/stage_approach.h"
 
-#include <algorithm>
-#include <cmath>
 #include <vector>
 
 #include "cyber/common/log.h"
-#include "modules/common/math/math_utils.h"
-#include "modules/common_msgs/map_msgs/map_lane.pb.h"
 #include "modules/map/pnc_map/path.h"
 #include "modules/planning/planning_base/common/frame.h"
 #include "modules/planning/planning_base/common/planning_context.h"
@@ -37,95 +33,6 @@ namespace planning {
 
 using apollo::common::TrajectoryPoint;
 using apollo::hdmap::PathOverlap;
-
-namespace {
-bool IsRoundaboutEntryLike(const ReferenceLineInfo& reference_line_info) {
-  constexpr double kEntryLookForward = 35.0;
-  constexpr double kInsideJunctionBuffer = 8.0;
-  constexpr double kCurveLookForward = 55.0;
-  constexpr double kMinMaxKappa = 0.025;
-  constexpr double kMinHeadingChange = 0.65;
-  constexpr double kUTurnHeadingChange = 1.8;
-  const double adc_end_s = reference_line_info.AdcSlBoundary().end_s();
-  bool near_pnc_junction = false;
-  for (const auto& overlap :
-       reference_line_info.reference_line().map_path().pnc_junction_overlaps()) {
-    if (overlap.end_s < adc_end_s - kInsideJunctionBuffer ||
-        overlap.start_s > adc_end_s + kEntryLookForward) {
-      continue;
-    }
-    near_pnc_junction = true;
-    break;
-  }
-  if (!near_pnc_junction) {
-    return false;
-  }
-  const auto& reference_line = reference_line_info.reference_line();
-  const double end_s =
-      std::min(reference_line.Length() - 1.0, adc_end_s + kCurveLookForward);
-  if (end_s - adc_end_s < 8.0) {
-    return false;
-  }
-  double max_abs_kappa = 0.0;
-  for (double s = adc_end_s; s <= end_s; s += 2.0) {
-    if (reference_line_info.GetPathTurnType(s) == hdmap::Lane::U_TURN) {
-      return false;
-    }
-    max_abs_kappa =
-        std::max(max_abs_kappa, std::fabs(reference_line.GetReferencePoint(s).kappa()));
-  }
-  const double heading_change = std::fabs(common::math::NormalizeAngle(
-      reference_line.GetReferencePoint(end_s).heading() -
-      reference_line.GetReferencePoint(adc_end_s).heading()));
-  return max_abs_kappa > kMinMaxKappa && heading_change > kMinHeadingChange &&
-         heading_change < kUTurnHeadingChange;
-}
-
-bool CanCommitRoundaboutLaunch(const Obstacle& obstacle) {
-  if (obstacle.reference_line_st_boundary().IsEmpty()) {
-    return true;
-  }
-  const auto& boundary = obstacle.reference_line_st_boundary();
-  const double obstacle_traveled_s =
-      boundary.bottom_left_point().s() - boundary.bottom_right_point().s();
-  constexpr double kEpsilon = 1e-6;
-  constexpr double kMinLaunchMinT = 0.35;
-  constexpr double kMinLaunchGapS = 4.5;
-  if (obstacle_traveled_s >= kEpsilon) {
-    return false;
-  }
-  const bool passable =
-      boundary.min_t() > kMinLaunchMinT && boundary.min_s() > kMinLaunchGapS;
-  if (passable) {
-    const double required_avg_v =
-        boundary.min_s() / std::max(boundary.min_t(), 0.1);
-    AINFO << "[ROUNDABOUT][CLEAR] commit launch ahead of obstacle, obs="
-          << obstacle.Id() << ", min_t=" << boundary.min_t()
-          << ", min_s=" << boundary.min_s()
-          << ", obs_speed=" << obstacle.speed()
-          << ", required_avg_v=" << required_avg_v;
-  }
-  return passable;
-}
-
-bool IsRoundaboutNonTargetLaneVehicle(const Obstacle& obstacle) {
-  if (obstacle.IsVirtual() || obstacle.IsStatic() ||
-      obstacle.Perception().type() != apollo::perception::PerceptionObstacle::VEHICLE) {
-    return false;
-  }
-  constexpr double kTargetLaneLateralRange = 2.2;
-  const auto& sl_boundary = obstacle.PerceptionSLBoundary();
-  const double nearest_l =
-      std::min(std::fabs(sl_boundary.start_l()), std::fabs(sl_boundary.end_l()));
-  const bool outside_target_lane = nearest_l > kTargetLaneLateralRange;
-  if (outside_target_lane) {
-    AINFO << "[ROUNDABOUT][CLEAR] ignore non-target-lane vehicle, obs="
-          << obstacle.Id() << ", start_l=" << sl_boundary.start_l()
-          << ", end_l=" << sl_boundary.end_l();
-  }
-  return outside_target_lane;
-}
-}  // namespace
 
 StageResult BareIntersectionUnprotectedStageApproach::Process(
     const TrajectoryPoint& planning_init_point, Frame* frame) {
@@ -232,7 +139,6 @@ bool BareIntersectionUnprotectedStageApproach::CheckClear(
   static constexpr double kConf_ignore_min_st_min_s = 15.0;  // meter
 
   bool all_far_away = true;
-  const bool roundabout_entry = IsRoundaboutEntryLike(reference_line_info);
   for (auto* obstacle :
        reference_line_info.path_decision().obstacles().Items()) {
     if (obstacle->IsVirtual() || obstacle->IsStatic()) {
@@ -256,14 +162,6 @@ bool BareIntersectionUnprotectedStageApproach::CheckClear(
               kConf_ignore_max_st_min_t &&
           obstacle->reference_line_st_boundary().min_s() >
               kConf_ignore_min_st_min_s) {
-        continue;
-      }
-
-      if (roundabout_entry && IsRoundaboutNonTargetLaneVehicle(*obstacle)) {
-        continue;
-      }
-
-      if (roundabout_entry && CanCommitRoundaboutLaunch(*obstacle)) {
         continue;
       }
 

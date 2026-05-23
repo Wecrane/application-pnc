@@ -22,4 +22,11 @@ message ScenarioContestConfig {
   optional double station_shuttle_look_forward_distance = 14 [default = 80.0];
   optional double station_shuttle_dwell_time_sec = 15 [default = 5.0];
   optional double station_shuttle_speed_limit = 16 [default = 8.33];
+
+  optional double roundabout_entry_look_forward_distance = 17 [default = 80.0];
+  optional double roundabout_inside_junction_buffer = 18 [default = 25.0];
+  optional double roundabout_curve_look_forward_distance = 19 [default = 55.0];
+  optional double roundabout_min_abs_kappa = 20 [default = 0.025];
+  optional double roundabout_min_heading_change = 21 [default = 0.65];
+  optional double roundabout_max_heading_change = 22 [default = 1.8];
 }
