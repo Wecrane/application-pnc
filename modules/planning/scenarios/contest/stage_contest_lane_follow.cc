@@ -33,7 +33,13 @@ namespace planning {
 StageResult ContestLaneFollowStage::Process(const common::TrajectoryPoint& planning_init_point, Frame* frame) {
     auto* ctx = GetContextAs<ContestScenarioContext>();
     if (ctx->kind == ContestScenarioKind::ROUNDABOUT) {
-        AINFO << "[ROUNDABOUT][Scenario] running CONTEST_ROUNDABOUT stage";
+        const double adc_x = frame->vehicle_state().x();
+        const double adc_y = frame->vehicle_state().y();
+        AINFO << "[ROUNDABOUT][Scenario] running CONTEST_ROUNDABOUT stage (one-shot)"
+              << ", committed=" << ctx->roundabout_committed
+              << ", adc_x=" << adc_x << ", adc_y=" << adc_y;
+        // 环岛入口阶段：只保留主参考线，禁止变道参考线
+        // （one-shot 模式下没有分阶段概念，整个激活期间都禁用变道）
         for (auto& reference_line_info : *frame->mutable_reference_line_info()) {
             if (reference_line_info.IsChangeLanePath()) {
                 AINFO << "[ROUNDABOUT][Scenario] disable change-lane reference line, lane_id="
@@ -41,6 +47,7 @@ StageResult ContestLaneFollowStage::Process(const common::TrajectoryPoint& plann
                 reference_line_info.SetDrivable(false);
             }
         }
+        // 持久化提交标志已在 StillInScenario 中设置，此处不再重复
     }
     // 站点接驳：在 task 流水线执行前注入 stop fence 和限速
     InjectStationShuttleStop(frame);
@@ -56,6 +63,17 @@ StageResult ContestLaneFollowStage::Process(const common::TrajectoryPoint& plann
                     ->mutable_planning_status()
                     ->mutable_path_decider()
                     ->set_is_in_path_lane_borrow_scenario(false);
+        }
+        // 环岛退出清理：重置上下文（保留 completed/exit_xy 用于防重入）
+        if (ctx->kind == ContestScenarioKind::ROUNDABOUT) {
+            ctx->roundabout_committed = false;
+            ctx->roundabout_entry_s = 0.0;
+            ctx->roundabout_entry_x = 0.0;
+            ctx->roundabout_entry_y = 0.0;
+            ctx->roundabout_commit_hold_frames = 0;
+            // roundabout_completed / roundabout_exit_x / roundabout_exit_y 保留
+            AINFO << "[ROUNDABOUT][Scenario] context reset, completed=" << ctx->roundabout_completed
+                  << ", exit_x=" << ctx->roundabout_exit_x;
         }
         return FinishScenario();
     }
@@ -224,17 +242,66 @@ bool ContestLaneFollowStage::StillInScenario(const Frame& frame) const {
                 > 0;
     case ContestScenarioKind::STATION_SHUTTLE:
         return !context->shuttle_departed;
-    case ContestScenarioKind::ROUNDABOUT:
+    case ContestScenarioKind::ROUNDABOUT: {
+        // ── 环岛入口场景 ──
+        // 场景在 ROI 内活跃，task 层通过 scenario_type 直接判断
+        // 退出条件 1：离开 ROI
+        // 退出条件 2：XY 行驶距离超过阈值（快速退出）
+        const auto& rli = frame.reference_line_info().front();
+        const double adc_end_s = rli.AdcSlBoundary().end_s();
+        const double adc_speed = frame.vehicle_state().linear_velocity();
+        const double adc_x = frame.vehicle_state().x();
+        const double adc_y = frame.vehicle_state().y();
+        const double adc_heading = frame.vehicle_state().heading();
+
+        // ── 退出条件 1：离开 ROI ──
         if (!contest::IsContestRoundaboutEntryRoi(frame)) {
-            AINFO << "[ROUNDABOUT][Scenario] leave entry ROI, exit to lane follow";
+            context->roundabout_completed = true;
+            context->roundabout_exit_x = adc_x;
+            context->roundabout_exit_y = adc_y;
+            AINFO << "[ROUNDABOUT][Scenario] leave ROI, exit"
+                  << ", adc_x=" << adc_x << ", adc_y=" << adc_y
+                  << ", adc_s=" << adc_end_s << ", heading=" << adc_heading;
             return false;
         }
-        if (contest::IsContestRoundaboutEntryPassed(
-                    frame.reference_line_info().front(), context->scenario_config)) {
-            AINFO << "[ROUNDABOUT][Scenario] entry passed, exit to lane follow";
-            return false;
+
+        // ── 退出条件 2：XY 行驶距离 > 阈值 → 快速退出 ──
+        static constexpr double kQuickExitXYDistance = 130.0;  // 米（略大于检测点→入口 ~123m）
+        if (context->roundabout_committed
+            && (context->roundabout_entry_x != 0.0 || context->roundabout_entry_y != 0.0)) {
+            const double dx = adc_x - context->roundabout_entry_x;
+            const double dy = adc_y - context->roundabout_entry_y;
+            const double xy_dist = std::sqrt(dx * dx + dy * dy);
+            if (xy_dist > kQuickExitXYDistance) {
+                context->roundabout_completed = true;
+                context->roundabout_exit_x = adc_x;
+                context->roundabout_exit_y = adc_y;
+                AINFO << "[ROUNDABOUT][Scenario] quick exit (XY distance)"
+                      << ", adc_x=" << adc_x << ", adc_y=" << adc_y
+                      << ", entry_x=" << context->roundabout_entry_x
+                      << ", entry_y=" << context->roundabout_entry_y
+                      << ", xy_dist=" << xy_dist
+                      << ", adc_s=" << adc_end_s << ", v=" << adc_speed;
+                return false;
+            }
         }
-        return contest::IsContestRoundaboutEntry(frame, context->scenario_config);
+
+        // ── 首次提交 ──
+        if (!context->roundabout_committed) {
+            context->roundabout_committed = true;
+            context->roundabout_commit_hold_frames = 0;
+            context->roundabout_entry_x = adc_x;
+            context->roundabout_entry_y = adc_y;
+            AINFO << "[ROUNDABOUT][Scenario] COMMIT, aggressive mode active"
+                  << ", adc_x=" << adc_x << ", adc_y=" << adc_y
+                  << ", adc_s=" << adc_end_s << ", entry_s=" << context->roundabout_entry_s
+                  << ", v=" << adc_speed << ", heading=" << adc_heading;
+        } else {
+            context->roundabout_commit_hold_frames++;
+        }
+
+        return true;
+    }
     }
     return false;
 }

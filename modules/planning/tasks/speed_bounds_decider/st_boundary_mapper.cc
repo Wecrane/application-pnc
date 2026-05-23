@@ -48,20 +48,26 @@ namespace planning {
 namespace {
 
 constexpr char kContestRoundaboutScenarioName[] = "CONTEST_ROUNDABOUT";
-constexpr double kRoundaboutInnerLaneHoldSec = 1.0;
-constexpr double kRoundaboutCommitMinSpeed = 0.8;
-constexpr double kRoundaboutTargetLaneMaxCenterL = 1.8;
+constexpr double kRoundaboutTargetLaneMaxCenterL = 4.5;
 constexpr double kRoundaboutCommitLookForward = 6.0;
 constexpr double kRoundaboutCommitLookBack = 3.0;
 
-std::unordered_map<std::string, double> roundabout_inner_lane_memory;
-bool roundabout_launch_committed = false;
-
 bool IsContestRoundaboutScenario(
     const std::shared_ptr<DependencyInjector>& injector) {
-  return injector != nullptr && injector->planning_context() != nullptr &&
-         injector->planning_context()->planning_status().scenario().scenario_type() ==
-             kContestRoundaboutScenarioName;
+  if (injector == nullptr || injector->planning_context() == nullptr) {
+    return false;
+  }
+  // 方式 1：当前场景即为 CONTEST_ROUNDABOUT
+  if (injector->planning_context()->planning_status().scenario().scenario_type()
+      == kContestRoundaboutScenarioName) {
+    return true;
+  }
+  // 方式 2：场景已退出但提交标志仍有效（one-shot 机制）
+  if (injector->planning_context()->planning_status()
+          .path_decider().is_in_path_lane_borrow_scenario()) {
+    return true;
+  }
+  return false;
 }
 
 bool IsRoundaboutNonTargetLaneVehicle(const Obstacle& obstacle) {
@@ -69,35 +75,13 @@ bool IsRoundaboutNonTargetLaneVehicle(const Obstacle& obstacle) {
       obstacle.Perception().type() != apollo::perception::PerceptionObstacle::VEHICLE) {
     return false;
   }
-  const double now = cyber::Clock::NowInSeconds();
   const auto& sl = obstacle.PerceptionSLBoundary();
   const double center_l = 0.5 * (sl.start_l() + sl.end_l());
   if (std::fabs(center_l) > kRoundaboutTargetLaneMaxCenterL) {
-    roundabout_inner_lane_memory[obstacle.Id()] = now;
     AINFO << "[ROUNDABOUT][STBoundary] ignore non-target-lane vehicle, obs="
           << obstacle.Id() << ", start_l=" << sl.start_l()
           << ", end_l=" << sl.end_l() << ", center_l=" << center_l;
     return true;
-  }
-  const auto iter = roundabout_inner_lane_memory.find(obstacle.Id());
-  if (iter != roundabout_inner_lane_memory.end() &&
-      now - iter->second < kRoundaboutInnerLaneHoldSec) {
-    AINFO << "[ROUNDABOUT][STBoundary] hold non-target-lane ignore for flicker, obs="
-          << obstacle.Id() << ", age=" << now - iter->second
-          << ", center_l=" << center_l;
-    return true;
-  }
-  return false;
-}
-
-bool IsRoundaboutCommitArea(
-    const ReferenceLine& reference_line, const SLBoundary& adc_sl_boundary) {
-  const double adc_end_s = adc_sl_boundary.end_s();
-  for (const auto& overlap : reference_line.map_path().pnc_junction_overlaps()) {
-    if (overlap.start_s <= adc_end_s + kRoundaboutCommitLookForward &&
-        overlap.end_s >= adc_end_s - kRoundaboutCommitLookBack) {
-      return true;
-    }
   }
   return false;
 }
@@ -107,22 +91,8 @@ bool IsRoundaboutLaunchCommitted(
     const common::VehicleState& vehicle_state,
     const ReferenceLine& reference_line,
     const SLBoundary& adc_sl_boundary) {
-  if (!IsContestRoundaboutScenario(injector)) {
-    if (roundabout_launch_committed) {
-      AINFO << "[ROUNDABOUT][Launch] reset committed outside roundabout";
-    }
-    roundabout_launch_committed = false;
-    roundabout_inner_lane_memory.clear();
-    return false;
-  }
-  if (!roundabout_launch_committed &&
-      IsRoundaboutCommitArea(reference_line, adc_sl_boundary) &&
-      vehicle_state.linear_velocity() > kRoundaboutCommitMinSpeed) {
-    roundabout_launch_committed = true;
-    AINFO << "[ROUNDABOUT][Launch] committed in ST by junction feature"
-          << ", v=" << vehicle_state.linear_velocity();
-  }
-  return roundabout_launch_committed;
+  // 场景活跃 = 已进入环岛区域 = 已提交
+  return IsContestRoundaboutScenario(injector);
 }
 
 }  // namespace
@@ -168,22 +138,26 @@ Status STBoundaryMapper::ComputeSTBoundary(PathDecision* path_decision) const {
     Obstacle* ptr_obstacle = path_decision->Find(ptr_obstacle_item->Id());
     ACHECK(ptr_obstacle != nullptr);
 
-    if (IsContestRoundaboutScenario(injector_) &&
-        IsRoundaboutNonTargetLaneVehicle(*ptr_obstacle)) {
-      ptr_obstacle->EraseStBoundary();
-      continue;
-    }
     if (IsRoundaboutLaunchCommitted(
             injector_, injector_->vehicle_state()->vehicle_state(),
             reference_line_, adc_sl_boundary_) &&
         !ptr_obstacle->IsVirtual() && !ptr_obstacle->IsStatic() &&
         ptr_obstacle->Perception().type() ==
             apollo::perception::PerceptionObstacle::VEHICLE) {
-      AINFO << "[ROUNDABOUT][Launch] erase dynamic ST after commit, obs="
-            << ptr_obstacle->Id();
-      ptr_obstacle->EraseStBoundary();
-      continue;
+      // 提交后：只保留正前方挡路的 ST boundary
+      const auto& obs_sl = ptr_obstacle->PerceptionSLBoundary();
+      static constexpr double kBlockingDist = 3.0;
+      if (obs_sl.start_s() < adc_sl_boundary_.end_s() + kBlockingDist
+          && obs_sl.end_s() > adc_sl_boundary_.start_s()) {
+        // 保留 ST boundary，正常处理
+      } else {
+        AINFO << "[ROUNDABOUT][Launch] erase dynamic ST after commit, obs="
+              << ptr_obstacle->Id();
+        ptr_obstacle->EraseStBoundary();
+        continue;
+      }
     }
+    // 注意：不再使用 center_l 过滤——此地图 SL 投影损坏，center_l 不可靠
 
     // If no longitudinal decision has been made, then plot it onto ST-graph.
     if (!ptr_obstacle->HasLongitudinalDecision()) {

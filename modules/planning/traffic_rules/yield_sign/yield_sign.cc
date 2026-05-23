@@ -43,9 +43,7 @@ using apollo::hdmap::PathOverlap;
 namespace {
 
 constexpr char kContestRoundaboutScenarioName[] = "CONTEST_ROUNDABOUT";
-constexpr double kRoundaboutInnerLaneHoldSec = 1.0;
-constexpr double kRoundaboutCommitMinSpeed = 0.8;
-constexpr double kRoundaboutTargetLaneMaxCenterL = 1.8;
+constexpr double kRoundaboutTargetLaneMaxCenterL = 4.5;
 constexpr double kRoundaboutCommitLookForward = 6.0;
 constexpr double kRoundaboutCommitLookBack = 3.0;
 constexpr double kUTurnYieldMaxDistanceToRefEnd = 35.0;
@@ -55,9 +53,6 @@ constexpr double kUTurnYieldSampleStep = 1.0;
 constexpr double kUTurnYieldKappaThreshold = 0.12;
 constexpr double kUTurnYieldHeadingChangeThreshold = 1.7;
 constexpr double kUTurnYieldMinSampleLength = 8.0;
-
-std::unordered_map<std::string, double> roundabout_inner_lane_memory;
-bool roundabout_launch_committed = false;
 
 bool HasUTurnLaneTag(const ReferenceLineInfo& reference_line_info,
                      const PathOverlap& yield_sign_overlap) {
@@ -119,9 +114,20 @@ bool IsYieldSignOnUTurnPath(const ReferenceLineInfo& reference_line_info,
 
 bool IsContestRoundaboutScenario(
     const std::shared_ptr<DependencyInjector>& injector) {
-  return injector != nullptr && injector->planning_context() != nullptr &&
-         injector->planning_context()->planning_status().scenario().scenario_type() ==
-             kContestRoundaboutScenarioName;
+  if (injector == nullptr || injector->planning_context() == nullptr) {
+    return false;
+  }
+  // 方式 1：当前场景即为 CONTEST_ROUNDABOUT
+  if (injector->planning_context()->planning_status().scenario().scenario_type()
+      == kContestRoundaboutScenarioName) {
+    return true;
+  }
+  // 方式 2：场景已退出但提交标志仍有效（one-shot 机制）
+  if (injector->planning_context()->planning_status()
+          .path_decider().is_in_path_lane_borrow_scenario()) {
+    return true;
+  }
+  return false;
 }
 
 bool IsRoundaboutNonTargetLaneVehicle(const Obstacle* obstacle) {
@@ -129,47 +135,16 @@ bool IsRoundaboutNonTargetLaneVehicle(const Obstacle* obstacle) {
       obstacle->Perception().type() != apollo::perception::PerceptionObstacle::VEHICLE) {
     return false;
   }
-  const double now = cyber::Clock::NowInSeconds();
   const auto& sl = obstacle->PerceptionSLBoundary();
   const double center_l = 0.5 * (sl.start_l() + sl.end_l());
-  if (std::fabs(center_l) > kRoundaboutTargetLaneMaxCenterL) {
-    roundabout_inner_lane_memory[obstacle->Id()] = now;
-    return true;
-  }
-  const auto iter = roundabout_inner_lane_memory.find(obstacle->Id());
-  return iter != roundabout_inner_lane_memory.end() &&
-         now - iter->second < kRoundaboutInnerLaneHoldSec;
-}
-
-bool IsRoundaboutCommitArea(const ReferenceLineInfo& reference_line_info) {
-  const double adc_end_s = reference_line_info.AdcSlBoundary().end_s();
-  for (const auto& overlap :
-       reference_line_info.reference_line().map_path().pnc_junction_overlaps()) {
-    if (overlap.start_s <= adc_end_s + kRoundaboutCommitLookForward &&
-        overlap.end_s >= adc_end_s - kRoundaboutCommitLookBack) {
-      return true;
-    }
-  }
-  return false;
+  return std::fabs(center_l) > kRoundaboutTargetLaneMaxCenterL;
 }
 
 bool IsRoundaboutLaunchCommitted(
     const std::shared_ptr<DependencyInjector>& injector,
     const ReferenceLineInfo& reference_line_info) {
-  if (!IsContestRoundaboutScenario(injector)) {
-    roundabout_launch_committed = false;
-    roundabout_inner_lane_memory.clear();
-    return false;
-  }
-  const auto& vehicle_state = injector->vehicle_state()->vehicle_state();
-  if (!roundabout_launch_committed &&
-      IsRoundaboutCommitArea(reference_line_info) &&
-      vehicle_state.linear_velocity() > kRoundaboutCommitMinSpeed) {
-    roundabout_launch_committed = true;
-    AINFO << "[ROUNDABOUT][Launch] committed in YieldSign by junction feature"
-          << ", v=" << vehicle_state.linear_velocity();
-  }
-  return roundabout_launch_committed;
+  // 场景活跃 = 已进入环岛区域 = 已提交
+  return IsContestRoundaboutScenario(injector);
 }
 
 std::vector<std::string> FilterRoundaboutWaitForObstacles(
@@ -256,7 +231,10 @@ void YieldSign::MakeDecisions(Frame* const frame,
     const bool roundabout_entry = IsContestRoundaboutScenario(injector_);
     if (roundabout_entry &&
         IsRoundaboutLaunchCommitted(injector_, *reference_line_info)) {
-      AINFO << "[ROUNDABOUT][YieldSign] skip stop wall after launch commit";
+      const double adc_x = frame->vehicle_state().x();
+      const double adc_y = frame->vehicle_state().y();
+      AINFO << "[ROUNDABOUT][YieldSign] skip stop wall after launch commit"
+            << ", adc_x=" << adc_x << ", adc_y=" << adc_y;
       continue;
     }
     const auto filtered_wait_for_obstacle_ids = roundabout_entry

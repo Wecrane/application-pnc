@@ -44,9 +44,20 @@ constexpr double kRoundaboutCommitLookBack = 3.0;
 
 bool IsContestRoundaboutScenario(
     const std::shared_ptr<DependencyInjector>& injector) {
-  return injector != nullptr && injector->planning_context() != nullptr &&
-         injector->planning_context()->planning_status().scenario().scenario_type() ==
-             kContestRoundaboutScenarioName;
+  if (injector == nullptr || injector->planning_context() == nullptr) {
+    return false;
+  }
+  // 方式 1：当前场景即为 CONTEST_ROUNDABOUT
+  if (injector->planning_context()->planning_status().scenario().scenario_type()
+      == kContestRoundaboutScenarioName) {
+    return true;
+  }
+  // 方式 2：场景已退出但提交标志仍有效（one-shot 机制）
+  if (injector->planning_context()->planning_status()
+          .path_decider().is_in_path_lane_borrow_scenario()) {
+    return true;
+  }
+  return false;
 }
 
 bool IsRoundaboutCommitArea(const ReferenceLineInfo* reference_line_info) {
@@ -118,7 +129,8 @@ Status PiecewiseJerkSpeedOptimizer::Process(const PathData& path_data,
     AINFO << "[WINDOW][Speed] release launch boost, label="
           << path_data.path_label() << ", init_v=" << init_s[1]
           << ", init_a=" << init_s[2]
-          << ", roundabout=" << roundabout_launch_area;
+          << ", roundabout=" << roundabout_launch_area
+          << ", adc_x=" << vehicle_state.x() << ", adc_y=" << vehicle_state.y();
   }
   if (vehicle_state.gear() == canbus::Chassis::GEAR_REVERSE) {
     init_s[1] = std::max(-init_s[1], 0.0);

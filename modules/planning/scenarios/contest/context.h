@@ -31,6 +31,14 @@ enum class ContestScenarioKind {
     ROUNDABOUT = 5,
 };
 
+enum class RoundaboutPhase {
+    NONE = 0,
+    ENTERING_OUTER = 1,   // 正在进入环岛外侧车道（忽略内侧来车）
+    ON_OUTER = 2,         // 已在外侧车道行驶，准备变道进入内侧
+    MERGING_INNER = 3,    // 正在从外侧变道到内侧
+    DONE = 4,             // 已成功进入内侧，等待退出
+};
+
 struct ContestScenarioContext : public ScenarioContext {
     ScenarioContestConfig scenario_config;
     ContestScenarioKind kind = ContestScenarioKind::LANE_CHANGE;
@@ -42,6 +50,16 @@ struct ContestScenarioContext : public ScenarioContext {
     bool u_turn_completed = false;
     double u_turn_entry_heading = 0.0;
     int u_turn_exit_hold_frames = 0;  // 退出保持计数器
+    // 环岛状态
+    RoundaboutPhase roundabout_phase = RoundaboutPhase::NONE;
+    bool roundabout_committed = false;   // 是否已提交进入（不再因为后车而刹车）
+    double roundabout_entry_s = 0.0;     // 入口 s 坐标
+    double roundabout_entry_x = 0.0;     // 入口 X 坐标
+    double roundabout_entry_y = 0.0;     // 入口 Y 坐标
+    int roundabout_commit_hold_frames = 0;  // 提交保持计数器
+    bool roundabout_completed = false;   // 是否已完成本次环岛（防重入，需远离出口后重置）
+    double roundabout_exit_x = 0.0;      // 上次退出 X 坐标
+    double roundabout_exit_y = 0.0;      // 上次退出 Y 坐标
 };
 
 }  // namespace planning

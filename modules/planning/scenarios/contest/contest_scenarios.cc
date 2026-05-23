@@ -16,6 +16,7 @@
 
 #include "modules/planning/scenarios/contest/contest_scenarios.h"
 
+#include <cmath>
 #include <string>
 
 #include "modules/planning/planning_base/common/frame.h"
@@ -106,6 +107,62 @@ bool ContestStationShuttleScenario::IsTransferable(const Scenario* other_scenari
         ctx->shuttle_dwell_start_time = 0.0;
     }
     return found;
+}
+
+bool ContestRoundaboutScenario::IsTransferable(const Scenario* other_scenario, const Frame& frame) {
+    if (other_scenario == nullptr || !IsReferenceLineReady(frame)) {
+        return false;
+    }
+    auto* ctx = GetContext();
+
+    // ── 防重入：场景已完成本次环岛，需远离出口后才允许再次切入 ──
+    if (ctx->roundabout_completed) {
+        const double dx = frame.vehicle_state().x() - ctx->roundabout_exit_x;
+        const double dy = frame.vehicle_state().y() - ctx->roundabout_exit_y;
+        const double dist_from_exit = std::sqrt(dx * dx + dy * dy);
+        static constexpr double kMinReentryDistance = 100.0;  // 离出口至少 100m 才允许重入
+        if (dist_from_exit < kMinReentryDistance) {
+            return false;  // 还在出口附近，禁止重入
+        }
+        // 已远离出口，重置完成标志，允许下次正常切入
+        ctx->roundabout_completed = false;
+        ctx->roundabout_exit_x = 0.0;
+        ctx->roundabout_exit_y = 0.0;
+        AINFO << "[ROUNDABOUT][Scenario] re-entry allowed (far from exit)"
+              << ", dist=" << dist_from_exit
+              << ", adc_x=" << frame.vehicle_state().x()
+              << ", adc_y=" << frame.vehicle_state().y();
+    }
+
+    // 不让 U 型弯和站点接驳场景被环岛抢走
+    const std::string other_name = other_scenario->Name();
+    if (other_name == "CONTEST_U_TURN" || other_name == "CONTEST_STATION_SHUTTLE") {
+        return false;
+    }
+    const double adc_x = frame.vehicle_state().x();
+    const double adc_y = frame.vehicle_state().y();
+    const bool is_entry_roi = contest::IsContestRoundaboutEntry(frame, ctx->scenario_config);
+    const bool is_entry_geo = contest::IsContestRoundaboutEntry(
+            frame.reference_line_info().front(), ctx->scenario_config);
+    const bool is_entry = is_entry_roi || is_entry_geo;
+    AINFO << "[ROUNDABOUT][Scenario] IsTransferable check"
+          << ", roi=" << is_entry_roi << ", geo=" << is_entry_geo
+          << ", other=" << other_name
+          << ", adc_x=" << adc_x << ", adc_y=" << adc_y;
+    if (!is_entry) {
+        ctx->roundabout_committed = false;
+        ctx->roundabout_entry_s = 0.0;
+        return false;
+    }
+    if (!ctx->roundabout_committed) {
+        ctx->roundabout_entry_s = frame.reference_line_info().front().AdcSlBoundary().end_s();
+        AINFO << "[ROUNDABOUT][Scenario] first time entry detection, entry_s=" << ctx->roundabout_entry_s
+              << ", adc_x=" << adc_x << ", adc_y=" << adc_y;
+    }
+    AINFO << "[ROUNDABOUT][Scenario] transfer to CONTEST_ROUNDABOUT from "
+          << other_scenario->Name()
+          << ", adc_x=" << adc_x << ", adc_y=" << adc_y;
+    return true;
 }
 
 }  // namespace planning

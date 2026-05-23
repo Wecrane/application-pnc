@@ -23,6 +23,10 @@ scenario {
     type: "YieldSignScenario"
 }
 scenario {
+    name: "CONTEST_ROUNDABOUT"
+    type: "ContestRoundaboutScenario"
+}
+scenario {
     name: "CONTEST_CONSTRUCTION_ZONE"
     type: "ContestConstructionZoneScenario"
 }

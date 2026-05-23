@@ -423,6 +423,25 @@ bool IsContestRoundaboutEntryRoi(const Frame& frame) {
     return true;
 }
 
+bool IsRoundaboutNearEntry(
+        const ReferenceLineInfo& reference_line_info,
+        const ScenarioContestConfig& config) {
+    const double adc_end_s = reference_line_info.AdcSlBoundary().end_s();
+    for (const auto& overlap :
+         reference_line_info.reference_line().map_path().pnc_junction_overlaps()) {
+        if (overlap.end_s < adc_end_s - config.roundabout_inside_junction_buffer()) {
+            continue;
+        }
+        if (overlap.start_s > adc_end_s + config.roundabout_entry_look_forward_distance()) {
+            continue;
+        }
+        // ADC 在入口前方 15m 以内或已在入口内部
+        return adc_end_s >= overlap.start_s - 15.0
+                && adc_end_s <= overlap.end_s + config.roundabout_inside_junction_buffer();
+    }
+    return false;
+}
+
 }  // namespace contest
 }  // namespace planning
 }  // namespace apollo
