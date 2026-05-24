@@ -53,18 +53,9 @@ constexpr double kRoundaboutCommitLookForward = 6.0;
 constexpr double kRoundaboutCommitLookBack = 3.0;
 
 bool IsContestRoundaboutScenario(const std::shared_ptr<DependencyInjector>& injector) {
-    if (injector == nullptr || injector->planning_context() == nullptr) {
-        return false;
-    }
-    // 方式 1：当前场景即为 CONTEST_ROUNDABOUT
-    if (injector->planning_context()->planning_status().scenario().scenario_type() == kContestRoundaboutScenarioName) {
-        return true;
-    }
-    // 方式 2：场景已退出但提交标志仍有效（one-shot 机制）
-    if (injector->planning_context()->planning_status().path_decider().is_in_path_lane_borrow_scenario()) {
-        return true;
-    }
-    return false;
+    return injector != nullptr && injector->planning_context() != nullptr
+            && injector->planning_context()->planning_status().scenario().scenario_type()
+                    == kContestRoundaboutScenarioName;
 }
 
 bool IsRoundaboutNonTargetLaneVehicle(const Obstacle& obstacle) {

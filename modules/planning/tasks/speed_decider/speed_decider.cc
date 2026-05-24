@@ -68,19 +68,9 @@ bool IsTightContestWindowArea(const std::shared_ptr<DependencyInjector>& injecto
 }
 
 bool IsContestRoundaboutScenario(const std::shared_ptr<DependencyInjector>& injector) {
-    if (injector == nullptr || injector->planning_context() == nullptr) {
-        return false;
-    }
-    // 方式 1：当前场景即为 CONTEST_ROUNDABOUT
-    if (injector->planning_context()->planning_status().scenario().scenario_type() == kContestRoundaboutScenarioName) {
-        return true;
-    }
-    // 方式 2：场景已退出但提交标志仍有效（one-shot 机制）
-    // stage_contest_lane_follow 在退出场景前将 is_in_path_lane_borrow_scenario 置 true
-    if (injector->planning_context()->planning_status().path_decider().is_in_path_lane_borrow_scenario()) {
-        return true;
-    }
-    return false;
+    return injector != nullptr && injector->planning_context() != nullptr
+            && injector->planning_context()->planning_status().scenario().scenario_type()
+                    == kContestRoundaboutScenarioName;
 }
 
 // 判断障碍物是否在非目标车道（内侧车道），ADC 进入外侧时忽略

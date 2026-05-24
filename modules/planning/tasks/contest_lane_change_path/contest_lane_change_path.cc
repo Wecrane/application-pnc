@@ -369,13 +369,21 @@ void ContestLaneChangePath::UpdateLaneChangeStatus() {
                 }
                 return;
             }
-            // 赛题模式：冷却结束后立即变道，跳过窗口/速度/安全帧确认
-            if (is_contest_lane_change) {
-                is_clear_to_change_lane_ = true;
-                consecutive_clear_count_ = kRequiredConsecutiveClearFrames;
-                AINFO << "[LC_STATUS] START (contest fast): FINISHED -> IN_CHANGE_LANE, elapsed=" << elapsed
-                      << " speed=" << ego_speed * 3.6 << " km/h id=" << change_lane_id;
-                UpdateStatus(now, ChangeLaneStatus::IN_CHANGE_LANE, change_lane_id);
+            // 赛题二：冷却结束后需通过安全窗口、速度、连续安全帧三道检查
+            if (is_contest_lane_change && !is_clear_to_change_lane_) {
+                AINFO << "[LC_STATUS] WAIT: no debounced pass-by window";
+                return;
+            }
+            // 赛题二：先提速到最低变道速度，再开始找变道窗口。
+            if (is_contest_lane_change && ego_speed < min_lane_change_speed) {
+                AINFO << "[LC_STATUS] WAIT: speed=" << ego_speed * 3.6 << " km/h < " << min_lane_change_speed * 3.6
+                      << ", waiting to accelerate";
+                return;
+            }
+            // 连续安全帧确认：需连续 kRequiredConsecutiveClearFrames 帧安全
+            if (is_contest_lane_change && consecutive_clear_count_ < kRequiredConsecutiveClearFrames) {
+                AINFO << "[LC_STATUS] WAIT: clear_frames=" << consecutive_clear_count_ << "/"
+                      << kRequiredConsecutiveClearFrames << ", waiting for stable safety";
                 return;
             }
             AINFO << "[LC_STATUS] START: FINISHED -> IN_CHANGE_LANE, elapsed=" << elapsed

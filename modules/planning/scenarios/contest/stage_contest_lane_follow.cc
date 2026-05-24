@@ -64,7 +64,12 @@ StageResult ContestLaneFollowStage::Process(const common::TrajectoryPoint& plann
                     ->set_is_in_path_lane_borrow_scenario(false);
         }
         // 环岛退出清理：重置上下文（保留 completed/exit_xy 用于防重入）
+        // 同时清理持久化标志，避免影响后续变道场景
         if (ctx->kind == ContestScenarioKind::ROUNDABOUT) {
+            injector_->planning_context()
+                    ->mutable_planning_status()
+                    ->mutable_path_decider()
+                    ->set_is_in_path_lane_borrow_scenario(false);
             ctx->roundabout_committed = false;
             ctx->roundabout_entry_s = 0.0;
             ctx->roundabout_entry_x = 0.0;
