@@ -70,7 +70,7 @@ bool IsTightContestWindowArea(const std::shared_ptr<DependencyInjector>& injecto
 bool IsContestRoundaboutScenario(const std::shared_ptr<DependencyInjector>& injector) {
     return injector != nullptr && injector->planning_context() != nullptr
             && injector->planning_context()->planning_status().scenario().scenario_type()
-                    == kContestRoundaboutScenarioName;
+            == kContestRoundaboutScenarioName;
 }
 
 // 判断障碍物是否在非目标车道（内侧车道），ADC 进入外侧时忽略

@@ -28,7 +28,7 @@ namespace apollo {
 namespace planning {
 namespace {
 
-constexpr double kLaneChangeWatchFrontBuffer = 0.2;
+constexpr double kLaneChangeWatchFrontBuffer = 1.0;
 constexpr double kLaneChangeWatchLateralBuffer = 0.8;
 constexpr double kLaneChangeHoldLateralHalfWidth = 0.5;
 constexpr double kLaneChangeSpeedLimit = 29.0 / 3.6;
@@ -86,9 +86,10 @@ bool IsContestLaneChangeWindowClear(ReferenceLineInfo* reference_line_info) {
             continue;
         }
 
-        ADEBUG << "[LC_CLEAR] target lane occupied by obs=" << obstacle->Id() << " obs_s=[" << obs_start_s << ","
-               << obs_end_s << "] check_s=[" << check_start_s << "," << check_end_s << "] obs_l=[" << obs_min_l << ","
-               << obs_max_l << "] lane_l=[" << -lane_right_width << "," << lane_left_width << "]";
+        AINFO << "[LC_CLEAR] target lane pass-by window occupied by obs=" << obstacle->Id()
+              << " obs_s=[" << obs_start_s << "," << obs_end_s << "] check_s=[" << check_start_s << ","
+              << check_end_s << "] obs_l=[" << obs_min_l << "," << obs_max_l << "] lane_l=["
+              << -lane_right_width << "," << lane_left_width << "]";
         if (reference_line_info->path_decision()->Find(obstacle->Id()) != nullptr) {
             reference_line_info->path_decision()->Find(obstacle->Id())->SetLaneChangeBlocking(true);
         }

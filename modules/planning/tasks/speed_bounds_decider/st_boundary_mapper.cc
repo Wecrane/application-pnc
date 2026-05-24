@@ -55,7 +55,7 @@ constexpr double kRoundaboutCommitLookBack = 3.0;
 bool IsContestRoundaboutScenario(const std::shared_ptr<DependencyInjector>& injector) {
     return injector != nullptr && injector->planning_context() != nullptr
             && injector->planning_context()->planning_status().scenario().scenario_type()
-                    == kContestRoundaboutScenarioName;
+            == kContestRoundaboutScenarioName;
 }
 
 bool IsRoundaboutNonTargetLaneVehicle(const Obstacle& obstacle) {

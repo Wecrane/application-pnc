@@ -61,14 +61,33 @@ apollo::common::Status ContestLaneChangePath::Process(Frame* frame, ReferenceLin
     ADEBUG << "[LC_PROCESS] called, is_change_lane=" << reference_line_info->IsChangeLanePath()
            << " path_reusable=" << reference_line_info->path_reusable()
            << " ref_line_count=" << frame->reference_line_info().size();
-    if (contest::IsCurrentScenario(injector_, contest::kUTurnScenario)
-        || contest::IsCurrentScenario(injector_, contest::kRoundaboutScenario)) {
+    const bool is_roundabout_scenario = contest::IsCurrentScenario(injector_, contest::kRoundaboutScenario);
+    if (contest::IsCurrentScenario(injector_, contest::kUTurnScenario) || is_roundabout_scenario) {
+        const double now = Clock::NowInSeconds();
         const auto& change_lane_status = injector_->planning_context()->planning_status().change_lane();
-        if (!change_lane_status.has_status() || change_lane_status.status() == ChangeLaneStatus::IN_CHANGE_LANE) {
-            UpdateStatus(Clock::NowInSeconds(), ChangeLaneStatus::CHANGE_LANE_FINISHED, "");
+        if (is_roundabout_scenario) {
+            // Roundabout suppresses change-lane reference lines only for the
+            // current frame. Keep the persistent lane-change state immediately
+            // reusable so the post-roundabout contest lane-change can start as
+            // soon as the next scenario is selected.
+            if (!change_lane_status.has_status()
+                || change_lane_status.status() == ChangeLaneStatus::IN_CHANGE_LANE
+                || now - change_lane_status.timestamp() < kContestLaneChangeSuccessCooldown
+                || !change_lane_status.path_id().empty()) {
+                UpdateStatus(
+                        now - kContestLaneChangeSuccessCooldown, ChangeLaneStatus::CHANGE_LANE_FINISHED, "");
+            }
+            lane_change_window_armed_ = true;
+            consecutive_clear_count_ = 0;
+            consecutive_occupied_count_ = 0;
+            lane_change_window_open_count_ = 0;
+            consecutive_empty_frames_ = 0;
+        } else if (
+                !change_lane_status.has_status()
+                || change_lane_status.status() == ChangeLaneStatus::IN_CHANGE_LANE) {
+            UpdateStatus(now, ChangeLaneStatus::CHANGE_LANE_FINISHED, "");
         }
-        if (contest::IsCurrentScenario(injector_, contest::kRoundaboutScenario)
-            && reference_line_info->IsChangeLanePath()) {
+        if (is_roundabout_scenario && reference_line_info->IsChangeLanePath()) {
             reference_line_info->SetDrivable(false);
             AINFO << "[ROUNDABOUT][LaneChangePath] skip change-lane path, lane_id="
                   << reference_line_info->Lanes().Id();
@@ -369,7 +388,6 @@ void ContestLaneChangePath::UpdateLaneChangeStatus() {
                 }
                 return;
             }
-            // 赛题二：冷却结束后需通过安全窗口、速度、连续安全帧三道检查
             if (is_contest_lane_change && !is_clear_to_change_lane_) {
                 AINFO << "[LC_STATUS] WAIT: no debounced pass-by window";
                 return;

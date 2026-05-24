@@ -176,11 +176,6 @@ bool ContestLaneFollowStage::StillInScenario(const Frame& frame) const {
     auto* context = GetContextAs<ContestScenarioContext>();
     switch (context->kind) {
     case ContestScenarioKind::LANE_CHANGE:
-        if (contest::IsContestRoundaboutEntry(frame, context->scenario_config)
-            || contest::IsContestRoundaboutEntryRoi(frame)) {
-            AINFO << "[ROUNDABOUT][Scenario] exit CONTEST_LANE_CHANGE for roundabout entry";
-            return false;
-        }
         return contest::IsContestLaneChange(frame);
     case ContestScenarioKind::S_CURVE:
         if (contest::IsContestUTurn(frame.reference_line_info().front(), context->scenario_config)) {
