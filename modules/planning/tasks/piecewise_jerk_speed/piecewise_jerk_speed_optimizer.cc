@@ -105,12 +105,14 @@ Status PiecewiseJerkSpeedOptimizer::Process(
     const auto& vehicle_state = frame_->vehicle_state();
     const bool roundabout_launch_area
             = IsContestRoundaboutScenario(injector_) && IsRoundaboutCommitArea(reference_line_info_);
-    const bool window_release_launch = init_s[1] < 1.0
-            && (path_data.path_label().find("uturn_release") != std::string::npos || roundabout_launch_area);
+    const bool uturn_release_launch = path_data.path_label().find("uturn_release_launch") != std::string::npos;
+    const bool window_release_launch = init_s[1] < 1.0 && (uturn_release_launch || roundabout_launch_area);
     if (window_release_launch) {
-        init_s[2] = std::max(init_s[2], 2.0);
+        const double launch_accel = uturn_release_launch ? veh_param.max_acceleration() : 2.0;
+        init_s[2] = std::max(init_s[2], launch_accel);
         AINFO << "[WINDOW][Speed] release launch boost, label=" << path_data.path_label() << ", init_v=" << init_s[1]
-              << ", init_a=" << init_s[2] << ", roundabout=" << roundabout_launch_area
+              << ", init_a=" << init_s[2] << ", uturn=" << uturn_release_launch
+              << ", roundabout=" << roundabout_launch_area
               << ", adc_x=" << vehicle_state.x() << ", adc_y=" << vehicle_state.y();
     }
     if (vehicle_state.gear() == canbus::Chassis::GEAR_REVERSE) {
@@ -193,7 +195,7 @@ Status PiecewiseJerkSpeedOptimizer::Process(
         constexpr double kSpeedLimitMargin = 1.5 / 3.6;  // 1.5 km/h → m/s
         v_upper_bound = std::fmax(0.0, v_upper_bound - (window_release_launch ? 0.0 : kSpeedLimitMargin));
         if (window_release_launch && curr_t <= 3.0) {
-            constexpr double kLaunchAccelRef = 3.0;
+            const double kLaunchAccelRef = uturn_release_launch ? veh_param.max_acceleration() : 3.0;
             dx_ref_weight[i] = std::max(dx_ref_weight[i], 80.0);
             dx_ref[i] = v_upper_bound;
             x_ref[i] = std::min(total_length, init_s[1] * curr_t + 0.5 * kLaunchAccelRef * curr_t * curr_t);
@@ -236,7 +238,10 @@ Status PiecewiseJerkSpeedOptimizer::Process(
     piecewise_jerk_problem.set_scale_factor({1.0, 10.0, 100.0});
     piecewise_jerk_problem.set_x_bounds(0.0, total_length);
     piecewise_jerk_problem.set_ddx_bounds(veh_param.max_deceleration(), veh_param.max_acceleration());
-    piecewise_jerk_problem.set_dddx_bound(FLAGS_longitudinal_jerk_lower_bound, FLAGS_longitudinal_jerk_upper_bound);
+    piecewise_jerk_problem.set_dddx_bound(
+            FLAGS_longitudinal_jerk_lower_bound,
+            uturn_release_launch ? std::max(FLAGS_longitudinal_jerk_upper_bound, 8.0)
+                                 : FLAGS_longitudinal_jerk_upper_bound);
     piecewise_jerk_problem.set_x_bounds(std::move(s_bounds));
     piecewise_jerk_problem.set_dx_ref(dx_ref_weight, dx_ref);
     piecewise_jerk_problem.set_x_ref(config_.ref_s_weight(), std::move(x_ref));

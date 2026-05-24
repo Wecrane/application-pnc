@@ -153,13 +153,21 @@ struct UTurnInnerLaneTraffic {
 
 UTurnInnerLaneTraffic CheckUTurnInnerLaneTraffic(const ReferenceLineInfo& reference_line_info) {
     constexpr double kInnerLaneHalfWidth = 1.8;
-    constexpr double kLookForwardDistance = 70.0;
+    // 参考环岛入口提交逻辑：只把近处真正会挡住切入的车当作 blocking，
+    // 远处车辆不再长期占用窗口，避免安全窗口出现后仍等待数秒。
+    constexpr double kLaunchBlockingDistance = 8.0;
+    constexpr double kMergeBlockingDistance = 3.0;
     constexpr double kPassedBehindDistance = 1.0;
     constexpr double kReleaseClearance = 1.0;
     const auto& adc_sl = reference_line_info.AdcSlBoundary();
     UTurnInnerLaneTraffic traffic;
     double nearest_blocking_s = std::numeric_limits<double>::infinity();
     double nearest_passed_s = std::numeric_limits<double>::infinity();
+    bool near_uturn = reference_line_info.GetPathTurnType(adc_sl.end_s()) == hdmap::Lane::U_TURN;
+    for (double s = adc_sl.end_s(); !near_uturn && s <= adc_sl.end_s() + 20.0
+         && s <= reference_line_info.reference_line().Length(); s += 2.0) {
+        near_uturn = reference_line_info.GetPathTurnType(s) == hdmap::Lane::U_TURN;
+    }
     for (const auto* obstacle : reference_line_info.path_decision().obstacles().Items()) {
         if (obstacle == nullptr || obstacle->IsVirtual() || obstacle->IsStatic()
             || obstacle->Perception().type() != apollo::perception::PerceptionObstacle::VEHICLE) {
@@ -179,7 +187,8 @@ UTurnInnerLaneTraffic CheckUTurnInnerLaneTraffic(const ReferenceLineInfo& refere
             }
             continue;
         }
-        if (sl.start_s() < adc_sl.end_s() + kLookForwardDistance
+        const double blocking_distance = near_uturn ? kLaunchBlockingDistance : kMergeBlockingDistance;
+        if (sl.start_s() < adc_sl.end_s() + blocking_distance
             && sl.end_s() > adc_sl.start_s() - kPassedBehindDistance) {
             traffic.blocking = true;
             if (sl.start_s() < nearest_blocking_s) {
@@ -1339,7 +1348,7 @@ void ContestLaneBorrowPath::IgnoreDynamicObstaclesForUTurnRelease(ReferenceLineI
 void ContestLaneBorrowPath::UpdateUTurnMergeState(const ReferenceLineInfo& reference_line_info) {
     constexpr int kConfirmSeenFrames = 3;
     constexpr int kMissingFramesToRelease = 2;
-    constexpr int kEmptyLanePreLaunchReleaseFrames = 30;
+    constexpr int kEmptyLanePreLaunchReleaseFrames = 3;
     constexpr int kEmptyLaneMergeReleaseFrames = 3;
     constexpr int kPreLaunchStopWaitFrames = 30;
     constexpr int kReleaseHoldFrames = 120;
@@ -1504,7 +1513,7 @@ void ContestLaneBorrowPath::UpdateUTurnMergeState(const ReferenceLineInfo& refer
         u_turn_inner_vehicle_id_.clear();
         u_turn_inner_vehicle_seen_frames_ = 0;
         u_turn_inner_vehicle_missing_frames_ = 0;
-        AINFO << "[UTURN][MERGE] 3s stop dwell done, start detecting next pass-by window";
+        AINFO << "[UTURN][MERGE] 3s stop dwell done, start detecting pass-by window";
         return;
     }
     if (!has_prelaunch_vehicle && !u_turn_prelaunch_stop_wait_done_) {
@@ -1538,7 +1547,7 @@ void ContestLaneBorrowPath::UpdateUTurnMergeState(const ReferenceLineInfo& refer
         u_turn_prelaunch_stop_wait_done_ = false;
         u_turn_release_hold_frames_ = kReleaseHoldFrames;
         u_turn_inner_vehicle_missing_frames_ = 0;
-        AINFO << "[UTURN][MERGE] inner lane stayed empty, release without waiting vehicle.";
+        AINFO << "[UTURN][MERGE] near target lane stayed empty, release like roundabout commit.";
         return;
     }
 
