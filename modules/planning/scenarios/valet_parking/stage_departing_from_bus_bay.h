@@ -17,32 +17,33 @@
 /**
  * @file
  **/
-#include "modules/planning/scenarios/valet_parking/stage_parking.h"
-#include "gtest/gtest.h"
-#include "modules/planning/planning_base/proto/planning_config.pb.h"
+
+#pragma once
+
+#include <memory>
+
+#include "cyber/plugin_manager/plugin_manager.h"
+#include "modules/planning/planning_interface_base/scenario_base/stage.h"
+#include "modules/planning/scenarios/valet_parking/bus_bay_transfer_scenario.h"
 
 namespace apollo {
 namespace planning {
 
-class StageParkingTest : public ::testing::Test {
+class StageDepartingFromBusBay : public Stage {
  public:
-  virtual void SetUp() {
-    config_.set_name("VALET_PARKING_PARKING");
-    injector_ = std::make_shared<DependencyInjector>();
-  }
+  StageResult Process(const common::TrajectoryPoint& planning_init_point,
+                      Frame* frame) override;
 
- protected:
-  StagePipeline config_;
-  std::shared_ptr<DependencyInjector> injector_;
-  ValetParkingContext context_;
+ private:
+  void InitDepartingStatus(Frame* frame);
+  void LogDepartingRoiDiagnostics(const Frame& frame) const;
+  bool CheckReadyToReturnLaneFollow(const Frame& frame) const;
+
+  bool departing_status_initialized_ = false;
 };
 
-TEST_F(StageParkingTest, Init) {
-  StageParking stage_parking;
-  stage_parking.Init(config_, injector_, "scenarios/valet_parking/conf",
-                     &context_);
-  EXPECT_EQ(stage_parking.Name(), "VALET_PARKING_PARKING");
-}
+CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(apollo::planning::StageDepartingFromBusBay,
+                                     Stage)
 
 }  // namespace planning
 }  // namespace apollo

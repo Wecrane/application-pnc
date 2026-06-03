@@ -1,7 +1,9 @@
 #!/bin/bash
 #
 # Apollo EDU 赛事提交包打包脚本
-# 用法: bash scripts/package_submit.sh
+# 用法: bash scripts/package_submit.sh [团队名称]
+#   - 不带参数: 仅时间戳命名，如 0603_143022.tar.gz
+#   - 带团队名称: 团队名_时间戳，如 中国矿业大学（北京）一只菠萝队_0603_143022.tar.gz
 #
 # 打包内容：
 #   - 改源码时:  modules/planning/ + profiles/<profile名>/
@@ -68,9 +70,18 @@ fi
 
 # 生成时间戳 (格式: MMDD_HHMMSS)
 TIMESTAMP=$(date +%m%d_%H%M%S)
+
+# 团队名称（从命令行参数获取，可选）
+TEAM_NAME="$1"
+
 OUTPUT_DIR="${WORKSPACE_DIR}/submit"
 mkdir -p "$OUTPUT_DIR"
-ARCHIVE_NAME="${TIMESTAMP}.tar.gz"
+
+if [ -n "$TEAM_NAME" ]; then
+    ARCHIVE_NAME="${TEAM_NAME}_${TIMESTAMP}.tar.gz"
+else
+    ARCHIVE_NAME="${TIMESTAMP}.tar.gz"
+fi
 ARCHIVE_PATH="${OUTPUT_DIR}/${ARCHIVE_NAME}"
 
 info "正在打包..."

@@ -7,8 +7,8 @@ scenario {
     type: "EmergencyStopScenario"
 }
 scenario {
-    name: "VALET_PARKING"
-    type: "ValetParkingScenario"
+    name: "BUS_BAY_TRANSFER"
+    type: "BusBayTransferScenario"
 }
 scenario {
     name: "BARE_INTERSECTION_UNPROTECTED"

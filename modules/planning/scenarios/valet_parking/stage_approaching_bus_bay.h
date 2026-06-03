@@ -25,12 +25,12 @@
 
 #include "cyber/plugin_manager/plugin_manager.h"
 #include "modules/planning/planning_interface_base/scenario_base/stage.h"
-#include "modules/planning/scenarios/valet_parking/valet_parking_scenario.h"
+#include "modules/planning/scenarios/valet_parking/bus_bay_transfer_scenario.h"
 
 namespace apollo {
 namespace planning {
 
-class StageApproachingParkingSpot : public Stage {
+class StageApproachingBusBay : public Stage {
  public:
   bool Init(const StagePipeline& config,
             const std::shared_ptr<DependencyInjector>& injector,
@@ -41,16 +41,16 @@ class StageApproachingParkingSpot : public Stage {
  private:
   bool CheckADCStop(const Frame& frame);
 
-  bool has_straight_reference_anchor_ = false;
-  double straight_reference_anchor_x_ = 0.0;
-  double straight_reference_anchor_y_ = 0.0;
-  double straight_reference_anchor_heading_ = 0.0;
+  bool straight_ref_anchor_locked_ = false;
+  double straight_ref_anchor_x_ = 0.0;
+  double straight_ref_anchor_y_ = 0.0;
+  double straight_ref_anchor_heading_ = 0.0;
 
-  ScenarioValetParkingConfig scenario_config_;
+  ScenarioBusBayTransferConfig scenario_config_;
 };
 
 CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(
-    apollo::planning::StageApproachingParkingSpot, Stage)
+    apollo::planning::StageApproachingBusBay, Stage)
 
 }  // namespace planning
 }  // namespace apollo

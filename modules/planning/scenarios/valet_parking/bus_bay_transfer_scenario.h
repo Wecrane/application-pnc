@@ -26,7 +26,7 @@
 #include <vector>
 
 #include "modules/common_msgs/map_msgs/map_id.pb.h"
-#include "modules/planning/scenarios/valet_parking/proto/valet_parking.pb.h"
+#include "modules/planning/scenarios/valet_parking/proto/bus_bay_transfer.pb.h"
 #include "cyber/plugin_manager/plugin_manager.h"
 #include "modules/common/math/box2d.h"
 #include "modules/map/hdmap/hdmap_util.h"
@@ -39,19 +39,19 @@ namespace planning {
 
 class Frame;
 
-struct ValetParkingContext : public ScenarioContext {
-  ScenarioValetParkingConfig scenario_config;
+struct BusBayTransferContext : public ScenarioContext {
+  ScenarioBusBayTransferConfig scenario_config;
   std::string target_parking_spot_id;
   bool pre_stop_rightaway_flag = false;
   hdmap::MapPathPoint pre_stop_rightaway_point;
-  bool station_shuttle_completed = false;
+  bool shuttle_mission_completed = false;
   std::vector<common::math::Box2d> latched_static_obstacle_boxes;
 
   void LatchStaticObstacles(const Frame& frame, const std::string& source);
   void InjectLatchedStaticObstacles(Frame* frame) const;
 };
 
-class ValetParkingScenario : public Scenario {
+class BusBayTransferScenario : public Scenario {
  public:
   bool Init(std::shared_ptr<DependencyInjector> injector,
             const std::string& name) override;
@@ -59,7 +59,7 @@ class ValetParkingScenario : public Scenario {
   /**
    * @brief Get the scenario context.
    */
-  ValetParkingContext* GetContext() override { return &context_; }
+  BusBayTransferContext* GetContext() override { return &context_; }
 
   bool IsTransferable(const Scenario* const other_scenario,
                       const Frame& frame) override;
@@ -81,13 +81,13 @@ class ValetParkingScenario : public Scenario {
 
  private:
   bool init_ = false;
-  ValetParkingContext context_;
+  BusBayTransferContext context_;
   const hdmap::HDMap* hdmap_ = nullptr;
   std::unordered_set<std::string> forbiden;
   std::unordered_set<std::string> occupied_parking_spots_;
 };
 
-CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(apollo::planning::ValetParkingScenario,
+CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(apollo::planning::BusBayTransferScenario,
                                      Scenario)
 
 }  // namespace planning

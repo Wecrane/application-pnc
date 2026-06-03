@@ -18,31 +18,33 @@
  * @file
  **/
 
-#include "modules/planning/scenarios/valet_parking/valet_parking_scenario.h"
-#include "gtest/gtest.h"
-#include "cyber/common/file.h"
-#include "cyber/common/log.h"
-#include "modules/planning/planning_base/gflags/planning_gflags.h"
+#pragma once
+
+#include <memory>
+
+#include "cyber/plugin_manager/plugin_manager.h"
+#include "modules/planning/planning_interface_base/scenario_base/stage.h"
+#include "modules/planning/scenarios/valet_parking/bus_bay_transfer_scenario.h"
 
 namespace apollo {
 namespace planning {
 
-class ValetParkingScenarioTest : public ::testing::Test {
+class StageDwellingAtBusBay : public Stage {
  public:
-  virtual void SetUp() {}
+  StageResult Process(const common::TrajectoryPoint& planning_init_point,
+                      Frame* frame) override;
 
- protected:
-  std::unique_ptr<ValetParkingScenario> scenario_;
+ private:
+  StageResult FinishStage();
+
+  bool dwell_timer_active_ = false;
+  double dwell_start_timestamp_ = 0.0;
+
+  ScenarioBusBayTransferConfig scenario_config_;
 };
 
-TEST_F(ValetParkingScenarioTest, Init) {
-  ScenarioValetParkingConfig scenario_config;
-
-  auto injector = std::make_shared<DependencyInjector>();
-  scenario_.reset(new ValetParkingScenario());
-  scenario_->Init(injector, "VALET_PARKING");
-  EXPECT_EQ(scenario_->Name(), "VALET_PARKING");
-}
+CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(apollo::planning::StageDwellingAtBusBay,
+                                     Stage)
 
 }  // namespace planning
 }  // namespace apollo

@@ -1,6 +1,6 @@
-<library path="modules/planning/scenarios/valet_parking/libvalet_parking_scenario.so">
-    <class type="apollo::planning::ValetParkingScenario" base_class="apollo::planning::Scenario"></class>
-    <class type="apollo::planning::StageApproachingParkingSpot" base_class="apollo::planning::Stage"></class>
-    <class type="apollo::planning::StageDeparting" base_class="apollo::planning::Stage"></class>
-    <class type="apollo::planning::StageParking" base_class="apollo::planning::Stage"></class>
+<library path="modules/planning/scenarios/valet_parking/libbus_bay_transfer_scenario.so">
+    <class type="apollo::planning::BusBayTransferScenario" base_class="apollo::planning::Scenario"></class>
+    <class type="apollo::planning::StageApproachingBusBay" base_class="apollo::planning::Stage"></class>
+    <class type="apollo::planning::StageDepartingFromBusBay" base_class="apollo::planning::Stage"></class>
+    <class type="apollo::planning::StageDwellingAtBusBay" base_class="apollo::planning::Stage"></class>
 </library>

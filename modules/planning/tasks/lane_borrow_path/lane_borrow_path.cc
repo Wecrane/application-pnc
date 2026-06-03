@@ -47,14 +47,14 @@ using apollo::common::math::Vec2d;
 
 namespace {
 
-constexpr double kValetFallbackBorrowWidth = 3.5;
+constexpr double kBusBayFallbackBorrowWidth = 3.5;
 
-bool IsValetParkingActive(const std::shared_ptr<DependencyInjector>& injector) {
+bool IsBusBayTransferActive(const std::shared_ptr<DependencyInjector>& injector) {
   const std::string scenario = contest::CurrentScenarioName(injector);
-  return scenario == "VALET_PARKING" || scenario == "ValetParkingScenario";
+  return scenario == "BUS_BAY_TRANSFER" || scenario == "BusBayTransferScenario";
 }
 
-std::string FindValetObstacleOnStraightPreview(
+std::string FindBusBayObstacleOnStraightPreview(
     const ReferenceLineInfo& reference_line_info) {
   constexpr double kLookForwardDistance = 80.0;
   constexpr double kRearBuffer = 2.0;
@@ -97,13 +97,13 @@ bool LaneBorrowPath::Init(
 }
 
 apollo::common::Status LaneBorrowPath::Process(Frame* frame, ReferenceLineInfo* reference_line_info) {
-    const bool is_valet_parking = IsValetParkingActive(injector_);
+    const bool is_bus_bay_transfer = IsBusBayTransferActive(injector_);
     if (!config_.is_allow_lane_borrowing() ||
-        (reference_line_info->path_reusable() && !is_valet_parking)) {
+        (reference_line_info->path_reusable() && !is_bus_bay_transfer)) {
         AINFO << "path reusable" << reference_line_info->path_reusable() << ",skip";
         return Status::OK();
     }
-    if (!is_valet_parking && ShouldFollowReferenceLineOnCurve()) {
+    if (!is_bus_bay_transfer && ShouldFollowReferenceLineOnCurve()) {
         decided_side_pass_direction_.clear();
         auto* mutable_path_decider_status
                 = injector_->planning_context()->mutable_planning_status()->mutable_path_decider();
@@ -252,11 +252,11 @@ bool LaneBorrowPath::OptimizePath(
         const std::vector<PathBoundary>& path_boundaries,
         std::vector<PathData>* candidate_path_data) {
     auto config = config_.path_optimizer_config();
-    if (IsValetParkingActive(injector_)) {
+    if (IsBusBayTransferActive(injector_)) {
         config.set_l_weight(1.0);
         config.set_ddl_weight(1000.0);
         config.set_path_reference_l_weight(100.0);
-        AINFO << "Valet approach uses relaxed lane-borrow optimizer weights.";
+        AINFO << "Bus-bay approach uses relaxed lane-borrow optimizer weights.";
     }
     const ReferenceLine& reference_line = reference_line_info_->reference_line();
     std::array<double, 3> end_state = {0.0, 0.0, 0.0};
@@ -325,7 +325,7 @@ bool LaneBorrowPath::AssessPath(std::vector<PathData>* candidate_path_data, Path
         }
     }
     if (valid_path_data.empty()) {
-        if (IsValetParkingActive(injector_)) {
+        if (IsBusBayTransferActive(injector_)) {
             for (auto& candidate_path : *candidate_path_data) {
                 if (candidate_path.Empty()) {
                     continue;
@@ -336,7 +336,7 @@ bool LaneBorrowPath::AssessPath(std::vector<PathData>* candidate_path_data, Path
                         *final_path);
                 RecordDebugInfo(
                         *final_path, final_path->path_label(), reference_line_info_);
-                AINFO << "Valet approach keeps generated lane-borrow path "
+                AINFO << "Bus-bay approach keeps generated lane-borrow path "
                       << "although regular assessment rejected all candidates, "
                       << "label=" << final_path->path_label();
                 return true;
@@ -441,10 +441,10 @@ bool LaneBorrowPath::GetBoundaryFromNeighborLane(
                 }
             }
         }
-        if (IsValetParkingActive(injector_) &&
+        if (IsBusBayTransferActive(injector_) &&
             curr_neighbor_lane_width < 1.0) {
-            curr_neighbor_lane_width = kValetFallbackBorrowWidth;
-            AINFO << "Valet approach uses fallback borrow width at s="
+            curr_neighbor_lane_width = kBusBayFallbackBorrowWidth;
+            AINFO << "Bus-bay approach uses fallback borrow width at s="
                   << curr_s << ", width=" << curr_neighbor_lane_width;
         }
         // 3. Calculate the proper boundary based on lane-width, ADC's position,
@@ -552,18 +552,18 @@ bool LaneBorrowPath::IsNecessaryToBorrowLane() {
     auto* mutable_path_decider_status
             = injector_->planning_context()->mutable_planning_status()->mutable_path_decider();
     UpdateSelfPathInfo();
-    if (IsValetParkingActive(injector_) &&
+    if (IsBusBayTransferActive(injector_) &&
         blocking_obstacle_id_.empty()) {
-        blocking_obstacle_id_ = FindValetObstacleOnStraightPreview(*reference_line_info_);
+        blocking_obstacle_id_ = FindBusBayObstacleOnStraightPreview(*reference_line_info_);
         if (!blocking_obstacle_id_.empty()) {
-            AINFO << "Valet approach found obstacle on straight preview, id="
+            AINFO << "Bus-bay approach found obstacle on straight preview, id="
                   << blocking_obstacle_id_;
             mutable_path_decider_status->set_front_static_obstacle_id(
                     blocking_obstacle_id_);
         }
     }
-    const bool valet_blocking_obstacle =
-            IsValetParkingActive(injector_) &&
+    const bool bus_bay_blocking_obstacle =
+            IsBusBayTransferActive(injector_) &&
             !blocking_obstacle_id_.empty() &&
             !reference_line_info_->IsChangeLanePath();
     is_in_path_lane_borrow_scenario_ = mutable_path_decider_status->is_in_path_lane_borrow_scenario();
@@ -582,7 +582,7 @@ bool LaneBorrowPath::IsNecessaryToBorrowLane() {
         bool last_frame_not_in_lane_borrow = nullptr != last_frame && nullptr != last_frame->DriveReferenceLineInfo()
                 && (last_frame->DriveReferenceLineInfo()->path_data().path_label().find("lane_change")
                     != std::string::npos);
-        if (!valet_blocking_obstacle && (use_self_lane_ >= 6 || last_frame_not_in_lane_borrow
+        if (!bus_bay_blocking_obstacle && (use_self_lane_ >= 6 || last_frame_not_in_lane_borrow
             || frame_->reference_line_info().size() != last_frame->reference_line_info().size())) {
             // If have been able to use self-lane for some time, then switch to
             // non-lane-borrowing.
@@ -602,13 +602,13 @@ bool LaneBorrowPath::IsNecessaryToBorrowLane() {
             AINFO << "Current referenceline is lane change.";
             return false;
         }
-        if (!valet_blocking_obstacle && !IsWithinSidePassingSpeedADC(*frame_)) {
+        if (!bus_bay_blocking_obstacle && !IsWithinSidePassingSpeedADC(*frame_)) {
             AINFO << "Not IsWithinSidePassingSpeedADC.";
             return false;
         }
 
         // Obstacle condition check for lane-borrowing:
-        if (!valet_blocking_obstacle &&
+        if (!bus_bay_blocking_obstacle &&
             !IsBlockingObstacleFarFromIntersection(*reference_line_info_, blocking_obstacle_id_)) {
             AINFO << "Not IsBlockingObstacleFarFromIntersection.";
             return false;
@@ -617,7 +617,7 @@ bool LaneBorrowPath::IsNecessaryToBorrowLane() {
         //   AINFO << "Not IsLongTermBlockingObstacle.";
         //   return false;
         // }
-        if (!valet_blocking_obstacle && !IsBlockingObstacleWithinDestination(
+        if (!bus_bay_blocking_obstacle && !IsBlockingObstacleWithinDestination(
                     *reference_line_info_, blocking_obstacle_id_, config_.enable_nudge_destination_threshold())) {
             AINFO << "Not IsBlockingObstacleWithinDestination.";
             return false;
@@ -631,7 +631,7 @@ bool LaneBorrowPath::IsNecessaryToBorrowLane() {
             return false;
         }
 
-        if (!valet_blocking_obstacle && !IsEnableNudge(*reference_line_info_)) {
+        if (!bus_bay_blocking_obstacle && !IsEnableNudge(*reference_line_info_)) {
             AINFO << "Not nudge, details in ObstacleNudgeDecider";
             return false;
         }
@@ -658,8 +658,8 @@ bool LaneBorrowPath::IsNecessaryToBorrowLane() {
                 }
             }
         }
-        if (valet_blocking_obstacle) {
-            AINFO << "Valet approach forces lane borrow for obstacle "
+        if (bus_bay_blocking_obstacle) {
+            AINFO << "Bus-bay approach forces lane borrow for obstacle "
                   << blocking_obstacle_id_;
         }
         use_self_lane_ = 0;
@@ -706,9 +706,9 @@ bool LaneBorrowPath::IsSidePassableObstacle(const ReferenceLineInfo& reference_l
 }
 
 bool LaneBorrowPath::IsEnableNudge(const ReferenceLineInfo& reference_line_info) {
-    if (IsValetParkingActive(injector_) &&
+    if (IsBusBayTransferActive(injector_) &&
         !blocking_obstacle_id_.empty()) {
-        AINFO << "Valet approach enables lane borrow for blocking obstacle "
+        AINFO << "Bus-bay approach enables lane borrow for blocking obstacle "
               << blocking_obstacle_id_;
         return true;
     }
@@ -763,8 +763,8 @@ void LaneBorrowPath::CheckLaneBorrow(
 
     *left_neighbor_lane_borrowable = true;
     *right_neighbor_lane_borrowable = true;
-    if (IsValetParkingActive(injector_)) {
-        AINFO << "Valet approach bypasses neighbor-lane id gate.";
+    if (IsBusBayTransferActive(injector_)) {
+        AINFO << "Bus-bay approach bypasses neighbor-lane id gate.";
         return;
     }
 
@@ -798,7 +798,7 @@ void LaneBorrowPath::CheckLaneBorrow(
         }
         const bool ignore_boundary_type =
                 config_.enable_ignore_boundary_type() ||
-                IsValetParkingActive(injector_);
+                IsBusBayTransferActive(injector_);
         AINFO << "enable_ignore_boundary_type: " << ignore_boundary_type;
         if (!ignore_boundary_type) {
             const auto waypoint = ref_point.lane_waypoints().front();
@@ -839,7 +839,7 @@ bool LaneBorrowPath::CheckLaneBoundaryType(
     }
     const bool ignore_boundary_type =
             config_.enable_ignore_boundary_type() ||
-            IsValetParkingActive(injector_);
+            IsBusBayTransferActive(injector_);
     if (!ignore_boundary_type) {
         const auto waypoint = ref_point.lane_waypoints().front();
         hdmap::LaneBoundaryType::Type lane_boundary_type = hdmap::LaneBoundaryType::UNKNOWN;

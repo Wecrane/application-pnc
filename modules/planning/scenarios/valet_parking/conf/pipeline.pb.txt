@@ -1,6 +1,6 @@
 stage: {
-  name: "VALET_PARKING_APPROACHING_PARKING_SPOT"
-  type: "StageApproachingParkingSpot"
+  name: "BUS_BAY_TRANSFER_APPROACHING"
+  type: "StageApproachingBusBay"
   enabled: true
   task {
     name: "OPEN_SPACE_PRE_STOP_DECIDER"
@@ -48,8 +48,8 @@ stage: {
   }
 }
 stage: {
-  name: "VALET_PARKING_PARKING"
-  type: "StageParking"
+  name: "BUS_BAY_TRANSFER_DWELLING"
+  type: "StageDwellingAtBusBay"
   enabled: true
   task {
     name: "OPEN_SPACE_ROI_DECIDER"
@@ -69,8 +69,8 @@ stage: {
   }
 }
 stage: {
-  name: "VALET_PARKING_DEPARTING"
-  type: "StageDeparting"
+  name: "BUS_BAY_TRANSFER_DEPARTING"
+  type: "StageDepartingFromBusBay"
   enabled: true
   task {
     name: "OPEN_SPACE_ROI_DECIDER"
