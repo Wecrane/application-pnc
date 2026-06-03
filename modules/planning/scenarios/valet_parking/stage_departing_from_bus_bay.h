@@ -30,20 +30,18 @@ namespace apollo {
 namespace planning {
 
 class StageDepartingFromBusBay : public Stage {
- public:
-  StageResult Process(const common::TrajectoryPoint& planning_init_point,
-                      Frame* frame) override;
+public:
+    StageResult Process(const common::TrajectoryPoint& planning_init_point, Frame* frame) override;
 
- private:
-  void InitDepartingStatus(Frame* frame);
-  void LogDepartingRoiDiagnostics(const Frame& frame) const;
-  bool CheckReadyToReturnLaneFollow(const Frame& frame) const;
+private:
+    void InitDepartingStatus(Frame* frame);
+    void LogDepartingRoiDiagnostics(const Frame& frame) const;
+    bool CheckReadyToReturnLaneFollow(const Frame& frame) const;
 
-  bool departing_status_initialized_ = false;
+    bool departing_status_initialized_ = false;
 };
 
-CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(apollo::planning::StageDepartingFromBusBay,
-                                     Stage)
+CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(apollo::planning::StageDepartingFromBusBay, Stage)
 
 }  // namespace planning
 }  // namespace apollo

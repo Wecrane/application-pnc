@@ -30,21 +30,19 @@ namespace apollo {
 namespace planning {
 
 class StageDwellingAtBusBay : public Stage {
- public:
-  StageResult Process(const common::TrajectoryPoint& planning_init_point,
-                      Frame* frame) override;
+public:
+    StageResult Process(const common::TrajectoryPoint& planning_init_point, Frame* frame) override;
 
- private:
-  StageResult FinishStage();
+private:
+    StageResult FinishStage();
 
-  bool dwell_timer_active_ = false;
-  double dwell_start_timestamp_ = 0.0;
+    bool dwell_timer_active_ = false;
+    double dwell_start_timestamp_ = 0.0;
 
-  ScenarioBusBayTransferConfig scenario_config_;
+    ScenarioBusBayTransferConfig scenario_config_;
 };
 
-CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(apollo::planning::StageDwellingAtBusBay,
-                                     Stage)
+CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(apollo::planning::StageDwellingAtBusBay, Stage)
 
 }  // namespace planning
 }  // namespace apollo

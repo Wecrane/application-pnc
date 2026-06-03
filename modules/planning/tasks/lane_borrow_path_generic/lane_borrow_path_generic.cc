@@ -45,12 +45,11 @@ using apollo::common::math::Vec2d;
 namespace {
 
 bool IsBusBayTransferScenario(const std::shared_ptr<DependencyInjector>& injector) {
-    return injector != nullptr && injector->planning_context() != nullptr &&
-           injector->planning_context()->planning_status().scenario().scenario_type() == "BUS_BAY_TRANSFER";
+    return injector != nullptr && injector->planning_context() != nullptr
+            && injector->planning_context()->planning_status().scenario().scenario_type() == "BUS_BAY_TRANSFER";
 }
 
-std::string FindBusBayObstacleOnStraightPreview(
-        const ReferenceLineInfo& reference_line_info) {
+std::string FindBusBayObstacleOnStraightPreview(const ReferenceLineInfo& reference_line_info) {
     constexpr double kLookForwardDistance = 80.0;
     constexpr double kRearBuffer = 2.0;
     constexpr double kMaxCenterAbsL = 1.8;
@@ -62,8 +61,7 @@ std::string FindBusBayObstacleOnStraightPreview(
             continue;
         }
         const auto& sl = obstacle->PerceptionSLBoundary();
-        if (sl.end_s() < adc_sl.end_s() - kRearBuffer ||
-            sl.start_s() > adc_sl.end_s() + kLookForwardDistance) {
+        if (sl.end_s() < adc_sl.end_s() - kRearBuffer || sl.start_s() > adc_sl.end_s() + kLookForwardDistance) {
             continue;
         }
         const double center_l = (sl.start_l() + sl.end_l()) * 0.5;
@@ -93,8 +91,7 @@ bool LaneBorrowPathGeneric::Init(
 
 apollo::common::Status LaneBorrowPathGeneric::Process(Frame* frame, ReferenceLineInfo* reference_line_info) {
     const bool is_bus_bay_transfer = IsBusBayTransferScenario(injector_);
-    if (!config_.is_allow_lane_borrowing() ||
-        (reference_line_info->path_reusable() && !is_bus_bay_transfer)) {
+    if (!config_.is_allow_lane_borrowing() || (reference_line_info->path_reusable() && !is_bus_bay_transfer)) {
         AINFO << "path reusable" << reference_line_info->path_reusable() << ",skip";
         return Status::OK();
     }
@@ -380,11 +377,12 @@ bool LaneBorrowPathGeneric::GetBoundaryFromNeighborLane(
                             &neighbor_lane_id,
                             &curr_neighbor_lane_width)) {
                     ADEBUG << "Borrow left forward neighbor lane." << neighbor_lane_id.id();
-                } else if (reference_line_info_->GetNeighborLaneInfo(
-                                   ReferenceLineInfo::LaneType::LeftReverse,
-                                   curr_s,
-                                   &neighbor_lane_id,
-                                   &curr_neighbor_lane_width)) {
+                } else if (
+                        reference_line_info_->GetNeighborLaneInfo(
+                                ReferenceLineInfo::LaneType::LeftReverse,
+                                curr_s,
+                                &neighbor_lane_id,
+                                &curr_neighbor_lane_width)) {
                     borrowing_reverse_lane = true;
                     ADEBUG << "Borrow left reverse neighbor lane." << neighbor_lane_id.id();
                 }
@@ -396,11 +394,12 @@ bool LaneBorrowPathGeneric::GetBoundaryFromNeighborLane(
                             &neighbor_lane_id,
                             &curr_neighbor_lane_width)) {
                     ADEBUG << "Borrow right forward neighbor lane." << neighbor_lane_id.id();
-                } else if (reference_line_info_->GetNeighborLaneInfo(
-                                   ReferenceLineInfo::LaneType::RightReverse,
-                                   curr_s,
-                                   &neighbor_lane_id,
-                                   &curr_neighbor_lane_width)) {
+                } else if (
+                        reference_line_info_->GetNeighborLaneInfo(
+                                ReferenceLineInfo::LaneType::RightReverse,
+                                curr_s,
+                                &neighbor_lane_id,
+                                &curr_neighbor_lane_width)) {
                     borrowing_reverse_lane = true;
                     ADEBUG << "Borrow right reverse neighbor lane." << neighbor_lane_id.id();
                 } else {
@@ -516,14 +515,11 @@ bool LaneBorrowPathGeneric::IsNecessaryToBorrowLane() {
     if (IsBusBayTransferScenario(injector_) && blocking_obstacle_id_.empty()) {
         blocking_obstacle_id_ = FindBusBayObstacleOnStraightPreview(*reference_line_info_);
         if (!blocking_obstacle_id_.empty()) {
-            AINFO << "Bus-bay park approach found obstacle on straight preview, id="
-                  << blocking_obstacle_id_;
+            AINFO << "Bus-bay park approach found obstacle on straight preview, id=" << blocking_obstacle_id_;
         }
     }
-    const bool bus_bay_blocking_obstacle =
-            IsBusBayTransferScenario(injector_) &&
-            !blocking_obstacle_id_.empty() &&
-            !reference_line_info_->IsChangeLanePath();
+    const bool bus_bay_blocking_obstacle = IsBusBayTransferScenario(injector_) && !blocking_obstacle_id_.empty()
+            && !reference_line_info_->IsChangeLanePath();
     is_in_path_lane_borrow_scenario_ = mutable_path_decider_status->is_in_path_lane_borrow_scenario();
     decided_side_pass_direction_.clear();
     if (mutable_path_decider_status->left_borrow()) {
@@ -540,8 +536,9 @@ bool LaneBorrowPathGeneric::IsNecessaryToBorrowLane() {
         bool last_frame_not_in_lane_borrow = nullptr != last_frame && nullptr != last_frame->DriveReferenceLineInfo()
                 && (last_frame->DriveReferenceLineInfo()->path_data().path_label().find("lane_change")
                     != std::string::npos);
-        if (!bus_bay_blocking_obstacle && (use_self_lane_ >= 6 || last_frame_not_in_lane_borrow
-            || frame_->reference_line_info().size() != last_frame->reference_line_info().size())) {
+        if (!bus_bay_blocking_obstacle
+            && (use_self_lane_ >= 6 || last_frame_not_in_lane_borrow
+                || frame_->reference_line_info().size() != last_frame->reference_line_info().size())) {
             // If have been able to use self-lane for some time, then switch to
             // non-lane-borrowing.
             is_in_path_lane_borrow_scenario_ = false;
@@ -566,8 +563,8 @@ bool LaneBorrowPathGeneric::IsNecessaryToBorrowLane() {
         }
 
         // Obstacle condition check for lane-borrowing:
-        if (!bus_bay_blocking_obstacle &&
-            !IsBlockingObstacleFarFromIntersection(*reference_line_info_, blocking_obstacle_id_)) {
+        if (!bus_bay_blocking_obstacle
+            && !IsBlockingObstacleFarFromIntersection(*reference_line_info_, blocking_obstacle_id_)) {
             AINFO << "Not IsBlockingObstacleFarFromIntersection.";
             return false;
         }
@@ -575,7 +572,8 @@ bool LaneBorrowPathGeneric::IsNecessaryToBorrowLane() {
         //   AINFO << "Not IsLongTermBlockingObstacle.";
         //   return false;
         // }
-        if (!bus_bay_blocking_obstacle && !IsBlockingObstacleWithinDestination(
+        if (!bus_bay_blocking_obstacle
+            && !IsBlockingObstacleWithinDestination(
                     *reference_line_info_, blocking_obstacle_id_, config_.enable_nudge_destination_threshold())) {
             AINFO << "Not IsBlockingObstacleWithinDestination.";
             return false;
@@ -617,8 +615,7 @@ bool LaneBorrowPathGeneric::IsNecessaryToBorrowLane() {
             }
         }
         if (bus_bay_blocking_obstacle) {
-            AINFO << "Bus-bay park approach forces lane borrow for obstacle "
-                  << blocking_obstacle_id_;
+            AINFO << "Bus-bay park approach forces lane borrow for obstacle " << blocking_obstacle_id_;
         }
         use_self_lane_ = 0;
         for (auto& lane_borrow_dir : decided_side_pass_direction_) {
@@ -665,8 +662,7 @@ bool LaneBorrowPathGeneric::IsSidePassableObstacle(const ReferenceLineInfo& refe
 
 bool LaneBorrowPathGeneric::IsEnableNudge(const ReferenceLineInfo& reference_line_info) {
     if (IsBusBayTransferScenario(injector_) && !blocking_obstacle_id_.empty()) {
-        AINFO << "Bus-bay park approach enables lane borrow for blocking obstacle "
-              << blocking_obstacle_id_;
+        AINFO << "Bus-bay park approach enables lane borrow for blocking obstacle " << blocking_obstacle_id_;
         return true;
     }
     if (!FLAGS_enable_nudge_decider) {
@@ -723,8 +719,7 @@ void LaneBorrowPathGeneric::CheckLaneBorrow(
             && ptr_lane_info->lane().right_neighbor_reverse_lane_id().empty()) {
             *right_neighbor_lane_borrowable = false;
         }
-        const bool ignore_boundary_type =
-                config_.enable_ignore_boundary_type() || IsBusBayTransferScenario(injector_);
+        const bool ignore_boundary_type = config_.enable_ignore_boundary_type() || IsBusBayTransferScenario(injector_);
         AINFO << "enable_ignore_boundary_type: " << ignore_boundary_type;
         if (!ignore_boundary_type) {
             const auto waypoint = ref_point.lane_waypoints().front();
@@ -763,8 +758,7 @@ bool LaneBorrowPathGeneric::CheckLaneBoundaryType(
     if (ref_point.lane_waypoints().empty()) {
         return false;
     }
-    const bool ignore_boundary_type =
-            config_.enable_ignore_boundary_type() || IsBusBayTransferScenario(injector_);
+    const bool ignore_boundary_type = config_.enable_ignore_boundary_type() || IsBusBayTransferScenario(injector_);
     if (!ignore_boundary_type) {
         const auto waypoint = ref_point.lane_waypoints().front();
         hdmap::LaneBoundaryType::Type lane_boundary_type = hdmap::LaneBoundaryType::UNKNOWN;

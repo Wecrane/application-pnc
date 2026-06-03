@@ -40,55 +40,57 @@ namespace planning {
 class Frame;
 
 struct BusBayTransferContext : public ScenarioContext {
-  ScenarioBusBayTransferConfig scenario_config;
-  std::string target_parking_spot_id;
-  bool pre_stop_rightaway_flag = false;
-  hdmap::MapPathPoint pre_stop_rightaway_point;
-  bool shuttle_mission_completed = false;
-  std::vector<common::math::Box2d> latched_static_obstacle_boxes;
+    ScenarioBusBayTransferConfig scenario_config;
+    std::string target_parking_spot_id;
+    bool pre_stop_rightaway_flag = false;
+    hdmap::MapPathPoint pre_stop_rightaway_point;
+    bool shuttle_mission_completed = false;
+    std::vector<common::math::Box2d> latched_static_obstacle_boxes;
 
-  void LatchStaticObstacles(const Frame& frame, const std::string& source);
-  void InjectLatchedStaticObstacles(Frame* frame) const;
+    void LatchStaticObstacles(const Frame& frame, const std::string& source);
+    void InjectLatchedStaticObstacles(Frame* frame) const;
 };
 
 class BusBayTransferScenario : public Scenario {
- public:
-  bool Init(std::shared_ptr<DependencyInjector> injector,
-            const std::string& name) override;
+public:
+    bool Init(std::shared_ptr<DependencyInjector> injector, const std::string& name) override;
 
-  /**
-   * @brief Get the scenario context.
-   */
-  BusBayTransferContext* GetContext() override { return &context_; }
+    /**
+     * @brief Get the scenario context.
+     */
+    BusBayTransferContext* GetContext() override {
+        return &context_;
+    }
 
-  bool IsTransferable(const Scenario* const other_scenario,
-                      const Frame& frame) override;
+    bool IsTransferable(const Scenario* const other_scenario, const Frame& frame) override;
 
-  bool Enter(Frame* frame) override;
+    bool Enter(Frame* frame) override;
 
- private:
-  static bool SearchTargetParkingSpotOnPath(
-      const hdmap::Path& nearby_path, const std::string& target_parking_id,
-      hdmap::PathOverlap* parking_space_overlap);
-  static bool CheckDistanceToParkingSpot(
-      const Frame& frame, const common::VehicleState& vehicle_state,
-      const hdmap::Path& nearby_path, const double parking_start_range,
-      const hdmap::PathOverlap& parking_space_overlap);
-  bool SearchForNearbyCandidate(
-      const Frame& frame,
-      const hdmap::Path& nearby_path,
-      hdmap::PathOverlap* parking_space_overlap);
+private:
+    static bool SearchTargetParkingSpotOnPath(
+            const hdmap::Path& nearby_path,
+            const std::string& target_parking_id,
+            hdmap::PathOverlap* parking_space_overlap);
+    static bool CheckDistanceToParkingSpot(
+            const Frame& frame,
+            const common::VehicleState& vehicle_state,
+            const hdmap::Path& nearby_path,
+            const double parking_start_range,
+            const hdmap::PathOverlap& parking_space_overlap);
+    bool SearchForNearbyCandidate(
+            const Frame& frame,
+            const hdmap::Path& nearby_path,
+            hdmap::PathOverlap* parking_space_overlap);
 
- private:
-  bool init_ = false;
-  BusBayTransferContext context_;
-  const hdmap::HDMap* hdmap_ = nullptr;
-  std::unordered_set<std::string> forbiden;
-  std::unordered_set<std::string> occupied_parking_spots_;
+private:
+    bool init_ = false;
+    BusBayTransferContext context_;
+    const hdmap::HDMap* hdmap_ = nullptr;
+    std::unordered_set<std::string> forbiden;
+    std::unordered_set<std::string> occupied_parking_spots_;
 };
 
-CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(apollo::planning::BusBayTransferScenario,
-                                     Scenario)
+CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(apollo::planning::BusBayTransferScenario, Scenario)
 
 }  // namespace planning
 }  // namespace apollo

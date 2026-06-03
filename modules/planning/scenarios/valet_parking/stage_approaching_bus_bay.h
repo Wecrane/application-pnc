@@ -31,26 +31,26 @@ namespace apollo {
 namespace planning {
 
 class StageApproachingBusBay : public Stage {
- public:
-  bool Init(const StagePipeline& config,
+public:
+    bool Init(
+            const StagePipeline& config,
             const std::shared_ptr<DependencyInjector>& injector,
-            const std::string& config_dir, void* context);
-  StageResult Process(const common::TrajectoryPoint& planning_init_point,
-                      Frame* frame) override;
+            const std::string& config_dir,
+            void* context);
+    StageResult Process(const common::TrajectoryPoint& planning_init_point, Frame* frame) override;
 
- private:
-  bool CheckADCStop(const Frame& frame);
+private:
+    bool CheckADCStop(const Frame& frame);
 
-  bool straight_ref_anchor_locked_ = false;
-  double straight_ref_anchor_x_ = 0.0;
-  double straight_ref_anchor_y_ = 0.0;
-  double straight_ref_anchor_heading_ = 0.0;
+    bool straight_ref_anchor_locked_ = false;
+    double straight_ref_anchor_x_ = 0.0;
+    double straight_ref_anchor_y_ = 0.0;
+    double straight_ref_anchor_heading_ = 0.0;
 
-  ScenarioBusBayTransferConfig scenario_config_;
+    ScenarioBusBayTransferConfig scenario_config_;
 };
 
-CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(
-    apollo::planning::StageApproachingBusBay, Stage)
+CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(apollo::planning::StageApproachingBusBay, Stage)
 
 }  // namespace planning
 }  // namespace apollo
