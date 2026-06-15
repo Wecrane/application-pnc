@@ -140,13 +140,9 @@ bool ContestRoundaboutScenario::IsTransferable(const Scenario* other_scenario, c
     }
     const double adc_x = frame.vehicle_state().x();
     const double adc_y = frame.vehicle_state().y();
-    const bool is_entry_roi = contest::IsContestRoundaboutEntry(frame, ctx->scenario_config);
-    const bool is_entry_geo
-            = contest::IsContestRoundaboutEntry(frame.reference_line_info().front(), ctx->scenario_config);
-    const bool is_entry = is_entry_roi || is_entry_geo;
+    const bool is_entry = contest::IsContestRoundaboutEntry(frame, ctx->scenario_config);
     AINFO << "[ROUNDABOUT][Scenario] IsTransferable check"
-          << ", roi=" << is_entry_roi << ", geo=" << is_entry_geo << ", other=" << other_name << ", adc_x=" << adc_x
-          << ", adc_y=" << adc_y;
+          << ", entry=" << is_entry << ", other=" << other_name << ", adc_x=" << adc_x << ", adc_y=" << adc_y;
     if (!is_entry) {
         ctx->roundabout_committed = false;
         ctx->roundabout_entry_s = 0.0;

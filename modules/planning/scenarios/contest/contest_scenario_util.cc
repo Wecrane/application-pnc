@@ -38,12 +38,9 @@ constexpr double kRoundaboutMinLongGeometryHeadingChange = 0.75;
 constexpr double kRoundaboutMaxLongGeometryHeadingChange = 2.2;
 constexpr double kRoundaboutMinLongGeometryKappa = 0.018;
 constexpr double kRoundaboutNearUTurnHeadingChange = 2.2;
-constexpr double kRoundaboutRoiMinX = 423360.0;
-constexpr double kRoundaboutRoiMaxX = 423548.0;
-constexpr double kRoundaboutRoiMinY = 4437990.0;
-constexpr double kRoundaboutRoiMaxY = 4438072.0;
-constexpr double kRoundaboutPassedX = 423535.0;
-constexpr double kRoundaboutPassedY = 4438064.0;
+constexpr double kRoundaboutEntryActivationDistance = 18.0;
+constexpr double kConstructionConeRearBuffer = 3.0;
+constexpr double kConstructionConeMaxRelativeL = 12.0;
 
 bool HasNearUTurnFeature(const ReferenceLineInfo& reference_line_info, const double start_s, const double end_s) {
     const auto& reference_line = reference_line_info.reference_line();
@@ -196,9 +193,13 @@ int CountContestConstructionConesAhead(
         const ReferenceLineInfo& self_rli,
         double look_forward_distance) {
     // 跨所有参考线统计锥桶（施工区域赛题锥桶横跨三条车道），
-    // 去重后用 self_rli 的 SL 坐标判断纵向位置。
+    // 优先使用车辆坐标系下的相对位置，避免评测地图坐标变化或多参考线 SL
+    // 不一致导致漏计；无中心点时再退回 SL 判断。
     const double adc_back_s = self_rli.AdcSlBoundary().start_s();
     const double adc_end_s = self_rli.AdcSlBoundary().end_s();
+    const double adc_x = frame.vehicle_state().x();
+    const double adc_y = frame.vehicle_state().y();
+    const double adc_heading = frame.vehicle_state().heading();
     std::set<std::string> seen_ids;
     int total = 0;
     for (const auto& rli : frame.reference_line_info()) {
@@ -208,7 +209,21 @@ int CountContestConstructionConesAhead(
             if (!seen_ids.insert(obstacle->Id()).second)
                 continue;
             const auto& sl = obstacle->PerceptionSLBoundary();
-            if (sl.start_s() > adc_back_s - 3.0 && sl.start_s() - adc_end_s < look_forward_distance) {
+            bool cone_ahead = false;
+            double cx = 0.0;
+            double cy = 0.0;
+            if (GetObstacleCenterXY(obstacle, &cx, &cy)) {
+                const double dx = cx - adc_x;
+                const double dy = cy - adc_y;
+                const double lon_dist = dx * std::cos(adc_heading) + dy * std::sin(adc_heading);
+                const double lat_dist = std::fabs(-dx * std::sin(adc_heading) + dy * std::cos(adc_heading));
+                cone_ahead = lon_dist > -kConstructionConeRearBuffer && lon_dist < look_forward_distance
+                        && lat_dist < kConstructionConeMaxRelativeL;
+            } else {
+                cone_ahead = sl.start_s() > adc_back_s - kConstructionConeRearBuffer
+                        && sl.start_s() - adc_end_s < look_forward_distance;
+            }
+            if (cone_ahead) {
                 ++total;
             }
         }
@@ -221,7 +236,7 @@ bool IsContestConstructionZone(const ReferenceLineInfo& reference_line_info, con
         return false;
     }
     return CountContestConstructionConesAhead(reference_line_info, config.construction_look_forward_distance())
-            > config.construction_min_cone_count();
+            >= config.construction_min_cone_count();
 }
 
 bool IsContestConstructionZone(
@@ -233,7 +248,7 @@ bool IsContestConstructionZone(
     }
     // 使用跨三车道锥桶统计，确保施工区域入口判定覆盖全部锥桶
     return CountContestConstructionConesAhead(frame, self_rli, config.construction_look_forward_distance())
-            > config.construction_min_cone_count();
+            >= config.construction_min_cone_count();
 }
 
 bool IsContestStationShuttle(
@@ -277,6 +292,7 @@ bool IsContestRoundaboutEntry(const ReferenceLineInfo& reference_line_info, cons
     bool near_pnc_junction = false;
     int pnc_junction_count = 0;
     double nearest_overlap_start_s = std::numeric_limits<double>::max();
+    double nearest_overlap_end_s = std::numeric_limits<double>::max();
     for (const auto& overlap : reference_line_info.reference_line().map_path().pnc_junction_overlaps()) {
         ++pnc_junction_count;
         if (overlap.end_s < adc_end_s - config.roundabout_inside_junction_buffer()) {
@@ -286,12 +302,20 @@ bool IsContestRoundaboutEntry(const ReferenceLineInfo& reference_line_info, cons
             continue;
         }
         near_pnc_junction = true;
-        nearest_overlap_start_s = std::min(nearest_overlap_start_s, overlap.start_s);
-        break;
+        if (overlap.start_s < nearest_overlap_start_s) {
+            nearest_overlap_start_s = overlap.start_s;
+            nearest_overlap_end_s = overlap.end_s;
+        }
     }
-    if (near_pnc_junction && adc_end_s > nearest_overlap_start_s + kRoundaboutExitPastEntryDistance) {
-        AINFO << "[ROUNDABOUT][Scenario] entry already passed, adc_s=" << adc_end_s
-              << ", entry_s=" << nearest_overlap_start_s;
+    const double distance_to_entry =
+            near_pnc_junction ? nearest_overlap_start_s - adc_end_s : std::numeric_limits<double>::infinity();
+    const bool in_entry_activation_window = !near_pnc_junction
+            || (distance_to_entry <= kRoundaboutEntryActivationDistance
+                && adc_end_s <= nearest_overlap_end_s + config.roundabout_inside_junction_buffer());
+    if (near_pnc_junction && !in_entry_activation_window) {
+        ADEBUG << "[ROUNDABOUT][Scenario] wait for entry window, adc_s=" << adc_end_s
+               << ", entry_s=" << nearest_overlap_start_s << ", distance=" << distance_to_entry
+               << ", pnc_count=" << pnc_junction_count;
         return false;
     }
 
@@ -340,31 +364,41 @@ bool IsContestRoundaboutEntry(const ReferenceLineInfo& reference_line_info, cons
             && long_max_abs_kappa > kRoundaboutMinLongGeometryKappa
             && long_heading_change > kRoundaboutMinLongGeometryHeadingChange
             && long_heading_change < kRoundaboutMaxLongGeometryHeadingChange;
-    const bool roundabout = (near_pnc_junction && (curve_like_roundabout || soft_curve_like_roundabout))
-            || long_geometry_like_roundabout;
+    // If the map has no pnc_junction overlap on this reference line, avoid the
+    // long look-ahead trigger: it can see the roundabout from far away. In that
+    // case only the local 55m curve signature is allowed to enter the scenario.
+    const bool roundabout = curve_like_roundabout || soft_curve_like_roundabout
+            || (near_pnc_junction && long_geometry_like_roundabout);
     if (!roundabout
         && (near_pnc_junction || pnc_junction_count > 0 || max_abs_kappa > 0.015 || heading_change > 0.35
             || long_geometry_like_roundabout || long_max_abs_kappa > kRoundaboutMinLongGeometryKappa)) {
         AINFO << "[ROUNDABOUT][Scenario] probe miss, adc_s=" << adc_end_s << ", pnc_count=" << pnc_junction_count
-              << ", near_pnc=" << near_pnc_junction << ", max_abs_kappa=" << max_abs_kappa
+              << ", near_pnc=" << near_pnc_junction << ", distance_to_entry=" << distance_to_entry
+              << ", max_abs_kappa=" << max_abs_kappa
               << ", heading_change=" << heading_change << ", long_max_abs_kappa=" << long_max_abs_kappa
               << ", long_heading_change=" << long_heading_change << ", ref_len=" << reference_line.Length();
     }
     if (roundabout) {
         AINFO << "[ROUNDABOUT][Scenario] detected entry, adc_s=" << adc_end_s << ", pnc_count=" << pnc_junction_count
-              << ", near_pnc=" << near_pnc_junction << ", max_abs_kappa=" << max_abs_kappa
+              << ", near_pnc=" << near_pnc_junction << ", distance_to_entry=" << distance_to_entry
+              << ", max_abs_kappa=" << max_abs_kappa
               << ", heading_change=" << heading_change << ", long_max_abs_kappa=" << long_max_abs_kappa
               << ", long_heading_change=" << long_heading_change << ", soft=" << soft_curve_like_roundabout;
     }
     return roundabout;
 }
 
-bool IsContestRoundaboutEntry(const Frame& frame, const ScenarioContestConfig&) {
+bool IsContestRoundaboutEntry(const Frame& frame, const ScenarioContestConfig& config) {
     if (frame.local_view().planning_command == nullptr
         || !frame.local_view().planning_command->has_lane_follow_command()) {
         return false;
     }
-    return IsContestRoundaboutEntryRoi(frame);
+    for (const auto& reference_line_info : frame.reference_line_info()) {
+        if (IsContestRoundaboutEntry(reference_line_info, config)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 bool IsContestRoundaboutEntryPassed(const ReferenceLineInfo& reference_line_info, const ScenarioContestConfig& config) {
@@ -381,25 +415,6 @@ bool IsContestRoundaboutEntryPassed(const ReferenceLineInfo& reference_line_info
     return false;
 }
 
-bool IsContestRoundaboutEntryRoi(const Frame& frame) {
-    if (frame.local_view().planning_command == nullptr
-        || !frame.local_view().planning_command->has_lane_follow_command()) {
-        return false;
-    }
-    const auto& vehicle_state = frame.vehicle_state();
-    const double x = vehicle_state.x();
-    const double y = vehicle_state.y();
-    if (x < kRoundaboutRoiMinX || x > kRoundaboutRoiMaxX || y < kRoundaboutRoiMinY || y > kRoundaboutRoiMaxY) {
-        return false;
-    }
-    if (x > kRoundaboutPassedX && y > kRoundaboutPassedY) {
-        return false;
-    }
-    AINFO << "[ROUNDABOUT][Scenario] detected entry ROI, x=" << x << ", y=" << y
-          << ", heading=" << vehicle_state.heading();
-    return true;
-}
-
 bool IsRoundaboutNearEntry(const ReferenceLineInfo& reference_line_info, const ScenarioContestConfig& config) {
     const double adc_end_s = reference_line_info.AdcSlBoundary().end_s();
     for (const auto& overlap : reference_line_info.reference_line().map_path().pnc_junction_overlaps()) {
@@ -409,8 +424,8 @@ bool IsRoundaboutNearEntry(const ReferenceLineInfo& reference_line_info, const S
         if (overlap.start_s > adc_end_s + config.roundabout_entry_look_forward_distance()) {
             continue;
         }
-        // ADC 在入口前方 15m 以内或已在入口内部
-        return adc_end_s >= overlap.start_s - 15.0
+        // ADC 在入口前方近距离内或已在入口内部
+        return adc_end_s >= overlap.start_s - kRoundaboutEntryActivationDistance
                 && adc_end_s <= overlap.end_s + config.roundabout_inside_junction_buffer();
     }
     return false;

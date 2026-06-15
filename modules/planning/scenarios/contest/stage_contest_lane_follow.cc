@@ -243,8 +243,8 @@ bool ContestLaneFollowStage::StillInScenario(const Frame& frame) const {
         return !context->shuttle_departed;
     case ContestScenarioKind::ROUNDABOUT: {
         // ── 环岛入口场景 ──
-        // 场景在 ROI 内活跃，task 层通过 scenario_type 直接判断
-        // 退出条件 1：离开 ROI
+        // 场景在地图几何/PnC junction 附近活跃，不使用固定 XY ROI。
+        // 退出条件 1：离开环岛入口/内部几何范围
         // 退出条件 2：XY 行驶距离超过阈值（快速退出）
         const auto& rli = frame.reference_line_info().front();
         const double adc_end_s = rli.AdcSlBoundary().end_s();
@@ -253,19 +253,9 @@ bool ContestLaneFollowStage::StillInScenario(const Frame& frame) const {
         const double adc_y = frame.vehicle_state().y();
         const double adc_heading = frame.vehicle_state().heading();
 
-        // ── 退出条件 1：离开 ROI ──
-        if (!contest::IsContestRoundaboutEntryRoi(frame)) {
-            context->roundabout_completed = true;
-            context->roundabout_exit_x = adc_x;
-            context->roundabout_exit_y = adc_y;
-            AINFO << "[ROUNDABOUT][Scenario] leave ROI, exit"
-                  << ", adc_x=" << adc_x << ", adc_y=" << adc_y << ", adc_s=" << adc_end_s
-                  << ", heading=" << adc_heading;
-            return false;
-        }
-
-        // ── 退出条件 2：XY 行驶距离 > 阈值 → 快速退出 ──
-        static constexpr double kQuickExitXYDistance = 130.0;  // 米（略大于检测点→入口 ~123m）
+        // ── 已提交后：按进入点后的行驶距离保持，避免无 PNC overlap
+        //    地图中局部曲率窗口变化导致刚进入又退出 ──
+        static constexpr double kQuickExitXYDistance = 70.0;  // 米
         if (context->roundabout_committed
             && (context->roundabout_entry_x != 0.0 || context->roundabout_entry_y != 0.0)) {
             const double dx = adc_x - context->roundabout_entry_x;
@@ -281,6 +271,29 @@ bool ContestLaneFollowStage::StillInScenario(const Frame& frame) const {
                       << ", adc_s=" << adc_end_s << ", v=" << adc_speed;
                 return false;
             }
+            context->roundabout_commit_hold_frames++;
+            return true;
+        }
+
+        // ── 退出条件 1：离开环岛入口/内部几何范围 ──
+        bool near_roundabout_geometry = contest::IsContestRoundaboutEntry(frame, context->scenario_config)
+                || contest::IsRoundaboutNearEntry(rli, context->scenario_config);
+        if (!near_roundabout_geometry) {
+            for (const auto& reference_line_info : frame.reference_line_info()) {
+                if (contest::IsRoundaboutNearEntry(reference_line_info, context->scenario_config)) {
+                    near_roundabout_geometry = true;
+                    break;
+                }
+            }
+        }
+        if (!near_roundabout_geometry) {
+            context->roundabout_completed = true;
+            context->roundabout_exit_x = adc_x;
+            context->roundabout_exit_y = adc_y;
+            AINFO << "[ROUNDABOUT][Scenario] leave geometry, exit"
+                  << ", adc_x=" << adc_x << ", adc_y=" << adc_y << ", adc_s=" << adc_end_s
+                  << ", heading=" << adc_heading;
+            return false;
         }
 
         // ── 首次提交 ──
@@ -292,8 +305,6 @@ bool ContestLaneFollowStage::StillInScenario(const Frame& frame) const {
             AINFO << "[ROUNDABOUT][Scenario] COMMIT, aggressive mode active"
                   << ", adc_x=" << adc_x << ", adc_y=" << adc_y << ", adc_s=" << adc_end_s
                   << ", entry_s=" << context->roundabout_entry_s << ", v=" << adc_speed << ", heading=" << adc_heading;
-        } else {
-            context->roundabout_commit_hold_frames++;
         }
 
         return true;

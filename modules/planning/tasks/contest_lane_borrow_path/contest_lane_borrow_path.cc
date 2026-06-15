@@ -52,6 +52,9 @@ constexpr double kJunctionClearanceDist = 15.0;
 
 namespace {
 
+constexpr double kConstructionConeRearBuffer = 6.0;
+constexpr double kConstructionConeMaxRelativeL = 12.0;
+
 int CountConstructionConesAhead(const ReferenceLineInfo& reference_line_info, double look_forward_distance) {
     const double adc_back_s = reference_line_info.AdcSlBoundary().start_s();
     const double adc_end_s = reference_line_info.AdcSlBoundary().end_s();
@@ -72,9 +75,13 @@ int CountConstructionConesAheadAllLanes(
         const Frame& frame,
         const ReferenceLineInfo& self_rli,
         double look_forward_distance) {
-    // 跨所有参考线统计锥桶（施工区域赛题锥桶横跨三条车道）
+    // 跨所有参考线统计锥桶（施工区域赛题锥桶横跨三条车道）。
+    // 优先使用车辆坐标系下的相对位置，减少多参考线 SL 差异导致的漏计。
     const double adc_back_s = self_rli.AdcSlBoundary().start_s();
     const double adc_end_s = self_rli.AdcSlBoundary().end_s();
+    const double adc_x = frame.vehicle_state().x();
+    const double adc_y = frame.vehicle_state().y();
+    const double adc_heading = frame.vehicle_state().heading();
     std::set<std::string> seen_ids;
     int total = 0;
     for (const auto& rli : frame.reference_line_info()) {
@@ -84,7 +91,21 @@ int CountConstructionConesAheadAllLanes(
             if (!seen_ids.insert(obstacle->Id()).second)
                 continue;  // 去重
             const auto& sl = obstacle->PerceptionSLBoundary();
-            if (sl.end_s() > adc_back_s - 6.0 && sl.start_s() < adc_end_s + look_forward_distance) {
+            bool cone_ahead = false;
+            double cx = 0.0;
+            double cy = 0.0;
+            if (contest::GetObstacleCenterXY(obstacle, &cx, &cy)) {
+                const double dx = cx - adc_x;
+                const double dy = cy - adc_y;
+                const double lon_dist = dx * std::cos(adc_heading) + dy * std::sin(adc_heading);
+                const double lat_dist = std::fabs(-dx * std::sin(adc_heading) + dy * std::cos(adc_heading));
+                cone_ahead = lon_dist > -kConstructionConeRearBuffer && lon_dist < look_forward_distance
+                        && lat_dist < kConstructionConeMaxRelativeL;
+            } else {
+                cone_ahead = sl.end_s() > adc_back_s - kConstructionConeRearBuffer
+                        && sl.start_s() < adc_end_s + look_forward_distance;
+            }
+            if (cone_ahead) {
                 ++total;
             }
         }
@@ -2208,13 +2229,12 @@ bool ContestLaneBorrowPath::DecideConstructZoneBoundary(std::vector<PathBoundary
             if (sl.start_s() - adc_front_s > contest::kDefaultConstructionLookForwardDistance) {
                 continue;
             }
+            obs_sl_polygons.emplace_back(sl, obs->Id());
             double cx = 0.0;
             double cy = 0.0;
-            if (!contest::GetObstacleCenterXY(obs, &cx, &cy) || !contest::IsDefaultConstructionZoneXY(cx, cy)) {
-                continue;
+            if (contest::GetObstacleCenterXY(obs, &cx, &cy)) {
+                cone_xy[obs->Id()] = {cx, cy};
             }
-            obs_sl_polygons.emplace_back(sl, obs->Id());
-            cone_xy[obs->Id()] = {cx, cy};
         }
         std::sort(obs_sl_polygons.begin(), obs_sl_polygons.end(), [](const SLPolygon& a, const SLPolygon& b) {
             return a.MinS() < b.MinS();

@@ -38,7 +38,8 @@ class SpeedLimitDecider {
  public:
   SpeedLimitDecider(const SpeedBoundsDeciderConfig& config,
                     const ReferenceLine& reference_line,
-                    const PathData& path_data);
+                    const PathData& path_data,
+                    bool relax_contest_roundabout_exit_speed_limit = false);
 
   virtual ~SpeedLimitDecider() = default;
 
@@ -58,6 +59,7 @@ class SpeedLimitDecider {
   const ReferenceLine& reference_line_;
   const PathData& path_data_;
   const apollo::common::VehicleParam& vehicle_param_;
+  const bool relax_contest_roundabout_exit_speed_limit_;
 };
 
 }  // namespace planning

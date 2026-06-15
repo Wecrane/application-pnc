@@ -49,7 +49,6 @@ bool IsContestStationShuttle(
 bool IsContestRoundaboutEntry(const ReferenceLineInfo& reference_line_info, const ScenarioContestConfig& config);
 bool IsContestRoundaboutEntry(const Frame& frame, const ScenarioContestConfig& config);
 bool IsContestRoundaboutEntryPassed(const ReferenceLineInfo& reference_line_info, const ScenarioContestConfig& config);
-bool IsContestRoundaboutEntryRoi(const Frame& frame);
 bool IsRoundaboutNearEntry(const ReferenceLineInfo& reference_line_info, const ScenarioContestConfig& config);
 
 }  // namespace contest
