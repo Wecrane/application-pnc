@@ -113,3 +113,8 @@ Planning 使用 Scenario-Stage 双层状态机：
 | `05_planner_and_algorithm.md` | 规划器、参考线平滑算法、路径/速度优化 |
 | `06_project_setup.md` | 项目安装、环境配置、常用命令速查 |
 | `07_competition_scenarios.md` | 2026 星火大赛 7 大赛题说明与评分标准 |
+| `08_technical_report.md` | 🆕 2026 星火大赛 PnC 赛道技术分析报告（全赛题深度剖析） |
+| `09_roundabout_analysis.md` | 🆕 环岛让行场景完整分析（场景元数据、交通流、让行逻辑） |
+| `10_u_turn_analysis.md` | 🆕 U 型弯场景完整分析（障碍物布局、路径策略） |
+| `11_map_analysis.md` | 🆕 Xh_2026_contest 地图详细分析（车道、路口、信号灯） |
+| `12_scenario_dev_guide.md` | 🆕 Apollo 场景新建与切换指南（Scenario 插件开发流程） |

@@ -1,0 +1,3 @@
+enabled: true
+stop_distance: 1.7
+max_stop_deceleration: 4.0

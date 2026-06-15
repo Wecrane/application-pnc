@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DRY_RUN=0
+
+usage() {
+  cat <<'EOF'
+Usage: ./cleanlog [--dry-run]
+
+Clear Apollo runtime logs under:
+  data/log
+  dumps
+
+Options:
+  --dry-run   Show what would be removed without deleting anything.
+  -h, --help  Show this help.
+EOF
+}
+
+for arg in "$@"; do
+  case "$arg" in
+    --dry-run)
+      DRY_RUN=1
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "Unknown option: $arg" >&2
+      usage >&2
+      exit 1
+      ;;
+  esac
+done
+
+clear_dir_contents() {
+  local dir="$1"
+
+  if [[ ! -d "$dir" ]]; then
+    echo "skip: $dir does not exist"
+    return
+  fi
+
+  echo "clean: $dir"
+  if [[ "$DRY_RUN" -eq 1 ]]; then
+    find "$dir" -mindepth 1 -maxdepth 1 -print
+  else
+    find "$dir" -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +
+  fi
+}
+
+echo "workspace: $ROOT_DIR"
+du -sh "$ROOT_DIR/data/log" "$ROOT_DIR/dumps" 2>/dev/null || true
+
+clear_dir_contents "$ROOT_DIR/data/log"
+clear_dir_contents "$ROOT_DIR/dumps"
+
+echo "after:"
+du -sh "$ROOT_DIR/data/log" "$ROOT_DIR/dumps" 2>/dev/null || true
