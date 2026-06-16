@@ -55,10 +55,17 @@ bool ScenarioManager::Init(
         PlanningLogContext::set_scenario_name(current_scenario_->Name());
     }
 #endif
+    init_ = true;
+    return true;
 }
 
 void ScenarioManager::Update(const common::TrajectoryPoint& ego_point, Frame* frame) {
     CHECK_NOTNULL(frame);
+#ifdef USE_NEW_LOG
+    if (current_scenario_) {
+        PlanningLogContext::set_scenario_name(current_scenario_->Name());
+    }
+#endif
     for (auto scenario : scenario_list_) {
         if (current_scenario_.get() == scenario.get()
             && current_scenario_->GetStatus() == ScenarioStatusType::STATUS_PROCESSING) {

@@ -1,6 +1,6 @@
 ---
 name: apollo-simulation-guide
-description: Apollo Planning 仿真开发全流程指南。覆盖：环境安装、Planning 模块架构（17 Scenario + 10 TrafficRule + 35 Task）、插件开发实战（Scenario/Task/TrafficRule 完整模板 + ScenarioManager 切换机制 + Stage 生命周期 + 配置链路 + 参数调优）、CyberRT 通信框架、PnC Map/Routing、Control 模块、aem/buildtool/profile 工具链、编译构建、赛事场景解题。专为只改 Planning 的仿真测试场景设计。当用户提及 Apollo 安装、Planning 开发、插件开发、场景、TrafficRule、Task、参数配置、编译构建、aem、buildtool、profile、CyberRT、PnC Map、Routing、Stage、pipeline、IsTransferable、BuildStopDecision、plugins.xml、LoadConfig 等关键词时必须使用此技能。
+description: Apollo Planning 仿真开发全流程指南。覆盖：环境安装、Planning 模块架构（17 Scenario + 10 TrafficRule + 35 Task）、插件开发实战（Scenario/Task/TrafficRule 完整模板 + ScenarioManager 切换机制 + Stage 生命周期 + 配置链路 + 参数调优）、CyberRT 通信框架、PnC Map/Routing、Control 模块、aem/buildtool/profile 工具链、编译构建、赛事场景解题、日志系统（planlog 结构化日志/planlog.sh 过滤/clean_logs.sh 清理/赛题调试三步法）。专为只改 Planning 的仿真测试场景设计。当用户提及 Apollo 安装、Planning 开发、插件开发、场景、TrafficRule、Task、参数配置、编译构建、aem、buildtool、profile、CyberRT、PnC Map、Routing、Stage、pipeline、IsTransferable、BuildStopDecision、plugins.xml、LoadConfig、日志、log、planlog、summary、decision、error.log、clean_logs 等关键词时必须使用此技能。
 ---
 
 # Apollo 仿真测试指南
@@ -96,7 +96,7 @@ description: Apollo Planning 仿真开发全流程指南。覆盖：环境安装
 - **编译（全量）**：`buildtool build -p core -j15`（首次建议执行两次）
 - **编译（只改 planning）**：`buildtool build -p modules/planning/ -j15`（快很多）
 - **编译后必须恢复 profile**：`aem profile use default`
-- **日志清理**：`find data/log/ -name "*.log.*20[0-9][0-9]*" -type f -delete`
+- **日志清理**：`find data/log/ -name "*.log.*20[0-9][0-9]*" -type f -delete`（通用）；`bash scripts/clean_logs.sh --dry-run`（新工具预览）；`bash scripts/clean_logs.sh --days 3`（新工具清理）
 
 ---
 
@@ -162,6 +162,7 @@ flowchart TD
 | `references/07-cyber-rt.md` | CyberRT 通信/调度/组件/插件机制 | 用户问模块通信 |
 | `references/08-pnc-map-routing.md` | 参考线生成 + 全局路由 | 用户问地图/路线 |
 | `references/09-params-version.md` | 参数配置机制 + 发版说明 | 用户问调参或版本 |
+| **`references/14-log-system.md`** | **⭐ 新日志系统：planlog 结构化日志/planlog.sh 过滤/clean_logs.sh 清理/赛题调试三步法** | **用户问日志/查错/赛题调试** |
 | `references/10-control.md` | Control 模块及 Planning 约束 | 用户问下游控制 |
 | `references/11-upstream-modules.md` | 上下游模块数据流 | 用户问感知/预测/定位接口 |
 | `references/12-algorithms.md` | 参考线平滑/路径优化/速度优化算法 | 用户问算法原理 |

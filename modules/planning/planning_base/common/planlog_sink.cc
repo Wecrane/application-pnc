@@ -348,9 +348,11 @@ void PlanningLogSink::RouteMessage(
             // Fallback: write scenario-tagged messages to decision.log
             WriteLine(decision_writer_, decision_mutex_, json_line);
         }
-    } else {
-        // Fallback: unrecognized tags → decision.log (captures all planning logs)
-        WriteLine(decision_writer_, decision_mutex_, json_line);
+    }
+
+    // Route 3: Trace mode — write ALL messages when trace enabled
+    if (FLAGS_planning_log_level >= 5) {
+        std::lock_guard<std::mutex> lock(trace_mutex_);
         RotateTraceIfNeeded();
         if (trace_writer_.is_open()) {
             trace_writer_ << json_line << "\n";
