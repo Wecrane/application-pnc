@@ -77,6 +77,10 @@ build:c++1z --config=c++17
 build --cxxopt="-std=c++14"
 build --host_cxxopt="-std=c++14"
 
+# Enable new Planning log system macros (USE_NEW_LOG)
+# Comment out this line to disable
+build --copt=-DUSE_NEW_LOG
+
 # +------------------------------------------------------------+
 # | Test Configurations                                        |
 # +------------------------------------------------------------+

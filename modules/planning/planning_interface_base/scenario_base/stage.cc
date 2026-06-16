@@ -31,6 +31,7 @@
 #include "modules/planning/planning_base/common/trajectory/publishable_trajectory.h"
 #include "modules/planning/planning_base/common/util/config_util.h"
 #include "modules/planning/planning_interface_base/task_base/task.h"
+#include "modules/planning/planning_base/common/planlog.h"
 
 namespace apollo {
 namespace planning {
@@ -100,6 +101,10 @@ const std::string& Stage::Name() const { return name_; }
 
 StageResult Stage::ExecuteTaskOnReferenceLine(
     const common::TrajectoryPoint& planning_start_point, Frame* frame) {
+#ifdef USE_NEW_LOG
+  PlanningLogContext::set_stage_name(name_);
+  PSTAGE_DEBUG << "Stage executing: " << name_;
+#endif
   StageResult stage_result;
   if (frame->reference_line_info().empty()) {
     AERROR << "referenceline is empty in stage" << name_;

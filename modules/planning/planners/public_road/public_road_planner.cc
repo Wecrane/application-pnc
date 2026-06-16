@@ -18,6 +18,7 @@
 
 #include "modules/planning/planning_base/gflags/planning_gflags.h"
 #include "modules/planning/planning_interface_base/scenario_base/scenario.h"
+#include "modules/planning/planning_base/common/planlog.h"
 
 namespace apollo {
 namespace planning {
@@ -37,6 +38,10 @@ Status PublicRoadPlanner::Init(
 Status PublicRoadPlanner::Plan(const TrajectoryPoint& planning_start_point,
                                Frame* frame,
                                ADCTrajectory* ptr_computed_trajectory) {
+#ifdef USE_NEW_LOG
+  PSCENARIO_INFO << "Plan() start, scenario="
+                 << (scenario_ ? scenario_->Name() : "none");
+#endif
   scenario_manager_.Update(planning_start_point, frame);
   scenario_ = scenario_manager_.mutable_scenario();
   if (!scenario_) {
@@ -57,8 +62,15 @@ Status PublicRoadPlanner::Plan(const TrajectoryPoint& planning_start_point,
   if (result.GetScenarioStatus() == ScenarioStatusType::STATUS_DONE) {
     // only updates scenario manager when previous scenario's status is
     // STATUS_DONE
+#ifdef USE_NEW_LOG
+    PSCENARIO_INFO << "Plan() done, switching scenario";
+#endif
     scenario_manager_.Update(planning_start_point, frame);
   } else if (result.GetScenarioStatus() == ScenarioStatusType::STATUS_UNKNOWN) {
+#ifdef USE_NEW_LOG
+    AERROR << "[frm:" << PlanningLogContext::frame_seq() << "] Plan() failed: "
+           << result.GetTaskStatus().error_message();
+#endif
     return Status(common::PLANNING_ERROR,
                   result.GetTaskStatus().error_message());
   }

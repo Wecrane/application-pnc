@@ -27,6 +27,7 @@
 #include "modules/common/configs/vehicle_config_helper.h"
 #include "modules/planning/planning_base/common/util/config_util.h"
 #include "modules/planning/planning_base/gflags/planning_gflags.h"
+#include "modules/planning/planning_base/common/planlog.h"
 namespace apollo {
 namespace planning {
 using apollo::common::Status;
@@ -114,7 +115,11 @@ Status TrafficDecider::Execute(Frame *frame,
     }
     rule->Reset();
     rule->ApplyRule(frame, reference_line_info);
+#ifdef USE_NEW_LOG
+    PDECISION_LOG << "traffic_rule[" << rule->Getname() << "] = applied";
+#else
     ADEBUG << "Applied rule " << rule->Getname();
+#endif
   }
 
   BuildPlanningTarget(reference_line_info);

@@ -296,3 +296,10 @@ DECLARE_bool(enable_expand_obs_corner);
 DECLARE_double(expand_obs_corner_lon_buffer);
 DECLARE_bool(enable_adc_vertex_constraint);
 DECLARE_double(obstacle_lon_end_buffer_park);
+
+// Planning Log System
+DECLARE_bool(planning_log_json);
+DECLARE_bool(planning_log_per_scenario);
+DECLARE_int32(planning_log_level);
+DECLARE_string(planning_log_dir);
+DECLARE_int32(planning_log_trace_rotate_minutes);

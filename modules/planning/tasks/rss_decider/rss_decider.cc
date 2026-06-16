@@ -343,8 +343,6 @@ Status RssDecider::Process(Frame *frame,
          << responseStateVector[0].lateralStateRight.isSafe;
   ADEBUG << " is_rss_safe : " << reference_line_info->rss_info().is_rss_safe();
   ADEBUG << " cur_dist_lon: " << reference_line_info->rss_info().cur_dist_lon();
-  ADEBUG << " is_rss_safe : " << reference_line_info->rss_info().is_rss_safe();
-  ADEBUG << " cur_dist_lon: " << reference_line_info->rss_info().cur_dist_lon();
   ADEBUG << " rss_safe_dist_lon: "
          << reference_line_info->rss_info().rss_safe_dist_lon();
   ADEBUG << " acc_longitudianlRange_minimum: "

@@ -36,6 +36,7 @@
 #include "cyber/message/raw_message.h"
 #include "modules/planning/planning_base/common/message_process.h"
 #include "modules/planning/planning_base/gflags/planning_gflags.h"
+#include "modules/planning/planning_base/common/planlog.h"
 #include "modules/planning/planning_component/planning_base.h"
 
 namespace apollo {
@@ -47,7 +48,11 @@ class PlanningComponent final
  public:
   PlanningComponent() = default;
 
-  ~PlanningComponent() = default;
+  ~PlanningComponent() {
+#ifdef USE_NEW_LOG
+    apollo::planning::ShutdownPlanningLogger();
+#endif
+  }
 
  public:
   bool Init() override;

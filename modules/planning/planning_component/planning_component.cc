@@ -25,6 +25,7 @@
 #include "modules/planning/planning_base/common/history.h"
 #include "modules/planning/planning_base/common/planning_context.h"
 #include "modules/planning/planning_base/common/util/util.h"
+#include "modules/planning/planning_base/common/planlog.h"
 #include "modules/planning/planning_component/navi_planning.h"
 #include "modules/planning/planning_component/on_lane_planning.h"
 namespace apollo {
@@ -135,6 +136,10 @@ bool PlanningComponent::Init() {
       config_.topic_config().planning_learning_data_topic());
   command_status_writer_ = node_->CreateWriter<external_command::CommandStatus>(
       FLAGS_planning_command_status);
+#ifdef USE_NEW_LOG
+  apollo::planning::InitPlanningLogger();
+  AINFO << "PlanningLogSink initialized, log_dir=" << FLAGS_planning_log_dir;
+#endif
   return true;
 }
 

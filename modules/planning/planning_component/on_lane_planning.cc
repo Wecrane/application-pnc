@@ -45,6 +45,7 @@
 #include "modules/planning/planning_base/reference_line/reference_line_provider.h"
 #include "modules/planning/planning_interface_base/planner_base/planner.h"
 #include "modules/planning/planning_interface_base/traffic_rules_base/traffic_decider.h"
+#include "modules/planning/planning_base/common/planlog.h"
 
 namespace apollo {
 namespace planning {
@@ -327,6 +328,9 @@ void OnLanePlanning::RunOnce(const LocalView& local_view,
 
   injector_->ego_info()->Update(stitching_trajectory.back(), vehicle_state);
   const uint32_t frame_num = static_cast<uint32_t>(seq_num_++);
+#ifdef USE_NEW_LOG
+  PlanningLogContext::set_frame_seq(frame_num);
+#endif
   AINFO << "Planning start frame sequence id = [" << frame_num << "]";
   status = InitFrame(frame_num, stitching_trajectory.back(), vehicle_state);
   if (status.ok()) {
@@ -460,6 +464,14 @@ void OnLanePlanning::RunOnce(const LocalView& local_view,
   AINFO << "Planning Perf: planning name [" << Name() << "], "
         << plnning_perf_ms << " ms.";
   AINFO << "Planning end frame sequence id = [" << frame_num << "]";
+#ifdef USE_NEW_LOG
+  PFRAME_SUMMARY << "frame complete"
+                 << " planner=" << planner_->Name()
+                 << " speed=" << vehicle_state.linear_velocity()
+                 << " traj_pts=" << ptr_trajectory_pb->trajectory_point_size()
+                 << " plan_time_ms=" << time_diff_ms
+                 << " status=" << (status.ok() ? "OK" : "FAIL");
+#endif
   injector_->frame_history()->Add(frame_num, std::move(frame_));
 }
 

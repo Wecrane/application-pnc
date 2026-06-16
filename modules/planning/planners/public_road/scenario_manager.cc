@@ -24,6 +24,7 @@
 #include "modules/common/status/status.h"
 #include "modules/planning/planning_base/common/util/config_util.h"
 #include "modules/planning/planning_interface_base/scenario_base/scenario.h"
+#include "modules/planning/planning_base/common/planlog.h"
 
 namespace apollo {
 namespace planning {
@@ -64,6 +65,11 @@ void ScenarioManager::Update(const common::TrajectoryPoint& ego_point,
       return;
     }
     if (scenario->IsTransferable(current_scenario_.get(), *frame)) {
+#ifdef USE_NEW_LOG
+      PDECISION_LOG << "IsTransferable: " << current_scenario_->Name()
+                    << " -> " << scenario->Name() << " = TRUE";
+      PlanningLogContext::set_scenario_name(scenario->Name());
+#endif
       current_scenario_->Exit(frame);
       AINFO << "switch scenario from" << current_scenario_->Name() << " to "
             << scenario->Name();
@@ -82,6 +88,10 @@ void ScenarioManager::Reset(Frame* frame) {
   AINFO << "Reset to default scenario:" << default_scenario_type_->Name();
   default_scenario_type_->Reset();
   current_scenario_ = default_scenario_type_;
+#ifdef USE_NEW_LOG
+  PSTATE_LOG << "SCENARIO_RESET: " << current_scenario_->Name()
+             << " -> " << default_scenario_type_->Name();
+#endif
 }
 }  // namespace planning
 }  // namespace apollo

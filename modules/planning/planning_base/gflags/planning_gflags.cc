@@ -532,3 +532,16 @@ DEFINE_bool(enable_adc_vertex_constraint, false,
 DEFINE_double(obstacle_lon_end_buffer_park, 0.6,
               "obstacle longitudinal end buffer (meters) for deciding "
               "path boundaries");
+
+// ===== Planning Log System gflags =====
+DEFINE_bool(planning_log_json, true,
+            "Enable JSON structured logging output via PlanningLogSink");
+DEFINE_bool(planning_log_per_scenario, false,
+            "Enable per-scenario log file routing");
+DEFINE_int32(planning_log_level, 3,
+             "Planning log level: 0=FATAL,1=ERROR,2=SUMMARY,"
+             "3=DECISION,4=STATE,5=TRACE");
+DEFINE_string(planning_log_dir, "data/log/planning",
+              "Planning structured log output directory");
+DEFINE_int32(planning_log_trace_rotate_minutes, 10,
+             "Trace log rotation interval in minutes");

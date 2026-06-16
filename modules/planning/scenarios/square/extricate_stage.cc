@@ -32,7 +32,7 @@ namespace planning {
 using apollo::common::ErrorCode;
 using apollo::common::Status;
 using apollo::common::TrajectoryPoint;
-#define AINFO AERROR
+
 bool ExtricateStage::Init(
         const StagePipeline& config,
         const std::shared_ptr<DependencyInjector>& injector,
