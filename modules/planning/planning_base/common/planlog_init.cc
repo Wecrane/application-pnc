@@ -31,34 +31,34 @@ PlanningLogSink* g_planning_log_sink = nullptr;
 }  // namespace
 
 void InitPlanningLogger() {
-  if (g_planning_log_sink != nullptr) {
-    // Already initialized (idempotent).
-    return;
-  }
+    if (g_planning_log_sink != nullptr) {
+        // Already initialized (idempotent).
+        return;
+    }
 
-  // Ensure log directory exists.
-  std::string log_dir = FLAGS_planning_log_dir;
-  if (log_dir.empty()) {
-    log_dir = "data/log/planning";
-  }
-  boost::system::error_code ec;
-  boost::filesystem::create_directories(log_dir, ec);
-  boost::filesystem::create_directories(log_dir + "/trace", ec);
-  boost::filesystem::create_directories(log_dir + "/per_scenario", ec);
+    // Ensure log directory exists.
+    std::string log_dir = FLAGS_planning_log_dir;
+    if (log_dir.empty()) {
+        log_dir = "data/log/planning";
+    }
+    boost::system::error_code ec;
+    boost::filesystem::create_directories(log_dir, ec);
+    boost::filesystem::create_directories(log_dir + "/trace", ec);
+    boost::filesystem::create_directories(log_dir + "/per_scenario", ec);
 
-  // Create and register the custom LogSink.
-  g_planning_log_sink = new PlanningLogSink();
-  google::AddLogSink(g_planning_log_sink);
+    // Create and register the custom LogSink.
+    g_planning_log_sink = new PlanningLogSink();
+    google::AddLogSink(g_planning_log_sink);
 
-  AINFO << "PlanningLogSink initialized, log_dir=" << log_dir;
+    AINFO << "PlanningLogSink initialized, log_dir=" << log_dir;
 }
 
 void ShutdownPlanningLogger() {
-  if (g_planning_log_sink != nullptr) {
-    google::RemoveLogSink(g_planning_log_sink);
-    delete g_planning_log_sink;
-    g_planning_log_sink = nullptr;
-  }
+    if (g_planning_log_sink != nullptr) {
+        google::RemoveLogSink(g_planning_log_sink);
+        delete g_planning_log_sink;
+        g_planning_log_sink = nullptr;
+    }
 }
 
 }  // namespace planning

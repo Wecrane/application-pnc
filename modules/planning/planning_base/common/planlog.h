@@ -43,29 +43,22 @@ void ShutdownPlanningLogger();
 #ifdef USE_NEW_LOG
 
 // ---- Base frame-level macro: auto-prepends [frm:<seq>] ----
-#define PLAN_LOG(level) \
-  LOG(level) << "[frm:" << ::apollo::planning::PlanningLogContext::frame_seq() << "] "
+#define PLAN_LOG(level) LOG(level) << "[frm:" << ::apollo::planning::PlanningLogContext::frame_seq() << "] "
 
 // ---- Scenario-aware macros: auto-prepend [scn:<name>] ----
-#define PSCENARIO_INFO \
-  LOG(INFO) << "[scn:" << ::apollo::planning::PlanningLogContext::scenario_name() << "] "
-#define PSCENARIO_WARN \
-  LOG(WARNING) << "[scn:" << ::apollo::planning::PlanningLogContext::scenario_name() << "] "
+#define PSCENARIO_INFO LOG(INFO) << "[scn:" << ::apollo::planning::PlanningLogContext::scenario_name() << "] "
+#define PSCENARIO_WARN LOG(WARNING) << "[scn:" << ::apollo::planning::PlanningLogContext::scenario_name() << "] "
 
 // ---- Stage-aware debug macro: auto-prepend [stg:<name>] ----
-#define PSTAGE_DEBUG \
-  VLOG(1) << "[stg:" << ::apollo::planning::PlanningLogContext::stage_name() << "] "
+#define PSTAGE_DEBUG VLOG(1) << "[stg:" << ::apollo::planning::PlanningLogContext::stage_name() << "] "
 
 // ---- Frame summary macro: routed to summary.log ----
-#define PFRAME_SUMMARY \
-  LOG(INFO) << "[SUMMARY] "
+#define PFRAME_SUMMARY LOG(INFO) << "[SUMMARY] "
 
 // ---- Decision log macro: routed to decision.log ----
-#define PDECISION_LOG \
-  LOG(INFO) << "[DECISION] "
+#define PDECISION_LOG LOG(INFO) << "[DECISION] "
 
 // ---- State transition log macro: routed to decision.log ----
-#define PSTATE_LOG \
-  LOG(INFO) << "[STATE] "
+#define PSTATE_LOG LOG(INFO) << "[STATE] "
 
 #endif  // USE_NEW_LOG

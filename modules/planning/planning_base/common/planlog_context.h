@@ -34,21 +34,21 @@ namespace planning {
 // These values are automatically attached to log messages by the
 // PLAN_LOG / PSCENARIO_* / PSTAGE_* macros and by PlanningLogSink.
 struct PlanningLogContext {
-  // ---- Frame sequence number ----
-  static void set_frame_seq(uint32_t seq);
-  static uint32_t frame_seq();
+    // ---- Frame sequence number ----
+    static void set_frame_seq(uint32_t seq);
+    static uint32_t frame_seq();
 
-  // ---- Scenario name (e.g. "lane_follow", "stop_sign_unprotected") ----
-  static void set_scenario_name(const std::string& name);
-  static const std::string& scenario_name();
+    // ---- Scenario name (e.g. "lane_follow", "stop_sign_unprotected") ----
+    static void set_scenario_name(const std::string& name);
+    static const std::string& scenario_name();
 
-  // ---- Stage name (e.g. "LANE_FOLLOW_STAGE", "STAGE_PRE_STOP") ----
-  static void set_stage_name(const std::string& name);
-  static const std::string& stage_name();
+    // ---- Stage name (e.g. "LANE_FOLLOW_STAGE", "STAGE_PRE_STOP") ----
+    static void set_stage_name(const std::string& name);
+    static const std::string& stage_name();
 
-  // ---- Planning module name (default "planning") ----
-  static void set_planning_name(const std::string& name);
-  static const std::string& planning_name();
+    // ---- Planning module name (default "planning") ----
+    static void set_planning_name(const std::string& name);
+    static const std::string& planning_name();
 };
 
 }  // namespace planning

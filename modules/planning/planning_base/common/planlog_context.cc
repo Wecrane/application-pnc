@@ -36,41 +36,41 @@ thread_local std::string g_planlog_planning_name = "planning";
 // ---- Frame sequence ----
 
 void PlanningLogContext::set_frame_seq(uint32_t seq) {
-  g_planlog_frame_seq = seq;
+    g_planlog_frame_seq = seq;
 }
 
 uint32_t PlanningLogContext::frame_seq() {
-  return g_planlog_frame_seq;
+    return g_planlog_frame_seq;
 }
 
 // ---- Scenario name ----
 
 void PlanningLogContext::set_scenario_name(const std::string& name) {
-  g_planlog_scenario_name = name;
+    g_planlog_scenario_name = name;
 }
 
 const std::string& PlanningLogContext::scenario_name() {
-  return g_planlog_scenario_name;
+    return g_planlog_scenario_name;
 }
 
 // ---- Stage name ----
 
 void PlanningLogContext::set_stage_name(const std::string& name) {
-  g_planlog_stage_name = name;
+    g_planlog_stage_name = name;
 }
 
 const std::string& PlanningLogContext::stage_name() {
-  return g_planlog_stage_name;
+    return g_planlog_stage_name;
 }
 
 // ---- Planning name ----
 
 void PlanningLogContext::set_planning_name(const std::string& name) {
-  g_planlog_planning_name = name;
+    g_planlog_planning_name = name;
 }
 
 const std::string& PlanningLogContext::planning_name() {
-  return g_planlog_planning_name;
+    return g_planlog_planning_name;
 }
 
 }  // namespace planning

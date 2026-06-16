@@ -43,63 +43,70 @@ namespace planning {
 // Thread safety: all file writers are protected by std::mutex.
 // Directory creation uses boost::filesystem.
 class PlanningLogSink : public google::LogSink {
- public:
-  PlanningLogSink();
-  virtual ~PlanningLogSink();
+public:
+    PlanningLogSink();
+    virtual ~PlanningLogSink();
 
-  // Called by glog for every log message.
-  // We serialize to JSON and route to appropriate file(s).
-  void send(google::LogSeverity severity, const char* full_filename,
-            const char* base_filename, int line, const struct ::tm* tm_time,
-            const char* message, size_t message_len) override;
+    // Called by glog for every log message.
+    // We serialize to JSON and route to appropriate file(s).
+    void send(
+            google::LogSeverity severity,
+            const char* full_filename,
+            const char* base_filename,
+            int line,
+            const struct ::tm* tm_time,
+            const char* message,
+            size_t message_len) override;
 
-  // Disable glog's wait mechanism — we flush on our own schedule.
-  void WaitTillSent() override {}
+    // Disable glog's wait mechanism — we flush on our own schedule.
+    void WaitTillSent() override {}
 
-  // Force flush all open file writers.
-  void FlushAll();
+    // Force flush all open file writers.
+    void FlushAll();
 
- private:
-  // ---- JSON serialization ----
-  std::string BuildJson(google::LogSeverity severity, const char* base_filename,
-                        int line, const struct ::tm* tm_time,
-                        const char* message, size_t message_len);
+private:
+    // ---- JSON serialization ----
+    std::string BuildJson(
+            google::LogSeverity severity,
+            const char* base_filename,
+            int line,
+            const struct ::tm* tm_time,
+            const char* message,
+            size_t message_len);
 
-  // ---- File routing ----
-  void RouteMessage(const std::string& json_line, int level,
-                    const std::string& tag, const std::string& scenario);
+    // ---- File routing ----
+    void RouteMessage(const std::string& json_line, int level, const std::string& tag, const std::string& scenario);
 
-  void WriteLine(std::ofstream& writer, std::mutex& mtx,
-                 const std::string& line);
-  void RotateTraceIfNeeded();
+    void WriteLine(std::ofstream& writer, std::mutex& mtx, const std::string& line);
+    void RotateTraceIfNeeded();
 
-  // Check if a log message level meets the configured threshold.
-  bool IsLevelEnabled(int level) const;
+    // Check if a log message level meets the configured threshold.
+    bool IsLevelEnabled(int level) const;
 
-  // ---- Directory / file paths ----
-  std::string log_dir_;
-  std::string trace_dir_;
-  std::string error_path_;
-  std::string summary_path_;
-  std::string decision_path_;
+    // ---- Directory / file paths ----
+    std::string log_dir_;
+    std::string trace_dir_;
+    std::string error_path_;
+    std::string summary_path_;
+    std::string decision_path_;
 
-  // ---- File writers ----
-  std::ofstream error_writer_;
-  std::ofstream summary_writer_;
-  std::ofstream decision_writer_;
-  std::ofstream trace_writer_;
-  std::map<std::string, std::ofstream> scenario_writers_;
+    // ---- File writers ----
+    std::ofstream error_writer_;
+    std::ofstream summary_writer_;
+    std::ofstream decision_writer_;
+    std::ofstream trace_writer_;
+    std::map<std::string, std::ofstream> scenario_writers_;
 
-  // ---- Mutexes for thread safety ----
-  std::mutex error_mutex_;
-  std::mutex summary_mutex_;
-  std::mutex decision_mutex_;
-  std::mutex trace_mutex_;
-  std::mutex scenario_mutex_;
+    // ---- Mutexes for thread safety ----
+    std::mutex error_mutex_;
+    std::mutex summary_mutex_;
+    std::mutex decision_mutex_;
+    std::mutex trace_mutex_;
+    std::mutex scenario_mutex_;
 
-  // ---- Trace rotation state ----
-  time_t trace_start_time_;
-  int trace_rotate_minutes_;
+    // ---- Trace rotation state ----
+    time_t trace_start_time_;
+    int trace_rotate_minutes_;
 };
 
 }  // namespace planning

@@ -31,66 +31,64 @@ namespace planning {
 
 using apollo::cyber::plugin_manager::PluginManager;
 
-bool ScenarioManager::Init(const std::shared_ptr<DependencyInjector>& injector,
-                           const PlannerPublicRoadConfig& planner_config) {
-  if (init_) {
-    return true;
-  }
-  injector_ = injector;
-  for (int i = 0; i < planner_config.scenario_size(); i++) {
-    auto scenario = PluginManager::Instance()->CreateInstance<Scenario>(
-        ConfigUtil::GetFullPlanningClassName(
-            planner_config.scenario(i).type()));
-    ACHECK(scenario->Init(injector_, planner_config.scenario(i).name()))
-        << "Can not init scenario" << planner_config.scenario(i).name();
-    scenario_list_.push_back(scenario);
-    if (planner_config.scenario(i).name() == "LANE_FOLLOW") {
-      default_scenario_type_ = scenario;
+bool ScenarioManager::Init(
+        const std::shared_ptr<DependencyInjector>& injector,
+        const PlannerPublicRoadConfig& planner_config) {
+    if (init_) {
+        return true;
     }
+    injector_ = injector;
+    for (int i = 0; i < planner_config.scenario_size(); i++) {
+        auto scenario = PluginManager::Instance()->CreateInstance<Scenario>(
+                ConfigUtil::GetFullPlanningClassName(planner_config.scenario(i).type()));
+        ACHECK(scenario->Init(injector_, planner_config.scenario(i).name()))
+                << "Can not init scenario" << planner_config.scenario(i).name();
+        scenario_list_.push_back(scenario);
+        if (planner_config.scenario(i).name() == "LANE_FOLLOW") {
+            default_scenario_type_ = scenario;
+        }
+    }
+    AINFO << "Load scenario list:" << planner_config.DebugString();
+    current_scenario_ = default_scenario_type_;
+#ifdef USE_NEW_LOG
+  if (current_scenario_) {
+    PlanningLogContext::set_scenario_name(current_scenario_->Name());
   }
-  AINFO << "Load scenario list:" << planner_config.DebugString();
-  current_scenario_ = default_scenario_type_;
-  init_ = true;
-  return true;
+#endif
 }
 
-void ScenarioManager::Update(const common::TrajectoryPoint& ego_point,
-                             Frame* frame) {
-  CHECK_NOTNULL(frame);
-  for (auto scenario : scenario_list_) {
-    if (current_scenario_.get() == scenario.get() &&
-        current_scenario_->GetStatus() ==
-            ScenarioStatusType::STATUS_PROCESSING) {
-      // The previous scenario has higher priority
-      return;
-    }
-    if (scenario->IsTransferable(current_scenario_.get(), *frame)) {
+void ScenarioManager::Update(const common::TrajectoryPoint& ego_point, Frame* frame) {
+    CHECK_NOTNULL(frame);
+    for (auto scenario : scenario_list_) {
+        if (current_scenario_.get() == scenario.get()
+            && current_scenario_->GetStatus() == ScenarioStatusType::STATUS_PROCESSING) {
+            // The previous scenario has higher priority
+            return;
+        }
+        if (scenario->IsTransferable(current_scenario_.get(), *frame)) {
 #ifdef USE_NEW_LOG
-      PDECISION_LOG << "IsTransferable: " << current_scenario_->Name()
-                    << " -> " << scenario->Name() << " = TRUE";
-      PlanningLogContext::set_scenario_name(scenario->Name());
+            PDECISION_LOG << "IsTransferable: " << current_scenario_->Name() << " -> " << scenario->Name() << " = TRUE";
+            PlanningLogContext::set_scenario_name(scenario->Name());
 #endif
-      current_scenario_->Exit(frame);
-      AINFO << "switch scenario from" << current_scenario_->Name() << " to "
-            << scenario->Name();
-      current_scenario_ = scenario;
-      current_scenario_->Reset();
-      current_scenario_->Enter(frame);
-      return;
+            current_scenario_->Exit(frame);
+            AINFO << "switch scenario from" << current_scenario_->Name() << " to " << scenario->Name();
+            current_scenario_ = scenario;
+            current_scenario_->Reset();
+            current_scenario_->Enter(frame);
+            return;
+        }
     }
-  }
 }
 
 void ScenarioManager::Reset(Frame* frame) {
-  if (current_scenario_) {
-    current_scenario_->Exit(frame);
-  }
-  AINFO << "Reset to default scenario:" << default_scenario_type_->Name();
-  default_scenario_type_->Reset();
-  current_scenario_ = default_scenario_type_;
+    if (current_scenario_) {
+        current_scenario_->Exit(frame);
+    }
+    AINFO << "Reset to default scenario:" << default_scenario_type_->Name();
+    default_scenario_type_->Reset();
+    current_scenario_ = default_scenario_type_;
 #ifdef USE_NEW_LOG
-  PSTATE_LOG << "SCENARIO_RESET: " << current_scenario_->Name()
-             << " -> " << default_scenario_type_->Name();
+    PSTATE_LOG << "SCENARIO_RESET: " << current_scenario_->Name() << " -> " << default_scenario_type_->Name();
 #endif
 }
 }  // namespace planning
