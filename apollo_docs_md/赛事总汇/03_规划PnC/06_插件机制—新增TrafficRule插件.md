@@ -1,0 +1,505 @@
+---
+title: 06_插件机制—新增TrafficRule插件
+source: https://apollo.baidu.com/docs/apollo/latest/md_docs_2_xE8_xB5_x9B_xE4_xBA_x8B_xE6_x80_xBB_xE6_xB1_x87_203___xE8_xA7_x84_xE5_x88_x92PnC_206__74e58e1833169641e2416abaeb116a82.html
+category: 赛事总汇 > 03_规划PnC > 06_插件机制—新增TrafficRule插件
+---
+
+# 06_插件机制—新增TrafficRule插件
+
+# 理解Planing 2.0插件机制 - 新增traffic rule插件
+
+> 
+> ‍作者: 宇新 | 发布时间: 2024-05-12 18:38 | 链接: https://apollo.baidu.com/community/article/1121 
+> 
+
+本节课，以车辆在行进过程中，驶入需限速的交汇路口为例，向大家介绍Planning模块插件机制，以及针对该交汇路口限速场景，教大家新建自定义插件，实现在指定区域的限速功能。
+
+![](https://apollo.baidu.com/docs/apollo/latest/docs/赛事总汇/images/04_规划PnC/649bdf7c622f799cb427810feb5807af.png)
+
+# 1 traffic rule 插件概述
+
+planning插件分为scenario、task、traffic rule三类，各类插件的使用场景如下图所示。本节课我们将针对如何新增一个traffic rule插件展开讲解。
+
+三类插件的作用：
+
+Traffic rule用于处理各种交通规则，并将各类规则转化为停车（生成虚拟障碍物实现）、限速两种输出类型。 Scenario用于判断车辆所在场景，而后依据不同的场景调用事先定义的Task组合。 Task用于执行执行具体任务，如生成借道路径、处理障碍物边界、轨迹优化等。 三者的调用逻辑如下图所示。
+
+![](https://apollo.baidu.com/docs/apollo/latest/docs/赛事总汇/images/04_规划PnC/02962173bdbda5e70514df6a2aaea8b0.png)
+
+traffic rule插件的生成与调用逻辑如下图所示。traffic rule插件继承自traffic rule基类，而后由planning_base中的traffic_decider对各个插件进行生成并调用。planning每进行一次规划任务，会通过traffic_decider调用各个traffic rule,从而使traffic rule插件生效。
+
+![](https://apollo.baidu.com/docs/apollo/latest/docs/赛事总汇/images/04_规划PnC/2d55e2770e30da1ee9d3f9cb3214c744.png)
+
+# 2 新增插件配置流程
+
+以region_speed_limit插件为例，一个完整的traffic rule插件文件夹目录结构以及各个文件功能如下所示。
+
+执行下述命令，在指定位置生成初始插件文件夹。
+
+buildtool create --template plugin \
+--namespaces planning \
+--name region-speed-limit \
+--base_class_name TrafficRule modules/planning/traffic_rules/region_speed_limit \
+--config_message_name RegionSpeedLimitConfig
+buildtool profile config init --package planning --profile=default &&
+aem profile use default
+fragment
+
+ 生成的插件文件夹下文件结构如下所示。
+
+└── region_speed_limit
+├── region_speed_limit.cc  # region_speed_limit插件源码
+├── region_speed_limit.h   # region_speed_limit插件源码
+├── conf
+│   └── default_conf.pb.txt  # region_speed_limit插件参数配置文件
+├── proto
+│   ├── region_speed_limit.proto  # region_speed_limit插件参数配置文件数据结构声明文件
+│   └── BUILD  # proto文件编译规则声明文件
+├── BUILD  # region_speed_limit插件编译规则声明文件
+├── plugin_region_speed_limit_description.xml  # region_speed_limit插件类声明文件
+└── cyberfile.xml  # region_speed_limit插件版本信息声明文件
+fragment
+
+ 在上述插件目录下，新建一个traffic rule插件流程如下图所示，主要包括了配置插件相关文件、在traffic_rule_config.pb.txt中加入新增插件。
+
+![](https://apollo.baidu.com/docs/apollo/latest/docs/赛事总汇/images/04_规划PnC/4a1999ffce5b7e81f6d32f9a038108e4.png)
+
+# 3 traffic rule插件实践案例
+
+> 
+> ‍INFO 问题：当无人车驶入交汇路口，有限速要求。对此，apollo planning模块应该如何处理？ 
+> 
+
+目的：新建区域限速交规插件，实现无人车在交汇路口限速行驶。
+
+**实践内容：**
+
+> 
+> ‍INFO 新增交汇路口限速traffic rule插件实践： 目标：实现车辆在指定区域低于指定速度行驶。 方法：新增交汇路口限速traffic rule插件。 结果：在dreamview上实时查看车辆行驶过路口的速度情况，验证是否符合要求。 
+> 
+
+**实践目的：**
+
+> 
+> ‍SUCCESS 学习traffic rule新增插件流程，掌握开发traffic rule插件步骤，使学员具有新建自定义插件能力。 
+> 
+
+**实践流程：**
+
+> 
+> ‍INFO 新建交汇路口限速插件实践： a. 指定位置新建插件region_speed_limit文件夹。 b. 根据要求，配置相应插件文件与traffic_rule_config.pb.txt。 配置RegionSpeedLimit类代码文件以及相应BUILD文件 配置参数文件以及BUILD文件 配置插件参数文件default_conf.pb.txt 配置cyberfile.xml 配置plugins.xml traffic_rule_config.pb.txt中加入新增插件 c. 编译region_speed_limit插件。 d. 运行车辆规划模块，并在dreamview上观察车辆驶入交汇路口的速度变化。 
+> 
+
+### 3.1 生成插件文件模版
+
+输入下述指令，在
+
+modules/planning/traffic_rules/下新建插件文件夹region_speed_limit。
+fragment
+buildtool create  \
+--template plugin   \
+--namespaces planning   \
+--name region-speed-limit   \
+--base_class_name TrafficRule modules/planning/traffic_rules/region_speed_limit   \
+--config_message_name RegionSpeedLimitConfig
+fragment
+
+### 3.2 写RegionSpeedLimit类代码文件以及配置相应BUILD文件
+
+#include <memory>
+#include "modules/planning/traffic_rules/region_speed_limit/region_speed_limit.h"
+
+namespace
+[apollo](https://apollo.baidu.com/docs/apollo/latest/namespaceapollo.html)
+{
+namespace
+[planning](https://apollo.baidu.com/docs/apollo/latest/classplanning.html)
+{
+
+/* 定义成员函数*/
+using
+[apollo::common::Status](https://apollo.baidu.com/docs/apollo/latest/classapollo_1_1common_1_1Status.html)
+;
+using
+[apollo::hdmap::PathOverlap](https://apollo.baidu.com/docs/apollo/latest/structapollo_1_1hdmap_1_1PathOverlap.html)
+;
+
+bool
+RegionSpeedLimit::Init(
+const
+std::string& name,
+const
+std::shared_ptr<DependencyInjector>& injector) {
+if
+(!
+[TrafficRule::Init](https://apollo.baidu.com/docs/apollo/latest/classapollo_1_1planning_1_1TrafficRule.html#a3dd807211873e592cc5f58e0f8c90b4b)
+(name, injector)) {
+return
+false
+;
+}
+// Load the config this task.
+return
+TrafficRule::LoadConfig<RegionSpeedLimitConfig>(&config_);
+}
+
+[Status](https://apollo.baidu.com/docs/apollo/latest/namespaceapollo_1_1dreamview.html#aa0e7567443c39e60163f212f22741bf0)
+RegionSpeedLimit::ApplyRule(
+[Frame](https://apollo.baidu.com/docs/apollo/latest/structFrame.html)
+*
+const
+frame,
+ReferenceLineInfo*
+const
+reference_line_info) {
+ReferenceLine* reference_line = reference_line_info->mutable_reference_line();
+const
+std::vector<PathOverlap>& pnc_junction_overlaps
+= reference_line_info->reference_line().map_path().pnc_junction_overlaps();
+for
+(
+const
+auto
+& pnc_junction_overlap : pnc_junction_overlaps) {
+reference_line->AddSpeedLimit(
+pnc_junction_overlap.start_s - config_.forward_buffer(),
+pnc_junction_overlap.end_s + config_.backward_buffer(),
+config_.limit_speed());
+}
+return
+[Status::OK](https://apollo.baidu.com/docs/apollo/latest/classapollo_1_1common_1_1Status.html#ac67a4ff48d712fc7d687107563d71d58)
+();
+}
+
+}
+// namespace planning
+}
+// namespace apollo
+[apollo::common::Status](https://apollo.baidu.com/docs/apollo/latest/classapollo_1_1common_1_1Status.html)
+A general class to denote the return status of an API call.
+Definition
+[status.h:43](https://apollo.baidu.com/docs/apollo/latest/common_2status_2status_8h_source.html#l00043)
+[apollo::common::Status::OK](https://apollo.baidu.com/docs/apollo/latest/classapollo_1_1common_1_1Status.html#ac67a4ff48d712fc7d687107563d71d58)
+static Status OK()
+generate a success status.
+Definition
+[status.h:60](https://apollo.baidu.com/docs/apollo/latest/common_2status_2status_8h_source.html#l00060)
+[apollo::planning::TrafficRule::Init](https://apollo.baidu.com/docs/apollo/latest/classapollo_1_1planning_1_1TrafficRule.html#a3dd807211873e592cc5f58e0f8c90b4b)
+virtual bool Init(const std::string &name, const std::shared_ptr< DependencyInjector > &injector)
+Definition
+[traffic_rule.cc:32](https://apollo.baidu.com/docs/apollo/latest/traffic__rule_8cc_source.html#l00032)
+[planning](https://apollo.baidu.com/docs/apollo/latest/classplanning.html)
+Planning module main class.
+[apollo::dreamview::Status](https://apollo.baidu.com/docs/apollo/latest/namespaceapollo_1_1dreamview.html#aa0e7567443c39e60163f212f22741bf0)
+Status
+Definition
+[preprocess_table.proto:5](https://apollo.baidu.com/docs/apollo/latest/preprocess__table_8proto_source.html#l00005)
+[apollo](https://apollo.baidu.com/docs/apollo/latest/namespaceapollo.html)
+class register implement
+Definition
+[arena_queue.h:37](https://apollo.baidu.com/docs/apollo/latest/arena__queue_8h_source.html#l00037)
+[Frame](https://apollo.baidu.com/docs/apollo/latest/structFrame.html)
+Definition
+[frame.proto:65](https://apollo.baidu.com/docs/apollo/latest/frame_8proto_source.html#l00065)
+[apollo::hdmap::PathOverlap](https://apollo.baidu.com/docs/apollo/latest/structapollo_1_1hdmap_1_1PathOverlap.html)
+Definition
+[path.h:90](https://apollo.baidu.com/docs/apollo/latest/path_8h_source.html#l00090)
+fragment
+> 
+> ‍INFO Init()函数：初始化RegionSpeedLimit类，读取配置文件信息到config_； ApplyRule()函数：traffic rule类调用接口，在运行中实际调用的函数； reference_line_info->reference_line().map_path()：获取道路信息，本插件获取了交汇路口信息pnc_junction_overlaps()； 针对交汇路口的限速功能，调用了ReferenceLine::AddSpeedLimit(double start_s, double end_s, double speed_limit),实现了在start_s处到end_s处最高速度为speed_limit的约束。 
+> 
+
+#pragma once
+#include <memory>
+#include "
+[cyber/plugin_manager/plugin_manager.h](https://apollo.baidu.com/docs/apollo/latest/cyber_2plugin__manager_2plugin__manager_8h.html)
+"
+/* 添加了相应的头文件*/
+#include "
+[modules/common/status/status.h](https://apollo.baidu.com/docs/apollo/latest/common_2status_2status_8h.html)
+"
+#include "modules/planning/traffic_rules/region_speed_limit/proto/region_speed_limit.pb.h"
+#include "
+[modules/planning/planning_interface_base/traffic_rules_base/traffic_rule.h](https://apollo.baidu.com/docs/apollo/latest/traffic__rule_8h.html)
+"
+
+namespace
+[apollo](https://apollo.baidu.com/docs/apollo/latest/namespaceapollo.html)
+{
+namespace
+[planning](https://apollo.baidu.com/docs/apollo/latest/classplanning.html)
+{
+
+class
+RegionSpeedLimit :
+public
+TrafficRule {
+/* 声明成员函数*/
+public
+:
+bool
+Init(
+const
+std::string& name,
+const
+std::shared_ptr<DependencyInjector>& injector)
+override
+;
+virtual
+~RegionSpeedLimit() =
+default
+;
+common::Status ApplyRule(
+[Frame](https://apollo.baidu.com/docs/apollo/latest/structFrame.html)
+*
+const
+frame,
+ReferenceLineInfo*
+const
+reference_line_info);
+void
+Reset()
+override
+{}
+
+private
+:
+RegionSpeedLimitConfig config_;
+};
+
+[CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN](https://apollo.baidu.com/docs/apollo/latest/cyber_2plugin__manager_2plugin__manager_8h.html#a3d39fb94b9dae7e6b630ae64c6f99f8c)
+(apollo::planning::RegionSpeedLimit, TrafficRule)
+
+}
+// namespace planning
+}
+// namespace apollo
+[status.h](https://apollo.baidu.com/docs/apollo/latest/common_2status_2status_8h.html)
+[plugin_manager.h](https://apollo.baidu.com/docs/apollo/latest/cyber_2plugin__manager_2plugin__manager_8h.html)
+[CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN](https://apollo.baidu.com/docs/apollo/latest/cyber_2plugin__manager_2plugin__manager_8h.html#a3d39fb94b9dae7e6b630ae64c6f99f8c)
+#define CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(name, base)
+Definition
+[plugin_manager.h:272](https://apollo.baidu.com/docs/apollo/latest/cyber_2plugin__manager_2plugin__manager_8h_source.html#l00272)
+[traffic_rule.h](https://apollo.baidu.com/docs/apollo/latest/traffic__rule_8h.html)
+fragment
+> 
+> ‍INFO Reset()函数：插件变量重置入口，清空上一次决策对插件内变量的更改。 CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(apollo::planning::RegionSpeedLimit,TrafficRule):声明该类为插件。 
+> 
+
+BUILD文件描述了源码的构建规则以及其依赖。
+
+load(
+"@rules_cc//cc:defs.bzl"
+,
+"cc_binary"
+,
+"cc_library"
+)
+load(
+"//tools:apollo.bzl"
+,
+"cyber_plugin_description"
+)
+load(
+"//tools:apollo_package.bzl"
+,
+"apollo_cc_library"
+,
+"apollo_package"
+,
+"apollo_plugin"
+)
+load(
+"//tools/proto:proto.bzl"
+,
+"proto_library"
+)
+load(
+"//tools:cpplint.bzl"
+,
+"cpplint"
+)
+package(
+default_visibility = [
+"//visibility:public"
+]
+)
+filegroup(
+name =
+"region_speed_limit_files"
+,
+srcs = glob(
+[
+"conf/**"
+,
+]),
+
+)
+apollo_plugin(
+name =
+"libregion_speed_limit.so"
+,
+srcs = [
+"region_speed_limit.cc"
+,
+],
+hdrs = [
+"region_speed_limit.h"
+,
+],
+description =
+":plugins.xml"
+,
+deps = [
+"//cyber"
+,
+# 添加该插件所需依赖        "//modules/planning/planning_interface_base:apollo_planning_planning_interface_base",
+"//modules/planning/traffic_rules/region_speed_limit/proto:region_speed_limit_proto"
+,
+],
+
+)
+apollo_package()
+cpplint()
+fragment
+> 
+> ‍INFO load():声明编译中使用的相关依赖 filegroup():声明文件组，编译后会将其安装到相应位置。 apollo_plugin（）：声明编译动态库、编译源码文件、插件描述文件、依赖。 
+> 
+
+### plugin_region_speed_limit_description.xml
+
+plugin_region_speed_limit_description.xml文件修改成plugins.xml文件
+
+![](https://apollo.baidu.com/docs/apollo/latest/docs/赛事总汇/images/04_规划PnC/17e4bc33d3e3d44de006823e7b86e5a3.png)
+
+plugins.xml文件内容
+
+<
+library
+path
+=
+"modules/planning/traffic_rules/region_speed_limit/libregion_speed_limit.so"
+>
+<
+class
+type
+=
+"apollo::planning::RegionSpeedLimit"
+base_class
+=
+"apollo::planning::TrafficRule"
+>
+</
+class
+>
+</
+library
+>
+fragment
+
+### 3.3 配置参数文件
+
+修改proto文件的region_speed_limit.proto
+
+syntax = "proto2";
+package apollo.planning;
+message RegionSpeedLimitConfig {
+// 声明RegionSpeedLimitConfig中的数据结构
+optional double forward_buffer = 1 [default = 3];
+optional double backward_buffer = 2 [default = 2];
+optional double limit_speed = 3 [default = 5];
+}
+fragment
+> 
+> ‍INFO region_speed_limit.proto 文件声明了该插件配置文件的数据结构。 BUILD 文件声明了该proto文件的编译规则。 
+> 
+
+### 3.4 写插件参数文件default_conf.pb.txt
+
+conf文件夹，region_speed_limit.pb.txt修改成default_conf.pb.txt 
+
+forward_buffer: 3.0
+backward_buffer: 2.0
+limit_speed: 15.0
+fragment
+
+### 3.5 配置cyberfile.xml
+
+fragment
+> 
+> ‍INFO 声明文件版本等信息 
+> 
+
+### 3.6 traffic_rule_config.pb.txt中加入新增插件
+
+将新建插件加入traffic rule配置文件中，从而使planning调用该traffic rule。
+
+rule {
+name: "BACKSIDE_VEHICLE"
+type: "BacksideVehicle"
+}
+rule {
+name: "CROSSWALK"
+type: "Crosswalk"
+}
+rule {
+name: "DESTINATION"
+type: "Destination"
+}
+rule {
+name: "KEEP_CLEAR"
+type: "KeepClear"
+}
+rule {
+name: "REFERENCE_LINE_END"
+type: "ReferenceLineEnd"
+}
+rule {
+name: "REROUTING"
+type: "Rerouting"
+}
+rule {
+name: "STOP_SIGN"
+type: "StopSign"
+}
+rule {
+name: "TRAFFIC_LIGHT"
+type: "TrafficLight"
+}
+rule {
+name: "YIELD_SIGN"
+type: "YieldSign"
+}
+rule {
+name: "SPEED_SETTING"
+type: "SpeedSetting"
+}
+rule {
+name: "REGION_SPEED_SETTING"
+type: "RegionSpeedLimit"
+}
+fragment
+
+### 3.7 编译插件
+
+执行以下命令编译插件
+
+buildtool build -p modules/planning/traffic_rules/region_speed_limit/
+fragment
+
+### 3.8 运行场景并调试参数
+
+终端执行以下命令运行dreamview。
+
+aem bootstrap start --plus
+fragment
+
+ 设置default_conf.pb.txt中limit_speed为3，使路口交汇处限速3m/s。
+
+如左图所示，到达路口前速度为23km/h,车辆正常行驶，到交汇路口后，如右图所示，速度降为10km/h，实现了交汇路口限速功能。
+
+![](https://apollo.baidu.com/docs/apollo/latest/docs/赛事总汇/images/04_规划PnC/b030832eb6ee6cfe8ec977358601453a.png) ![](https://apollo.baidu.com/docs/apollo/latest/docs/赛事总汇/images/04_规划PnC/da8916046d7a12991408c489320031e2.png)
+
+## 文档意见反馈
+
+如果您在使用文档的过程中，遇到任何问题，请到我们在【开发者社区】建立的 [反馈意见收集问答页面](https://studio.apollo.auto/community/article/163)，反馈相关的问题。我们会根据反馈意见对文档进行迭代优化。

@@ -1,0 +1,1717 @@
+---
+title: 07_插件机制—新增Scenario插件
+source: https://apollo.baidu.com/docs/apollo/latest/md_docs_2_xE8_xB5_x9B_xE4_xBA_x8B_xE6_x80_xBB_xE6_xB1_x87_203___xE8_xA7_x84_xE5_x88_x92PnC_207__fbff256c04637e1acb9ec71e5b55f837.html
+category: 赛事总汇 > 03_规划PnC > 07_插件机制—新增Scenario插件
+---
+
+# 07_插件机制—新增Scenario插件
+
+# 理解Planing 2.0插件机制-新增Scenario插件
+
+> 
+> ‍作者: 宇新 | 发布时间: 2023-10-13 11:18 | 链接: https://apollo.baidu.com/community/article/1127 
+> 
+
+# Planing运行机制回顾
+
+Apollo采用的是双状态机的框架，场景（Scenario）是规划模块的状态机，由场景管理器来切换调度，阶段（Stage）是场景的状态机，由场景来切换调度，任务（Task）是具体执行的规划运算，由阶段来编排调度。任务可以从任务库中复用我们现有的任务，也可以开发新的任务加入到任务库中，供各个场景阶段复用。
+
+![](https://apollo.baidu.com/docs/apollo/latest/docs/赛事总汇/images/04_规划PnC/83dfaa5293c264a69d405f3676fb290c.png)
+
+## 场景开发实践——新增一个左转待转场景
+
+### 场景需求
+
+这里以apollo_virtual_map为地图，开发一个左转待转场景。左转待转场景可以分为两个区域，直行区和左转待转区。
+
+主车在直行区：
+
+如果左转红灯、直行绿灯，则车辆可以进入左转待转区
+
+![](https://apollo.baidu.com/docs/apollo/latest/docs/赛事总汇/images/04_规划PnC/e1f0becc29baf49c4ca69657cc9ea4e0.png)
+
+如果左转绿灯，无论直行灯是红灯还是绿灯都可以通过路口
+
+![](https://apollo.baidu.com/docs/apollo/latest/docs/赛事总汇/images/04_规划PnC/071df2cc5b59dd12936f2cdff75178b7.png)
+
+如果左转红灯、直行红灯，则车辆在直行区停止线等待
+
+![](https://apollo.baidu.com/docs/apollo/latest/docs/赛事总汇/images/04_规划PnC/fd29d5f58d60f16446f5cdd346958c73.png)
+
+主车在左转区：
+
+如果左转为红灯，直行为绿灯，则车辆在左转区停止线前等待
+
+![](https://apollo.baidu.com/docs/apollo/latest/docs/赛事总汇/images/04_规划PnC/eabf30fed0cae4f8a9112600351df10c.png)
+
+如果左转为绿灯，则车辆可以通行路口
+
+![](https://apollo.baidu.com/docs/apollo/latest/docs/赛事总汇/images/04_规划PnC/54e6135fa77d6f2c0d03cb39bcebd971.png)
+
+p.s.在待转区如果左转灯由绿变成红，则主车可以不需要在待转区等待，通行路口
+
+额外要求：每个区域巡航速度不同，在直行区巡航速度为5m/s，左转区巡航速度3m/s，通过路口巡航速度8m/s
+
+![](https://apollo.baidu.com/docs/apollo/latest/docs/赛事总汇/images/04_规划PnC/ab41a56a272652027cda9fa1b75ffbd2.png)
+
+在base_map.txt的地图文件可以观察下左转待转区的元素：
+
+左转待转场景，左转灯在左转车道上存在两条停止线，分别在直行区和左转区，左转灯的subsignal的类型为ARROW_LEFT；而直行灯在左转的车道上只有一条停止线，位于直行区，且直行灯的subsignal为CIRCLE类型。可以依此来判断是否进入左转待转场景
+
+阶段的划分：
+
+我们可以根据行驶过程分为：
+
+在直行区停车等待的阶段TRAFFIC_LIGHT_LEFT_TURN_WAITING_ZONE_APPROACH 在待转区行停车等待的阶段TRAFFIC_LIGHT_LEFT_TURN_WAITING_ZONE_CREEP 通过路口的阶段TRAFFIC_LIGHT_LEFT_TURN_WAITING_ZONE_CRUISE 
+
+### 实践步骤
+
+在包管理环境下创建插件模板，通过以下命令可以创建一个左转待转插件的模板 
+
+buildtool create \
+--template plugin \
+--namespaces planning \
+--dependencies planning:binary:planning \
+--base_class_name apollo::planning::Scenario \
+--class_name TrafficLightLeftTurnWaitingZone     modules/planning/scenarios/traffic_light_left_turn_waiting_zone
+fragment
+
+ 在包管理模版基础上实现左转待转的Scneario子类 在IsTransferable()函数中添加场景切入条件：当发现当前参考线上有两个id一样的信号灯overlap，而且是左转信号灯，且其中一个overlap在最近的信号灯组内，则切入该场景 在Enter()函数设置进入场景前的参数初始化，将直行信号灯，左转信号灯id保存到context_变量中 在Exit()函数设置场景切出时对成员变量和全局变量的重置 文件目录：
+
+planning/scenarios/traffic_light_left_turn_waiting_zone/traffic_light_left_turn_waiting_zone.cc
+fragment
+#include <memory>
+#include "modules/planning/scenarios/traffic_light_left_turn_waiting_zone/traffic_light_left_turn_waiting_zone.h"
+
+namespace
+[apollo](https://apollo.baidu.com/docs/apollo/latest/namespaceapollo.html)
+{
+namespace
+[planning](https://apollo.baidu.com/docs/apollo/latest/classplanning.html)
+{
+
+using
+[apollo::hdmap::HDMapUtil](https://apollo.baidu.com/docs/apollo/latest/classapollo_1_1hdmap_1_1HDMapUtil.html)
+;
+
+bool
+TrafficLightLeftTurnWaitingZone::Init(
+std::shared_ptr<DependencyInjector> injector,
+const
+std::string& name) {
+if
+(!
+[Scenario::Init](https://apollo.baidu.com/docs/apollo/latest/classapollo_1_1planning_1_1Scenario.html#a29b188da032c64d277a7adbd554a529b)
+(injector, name)) {
+[AERROR](https://apollo.baidu.com/docs/apollo/latest/log_8h.html#a6f0289102fe6b16c585ca7d18eae701e)
+<<
+"failed to init scenario"
+<< Name();
+return
+false
+;
+}
+if
+(!Scenario::LoadConfig<TrafficLightLeftTurnWaitingZoneConfig>(
+&context_.scenario_config)) {
+[AERROR](https://apollo.baidu.com/docs/apollo/latest/log_8h.html#a6f0289102fe6b16c585ca7d18eae701e)
+<<
+"fail to get specific config of scenario "
+<< Name();
+return
+false
+;
+}
+return
+true
+;
+}
+
+bool
+TrafficLightLeftTurnWaitingZone::IsTransferable(
+const
+Scenario*
+const
+other_scenario,
+const
+[Frame](https://apollo.baidu.com/docs/apollo/latest/structFrame.html)
+& frame) {
+if
+(other_scenario ==
+nullptr
+|| frame.reference_line_info().empty()) {
+return
+false
+;
+}
+const
+auto
+& reference_line_info = frame.reference_line_info().front();
+const
+auto
+& first_encountered_overlaps =
+reference_line_info.FirstEncounteredOverlaps();
+const
+std::vector<hdmap::PathOverlap> traffic_light_overlaps
+= reference_line_info.reference_line().map_path().signal_overlaps();
+if
+(first_encountered_overlaps.empty()) {
+return
+false
+;
+}
+hdmap::PathOverlap* traffic_sign_overlap =
+nullptr
+;
+for
+(
+const
+auto
+& overlap : first_encountered_overlaps) {
+if
+(overlap.first ==
+[ReferenceLineInfo::STOP_SIGN](https://apollo.baidu.com/docs/apollo/latest/classapollo_1_1planning_1_1ReferenceLineInfo.html#a01c1c3e252e5345118f5cff0798d9a47a086a2cc206abdd4150fb0244f536729b)
+||
+overlap.first ==
+[ReferenceLineInfo::YIELD_SIGN](https://apollo.baidu.com/docs/apollo/latest/classapollo_1_1planning_1_1ReferenceLineInfo.html#a01c1c3e252e5345118f5cff0798d9a47ac001758510dc023c736d4d8d225b26e9)
+) {
+return
+false
+;
+}
+else
+if
+(overlap.first ==
+[ReferenceLineInfo::SIGNAL](https://apollo.baidu.com/docs/apollo/latest/classapollo_1_1planning_1_1ReferenceLineInfo.html#a01c1c3e252e5345118f5cff0798d9a47ac46e8ed03b2a3ec82e53f22479793249)
+) {
+traffic_sign_overlap =
+const_cast<
+hdmap::PathOverlap*
+>
+(&overlap.second);
+break
+;
+}
+}
+if
+(traffic_sign_overlap ==
+nullptr
+) {
+return
+false
+;
+}
+const
+double
+start_check_distance =
+context_.scenario_config.start_traffic_light_scenario_distance();
+const
+double
+adc_front_edge_s = reference_line_info.AdcSlBoundary().end_s();
+if
+(traffic_sign_overlap->start_s - adc_front_edge_s > start_check_distance) {
+return
+false
+;
+}
+const
+auto
+& turn_type =
+reference_line_info.GetPathTurnType(traffic_sign_overlap->start_s);
+if
+(turn_type !=
+[hdmap::Lane::LEFT_TURN](https://apollo.baidu.com/docs/apollo/latest/structapollo_1_1hdmap_1_1Lane.html#ad6645d36cff33bf29fda3bf547a6c77ca6c36c937b255ebe03a0dcf8be4f35033)
+) {
+return
+false
+;
+}
+auto
+* base_map =
+[HDMapUtil::BaseMapPtr](https://apollo.baidu.com/docs/apollo/latest/classapollo_1_1hdmap_1_1HDMapUtil.html#a630a4df5fd975e1d812662db923416ed)
+();
+static
+constexpr
+double
+kTrafficLightGroupingMaxDist = 2.0;
+// unit: m
+for
+(
+const
+auto
+& overlap : traffic_light_overlaps) {
+const
+double
+dist = overlap.start_s - traffic_sign_overlap->start_s;
+if
+(fabs(dist) <= kTrafficLightGroupingMaxDist) {
+const
+auto
+& signal =
+base_map->GetSignalById(
+[hdmap::MakeMapId](https://apollo.baidu.com/docs/apollo/latest/namespaceapollo_1_1hdmap.html#a62f2743cd6864fc92339b3ebd992e2d7)
+(overlap.object_id))->signal();
+if
+(signal.subsignal_size() > 0 &&
+signal.subsignal(0).type() ==
+[apollo::hdmap::Subsignal::ARROW_LEFT](https://apollo.baidu.com/docs/apollo/latest/structapollo_1_1hdmap_1_1Subsignal.html#abf1e46aec3c13d10fd34ca69a14ab8e0a5fb51471f4a6e3d7db02d6d372dd793f)
+&& signal.stop_line_size() > 1) {
+return
+true
+;
+}
+}
+}
+return
+false
+;
+}
+
+bool
+TrafficLightLeftTurnWaitingZone::Enter(
+[Frame](https://apollo.baidu.com/docs/apollo/latest/structFrame.html)
+* frame) {
+const
+auto
+& reference_line_info = frame->reference_line_info().front();
+const
+auto
+& first_encountered_overlaps =
+reference_line_info.FirstEncounteredOverlaps();
+const
+std::vector<hdmap::PathOverlap> traffic_light_overlaps
+= reference_line_info.reference_line().map_path().signal_overlaps();
+hdmap::PathOverlap* nearest_traffic_light_overlap =
+nullptr
+;
+for
+(
+const
+auto
+& overlap : first_encountered_overlaps) {
+if
+(overlap.first ==
+[ReferenceLineInfo::SIGNAL](https://apollo.baidu.com/docs/apollo/latest/classapollo_1_1planning_1_1ReferenceLineInfo.html#a01c1c3e252e5345118f5cff0798d9a47ac46e8ed03b2a3ec82e53f22479793249)
+) {
+nearest_traffic_light_overlap =
+const_cast<
+hdmap::PathOverlap*
+>
+(&overlap.second);
+break
+;
+}
+}
+std::vector<hdmap::PathOverlap> next_traffic_lights;
+auto
+* base_map =
+[HDMapUtil::BaseMapPtr](https://apollo.baidu.com/docs/apollo/latest/classapollo_1_1hdmap_1_1HDMapUtil.html#a630a4df5fd975e1d812662db923416ed)
+();
+std::string left_turn_signal_id;
+static
+constexpr
+double
+kTrafficLightGroupingMaxDist = 2.0;
+// unit: m
+for
+(
+const
+auto
+& overlap : traffic_light_overlaps) {
+const
+double
+dist =
+overlap.start_s - nearest_traffic_light_overlap->start_s;
+if
+(fabs(dist) <= kTrafficLightGroupingMaxDist) {
+const
+auto
+signal =
+base_map->GetSignalById(
+[hdmap::MakeMapId](https://apollo.baidu.com/docs/apollo/latest/namespaceapollo_1_1hdmap.html#a62f2743cd6864fc92339b3ebd992e2d7)
+(overlap.object_id));
+[AINFO](https://apollo.baidu.com/docs/apollo/latest/log_8h.html#af1a972c64154fbc2f9b56766c89add01)
+<< signal->id().id() <<
+","
+<< overlap.object_id;
+if
+(signal->signal().subsignal(0).type() ==
+[apollo::hdmap::Subsignal::ARROW_LEFT](https://apollo.baidu.com/docs/apollo/latest/structapollo_1_1hdmap_1_1Subsignal.html#abf1e46aec3c13d10fd34ca69a14ab8e0a5fb51471f4a6e3d7db02d6d372dd793f)
+) {
+context_.left_turn_traffic_light_id = overlap.object_id;
+[AINFO](https://apollo.baidu.com/docs/apollo/latest/log_8h.html#af1a972c64154fbc2f9b56766c89add01)
+<<
+"left_turn_signal_id"
+<< context_.left_turn_traffic_light_id;
+}
+else
+{
+context_.forward_traffic_light_id = overlap.object_id;
+[AINFO](https://apollo.baidu.com/docs/apollo/latest/log_8h.html#af1a972c64154fbc2f9b56766c89add01)
+<<
+"forward signal id"
+<< context_.forward_traffic_light_id;
+}
+}
+}
+return
+true
+;
+}
+
+bool
+TrafficLightLeftTurnWaitingZone::Exit(
+[Frame](https://apollo.baidu.com/docs/apollo/latest/structFrame.html)
+* frame) {
+context_.left_turn_traffic_light_id.clear();
+context_.forward_traffic_light_id.clear();
+auto
+done_traffic_light =
+injector_->planning_context()->mutable_planning_status()->mutable_traffic_light();
+done_traffic_light->mutable_done_traffic_light_overlap_id()->Clear();
+return
+true
+;
+}
+
+}
+// namespace planning
+}
+// namespace apollo
+[apollo::hdmap::HDMapUtil](https://apollo.baidu.com/docs/apollo/latest/classapollo_1_1hdmap_1_1HDMapUtil.html)
+Definition
+[hdmap_util.h:93](https://apollo.baidu.com/docs/apollo/latest/hdmap__util_8h_source.html#l00093)
+[apollo::hdmap::HDMapUtil::BaseMapPtr](https://apollo.baidu.com/docs/apollo/latest/classapollo_1_1hdmap_1_1HDMapUtil.html#a630a4df5fd975e1d812662db923416ed)
+static const HDMap * BaseMapPtr()
+Definition
+[hdmap_util.cc:111](https://apollo.baidu.com/docs/apollo/latest/hdmap__util_8cc_source.html#l00111)
+[apollo::planning::ReferenceLineInfo::STOP_SIGN](https://apollo.baidu.com/docs/apollo/latest/classapollo_1_1planning_1_1ReferenceLineInfo.html#a01c1c3e252e5345118f5cff0798d9a47a086a2cc206abdd4150fb0244f536729b)
+@ STOP_SIGN
+Definition
+[reference_line_info.h:245](https://apollo.baidu.com/docs/apollo/latest/reference__line__info_8h_source.html#l00245)
+[apollo::planning::ReferenceLineInfo::YIELD_SIGN](https://apollo.baidu.com/docs/apollo/latest/classapollo_1_1planning_1_1ReferenceLineInfo.html#a01c1c3e252e5345118f5cff0798d9a47ac001758510dc023c736d4d8d225b26e9)
+@ YIELD_SIGN
+Definition
+[reference_line_info.h:246](https://apollo.baidu.com/docs/apollo/latest/reference__line__info_8h_source.html#l00246)
+[apollo::planning::ReferenceLineInfo::SIGNAL](https://apollo.baidu.com/docs/apollo/latest/classapollo_1_1planning_1_1ReferenceLineInfo.html#a01c1c3e252e5345118f5cff0798d9a47ac46e8ed03b2a3ec82e53f22479793249)
+@ SIGNAL
+Definition
+[reference_line_info.h:244](https://apollo.baidu.com/docs/apollo/latest/reference__line__info_8h_source.html#l00244)
+[apollo::planning::Scenario::Init](https://apollo.baidu.com/docs/apollo/latest/classapollo_1_1planning_1_1Scenario.html#a29b188da032c64d277a7adbd554a529b)
+virtual bool Init(std::shared_ptr< DependencyInjector > injector, const std::string &name)
+Definition
+[scenario.cc:43](https://apollo.baidu.com/docs/apollo/latest/scenario_8cc_source.html#l00043)
+[planning](https://apollo.baidu.com/docs/apollo/latest/classplanning.html)
+Planning module main class.
+[AERROR](https://apollo.baidu.com/docs/apollo/latest/log_8h.html#a6f0289102fe6b16c585ca7d18eae701e)
+#define AERROR
+Definition
+[log.h:44](https://apollo.baidu.com/docs/apollo/latest/log_8h_source.html#l00044)
+[AINFO](https://apollo.baidu.com/docs/apollo/latest/log_8h.html#af1a972c64154fbc2f9b56766c89add01)
+#define AINFO
+Definition
+[log.h:42](https://apollo.baidu.com/docs/apollo/latest/log_8h_source.html#l00042)
+[apollo::hdmap::MakeMapId](https://apollo.baidu.com/docs/apollo/latest/namespaceapollo_1_1hdmap.html#a62f2743cd6864fc92339b3ebd992e2d7)
+apollo::hdmap::Id MakeMapId(const std::string &id)
+create a Map ID given a string.
+Definition
+[hdmap_util.h:85](https://apollo.baidu.com/docs/apollo/latest/hdmap__util_8h_source.html#l00085)
+[apollo](https://apollo.baidu.com/docs/apollo/latest/namespaceapollo.html)
+class register implement
+Definition
+[arena_queue.h:37](https://apollo.baidu.com/docs/apollo/latest/arena__queue_8h_source.html#l00037)
+[Frame](https://apollo.baidu.com/docs/apollo/latest/structFrame.html)
+Definition
+[frame.proto:65](https://apollo.baidu.com/docs/apollo/latest/frame_8proto_source.html#l00065)
+[apollo::hdmap::Lane::LEFT_TURN](https://apollo.baidu.com/docs/apollo/latest/structapollo_1_1hdmap_1_1Lane.html#ad6645d36cff33bf29fda3bf547a6c77ca6c36c937b255ebe03a0dcf8be4f35033)
+@ LEFT_TURN
+Definition
+[map_lane.proto:83](https://apollo.baidu.com/docs/apollo/latest/map__lane_8proto_source.html#l00083)
+[apollo::hdmap::Subsignal::ARROW_LEFT](https://apollo.baidu.com/docs/apollo/latest/structapollo_1_1hdmap_1_1Subsignal.html#abf1e46aec3c13d10fd34ca69a14ab8e0a5fb51471f4a6e3d7db02d6d372dd793f)
+@ ARROW_LEFT
+Definition
+[map_signal.proto:13](https://apollo.baidu.com/docs/apollo/latest/map__signal_8proto_source.html#l00013)
+fragment
+
+ 添加头文件
+
+modules/planning/scenarios/traffic_light_left_turn_waiting_zone/traffic_light_left_turn_waiting_zone.h：
+fragment
+#pragma once
+#include <memory>
+#include "
+[cyber/plugin_manager/plugin_manager.h](https://apollo.baidu.com/docs/apollo/latest/cyber_2plugin__manager_2plugin__manager_8h.html)
+"
+#include "modules/planning/planning_base/scenario_base/scenario.h"
+#include "modules/planning/scenarios/traffic_light_left_turn_waiting_zone/proto/traffic_light_left_turn_waiting_zone.pb.h"
+
+namespace
+[apollo](https://apollo.baidu.com/docs/apollo/latest/namespaceapollo.html)
+{
+namespace
+[planning](https://apollo.baidu.com/docs/apollo/latest/classplanning.html)
+{
+
+struct
+TrafficLightLeftTurnWaitingZoneContext :
+public
+ScenarioContext {
+TrafficLightLeftTurnWaitingZoneConfig scenario_config;
+std::string left_turn_traffic_light_id;
+std::string forward_traffic_light_id;
+};
+
+class
+TrafficLightLeftTurnWaitingZone :
+public
+[apollo::planning::Scenario](https://apollo.baidu.com/docs/apollo/latest/classapollo_1_1planning_1_1Scenario.html)
+{
+public
+:
+bool
+Init(std::shared_ptr<DependencyInjector> injector,
+const
+std::string& name);
+TrafficLightLeftTurnWaitingZoneContext* GetContext()
+override
+{
+return
+&context_;
+}
+bool
+IsTransferable(
+const
+Scenario* other_scenario,
+const
+[Frame](https://apollo.baidu.com/docs/apollo/latest/structFrame.html)
+& frame);
+bool
+Exit(
+[Frame](https://apollo.baidu.com/docs/apollo/latest/structFrame.html)
+* frame);
+bool
+Enter(
+[Frame](https://apollo.baidu.com/docs/apollo/latest/structFrame.html)
+* frame);
+
+private
+:
+TrafficLightLeftTurnWaitingZoneContext context_;
+};
+
+[CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN](https://apollo.baidu.com/docs/apollo/latest/cyber_2plugin__manager_2plugin__manager_8h.html#a3d39fb94b9dae7e6b630ae64c6f99f8c)
+(
+apollo::planning::TrafficLightLeftTurnWaitingZone,
+[apollo::planning::Scenario](https://apollo.baidu.com/docs/apollo/latest/classapollo_1_1planning_1_1Scenario.html)
+)
+
+}
+// namespace planning
+}
+// namespace apollo
+[apollo::planning::Scenario](https://apollo.baidu.com/docs/apollo/latest/classapollo_1_1planning_1_1Scenario.html)
+Definition
+[scenario.h:52](https://apollo.baidu.com/docs/apollo/latest/scenario_8h_source.html#l00052)
+[plugin_manager.h](https://apollo.baidu.com/docs/apollo/latest/cyber_2plugin__manager_2plugin__manager_8h.html)
+[CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN](https://apollo.baidu.com/docs/apollo/latest/cyber_2plugin__manager_2plugin__manager_8h.html#a3d39fb94b9dae7e6b630ae64c6f99f8c)
+#define CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(name, base)
+Definition
+[plugin_manager.h:272](https://apollo.baidu.com/docs/apollo/latest/cyber_2plugin__manager_2plugin__manager_8h_source.html#l00272)
+fragment
+
+ 开发左转待转的第一个阶段，行驶到直行区停止线的阶段TRAFFIC_LIGHT_LEFT_TURN_WAITING_ZONE_APPROACH，实现Stage的Process()函数： 在reference_line_info中设置该阶段的限速 如果左转灯是绿灯，且通过了停止线则切到TRAFFIC_LIGHT_LEFT_TURN_WAITING_ZONE_CRUISE阶段，同时将直行灯加入到add_done_traffic_light_overlap_id的全局变量中 如果左转灯是红灯，直行灯是绿灯，则切到TRAFFIC_LIGHT_LEFT_TURN_WAITING_ZONE_CREEP阶段，同时将左转灯加入到add_done_traffic_light_overlap_id的全局变量中 如果已经通过了停止线，则切入TRAFFIC_LIGHT_LEFT_TURN_WAITING_ZONE_CRUISE阶段 文件路径：
+
+planning/scenarios/traffic_light_left_turn_waiting_zone/stage_approach.cc
+fragment
+#include "modules/planning/scenarios/traffic_light_left_turn_waiting_zone/stage_approach.h"
+#include "modules/planning/scenarios/traffic_light_left_turn_waiting_zone/traffic_light_left_turn_waiting_zone.h"
+#include "modules/common_msgs/perception_msgs/traffic_light_detection.pb.h"
+#include "
+[cyber/common/log.h](https://apollo.baidu.com/docs/apollo/latest/log_8h.html)
+"
+#include "
+[modules/planning/planning_base/common/frame.h](https://apollo.baidu.com/docs/apollo/latest/modules_2planning_2planning__base_2common_2frame_8h.html)
+"
+#include "
+[modules/planning/planning_base/common/planning_context.h](https://apollo.baidu.com/docs/apollo/latest/planning__context_8h.html)
+"
+
+namespace
+[apollo](https://apollo.baidu.com/docs/apollo/latest/namespaceapollo.html)
+{
+namespace
+[planning](https://apollo.baidu.com/docs/apollo/latest/classplanning.html)
+{
+
+using
+[apollo::common::TrajectoryPoint](https://apollo.baidu.com/docs/apollo/latest/structapollo_1_1common_1_1TrajectoryPoint.html)
+;
+using
+[apollo::hdmap::PathOverlap](https://apollo.baidu.com/docs/apollo/latest/structapollo_1_1hdmap_1_1PathOverlap.html)
+;
+using
+[apollo::perception::TrafficLight](https://apollo.baidu.com/docs/apollo/latest/structapollo_1_1perception_1_1TrafficLight.html)
+;
+
+StageResult TrafficLightLeftTurnWaitingZoneStageApproach::Process(
+const
+TrajectoryPoint& planning_init_point,
+[Frame](https://apollo.baidu.com/docs/apollo/latest/structFrame.html)
+* frame) {
+[ADEBUG](https://apollo.baidu.com/docs/apollo/latest/log_8h.html#a60e57c8fd39594209e4a91527cda7aa2)
+<<
+"stage: Approach"
+;
+CHECK_NOTNULL(frame);
+CHECK_NOTNULL(context_);
+auto
+* context = GetContextAs<TrafficLightLeftTurnWaitingZoneContext>();
+const
+auto
+& scenario_config = context->scenario_config;
+auto
+& reference_line_info = frame->mutable_reference_line_info()->front();
+reference_line_info.LimitCruiseSpeed(scenario_config.approach_speed());
+StageResult result = ExecuteTaskOnReferenceLine(planning_init_point, frame);
+if
+(result.HasError()) {
+[AERROR](https://apollo.baidu.com/docs/apollo/latest/log_8h.html#a6f0289102fe6b16c585ca7d18eae701e)
+<<
+"TrafficLightLeftTurnWaitingZoneStageApproach planning error"
+;
+}
+if
+(context->left_turn_traffic_light_id.empty() ||
+context->forward_traffic_light_id.empty()) {
+return
+FinishScenario();
+}
+hdmap::PathOverlap forward_traffic_light_overlap;
+hdmap::PathOverlap left_turn_traffic_light_overlap_first;
+hdmap::PathOverlap left_turn_traffic_light_overlap_second;
+const
+std::vector<hdmap::PathOverlap> traffic_light_overlaps
+= reference_line_info.reference_line().map_path().signal_overlaps();
+for
+(
+const
+auto
+& overlap : traffic_light_overlaps) {
+if
+(overlap.object_id == context->forward_traffic_light_id) {
+forward_traffic_light_overlap = overlap;
+}
+else
+if
+(overlap.object_id == context->left_turn_traffic_light_id) {
+if
+(left_turn_traffic_light_overlap_second.start_s < overlap.start_s) {
+std::swap(left_turn_traffic_light_overlap_first,
+left_turn_traffic_light_overlap_second);
+left_turn_traffic_light_overlap_second = overlap;
+}
+else
+{
+left_turn_traffic_light_overlap_first = overlap;
+}
+}
+}
+const
+double
+adc_back_edge_s = reference_line_info.AdcSlBoundary().end_s();
+bool
+is_passed_forward_stop_line =
+adc_back_edge_s > forward_traffic_light_overlap.end_s;
+auto
+forward_signal_color =
+frame->GetSignal(context->forward_traffic_light_id).color();
+auto
+left_signal_color =
+frame->GetSignal(context->left_turn_traffic_light_id).color();
+auto
+done_traffic_light =
+injector_->planning_context()->mutable_planning_status()->mutable_traffic_light();
+done_traffic_light->mutable_done_traffic_light_overlap_id()->Clear();
+if
+(left_signal_color == TrafficLight::GREEN) {
+if
+(is_passed_forward_stop_line) {
+return
+FinishStage(
+"TRAFFIC_LIGHT_LEFT_TURN_WAITING_ZONE_CRUISE"
+);
+}
+done_traffic_light->add_done_traffic_light_overlap_id(
+forward_traffic_light_overlap.object_id);
+}
+else
+if
+(forward_signal_color == TrafficLight::GREEN) {
+done_traffic_light->add_done_traffic_light_overlap_id(
+left_turn_traffic_light_overlap_first.object_id);
+}
+if
+(is_passed_forward_stop_line) {
+return
+FinishStage(
+"TRAFFIC_LIGHT_LEFT_TURN_WAITING_ZONE_CREEP"
+);
+}
+return
+result.SetStageStatus(
+[StageStatusType::RUNNING](https://apollo.baidu.com/docs/apollo/latest/namespaceapollo_1_1planning.html#ad726b78fb7282f9a3f49e9f38b299255a43491564ebcfd38568918efbd6e840fd)
+);
+}
+
+StageResult TrafficLightLeftTurnWaitingZoneStageApproach::FinishStage(
+std::string next_stage) {
+injector_->planning_context()
+->mutable_planning_status()
+->mutable_traffic_light()
+->mutable_done_traffic_light_overlap_id()
+->Clear();
+next_stage_ = next_stage;
+return
+StageResult(
+[StageStatusType::FINISHED](https://apollo.baidu.com/docs/apollo/latest/namespaceapollo_1_1planning.html#ad726b78fb7282f9a3f49e9f38b299255a2c616b2713e2e0aed04b4c4752c88133)
+);
+}
+
+}
+// namespace planning
+}
+// namespace apollo
+[log.h](https://apollo.baidu.com/docs/apollo/latest/log_8h.html)
+[ADEBUG](https://apollo.baidu.com/docs/apollo/latest/log_8h.html#a60e57c8fd39594209e4a91527cda7aa2)
+#define ADEBUG
+Definition
+[log.h:41](https://apollo.baidu.com/docs/apollo/latest/log_8h_source.html#l00041)
+[frame.h](https://apollo.baidu.com/docs/apollo/latest/modules_2planning_2planning__base_2common_2frame_8h.html)
+[apollo::planning::StageStatusType::FINISHED](https://apollo.baidu.com/docs/apollo/latest/namespaceapollo_1_1planning.html#ad726b78fb7282f9a3f49e9f38b299255a2c616b2713e2e0aed04b4c4752c88133)
+@ FINISHED
+[apollo::planning::StageStatusType::RUNNING](https://apollo.baidu.com/docs/apollo/latest/namespaceapollo_1_1planning.html#ad726b78fb7282f9a3f49e9f38b299255a43491564ebcfd38568918efbd6e840fd)
+@ RUNNING
+[planning_context.h](https://apollo.baidu.com/docs/apollo/latest/planning__context_8h.html)
+[apollo::common::TrajectoryPoint](https://apollo.baidu.com/docs/apollo/latest/structapollo_1_1common_1_1TrajectoryPoint.html)
+Definition
+[pnc_point.proto:61](https://apollo.baidu.com/docs/apollo/latest/pnc__point_8proto_source.html#l00061)
+[apollo::hdmap::PathOverlap](https://apollo.baidu.com/docs/apollo/latest/structapollo_1_1hdmap_1_1PathOverlap.html)
+Definition
+[path.h:90](https://apollo.baidu.com/docs/apollo/latest/path_8h_source.html#l00090)
+[apollo::perception::TrafficLight](https://apollo.baidu.com/docs/apollo/latest/structapollo_1_1perception_1_1TrafficLight.html)
+Definition
+[traffic_light_detection.proto:33](https://apollo.baidu.com/docs/apollo/latest/traffic__light__detection_8proto_source.html#l00033)
+fragment
+
+ 添加头文件
+
+modules/planning/scenarios/traffic_light_left_turn_waiting_zone/stage_approach.h：
+fragment
+#pragma once
+#include "
+[cyber/plugin_manager/plugin_manager.h](https://apollo.baidu.com/docs/apollo/latest/cyber_2plugin__manager_2plugin__manager_8h.html)
+"
+#include "modules/planning/planning_base/scenario_base/stage.h"
+
+namespace
+[apollo](https://apollo.baidu.com/docs/apollo/latest/namespaceapollo.html)
+{
+namespace
+[planning](https://apollo.baidu.com/docs/apollo/latest/classplanning.html)
+{
+
+class
+TrafficLightLeftTurnWaitingZoneStageApproach :
+public
+Stage {
+public
+:
+StageResult Process(
+const
+common::TrajectoryPoint& planning_init_point,
+[Frame](https://apollo.baidu.com/docs/apollo/latest/structFrame.html)
+* frame)
+override
+;
+
+private
+:
+StageResult FinishStage(std::string next_stage);
+};
+
+[CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN](https://apollo.baidu.com/docs/apollo/latest/cyber_2plugin__manager_2plugin__manager_8h.html#a3d39fb94b9dae7e6b630ae64c6f99f8c)
+(
+apollo::planning::TrafficLightLeftTurnWaitingZoneStageApproach,
+[apollo::planning::Stage](https://apollo.baidu.com/docs/apollo/latest/classapollo_1_1planning_1_1Stage.html)
+)
+
+}
+// namespace planning
+}
+// namespace apollo
+[apollo::planning::Stage](https://apollo.baidu.com/docs/apollo/latest/classapollo_1_1planning_1_1Stage.html)
+Definition
+[stage.h:46](https://apollo.baidu.com/docs/apollo/latest/stage_8h_source.html#l00046)
+fragment
+
+ 开发第二个阶段，待转区行驶的阶段TRAFFIC_LIGHT_LEFT_TURN_WAITING_ZONE_CREEP，实现待转区阶段的Process()函数: 在reference_line_info中设置该阶段的限速 如果通过了左转停止线，或者左转灯是绿灯则切入TRAFFIC_LIGHT_LEFT_TURN_WAITING_ZONE_CRUISE阶段 文件路径：
+
+planning/scenarios/traffic_light_left_turn_waiting_zone/stage_creep.cc
+fragment
+#include "modules/planning/scenarios/traffic_light_left_turn_waiting_zone/stage_creep.h"
+#include "modules/planning/scenarios/traffic_light_left_turn_waiting_zone/traffic_light_left_turn_waiting_zone.h"
+#include <string>
+#include "modules/common_msgs/perception_msgs/traffic_light_detection.pb.h"
+#include "
+[cyber/common/log.h](https://apollo.baidu.com/docs/apollo/latest/log_8h.html)
+"
+#include "
+[modules/planning/planning_base/common/frame.h](https://apollo.baidu.com/docs/apollo/latest/modules_2planning_2planning__base_2common_2frame_8h.html)
+"
+#include "
+[modules/planning/planning_base/common/planning_context.h](https://apollo.baidu.com/docs/apollo/latest/planning__context_8h.html)
+"
+
+namespace
+[apollo](https://apollo.baidu.com/docs/apollo/latest/namespaceapollo.html)
+{
+namespace
+[planning](https://apollo.baidu.com/docs/apollo/latest/classplanning.html)
+{
+
+using
+[apollo::common::TrajectoryPoint](https://apollo.baidu.com/docs/apollo/latest/structapollo_1_1common_1_1TrajectoryPoint.html)
+;
+using
+[apollo::hdmap::PathOverlap](https://apollo.baidu.com/docs/apollo/latest/structapollo_1_1hdmap_1_1PathOverlap.html)
+;
+using
+[apollo::perception::TrafficLight](https://apollo.baidu.com/docs/apollo/latest/structapollo_1_1perception_1_1TrafficLight.html)
+;
+
+bool
+TrafficLightLeftTurnWaitingZoneStageCreep::Init(
+const
+StagePipeline& config,
+const
+std::shared_ptr<DependencyInjector>& injector,
+const
+std::string& config_dir,
+void
+* context) {
+CHECK_NOTNULL(context);
+bool
+ret =
+[Stage::Init](https://apollo.baidu.com/docs/apollo/latest/classapollo_1_1planning_1_1Stage.html#a7dcf7c31e54ea46a0dee424296850f73)
+(config, injector, config_dir, context);
+if
+(!ret) {
+[AERROR](https://apollo.baidu.com/docs/apollo/latest/log_8h.html#a6f0289102fe6b16c585ca7d18eae701e)
+<< Name() <<
+"init failed!"
+;
+return
+false
+;
+}
+return
+ret;
+}
+
+StageResult TrafficLightLeftTurnWaitingZoneStageCreep::Process(
+const
+TrajectoryPoint& planning_init_point,
+[Frame](https://apollo.baidu.com/docs/apollo/latest/structFrame.html)
+* frame) {
+CHECK_NOTNULL(frame);
+CHECK_NOTNULL(context_);
+auto
+* context = GetContextAs<TrafficLightLeftTurnWaitingZoneContext>();
+const
+auto
+& scenario_config = context->scenario_config;
+auto
+& reference_line_info = frame->mutable_reference_line_info()->front();
+reference_line_info.LimitCruiseSpeed(scenario_config.creep_speed());
+StageResult result = ExecuteTaskOnReferenceLine(planning_init_point, frame);
+if
+(result.HasError()) {
+[AERROR](https://apollo.baidu.com/docs/apollo/latest/log_8h.html#a6f0289102fe6b16c585ca7d18eae701e)
+<<
+"TrafficLightLeftTurnWaitingZoneStageCreep planning error"
+;
+}
+hdmap::PathOverlap forward_traffic_light_overlap;
+hdmap::PathOverlap left_turn_traffic_light_overlap_first;
+hdmap::PathOverlap left_turn_traffic_light_overlap_second;
+const
+std::vector<hdmap::PathOverlap> traffic_light_overlaps
+= reference_line_info.reference_line().map_path().signal_overlaps();
+for
+(
+const
+auto
+& overlap : traffic_light_overlaps) {
+if
+(overlap.object_id == context->forward_traffic_light_id) {
+forward_traffic_light_overlap = overlap;
+}
+else
+if
+(overlap.object_id == context->left_turn_traffic_light_id) {
+if
+(left_turn_traffic_light_overlap_second.start_s < overlap.start_s) {
+std::swap(left_turn_traffic_light_overlap_first,
+left_turn_traffic_light_overlap_second);
+left_turn_traffic_light_overlap_second = overlap;
+}
+else
+{
+left_turn_traffic_light_overlap_first = overlap;
+}
+}
+}
+const
+double
+adc_front_edge_s = reference_line_info.AdcSlBoundary().end_s();
+bool
+is_passed_left_turn_stop_line =
+adc_front_edge_s > left_turn_traffic_light_overlap_second.end_s;
+auto
+left_signal_color =
+frame->GetSignal(context->left_turn_traffic_light_id).color();
+auto
+done_traffic_light =
+injector_->planning_context()->mutable_planning_status()->mutable_traffic_light();
+done_traffic_light->mutable_done_traffic_light_overlap_id()->Clear();
+if
+(is_passed_left_turn_stop_line || left_signal_color == TrafficLight::GREEN) {
+reference_line_info.LimitCruiseSpeed(scenario_config.cruise_speed());
+return
+FinishStage();
+}
+return
+result.SetStageStatus(
+[StageStatusType::RUNNING](https://apollo.baidu.com/docs/apollo/latest/namespaceapollo_1_1planning.html#ad726b78fb7282f9a3f49e9f38b299255a43491564ebcfd38568918efbd6e840fd)
+);
+}
+
+StageResult TrafficLightLeftTurnWaitingZoneStageCreep::FinishStage() {
+next_stage_ =
+"TRAFFIC_LIGHT_LEFT_TURN_WAITING_ZONE_CRUISE"
+;
+return
+StageResult(
+[StageStatusType::FINISHED](https://apollo.baidu.com/docs/apollo/latest/namespaceapollo_1_1planning.html#ad726b78fb7282f9a3f49e9f38b299255a2c616b2713e2e0aed04b4c4752c88133)
+);
+}
+
+}
+// namespace planning
+}
+// namespace apollo
+[apollo::planning::Stage::Init](https://apollo.baidu.com/docs/apollo/latest/classapollo_1_1planning_1_1Stage.html#a7dcf7c31e54ea46a0dee424296850f73)
+virtual bool Init(const StagePipeline &config, const std::shared_ptr< DependencyInjector > &injector, const std::string &config_dir, void *context)
+Definition
+[stage.cc:43](https://apollo.baidu.com/docs/apollo/latest/stage_8cc_source.html#l00043)
+fragment
+
+ 添加头文件
+
+modules/planning/scenarios/traffic_light_left_turn_waiting_zone/stage_creep.h：
+fragment
+#pragma once
+#include <memory>
+#include <string>
+#include "
+[cyber/plugin_manager/plugin_manager.h](https://apollo.baidu.com/docs/apollo/latest/cyber_2plugin__manager_2plugin__manager_8h.html)
+"
+#include "modules/planning/planning_base/scenario_base/stage.h"
+
+namespace
+[apollo](https://apollo.baidu.com/docs/apollo/latest/namespaceapollo.html)
+{
+namespace
+[planning](https://apollo.baidu.com/docs/apollo/latest/classplanning.html)
+{
+
+class
+TrafficLightLeftTurnWaitingZoneStageCreep :
+public
+Stage {
+public
+:
+bool
+Init(
+const
+StagePipeline& config,
+const
+std::shared_ptr<DependencyInjector>& injector,
+const
+std::string& config_dir,
+void
+* context)
+override
+;
+StageResult Process(
+const
+common::TrajectoryPoint& planning_init_point,
+[Frame](https://apollo.baidu.com/docs/apollo/latest/structFrame.html)
+* frame)
+override
+;
+
+private
+:
+StageResult FinishStage();
+};
+
+[CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN](https://apollo.baidu.com/docs/apollo/latest/cyber_2plugin__manager_2plugin__manager_8h.html#a3d39fb94b9dae7e6b630ae64c6f99f8c)
+(
+apollo::planning::TrafficLightLeftTurnWaitingZoneStageCreep, Stage)
+
+}
+// namespace planning
+}
+// namespace apollo
+fragment
+
+ 开发第三个阶段通过交叉路口TRAFFIC_LIGHT_LEFT_TURN_WAITING_ZONE_CRUISE： 该阶段可以继承当前已有的交叉路口阶段基类BaseStageTrafficLightCruise 设置当前阶段限速 这一阶段将无视红绿灯信息，因此将直行灯和左转灯都加入到add_done_traffic_light_overlap_id 文件路径：
+
+planning/scenarios/traffic_light_left_turn_waiting_zone/stage_intersection_cruise.cc
+fragment
+#include "modules/planning/scenarios/traffic_light_left_turn_waiting_zone/stage_intersection_cruise.h"
+#include "modules/planning/scenarios/traffic_light_left_turn_waiting_zone/traffic_light_left_turn_waiting_zone.h"
+#include "
+[cyber/common/log.h](https://apollo.baidu.com/docs/apollo/latest/log_8h.html)
+"
+
+namespace
+[apollo](https://apollo.baidu.com/docs/apollo/latest/namespaceapollo.html)
+{
+namespace
+[planning](https://apollo.baidu.com/docs/apollo/latest/classplanning.html)
+{
+
+StageResult TrafficLightLeftTurnWaitingZoneStageIntersectionCruise::Process(
+const
+common::TrajectoryPoint& planning_init_point,
+[Frame](https://apollo.baidu.com/docs/apollo/latest/structFrame.html)
+* frame) {
+const
+auto
+* context = GetContextAs<TrafficLightLeftTurnWaitingZoneContext>();
+const
+auto
+& scenario_config = context->scenario_config;
+auto
+& reference_line_info = frame->mutable_reference_line_info()->front();
+reference_line_info.LimitCruiseSpeed(scenario_config.cruise_speed());
+StageResult result = ExecuteTaskOnReferenceLine(planning_init_point, frame);
+auto
+done_traffic_light =
+injector_->planning_context()->mutable_planning_status()->mutable_traffic_light();
+done_traffic_light->mutable_done_traffic_light_overlap_id()->Clear();
+done_traffic_light->add_done_traffic_light_overlap_id(
+context->forward_traffic_light_id);
+done_traffic_light->add_done_traffic_light_overlap_id(
+context->left_turn_traffic_light_id);
+if
+(result.HasError()) {
+[AERROR](https://apollo.baidu.com/docs/apollo/latest/log_8h.html#a6f0289102fe6b16c585ca7d18eae701e)
+<<
+"TrafficLightLeftTurnWaitingZoneStageIntersectionCruise "
+<<
+"plan error"
+;
+}
+bool
+stage_done = CheckDone(*frame, injector_->planning_context(),
+true
+);
+if
+(stage_done) {
+return
+FinishStage();
+}
+return
+result.SetStageStatus(
+[StageStatusType::RUNNING](https://apollo.baidu.com/docs/apollo/latest/namespaceapollo_1_1planning.html#ad726b78fb7282f9a3f49e9f38b299255a43491564ebcfd38568918efbd6e840fd)
+);
+}
+
+StageResult TrafficLightLeftTurnWaitingZoneStageIntersectionCruise::FinishStage() {
+return
+FinishScenario();
+}
+
+}
+// namespace planning
+}
+// namespace apollo
+fragment
+
+ 添加头文件
+
+modules/planning/scenarios/traffic_light_left_turn_waiting_zone/stage_intersection_cruise.h：
+fragment
+#pragma once
+#include <string>
+#include "
+[cyber/plugin_manager/plugin_manager.h](https://apollo.baidu.com/docs/apollo/latest/cyber_2plugin__manager_2plugin__manager_8h.html)
+"
+#include "modules/planning/planning_base/scenario_base/traffic_light_base/base_stage_traffic_light_cruise.h"
+
+namespace
+[apollo](https://apollo.baidu.com/docs/apollo/latest/namespaceapollo.html)
+{
+namespace
+[planning](https://apollo.baidu.com/docs/apollo/latest/classplanning.html)
+{
+
+class
+TrafficLightLeftTurnWaitingZoneStageIntersectionCruise
+:
+public
+BaseStageTrafficLightCruise {
+public
+:
+StageResult Process(
+const
+common::TrajectoryPoint& planning_init_point,
+[Frame](https://apollo.baidu.com/docs/apollo/latest/structFrame.html)
+* frame)
+override
+;
+
+private
+:
+StageResult FinishStage();
+};
+
+[CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN](https://apollo.baidu.com/docs/apollo/latest/cyber_2plugin__manager_2plugin__manager_8h.html#a3d39fb94b9dae7e6b630ae64c6f99f8c)
+(
+apollo::planning::TrafficLightLeftTurnWaitingZoneStageIntersectionCruise,
+Stage)
+
+}
+// namespace planning
+}
+// namespace apollo
+fragment
+
+ 完成场景的流水线配置conf/pipeline.pb.txt，配置需要启动的阶段，和每个阶段用到的任务 文件路径
+
+planning/scenarios/traffic_light_left_turn_waiting_zone/conf/pipeline.pb.txt
+fragment
+stage: {
+name: "TRAFFIC_LIGHT_LEFT_TURN_WAITING_ZONE_APPROACH"
+type: "TrafficLightLeftTurnWaitingZoneStageApproach"
+enabled: true
+task {
+name: "LANE_FOLLOW_PATH"
+type: "LaneFollowPath"
+}
+task {
+name: "FALLBACK_PATH"
+type: "FallbackPath"
+}
+task {
+name: "PATH_DECIDER"
+type: "PathDecider"
+}
+task {
+name: "RULE_BASED_STOP_DECIDER"
+type: "RuleBasedStopDecider"
+}
+task {
+name: "SPEED_BOUNDS_PRIORI_DECIDER"
+type: "SpeedBoundsDecider"
+}
+task {
+name: "SPEED_HEURISTIC_OPTIMIZER"
+type: "PathTimeHeuristicOptimizer"
+}
+task {
+name: "SPEED_DECIDER"
+type: "SpeedDecider"
+}
+task {
+name: "SPEED_BOUNDS_FINAL_DECIDER"
+type: "SpeedBoundsDecider"
+}
+task {
+name: "PIECEWISE_JERK_SPEED"
+type: "PiecewiseJerkSpeedOptimizer"
+}
+}
+stage: {
+name: "TRAFFIC_LIGHT_LEFT_TURN_WAITING_ZONE_CREEP"
+type: "TrafficLightLeftTurnWaitingZoneStageCreep"
+enabled: true
+task {
+name: "LANE_FOLLOW_PATH"
+type: "LaneFollowPath"
+}
+task {
+name: "FALLBACK_PATH"
+type: "FallbackPath"
+}
+task {
+name: "PATH_DECIDER"
+type: "PathDecider"
+}
+task {
+name: "RULE_BASED_STOP_DECIDER"
+type: "RuleBasedStopDecider"
+}
+task {
+name: "SPEED_BOUNDS_PRIORI_DECIDER"
+type: "SpeedBoundsDecider"
+}
+task {
+name: "SPEED_HEURISTIC_OPTIMIZER"
+type: "PathTimeHeuristicOptimizer"
+}
+task {
+name: "SPEED_DECIDER"
+type: "SpeedDecider"
+}
+task {
+name: "SPEED_BOUNDS_FINAL_DECIDER"
+type: "SpeedBoundsDecider"
+}
+task {
+name: "PIECEWISE_JERK_SPEED"
+type: "PiecewiseJerkSpeedOptimizer"
+}
+}
+stage: {
+name: "TRAFFIC_LIGHT_LEFT_TURN_WAITING_ZONE_CRUISE"
+type: "TrafficLightLeftTurnWaitingZoneStageIntersectionCruise"
+enabled: true
+task {
+name: "LANE_FOLLOW_PATH"
+type: "LaneFollowPath"
+}
+task {
+name: "FALLBACK_PATH"
+type: "FallbackPath"
+}
+task {
+name: "PATH_DECIDER"
+type: "PathDecider"
+}
+task {
+name: "RULE_BASED_STOP_DECIDER"
+type: "RuleBasedStopDecider"
+}
+task {
+name: "ST_BOUNDS_DECIDER"
+type: "STBoundsDecider"
+}
+task {
+name: "SPEED_BOUNDS_PRIORI_DECIDER"
+type: "SpeedBoundsDecider"
+}
+task {
+name: "SPEED_HEURISTIC_OPTIMIZER"
+type: "PathTimeHeuristicOptimizer"
+}
+task {
+name: "SPEED_DECIDER"
+type: "SpeedDecider"
+}
+task {
+name: "SPEED_BOUNDS_FINAL_DECIDER"
+type: "SpeedBoundsDecider"
+}
+task {
+name: "PIECEWISE_JERK_SPEED"
+type: "PiecewiseJerkSpeedOptimizer"
+}
+}
+fragment
+
+ 添加场景的参数文件 将场景用到的参数配置到一个proto文件 文件路径：
+
+planning/scenarios/traffic_light_left_turn_waiting_zone/proto/traffic_light_left_turn_waiting_zone.proto
+fragment
+syntax = "proto2";
+package apollo.planning;
+message TrafficLightLeftTurnWaitingZoneConfig {
+optional double start_traffic_light_scenario_distance = 1;
+// meter
+optional double approach_speed = 2;
+optional double creep_speed = 3;
+optional double cruise_speed = 4;
+}
+fragment
+
+ 修改配置的编译文件BUILD，将其编译为一个 文件路径：
+
+文件路径：
+
+planning/scenarios/traffic_light_left_turn_waiting_zone/proto/BUILD
+fragment
+load(
+"@rules_cc//cc:defs.bzl"
+,
+"cc_binary"
+,
+"cc_library"
+)
+load(
+"//tools:apollo_package.bzl"
+,
+"apollo_cc_library"
+,
+"apollo_package"
+,
+"apollo_plugin"
+)
+load(
+"//tools/proto:proto.bzl"
+,
+"proto_library"
+)
+load(
+"//tools:cpplint.bzl"
+,
+"cpplint"
+)
+package(
+default_visibility = [
+"//visibility:public"
+]
+)
+proto_library(
+name =
+"traffic_light_left_turn_waiting_zone_proto"
+,
+srcs = [
+"traffic_light_left_turn_waiting_zone.proto"
+],
+
+)
+apollo_package()
+cpplint()
+fragment
+
+ 将场景的参数配置添加到
+
+planning/scenarios/traffic_light_left_turn_waiting_zone/conf/scenario_conf.pb.txt中
+fragment
+start_traffic_light_scenario_distance: 30.0
+approach_speed:5.0
+creep_speed: 3.0
+cruise_speed:8.0
+fragment
+
+ 将添加的scenario和stage插件注册到文件中 
+
+modules/planning/scenarios/traffic_light_left_turn_waiting_zone/plugin_traffic_light_left_turn_waiting_zone_description.xml
+fragment
+<
+library
+path
+=
+"modules/planning/scenarios/traffic_light_left_turn_waiting_zone/libtraffic_light_left_turn_waiting_zone.so"
+>
+<
+class
+type
+=
+"apollo::planning::TrafficLightLeftTurnWaitingZone"
+base_class
+=
+"apollo::planning::Scenario"
+>
+</
+class
+>
+<
+class
+type
+=
+"apollo::planning::TrafficLightLeftTurnWaitingZoneStageApproach"
+base_class
+=
+"apollo::planning::Stage"
+>
+</
+class
+>
+<
+class
+type
+=
+"apollo::planning::TrafficLightLeftTurnWaitingZoneStageCreep"
+base_class
+=
+"apollo::planning::Stage"
+>
+</
+class
+>
+<
+class
+type
+=
+"apollo::planning::TrafficLightLeftTurnWaitingZoneStageIntersectionCruise"
+base_class
+=
+"apollo::planning::Stage"
+>
+</
+class
+>
+</
+library
+>
+fragment
+
+ 将左转待转场景加入到planning的场景管理流水线中 文件路径：
+
+profiles/current/modules/planning/planning_base/conf/planning_config.pb.txt
+fragment
+topic_config {
+chassis_topic: "/apollo/canbus/chassis"
+hmi_status_topic: "/apollo/hmi/status"
+localization_topic: "/apollo/localization/pose"
+planning_pad_topic: "/apollo/planning/pad"
+planning_trajectory_topic: "/apollo/planning"
+prediction_topic: "/apollo/prediction"
+relative_map_topic: "/apollo/relative_map"
+routing_request_topic: "/apollo/external_command/lane_follow"
+routing_response_topic: "/apollo/routing_response"
+planning_command_topic: "/apollo/planning/command"
+story_telling_topic: "/apollo/storytelling"
+traffic_light_detection_topic: "/apollo/perception/traffic_light"
+planning_learning_data_topic: "/apollo/planning/learning_data"
+}
+# NO_LEARNING / E2E / HYBRID / RL_TEST / E2E_TEST / HYBRID_TEST
+learning_mode: NO_LEARNING
+reference_line_config {
+pnc_map_class: "apollo::planning::LaneFollowMap"
+}
+standard_planning_config {
+planner_type: PUBLIC_ROAD
+planner_public_road_config {
+scenario {
+name: "EMERGENCY_PULL_OVER"
+type: "EmergencyPullOverScenario"
+}
+scenario {
+name: "EMERGENCY_STOP"
+type: "EmergencyStopScenario"
+}
+scenario {
+name: "VALET_PARKING"
+type: "ValetParkingScenario"
+}
+scenario {
+name: "BARE_INTERSECTION_UNPROTECTED"
+type: "BareIntersectionUnprotectedScenario"
+}
+scenario {
+name: "STOP_SIGN_UNPROTECTED"
+type: "StopSignUnprotectedScenario"
+}
+scenario {
+name: "YIELD_SIGN"
+type: "YieldSignScenario"
+}
+scenario {
+name: "TRAFFIC_LIGHT_LEFT_TURN_WAITING_ZONE"
+type: "TrafficLightLeftTurnWaitingZone"
+}
+scenario {
+name: "TRAFFIC_LIGHT_UNPROTECTED_LEFT_TURN"
+type: "TrafficLightUnprotectedLeftTurnScenario"
+}
+scenario {
+name: "TRAFFIC_LIGHT_UNPROTECTED_RIGHT_TURN"
+type: "TrafficLightUnprotectedRightTurnScenario"
+}
+scenario {
+name: "TRAFFIC_LIGHT_PROTECTED"
+type: "TrafficLightProtectedScenario"
+}
+scenario {
+name: "PULL_OVER"
+type: "PullOverScenario"
+}
+scenario {
+name: "PARK_AND_GO"
+type: "ParkAndGoScenario"
+}
+scenario {
+name: "LANE_FOLLOW"
+type: "LaneFollowScenario"
+}
+}
+}
+fragment
+
+ 开发一个仿真测试的脚本，通过键盘输入来控制信号灯的变换。 文件路径：
+
+modules/planning/scenarios/traffic_light_left_turn_waiting_zone/tools/manual_traffic_light.py
+fragment
+from
+cyber.python.cyber_py3
+import
+cyber
+from
+cyber.python.cyber_py3
+import
+cyber_time
+import
+modules.common_msgs.perception_msgs.traffic_light_detection_pb2
+as
+traffic_light_detection_pb2
+import
+threading
+import
+time
+
+def
+add_left_light(color, traffic_light_pb):
+light = traffic_light_pb.traffic_light.add()
+light.color = color
+light.id =
+"451089192"
+light.tracking_time = 10.0
+
+def
+add_forward_light(color, traffic_light_pb):
+light = traffic_light_pb.traffic_light.add()
+light.color = color
+light.id =
+"451089193"
+light.tracking_time = 10.0
+
+seq_num = 0
+
+def
+add_header(msg):
+global
+seq_num
+msg.header.sequence_num = seq_num
+msg.header.timestamp_sec = cyber_time.Time.now().to_sec()
+msg.header.module_name =
+"manual_traffic_light"
+seq_num = seq_num + 1
+
+def
+pub_func(writer):
+while
+not
+cyber.is_shutdown():
+global
+traffic_light_msg
+add_header(traffic_light_msg)
+writer.write(traffic_light_msg)
+time.sleep(0.1)
+
+traffic_light_msg =
+None
+
+if
+__name__ ==
+'__main__'
+:
+traffic_light_msg = traffic_light_detection_pb2.TrafficLightDetection()
+cyber.init()
+node = cyber.Node(
+"traffic_light_command"
+)
+writer = node.create_writer(
+"/apollo/perception/traffic_light"
+, traffic_light_detection_pb2.TrafficLightDetection)
+thread = threading.Thread(target=pub_func, args=(writer,))
+thread.start()
+
+while
+not
+cyber.is_shutdown():
+m = input(
+"1: all red 2: forward green  3: left green 4:all green\n"
+)
+traffic_light_msg.ClearField(
+'traffic_light'
+)
+print(m)
+
+if
+m ==
+'1'
+:
+add_left_light(traffic_light_detection_pb2.TrafficLight.RED, traffic_light_msg)
+add_forward_light(traffic_light_detection_pb2.TrafficLight.RED, traffic_light_msg)
+elif
+m ==
+"2"
+:
+add_left_light(traffic_light_detection_pb2.TrafficLight.RED, traffic_light_msg)
+add_forward_light(traffic_light_detection_pb2.TrafficLight.GREEN, traffic_light_msg)
+elif
+m ==
+"3"
+:
+add_left_light(traffic_light_detection_pb2.TrafficLight.GREEN, traffic_light_msg)
+add_forward_light(traffic_light_detection_pb2.TrafficLight.RED, traffic_light_msg)
+elif
+m ==
+"4"
+:
+add_left_light(traffic_light_detection_pb2.TrafficLight.GREEN, traffic_light_msg)
+add_forward_light(traffic_light_detection_pb2.TrafficLight.GREEN, traffic_light_msg)
+cyber.shutdown()
+fragment
+
+ 修改BUILD文件，配置编译依赖。 将包内所有代码编译为一个apollo的插件，添加代码中所有对基础库的依赖 
+
+load(
+"@rules_cc//cc:defs.bzl"
+,
+"cc_binary"
+,
+"cc_library"
+)
+load(
+"//tools:apollo.bzl"
+,
+"cyber_plugin_description"
+)
+load(
+"//tools:apollo_package.bzl"
+,
+"apollo_cc_library"
+,
+"apollo_package"
+,
+"apollo_plugin"
+)
+load(
+"//tools/proto:proto.bzl"
+,
+"proto_library"
+)
+load(
+"//tools:cpplint.bzl"
+,
+"cpplint"
+)
+package(
+default_visibility = [
+"//visibility:public"
+]
+)
+filegroup(
+name =
+"left_turn_waiting_zone_files"
+,
+srcs = glob(
+[
+"conf/**"
+,
+]),
+
+)
+apollo_plugin(
+name =
+"libtraffic_light_left_turn_waiting_zone.so"
+,
+srcs = [
+"stage_approach.cc"
+,
+"stage_creep.cc"
+,
+"stage_intersection_cruise.cc"
+,
+"traffic_light_left_turn_waiting_zone.cc"
+,
+],
+hdrs = [
+"stage_approach.h"
+,
+"stage_creep.h"
+,
+"stage_intersection_cruise.h"
+,
+"traffic_light_left_turn_waiting_zone.h"
+,
+],
+copts = [
+"-DMODULE_NAME=\\\"planning\\\""
+],
+description =
+":plugin_traffic_light_left_turn_waiting_zone_description.xml"
+,
+deps = [
+"//cyber"
+,
+"//modules/common/util:common_util"
+,
+"//modules/common/util:util_tool"
+,
+"//modules/common_msgs/planning_msgs:planning_cc_proto"
+,
+"//modules/map:apollo_map"
+,
+"//modules/planning/planning_base:apollo_planning_planning_base"
+,
+"//modules/planning/scenarios/traffic_light_left_turn_waiting_zone/proto:traffic_light_left_turn_waiting_zone_cc_proto"
+,
+],
+
+)
+apollo_package()
+cpplint()
+fragment
+
+ 编译开发好的包 
+
+buildtool build -p modules/planning/scenarios/traffic_light_left_turn_waiting_zone
+fragment
+
+ 在Dreamview仿真验证 选择planning2.0场景集，左转待转场景 ![](https://apollo.baidu.com/docs/apollo/latest/docs/赛事总汇/images/04_规划PnC/1225378e3870695a8d18868d3d498372.png) ![](https://apollo.baidu.com/docs/apollo/latest/docs/赛事总汇/images/04_规划PnC/0e6137ec46448785124ac00b1fbffce7.png)
+
+将车放置在地图左下角的路口，左转车道上 ![](https://apollo.baidu.com/docs/apollo/latest/docs/赛事总汇/images/04_规划PnC/95ffbbc2fd36013cdbe818994f5e88df.png)
+
+打开planning模块 在终端启动红绿灯脚本，使直行灯和左转灯都为红色
+
+需要提前安装tools工具，需要在容器中输入该指令：
+
+sudo apt install apollo-neo-tools
+python3 modules/planning/scenarios/traffic_light_left_turn_waiting_zone/tools/manual_traffic_light.py
+fragment
+
+发送目标车道的路由请求 发送目标车道的路由请求 ![](https://apollo.baidu.com/docs/apollo/latest/docs/赛事总汇/images/04_规划PnC/deb82b6b9d42b1a6c80fc1322f64d289.png)
+
+车辆行驶到停止线后，修改为直行绿灯左转红灯 **在终端输入：2**
+
+![](https://apollo.baidu.com/docs/apollo/latest/docs/赛事总汇/images/04_规划PnC/3b9e5bdef52bff3e42359461d7f3bfdd.png)
+
+**现象：**
+
+![](https://apollo.baidu.com/docs/apollo/latest/docs/赛事总汇/images/04_规划PnC/e1f0becc29baf49c4ca69657cc9ea4e0.png)
+
+车辆行驶到左转区停止线后，修改为左转绿灯 **在终端输入：3**
+
+![](https://apollo.baidu.com/docs/apollo/latest/docs/赛事总汇/images/04_规划PnC/19f8b334971a9623c64d215238b1c819.png)
+
+**现象：**
+
+![](https://apollo.baidu.com/docs/apollo/latest/docs/赛事总汇/images/04_规划PnC/902ad052e2b130b7566a54e3dd5482c1.png)
+
+重新仿真测试，当直行区左转灯是绿灯时测试效果 重新仿真测试，当左转区由绿灯变成红灯测试效果
+
+# 云实验链接：
+
+该实践内容已经上线Apollo云实验室，开快速启动进行实践体验: [https://apollo.baidu.com/community/course/25](https://apollo.baidu.com/community/course/9)
+
+## 文档意见反馈
+
+如果您在使用文档的过程中，遇到任何问题，请到我们在【开发者社区】建立的 [反馈意见收集问答页面](https://studio.apollo.auto/community/article/163)，反馈相关的问题。我们会根据反馈意见对文档进行迭代优化。
