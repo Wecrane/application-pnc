@@ -48,7 +48,7 @@ Status PublicRoadPlanner::Plan(
     auto result = scenario_->Process(planning_start_point, frame);
 
 #ifdef USE_NEW_LOG
-  PlanningLogContext::set_stage_name(scenario_->GetStage());
+    PlanningLogContext::set_stage_name(scenario_->GetStage());
 #endif
 
     if (FLAGS_enable_record_debug) {

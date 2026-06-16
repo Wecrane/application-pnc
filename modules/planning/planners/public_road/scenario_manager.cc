@@ -51,9 +51,9 @@ bool ScenarioManager::Init(
     AINFO << "Load scenario list:" << planner_config.DebugString();
     current_scenario_ = default_scenario_type_;
 #ifdef USE_NEW_LOG
-  if (current_scenario_) {
-    PlanningLogContext::set_scenario_name(current_scenario_->Name());
-  }
+    if (current_scenario_) {
+        PlanningLogContext::set_scenario_name(current_scenario_->Name());
+    }
 #endif
 }
 

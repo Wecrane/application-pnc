@@ -330,27 +330,27 @@ void PlanningLogSink::RouteMessage(
         WriteLine(summary_writer_, summary_mutex_, json_line);
     } else if (tag == "decision" || tag == "state") {
         WriteLine(decision_writer_, decision_mutex_, json_line);
-  } else if (tag == "scenario") {
-    if (FLAGS_planning_log_per_scenario) {
-      std::lock_guard<std::mutex> lock(scenario_mutex_);
-      auto it = scenario_writers_.find(scenario);
-      if (it == scenario_writers_.end()) {
-        std::string scenario_path = log_dir_ + "/per_scenario/" + scenario + ".jsonl";
-        boost::system::error_code ec;
-        boost::filesystem::create_directories(log_dir_ + "/per_scenario", ec);
-        scenario_writers_[scenario].open(scenario_path, std::ios::out | std::ios::app);
-        it = scenario_writers_.find(scenario);
-      }
-      if (it != scenario_writers_.end() && it->second.is_open()) {
-        it->second << json_line << "\n";
-      }
+    } else if (tag == "scenario") {
+        if (FLAGS_planning_log_per_scenario) {
+            std::lock_guard<std::mutex> lock(scenario_mutex_);
+            auto it = scenario_writers_.find(scenario);
+            if (it == scenario_writers_.end()) {
+                std::string scenario_path = log_dir_ + "/per_scenario/" + scenario + ".jsonl";
+                boost::system::error_code ec;
+                boost::filesystem::create_directories(log_dir_ + "/per_scenario", ec);
+                scenario_writers_[scenario].open(scenario_path, std::ios::out | std::ios::app);
+                it = scenario_writers_.find(scenario);
+            }
+            if (it != scenario_writers_.end() && it->second.is_open()) {
+                it->second << json_line << "\n";
+            }
+        } else {
+            // Fallback: write scenario-tagged messages to decision.log
+            WriteLine(decision_writer_, decision_mutex_, json_line);
+        }
     } else {
-      // Fallback: write scenario-tagged messages to decision.log
-      WriteLine(decision_writer_, decision_mutex_, json_line);
-    }
-  } else {
-    // Fallback: unrecognized tags → decision.log (captures all planning logs)
-    WriteLine(decision_writer_, decision_mutex_, json_line);
+        // Fallback: unrecognized tags → decision.log (captures all planning logs)
+        WriteLine(decision_writer_, decision_mutex_, json_line);
         RotateTraceIfNeeded();
         if (trace_writer_.is_open()) {
             trace_writer_ << json_line << "\n";
