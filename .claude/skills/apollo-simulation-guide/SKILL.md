@@ -1,6 +1,6 @@
 ---
 name: apollo-simulation-guide
-description: Apollo Planning 仿真开发全流程指南。覆盖：环境安装、Planning 模块架构（17 Scenario + 10 TrafficRule + 25 Task）、插件开发实战、参数配置、CyberRT 通信框架、PnC Map/Routing、Control 模块、aem/buildtool/profile 工具链、编译构建、赛事场景解题。专为只改 Planning 的仿真测试场景设计。当用户提及 Apollo 安装、Planning 开发、插件开发、场景、TrafficRule、Task、参数配置、编译构建、aem、buildtool、profile、CyberRT、PnC Map、Routing 等关键词时必须使用此技能。
+description: Apollo Planning 仿真开发全流程指南。覆盖：环境安装、Planning 模块架构（17 Scenario + 10 TrafficRule + 35 Task）、插件开发实战（Scenario/Task/TrafficRule 完整模板 + ScenarioManager 切换机制 + Stage 生命周期 + 配置链路 + 参数调优）、CyberRT 通信框架、PnC Map/Routing、Control 模块、aem/buildtool/profile 工具链、编译构建、赛事场景解题。专为只改 Planning 的仿真测试场景设计。当用户提及 Apollo 安装、Planning 开发、插件开发、场景、TrafficRule、Task、参数配置、编译构建、aem、buildtool、profile、CyberRT、PnC Map、Routing、Stage、pipeline、IsTransferable、BuildStopDecision、plugins.xml、LoadConfig 等关键词时必须使用此技能。
 ---
 
 # Apollo 仿真测试指南
@@ -32,7 +32,8 @@ description: Apollo Planning 仿真开发全流程指南。覆盖：环境安装
 | 电脑重启后进入 Apollo | 见下方高频问答 | `aem start && aem enter` |
 | 下载 Planning 源码 / 编译 / 打包 | 见下方高频问答 | 高频命令 |
 | **Planning 模块全索引** | **`references/06-planning-module.md`** | **72 子模块索引** |
-| Scenario / TrafficRule / Task 开发 | `references/03-pnc-development.md` | 插件开发 + 实战模板 + 赛事集锦 |
+| Scenario / TrafficRule / Task 开发 | `references/03-pnc-development.md` | 插件开发概述 + 赛事集锦 |
+| **插件开发实战手册** | **`references/13-plugin-dev-handbook.md`** | **通用模板 + 切换机制 + 配置链路 + 参数速查（⭐核心）** |
 | 参数配置 / 调参 | `references/09-params-version.md` | 分级参数 + 发版说明 |
 | aem / buildtool / profile | `references/05-tools-reference.md` | 工具详解 + Profile 排查 |
 | CyberRT 通信框架 | `references/07-cyber-rt.md` | 通信/调度/组件机制 |
@@ -154,7 +155,8 @@ flowchart TD
 | 文件 | 内容 | 何时阅读 |
 |------|------|---------|
 | `references/01-quick-start.md` | 从零到仿真运行的完整流程 | 用户首次安装或环境出问题 |
-| `references/03-pnc-development.md` | 插件开发 + 实战模板 + 赛事集锦场景 | 用户做 PnC 开发或看赛题 |
+| `references/03-pnc-development.md` | 插件开发概述 + 赛事集锦场景 | 用户了解插件体系概述或看赛题解法 |
+| **`references/13-plugin-dev-handbook.md`** | **⭐ 插件开发实战手册：通用代码模板 + ScenarioManager 切换机制 + Stage 生命周期 + LoadConfig 配置链路 + 参数速查 + 常见陷阱** | **用户问如何新增/修改 Scenario/Task/TrafficRule** |
 | `references/05-tools-reference.md` | aem/buildtool/profile 详解 + 排查 | 用户问命令行工具或配置问题 |
 | **`references/06-planning-module.md`** | **Planning 72 子模块完整索引** | **用户问任何 Planning 子模块** |
 | `references/07-cyber-rt.md` | CyberRT 通信/调度/组件/插件机制 | 用户问模块通信 |
@@ -174,7 +176,15 @@ flowchart TD
 |---------|---------|
 | 安装 Apollo、配置环境 | 先查高频快答，未覆盖则读 `references/01-quick-start.md` |
 | Planning 子模块查询 | 先查 `references/06-planning-module.md`，再查 `apollo_docs_md/框架设计/.../planning/` |
-| Scenario/TrafficRule/Task 开发 | 读 `references/03-pnc-development.md` |
+| **如何新增/修改 Scenario** | 读 `references/13-plugin-dev-handbook.md`（模板 + Checklist + IsTransferable 模式） |
+| **如何新增/修改 Task** | 读 `references/13-plugin-dev-handbook.md`（模板 + 继承体系 + pipeline 引用） |
+| **如何新增/修改 TrafficRule** | 读 `references/13-plugin-dev-handbook.md`（模板 + BuildStopDecision + 注册） |
+| **ScenarioManager 切换机制** | 读 `references/13-plugin-dev-handbook.md`（Update 逻辑 + STATUS_PROCESSING 保护） |
+| **Stage 生命周期 / pipeline 配置** | 读 `references/13-plugin-dev-handbook.md`（状态机 + FinishStage/FinishScenario） |
+| **配置加载链路 / LoadConfig** | 读 `references/13-plugin-dev-handbook.md`（__cxa_demangle + 调用链） |
+| **BUILD / plugins.xml / cyberfile.xml 怎么写** | 读 `references/13-plugin-dev-handbook.md`（完整模板 + 格式约束） |
+| **参数在哪里改 / 调参** | 读 `references/13-plugin-dev-handbook.md` §八 + `references/09-params-version.md` |
+| Scenario/TrafficRule/Task 概述 | 读 `references/03-pnc-development.md` |
 | 参数配置 / 调参 | 读 `references/09-params-version.md` |
 | aem / buildtool / profile | 读 `references/05-tools-reference.md` |
 | CyberRT / 模块通信 | 读 `references/07-cyber-rt.md` |
