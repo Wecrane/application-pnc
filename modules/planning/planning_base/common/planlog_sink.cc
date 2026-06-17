@@ -176,14 +176,26 @@ PlanningLogSink::PlanningLogSink() : trace_start_time_(0), trace_rotate_minutes_
 
 PlanningLogSink::~PlanningLogSink() {
     FlushAll();
-    { std::lock_guard<std::mutex> lock(error_mutex_);
-      if (error_writer_.is_open()) error_writer_.close(); }
-    { std::lock_guard<std::mutex> lock(summary_mutex_);
-      if (summary_writer_.is_open()) summary_writer_.close(); }
-    { std::lock_guard<std::mutex> lock(decision_mutex_);
-      if (decision_writer_.is_open()) decision_writer_.close(); }
-    { std::lock_guard<std::mutex> lock(trace_mutex_);
-      if (trace_writer_.is_open()) trace_writer_.close(); }
+    {
+        std::lock_guard<std::mutex> lock(error_mutex_);
+        if (error_writer_.is_open())
+            error_writer_.close();
+    }
+    {
+        std::lock_guard<std::mutex> lock(summary_mutex_);
+        if (summary_writer_.is_open())
+            summary_writer_.close();
+    }
+    {
+        std::lock_guard<std::mutex> lock(decision_mutex_);
+        if (decision_writer_.is_open())
+            decision_writer_.close();
+    }
+    {
+        std::lock_guard<std::mutex> lock(trace_mutex_);
+        if (trace_writer_.is_open())
+            trace_writer_.close();
+    }
     {
         std::lock_guard<std::mutex> lock(scenario_mutex_);
         for (auto& pair : scenario_writers_) {
@@ -311,7 +323,7 @@ std::string PlanningLogSink::ExtractDatFields(const char* message, size_t messag
             char c = value[i];
             if (c == '-' || c == '+') {
                 // Sign only valid at start or immediately after 'e'/'E'.
-                if (i == 0 || (i > 0 && (value[i-1] == 'e' || value[i-1] == 'E'))) {
+                if (i == 0 || (i > 0 && (value[i - 1] == 'e' || value[i - 1] == 'E'))) {
                     continue;
                 }
                 is_numeric = false;
@@ -370,8 +382,7 @@ std::string PlanningLogSink::BuildJson(
         size_t message_len) {
     // Get real microsecond timestamp (glog only provides second-level tm_time).
     auto now = std::chrono::system_clock::now();
-    auto us = std::chrono::duration_cast<std::chrono::microseconds>(
-        now.time_since_epoch()).count() % 1000000;
+    auto us = std::chrono::duration_cast<std::chrono::microseconds>(now.time_since_epoch()).count() % 1000000;
     char time_buf[32];
     FormatISO8601(time_buf, sizeof(time_buf), tm_time, static_cast<int>(us));
 
@@ -388,8 +399,7 @@ std::string PlanningLogSink::BuildJson(
     std::string escaped_scenario = EscapeJsonString(scenario.c_str(), scenario.size());
     std::string escaped_stage = EscapeJsonString(stage.c_str(), stage.size());
     std::string escaped_filename = EscapeJsonString(
-        (base_filename ? base_filename : "unknown"),
-        (base_filename ? std::strlen(base_filename) : 7));
+            (base_filename ? base_filename : "unknown"), (base_filename ? std::strlen(base_filename) : 7));
 
     std::ostringstream json;
     json << "{"
@@ -445,7 +455,8 @@ void PlanningLogSink::RotateTraceIfNeeded() {
         }
     }
 
-    if (!need_open) return;
+    if (!need_open)
+        return;
 
     // Generate new trace filename with timestamp.
     char time_buf[20];

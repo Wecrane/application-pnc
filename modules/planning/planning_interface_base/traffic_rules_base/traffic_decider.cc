@@ -92,8 +92,8 @@ void TrafficDecider::BuildPlanningTarget(ReferenceLineInfo *reference_line_info)
         stop_point.set_s(min_s - front_edge_to_center + FLAGS_virtual_stop_wall_length / 2.0);
         reference_line_info->SetLatticeStopPoint(stop_point);
 #ifdef USE_NEW_LOG
-        PDECISION_LOG << "planning_target stop=" << StopPoint::Type_Name(stop_point.type())
-                      << " s=" << stop_point.s() << " source=" << stop_source;
+        PDECISION_LOG << "planning_target stop=" << StopPoint::Type_Name(stop_point.type()) << " s=" << stop_point.s()
+                      << " source=" << stop_source;
 #endif
     } else {
 #ifdef USE_NEW_LOG
@@ -124,13 +124,16 @@ Status TrafficDecider::Execute(Frame *frame, ReferenceLineInfo *reference_line_i
 #ifdef USE_NEW_LOG
     // Log stop wall details for each rule.
     for (const auto &rule : rule_list_) {
-        if (!rule) continue;
+        if (!rule)
+            continue;
         for (const auto *obstacle : reference_line_info->path_decision()->obstacles().Items()) {
             if (obstacle->IsVirtual() && obstacle->HasLongitudinalDecision()
                 && obstacle->LongitudinalDecision().has_stop()) {
                 PDECISION_LOG << "traffic_rule[" << rule->Getname() << "] stop_wall: type="
                               << (obstacle->LongitudinalDecision().stop().reason_code()
-                                  == StopReasonCode::STOP_REASON_YELLOW_SIGNAL ? "SOFT" : "HARD")
+                                                  == StopReasonCode::STOP_REASON_YELLOW_SIGNAL
+                                          ? "SOFT"
+                                          : "HARD")
                               << " s=" << obstacle->PerceptionSLBoundary().start_s();
                 break;
             }

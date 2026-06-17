@@ -155,8 +155,7 @@ StageResult Stage::ExecuteTaskOnReferenceLine(const common::TrajectoryPoint& pla
             auto fallback_ret = fallback_task_->Execute(frame, &reference_line_info);
             const double fallback_time_ms = (Clock::NowInSeconds() - fallback_start) * 1000;
 #ifdef USE_NEW_LOG
-            PDECISION_LOG << "fallback_task[" << fallback_task_->Name()
-                          << "] time_ms=" << fallback_time_ms
+            PDECISION_LOG << "fallback_task[" << fallback_task_->Name() << "] time_ms=" << fallback_time_ms
                           << " status=" << (fallback_ret.ok() ? "OK" : "FAIL");
 #endif
         }

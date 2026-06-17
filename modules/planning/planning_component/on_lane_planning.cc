@@ -451,13 +451,12 @@ void OnLanePlanning::RunOnce(const LocalView& local_view, ADCTrajectory* const p
     // ---- Build enriched frame SUMMARY with debugging-critical data ----
     std::ostringstream summary_dat;
     summary_dat << "frame complete"
-                << " planner=" << planner_->Name()
-                << " speed=" << vehicle_state.linear_velocity()
-                << " accel=" << vehicle_state.linear_acceleration()
-                << " gear=" << (vehicle_state.gear() == canbus::Chassis::GEAR_DRIVE ? "D" :
-                                vehicle_state.gear() == canbus::Chassis::GEAR_REVERSE ? "R" : "P")
-                << " traj_pts=" << ptr_trajectory_pb->trajectory_point_size()
-                << " plan_time_ms=" << time_diff_ms
+                << " planner=" << planner_->Name() << " speed=" << vehicle_state.linear_velocity()
+                << " accel=" << vehicle_state.linear_acceleration() << " gear="
+                << (vehicle_state.gear() == canbus::Chassis::GEAR_DRIVE             ? "D"
+                            : vehicle_state.gear() == canbus::Chassis::GEAR_REVERSE ? "R"
+                                                                                    : "P")
+                << " traj_pts=" << ptr_trajectory_pb->trajectory_point_size() << " plan_time_ms=" << time_diff_ms
                 << " replan=" << (stitching_trajectory.size() == 1 ? "Y" : "N")
                 << " replan_reason=" << (replan_reason.empty() ? "none" : replan_reason)
                 << " status=" << (status.ok() ? "OK" : "FAIL");
@@ -468,23 +467,29 @@ void OnLanePlanning::RunOnce(const LocalView& local_view, ADCTrajectory* const p
         double closest_dist = 999.0, closest_speed = 0.0;
         std::string closest_type = "NONE";
         for (const auto* obs : frame_->obstacles()) {
-            if (!obs) continue;
+            if (!obs)
+                continue;
             ++obs_cnt;
-            if (!obs->IsStatic()) ++obs_dyn_cnt;
+            if (!obs->IsStatic())
+                ++obs_dyn_cnt;
             double dist = obs->PerceptionSLBoundary().start_s();
             if (dist > 0.0 && dist < closest_dist) {
                 closest_dist = dist;
                 closest_speed = obs->speed();
                 auto type = obs->Perception().type();
-                if (type == perception::PerceptionObstacle::VEHICLE) closest_type = "VEH";
-                else if (type == perception::PerceptionObstacle::PEDESTRIAN) closest_type = "PED";
-                else if (type == perception::PerceptionObstacle::BICYCLE) closest_type = "CYC";
-                else closest_type = "UNK";
+                if (type == perception::PerceptionObstacle::VEHICLE)
+                    closest_type = "VEH";
+                else if (type == perception::PerceptionObstacle::PEDESTRIAN)
+                    closest_type = "PED";
+                else if (type == perception::PerceptionObstacle::BICYCLE)
+                    closest_type = "CYC";
+                else
+                    closest_type = "UNK";
             }
         }
         summary_dat << " obs_cnt=" << obs_cnt << " obs_dyn=" << obs_dyn_cnt
-                    << " front_clear=" << injector_->ego_info()->front_clear_distance()
-                    << " close_obs=" << closest_type << "@" << closest_dist << "m " << closest_speed << "m/s";
+                    << " front_clear=" << injector_->ego_info()->front_clear_distance() << " close_obs=" << closest_type
+                    << "@" << closest_dist << "m " << closest_speed << "m/s";
 
         // ---- Reference line / path ----
         const auto& ref_line_infos = frame_->reference_line_info();
@@ -498,16 +503,14 @@ void OnLanePlanning::RunOnce(const LocalView& local_view, ADCTrajectory* const p
                     max_kappa = std::max(max_kappa, std::abs(pt.kappa()));
                 }
                 summary_dat << " ref_len=" << drive_ref->reference_line().Length()
-                            << " max_kappa=" << (max_kappa * 1000.0)
-                            << " cruise_spd=" << drive_ref->GetCruiseSpeed()
+                            << " max_kappa=" << (max_kappa * 1000.0) << " cruise_spd=" << drive_ref->GetCruiseSpeed()
                             << " chg_lane=" << (drive_ref->IsChangeLanePath() ? "Y" : "N")
                             << " drivable=" << (drive_ref->IsDrivable() ? "Y" : "N");
 
                 // ---- Stop wall ----
                 if (drive_ref->planning_target().has_stop_point()) {
                     const auto& sp = drive_ref->planning_target().stop_point();
-                    summary_dat << " stop_type=" << StopPoint::Type_Name(sp.type())
-                                << " stop_s=" << sp.s();
+                    summary_dat << " stop_type=" << StopPoint::Type_Name(sp.type()) << " stop_s=" << sp.s();
                 } else {
                     summary_dat << " stop_type=NONE";
                 }
@@ -518,10 +521,18 @@ void OnLanePlanning::RunOnce(const LocalView& local_view, ADCTrajectory* const p
                     if (overlap.first == ReferenceLineInfo::SIGNAL) {
                         auto signal = frame_->GetSignal(overlap.second.object_id);
                         switch (signal.color()) {
-                        case perception::TrafficLight::RED:   tl_color = "RED"; break;
-                        case perception::TrafficLight::YELLOW:tl_color = "YEL"; break;
-                        case perception::TrafficLight::GREEN: tl_color = "GRN"; break;
-                        default: tl_color = "UNK"; break;
+                        case perception::TrafficLight::RED:
+                            tl_color = "RED";
+                            break;
+                        case perception::TrafficLight::YELLOW:
+                            tl_color = "YEL";
+                            break;
+                        case perception::TrafficLight::GREEN:
+                            tl_color = "GRN";
+                            break;
+                        default:
+                            tl_color = "UNK";
+                            break;
                         }
                         break;
                     }
