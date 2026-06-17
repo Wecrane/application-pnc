@@ -477,50 +477,67 @@ void OnLanePlanning::RunOnce(const LocalView& local_view, ADCTrajectory* const p
         double block_dist = -1.0, block_spd = 0.0;
 
         for (const auto* obs : obstacles) {
-            if (!obs) continue;
+            if (!obs)
+                continue;
             ++obs_cnt;
-            if (!obs->IsStatic()) ++obs_dyn;
+            if (!obs->IsStatic())
+                ++obs_dyn;
             double s = obs->PerceptionSLBoundary().start_s();
             double l = obs->PerceptionSLBoundary().start_l();
             double end_l = obs->PerceptionSLBoundary().end_l();
             double spd = obs->speed();
             auto ptype = obs->Perception().type();
             std::string tstr = "UNK";
-            if (ptype == perception::PerceptionObstacle::VEHICLE) tstr = "VEH";
-            else if (ptype == perception::PerceptionObstacle::PEDESTRIAN) tstr = "PED";
-            else if (ptype == perception::PerceptionObstacle::BICYCLE) tstr = "CYC";
+            if (ptype == perception::PerceptionObstacle::VEHICLE)
+                tstr = "VEH";
+            else if (ptype == perception::PerceptionObstacle::PEDESTRIAN)
+                tstr = "PED";
+            else if (ptype == perception::PerceptionObstacle::BICYCLE)
+                tstr = "CYC";
 
             // Closest obstacle overall (any type, in front).
             if (s > 0.0 && s < closest_s) {
-                closest_s = s; closest_spd = spd; closest_type = tstr; closest_lat = l;
+                closest_s = s;
+                closest_spd = spd;
+                closest_type = tstr;
+                closest_lat = l;
             }
             // Front dynamic vehicle (vehicle/bicycle ahead, closest).
             if (s > 0.0 && s < front_dyn_s && !obs->IsStatic()
                 && (ptype == perception::PerceptionObstacle::VEHICLE
                     || ptype == perception::PerceptionObstacle::BICYCLE)) {
-                front_dyn_s = s; front_dyn_spd = spd; front_dyn_type = tstr;
+                front_dyn_s = s;
+                front_dyn_spd = spd;
+                front_dyn_type = tstr;
             }
             // Rear dynamic vehicle (closest behind).
             if (s < 0.0 && s > rear_dyn_s && !obs->IsStatic()
                 && (ptype == perception::PerceptionObstacle::VEHICLE
                     || ptype == perception::PerceptionObstacle::BICYCLE)) {
-                rear_dyn_s = s; rear_dyn_spd = spd; rear_dyn_type = tstr;
+                rear_dyn_s = s;
+                rear_dyn_spd = spd;
+                rear_dyn_type = tstr;
             }
             // Lateral overlap: obstacle l-range overlaps ego lateral footprint.
             if ((l <= 2.5 && end_l >= -2.5) || (l <= -2.5 && end_l >= -4.5)) {
                 ++lat_overlap_cnt;
                 double lat_d = std::min(std::abs(l), std::abs(end_l));
-                if (lat_d < min_lat_dist) min_lat_dist = lat_d;
+                if (lat_d < min_lat_dist)
+                    min_lat_dist = lat_d;
             }
             // Obstacle decision counts.
             if (obs->HasLongitudinalDecision()) {
                 const auto& d = obs->LongitudinalDecision();
-                if (d.has_stop()) ++obs_stop_dec;
-                if (d.has_yield()) ++obs_yield_dec;
-                if (d.has_follow()) ++obs_follow_dec;
+                if (d.has_stop())
+                    ++obs_stop_dec;
+                if (d.has_yield())
+                    ++obs_yield_dec;
+                if (d.has_follow())
+                    ++obs_follow_dec;
             }
             if (obs->HasLateralDecision()) {
-                if (obs->LateralDecision().has_nudge()) ++obs_nudge_dec;
+                if (obs->LateralDecision().has_nudge())
+                    ++obs_nudge_dec;
             }
         }
 
@@ -534,9 +551,12 @@ void OnLanePlanning::RunOnce(const LocalView& local_view, ADCTrajectory* const p
                     block_dist = blk->PerceptionSLBoundary().start_s();
                     block_spd = blk->speed();
                     auto bt = blk->Perception().type();
-                    if (bt == perception::PerceptionObstacle::VEHICLE) block_type = "VEH";
-                    else if (bt == perception::PerceptionObstacle::PEDESTRIAN) block_type = "PED";
-                    else if (bt == perception::PerceptionObstacle::BICYCLE) block_type = "CYC";
+                    if (bt == perception::PerceptionObstacle::VEHICLE)
+                        block_type = "VEH";
+                    else if (bt == perception::PerceptionObstacle::PEDESTRIAN)
+                        block_type = "PED";
+                    else if (bt == perception::PerceptionObstacle::BICYCLE)
+                        block_type = "CYC";
                 }
             }
         }
@@ -545,27 +565,28 @@ void OnLanePlanning::RunOnce(const LocalView& local_view, ADCTrajectory* const p
                     << " front_clear=" << injector_->ego_info()->front_clear_distance();
 
         if (closest_s < 999.0)
-            summary_dat << " close_obs=" << closest_type << "@" << closest_s << "m "
-                        << closest_spd << "m/s lat=" << closest_lat;
-        else summary_dat << " close_obs=NONE";
+            summary_dat << " close_obs=" << closest_type << "@" << closest_s << "m " << closest_spd
+                        << "m/s lat=" << closest_lat;
+        else
+            summary_dat << " close_obs=NONE";
 
         if (block_dist >= 0.0)
-            summary_dat << " block_obs=" << block_type << "(" << block_id << ")@"
-                        << block_dist << "m " << block_spd << "m/s";
-        else summary_dat << " block_obs=NONE";
+            summary_dat << " block_obs=" << block_type << "(" << block_id << ")@" << block_dist << "m " << block_spd
+                        << "m/s";
+        else
+            summary_dat << " block_obs=NONE";
 
         if (front_dyn_s < 999.0)
-            summary_dat << " front_veh=" << front_dyn_type << "@" << front_dyn_s
-                        << "m " << front_dyn_spd << "m/s";
-        else summary_dat << " front_veh=NONE";
+            summary_dat << " front_veh=" << front_dyn_type << "@" << front_dyn_s << "m " << front_dyn_spd << "m/s";
+        else
+            summary_dat << " front_veh=NONE";
 
         if (rear_dyn_s > -999.0)
-            summary_dat << " rear_veh=" << rear_dyn_type << "@" << rear_dyn_s
-                        << "m " << rear_dyn_spd << "m/s";
-        else summary_dat << " rear_veh=NONE";
+            summary_dat << " rear_veh=" << rear_dyn_type << "@" << rear_dyn_s << "m " << rear_dyn_spd << "m/s";
+        else
+            summary_dat << " rear_veh=NONE";
 
-        summary_dat << " lat_obs=" << lat_overlap_cnt
-                    << " dec_stop=" << obs_stop_dec << " dec_yield=" << obs_yield_dec
+        summary_dat << " lat_obs=" << lat_overlap_cnt << " dec_stop=" << obs_stop_dec << " dec_yield=" << obs_yield_dec
                     << " dec_follow=" << obs_follow_dec << " dec_nudge=" << obs_nudge_dec;
 
         // ---- Reference line / path / stop / tl / borrow ----
@@ -579,16 +600,14 @@ void OnLanePlanning::RunOnce(const LocalView& local_view, ADCTrajectory* const p
                 double max_kappa = 0.0;
                 for (const auto& pt : dr->reference_line().reference_points())
                     max_kappa = std::max(max_kappa, std::abs(pt.kappa()));
-                summary_dat << " ref_len=" << dr->reference_line().Length()
-                            << " max_kappa=" << (max_kappa * 1000.0)
+                summary_dat << " ref_len=" << dr->reference_line().Length() << " max_kappa=" << (max_kappa * 1000.0)
                             << " cruise_spd=" << dr->GetCruiseSpeed()
                             << " chg_lane=" << (dr->IsChangeLanePath() ? "Y" : "N")
                             << " drivable=" << (dr->IsDrivable() ? "Y" : "N");
 
                 if (dr->planning_target().has_stop_point()) {
                     const auto& sp = dr->planning_target().stop_point();
-                    summary_dat << " stop_type=" << StopPoint::Type_Name(sp.type())
-                                << " stop_s=" << sp.s();
+                    summary_dat << " stop_type=" << StopPoint::Type_Name(sp.type()) << " stop_s=" << sp.s();
                 } else {
                     summary_dat << " stop_type=NONE";
                 }
@@ -598,16 +617,23 @@ void OnLanePlanning::RunOnce(const LocalView& local_view, ADCTrajectory* const p
                     if (overlap.first == ReferenceLineInfo::SIGNAL) {
                         auto signal = frame_->GetSignal(overlap.second.object_id);
                         switch (signal.color()) {
-                        case perception::TrafficLight::RED:   tl_color = "RED"; break;
-                        case perception::TrafficLight::YELLOW:tl_color = "YEL"; break;
-                        case perception::TrafficLight::GREEN: tl_color = "GRN"; break;
-                        default: tl_color = "UNK"; break;
+                        case perception::TrafficLight::RED:
+                            tl_color = "RED";
+                            break;
+                        case perception::TrafficLight::YELLOW:
+                            tl_color = "YEL";
+                            break;
+                        case perception::TrafficLight::GREEN:
+                            tl_color = "GRN";
+                            break;
+                        default:
+                            tl_color = "UNK";
+                            break;
                         }
                         break;
                     }
                 }
-                summary_dat << " tl=" << tl_color
-                            << " borrow=" << (dr->is_path_lane_borrow() ? "Y" : "N");
+                summary_dat << " tl=" << tl_color << " borrow=" << (dr->is_path_lane_borrow() ? "Y" : "N");
             }
         }
 
@@ -615,7 +641,8 @@ void OnLanePlanning::RunOnce(const LocalView& local_view, ADCTrajectory* const p
         double max_plan_spd = 0.0;
         for (int i = 0; i < ptr_trajectory_pb->trajectory_point_size(); ++i) {
             double v = ptr_trajectory_pb->trajectory_point(i).v();
-            if (v > max_plan_spd) max_plan_spd = v;
+            if (v > max_plan_spd)
+                max_plan_spd = v;
         }
         summary_dat << " max_plan_spd=" << max_plan_spd;
     }
