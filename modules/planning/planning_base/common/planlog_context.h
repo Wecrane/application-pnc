@@ -33,7 +33,25 @@ namespace planning {
 //
 // These values are automatically attached to log messages by the
 // PLAN_LOG / PSCENARIO_* / PSTAGE_* macros and by PlanningLogSink.
+//
+// Snapshot mechanism: When crossing thread boundaries (e.g. cyber::Async),
+// call Snapshot() on the source thread and Restore() on the target thread
+// to propagate the logging context.
 struct PlanningLogContext {
+    // ---- Snapshot for cross-thread context propagation ----
+    struct Snapshot {
+        uint32_t frame_seq = 0;
+        std::string scenario_name = "<unset>";
+        std::string stage_name = "<unset>";
+        std::string planning_name = "planning";
+    };
+
+    // Capture current thread-local context into a Snapshot.
+    static Snapshot Capture();
+
+    // Restore thread-local context from a Snapshot.
+    static void Restore(const Snapshot& snap);
+
     // ---- Frame sequence number ----
     static void set_frame_seq(uint32_t seq);
     static uint32_t frame_seq();

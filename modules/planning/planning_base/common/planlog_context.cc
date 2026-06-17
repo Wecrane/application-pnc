@@ -27,11 +27,29 @@ namespace {
 // and PlanningLogSink::send() is called from whichever thread issued the log.
 
 thread_local uint32_t g_planlog_frame_seq = 0;
-thread_local std::string g_planlog_scenario_name = "unknown";
-thread_local std::string g_planlog_stage_name = "unknown";
+thread_local std::string g_planlog_scenario_name = "<unset>";
+thread_local std::string g_planlog_stage_name = "<unset>";
 thread_local std::string g_planlog_planning_name = "planning";
 
 }  // namespace
+
+// ---- Snapshot / cross-thread propagation ----
+
+PlanningLogContext::Snapshot PlanningLogContext::Capture() {
+    Snapshot snap;
+    snap.frame_seq = g_planlog_frame_seq;
+    snap.scenario_name = g_planlog_scenario_name;
+    snap.stage_name = g_planlog_stage_name;
+    snap.planning_name = g_planlog_planning_name;
+    return snap;
+}
+
+void PlanningLogContext::Restore(const Snapshot& snap) {
+    g_planlog_frame_seq = snap.frame_seq;
+    g_planlog_scenario_name = snap.scenario_name;
+    g_planlog_stage_name = snap.stage_name;
+    g_planlog_planning_name = snap.planning_name;
+}
 
 // ---- Frame sequence ----
 

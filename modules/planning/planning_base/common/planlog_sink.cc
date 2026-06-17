@@ -20,9 +20,11 @@
 #include <unistd.h>
 
 #include <algorithm>
+#include <chrono>
 #include <cstdio>
 #include <cstring>
 #include <iomanip>
+#include <iostream>
 #include <sstream>
 
 #include <boost/filesystem.hpp>
@@ -78,7 +80,10 @@ std::string EscapeJsonString(const char* message, size_t len) {
             break;
         default:
             if (static_cast<unsigned char>(c) < 0x20) {
-                // Non-printable control characters are dropped.
+                // Escape non-printable control characters as \uXXXX (RFC 8259).
+                char buf[8];
+                snprintf(buf, sizeof(buf), "\\u%04x", static_cast<unsigned char>(c));
+                result += buf;
                 break;
             }
             result += c;
@@ -105,6 +110,8 @@ std::string SeverityToString(int severity) {
 }
 
 // Map glog severity to our configured log level.
+// NOTE: GLOG_WARNING is mapped to level -1 to distinguish it from ERROR.
+// WARNING messages are always written but do NOT go to error.log.
 int SeverityToLevel(int severity) {
     switch (severity) {
     case google::GLOG_FATAL:
@@ -114,7 +121,7 @@ int SeverityToLevel(int severity) {
     case google::GLOG_INFO:
         return 2;  // SUMMARY, DECISION, STATE all use INFO
     case google::GLOG_WARNING:
-        return 1;
+        return -1;  // Always enabled, separate from ERROR
     default:
         return 2;
     }
@@ -151,6 +158,9 @@ PlanningLogSink::PlanningLogSink() : trace_start_time_(0), trace_rotate_minutes_
 
     // Open error writer (append mode).
     error_writer_.open(error_path_, std::ios::out | std::ios::app);
+    if (!error_writer_.is_open()) {
+        std::cerr << "[PLANLOG] ERROR: Failed to open error log: " << error_path_ << std::endl;
+    }
     // Open summary writer (append mode).
     summary_writer_.open(summary_path_, std::ios::out | std::ios::app);
     // Open decision writer (append mode).
@@ -166,14 +176,14 @@ PlanningLogSink::PlanningLogSink() : trace_start_time_(0), trace_rotate_minutes_
 
 PlanningLogSink::~PlanningLogSink() {
     FlushAll();
-    if (error_writer_.is_open())
-        error_writer_.close();
-    if (summary_writer_.is_open())
-        summary_writer_.close();
-    if (decision_writer_.is_open())
-        decision_writer_.close();
-    if (trace_writer_.is_open())
-        trace_writer_.close();
+    { std::lock_guard<std::mutex> lock(error_mutex_);
+      if (error_writer_.is_open()) error_writer_.close(); }
+    { std::lock_guard<std::mutex> lock(summary_mutex_);
+      if (summary_writer_.is_open()) summary_writer_.close(); }
+    { std::lock_guard<std::mutex> lock(decision_mutex_);
+      if (decision_writer_.is_open()) decision_writer_.close(); }
+    { std::lock_guard<std::mutex> lock(trace_mutex_);
+      if (trace_writer_.is_open()) trace_writer_.close(); }
     {
         std::lock_guard<std::mutex> lock(scenario_mutex_);
         for (auto& pair : scenario_writers_) {
@@ -229,6 +239,128 @@ bool PlanningLogSink::IsLevelEnabled(int level) const {
 // BuildJson — serialize log entry to a JSON line
 // ============================================================================
 
+// Extract key=value pairs from message body.
+// Parses patterns like: key1=val1 key2=2.5 key3=text
+// Values containing spaces are not supported (stop at next space).
+// Returns a JSON object string like {"key1":"val1","key2":2.5,"key3":"text"},
+// or empty string if no key=value pairs found.
+std::string PlanningLogSink::ExtractDatFields(const char* message, size_t message_len) {
+    if (message == nullptr || message_len == 0)
+        return "";
+
+    std::string msg(message, message_len);
+
+    // Skip leading tag prefix like "[SUMMARY] " or "[DECISION] " or "[scn:XXX] "
+    size_t body_start = 0;
+    if (msg.size() >= 2 && msg[0] == '[') {
+        size_t close_bracket = msg.find("] ");
+        if (close_bracket != std::string::npos) {
+            body_start = close_bracket + 2;  // skip past "] "
+        }
+    }
+
+    std::string body = msg.substr(body_start);
+    if (body.empty())
+        return "";
+
+    std::ostringstream dat;
+    dat << "{";
+    bool first = true;
+    size_t pos = 0;
+
+    while (pos < body.size()) {
+        // Find '=' sign
+        size_t eq = body.find('=', pos);
+        if (eq == std::string::npos)
+            break;
+
+        // Extract key (from pos to eq, backtrack to last space)
+        size_t key_start = pos;
+        size_t key_end = eq;
+        // Find the start of this key (previous space or beginning)
+        size_t space_before = body.rfind(' ', eq);
+        if (space_before != std::string::npos && space_before >= pos) {
+            key_start = space_before + 1;
+        }
+
+        std::string key = body.substr(key_start, key_end - key_start);
+        if (key.empty()) {
+            pos = eq + 1;
+            continue;
+        }
+
+        // Extract value (from eq+1 to next space or end)
+        size_t val_start = eq + 1;
+        size_t val_end = body.find(' ', val_start);
+        if (val_end == std::string::npos)
+            val_end = body.size();
+
+        std::string value = body.substr(val_start, val_end - val_start);
+        if (value.empty()) {
+            pos = val_end;
+            continue;
+        }
+
+        // Determine if value is numeric or string.
+        // Supports: integers, decimals, negatives, scientific notation (e.g. 1.5e10).
+        bool is_numeric = true;
+        bool has_dot = false;
+        bool has_digit = false;
+        bool has_exp = false;
+        for (size_t i = 0; i < value.size(); ++i) {
+            char c = value[i];
+            if (c == '-' || c == '+') {
+                // Sign only valid at start or immediately after 'e'/'E'.
+                if (i == 0 || (i > 0 && (value[i-1] == 'e' || value[i-1] == 'E'))) {
+                    continue;
+                }
+                is_numeric = false;
+                break;
+            }
+            if (c == '.' && !has_dot && !has_exp) {
+                has_dot = true;
+                continue;
+            }
+            if ((c == 'e' || c == 'E') && !has_exp && has_digit) {
+                has_exp = true;
+                has_dot = false;  // no more dots after exponent
+                continue;
+            }
+            if (c >= '0' && c <= '9') {
+                has_digit = true;
+                continue;
+            }
+            is_numeric = false;
+            break;
+        }
+        // Must contain at least one digit; single '-' or '+' is not numeric.
+        if (!has_digit) {
+            is_numeric = false;
+        }
+
+        if (!first)
+            dat << ",";
+        first = false;
+
+        // Escape key and value for JSON
+        dat << "\"" << EscapeJsonString(key.c_str(), key.size()) << "\":";
+        if (is_numeric) {
+            dat << value;
+        } else {
+            dat << "\"" << EscapeJsonString(value.c_str(), value.size()) << "\"";
+        }
+
+        pos = val_end;
+    }
+
+    dat << "}";
+
+    // Only return if we actually found some fields
+    if (first)
+        return "";  // no fields found
+    return dat.str();
+}
+
 std::string PlanningLogSink::BuildJson(
         google::LogSeverity severity,
         const char* base_filename,
@@ -236,34 +368,48 @@ std::string PlanningLogSink::BuildJson(
         const struct ::tm* tm_time,
         const char* message,
         size_t message_len) {
+    // Get real microsecond timestamp (glog only provides second-level tm_time).
+    auto now = std::chrono::system_clock::now();
+    auto us = std::chrono::duration_cast<std::chrono::microseconds>(
+        now.time_since_epoch()).count() % 1000000;
     char time_buf[32];
-    // glog's LogMessage::Flush() provides usecs via the timeinfo struct,
-    // but the exact usec field isn't in struct tm. We approximate with 0
-    // because the microsecond is already baked into tm_time's formatting
-    // when glog calls LogSink::send.
-    FormatISO8601(time_buf, sizeof(time_buf), tm_time, 0);
+    FormatISO8601(time_buf, sizeof(time_buf), tm_time, static_cast<int>(us));
 
     std::string escaped_msg = EscapeJsonString(message, message_len);
 
     pid_t tid = static_cast<pid_t>(syscall(SYS_gettid));
 
+    // Escape context fields that may contain special JSON characters.
     const std::string& scenario = PlanningLogContext::scenario_name();
     const std::string& stage = PlanningLogContext::stage_name();
     uint32_t frame = PlanningLogContext::frame_seq();
     const std::string& mod = PlanningLogContext::planning_name();
+    std::string escaped_mod = EscapeJsonString(mod.c_str(), mod.size());
+    std::string escaped_scenario = EscapeJsonString(scenario.c_str(), scenario.size());
+    std::string escaped_stage = EscapeJsonString(stage.c_str(), stage.size());
+    std::string escaped_filename = EscapeJsonString(
+        (base_filename ? base_filename : "unknown"),
+        (base_filename ? std::strlen(base_filename) : 7));
 
     std::ostringstream json;
     json << "{"
          << "\"ts\":\"" << time_buf << "\","
          << "\"lvl\":\"" << SeverityToString(severity) << "\","
-         << "\"mod\":\"" << mod << "\","
-         << "\"scn\":\"" << scenario << "\","
-         << "\"stg\":\"" << stage << "\","
+         << "\"mod\":\"" << escaped_mod << "\","
+         << "\"scn\":\"" << escaped_scenario << "\","
+         << "\"stg\":\"" << escaped_stage << "\","
          << "\"frm\":" << frame << ","
-         << "\"src\":{\"file\":\"" << (base_filename ? base_filename : "unknown") << "\",\"line\":" << line << "},"
+         << "\"src\":{\"file\":\"" << escaped_filename << "\",\"line\":" << line << "},"
          << "\"tid\":" << tid << ","
-         << "\"msg\":\"" << escaped_msg << "\""
-         << "}";
+         << "\"msg\":\"" << escaped_msg << "\"";
+
+    // Extract structured key=value pairs from message body for "dat" field.
+    std::string dat_json = ExtractDatFields(message, message_len);
+    if (!dat_json.empty()) {
+        json << ",\"dat\":" << dat_json;
+    }
+
+    json << "}";
     return json.str();
 }
 
@@ -284,31 +430,39 @@ void PlanningLogSink::WriteLine(std::ofstream& writer, std::mutex& mtx, const st
 
 void PlanningLogSink::RotateTraceIfNeeded() {
     time_t now = time(nullptr);
-    double elapsed_minutes = difftime(now, trace_start_time_) / 60.0;
 
-    if (elapsed_minutes >= trace_rotate_minutes_) {
-        // Close current trace writer
-        if (trace_writer_.is_open()) {
+    // Determine if we need to open a new trace file.
+    bool need_open = false;
+    if (!trace_writer_.is_open()) {
+        // First-time open: ensure trace file is available immediately.
+        need_open = true;
+    } else {
+        double elapsed_minutes = difftime(now, trace_start_time_) / 60.0;
+        if (elapsed_minutes >= trace_rotate_minutes_) {
+            // Close current trace writer before rotating.
             trace_writer_.close();
+            need_open = true;
         }
-
-        // Generate new trace filename with timestamp
-        char time_buf[20];
-        struct tm* tm_now = localtime(&now);
-        snprintf(
-                time_buf,
-                sizeof(time_buf),
-                "%04d%02d%02d_%02d%02d",
-                tm_now->tm_year + 1900,
-                tm_now->tm_mon + 1,
-                tm_now->tm_mday,
-                tm_now->tm_hour,
-                tm_now->tm_min);
-
-        std::string new_trace_path = trace_dir_ + "/" + time_buf + "_trace.jsonl";
-        trace_writer_.open(new_trace_path, std::ios::out | std::ios::app);
-        trace_start_time_ = now;
     }
+
+    if (!need_open) return;
+
+    // Generate new trace filename with timestamp.
+    char time_buf[20];
+    struct tm* tm_now = localtime(&now);
+    snprintf(
+            time_buf,
+            sizeof(time_buf),
+            "%04d%02d%02d_%02d%02d",
+            tm_now->tm_year + 1900,
+            tm_now->tm_mon + 1,
+            tm_now->tm_mday,
+            tm_now->tm_hour,
+            tm_now->tm_min);
+
+    std::string new_trace_path = trace_dir_ + "/" + time_buf + "_trace.jsonl";
+    trace_writer_.open(new_trace_path, std::ios::out | std::ios::app);
+    trace_start_time_ = now;
 }
 
 // ============================================================================
@@ -376,28 +530,45 @@ void PlanningLogSink::send(
 
     int level = SeverityToLevel(severity);
 
-    // Filter by configured log level (except errors which always pass through).
-    if (level > 1 && !IsLevelEnabled(level)) {
-        // Skip INFO-level messages that are below the configured threshold.
-        // But ERROR/FATAL (level 0-1) always pass through.
-        return;
+    // Parse message tag for routing decisions and tag-based level filtering.
+    // Tags are prefixes like "[SUMMARY]", "[DECISION]", "[STATE]", "[scn:".
+    std::string tag;
+    int tag_level = 2;  // default: INFO level
+    if (message_len >= 9 && std::strncmp(message, "[SUMMARY]", 9) == 0) {
+        tag = "summary";
+        tag_level = 2;
+    } else if (message_len >= 10 && std::strncmp(message, "[DECISION]", 10) == 0) {
+        tag = "decision";
+        tag_level = 3;
+    } else if (message_len >= 7 && std::strncmp(message, "[STATE]", 7) == 0) {
+        tag = "state";
+        tag_level = 4;
+    } else if (message_len >= 5 && std::strncmp(message, "[scn:", 5) == 0) {
+        tag = "scenario";
+        tag_level = 2;
+    } else if (message_len >= 5 && std::strncmp(message, "[stg:", 5) == 0) {
+        tag = "scenario";  // Stage messages route similarly to scenario
+        tag_level = 4;
+    } else if (message_len >= 5 && std::strncmp(message, "[frm:", 5) == 0) {
+        tag = "scenario";  // Frame-level messages route similarly
+        tag_level = 2;
+    }
+
+    // Filter by configured log level.
+    // FATAL/ERROR (severity-level 0-1) always pass through.
+    // For INFO-level messages, use tag_level for fine-grained filtering
+    // (SUMMARY=2, DECISION=3, STATE=4) so that --planning_log_level=N
+    // correctly distinguishes these semantic levels.
+    if (level <= 1) {
+        // FATAL/ERROR always pass through.
+    } else if (level == -1) {
+        // WARNING always enabled, no filtering.
+    } else if (tag_level > FLAGS_planning_log_level) {
+        return;  // Below configured threshold.
     }
 
     // Build JSON line.
     std::string json_line = BuildJson(severity, base_filename, line, tm_time, message, message_len);
-
-    // Parse message tag for routing decisions.
-    // Tags are prefixes like "[SUMMARY]", "[DECISION]", "[STATE]", "[scn:".
-    std::string tag;
-    if (message_len >= 9 && std::strncmp(message, "[SUMMARY]", 9) == 0) {
-        tag = "summary";
-    } else if (message_len >= 10 && std::strncmp(message, "[DECISION]", 10) == 0) {
-        tag = "decision";
-    } else if (message_len >= 7 && std::strncmp(message, "[STATE]", 7) == 0) {
-        tag = "state";
-    } else if (message_len >= 5 && std::strncmp(message, "[scn:", 5) == 0) {
-        tag = "scenario";
-    }
 
     // Get current scenario name for per-scenario routing.
     const std::string& scenario = PlanningLogContext::scenario_name();

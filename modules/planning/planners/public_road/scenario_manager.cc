@@ -84,6 +84,9 @@ void ScenarioManager::Update(const common::TrajectoryPoint& ego_point, Frame* fr
             current_scenario_->Enter(frame);
             return;
         }
+#ifdef USE_NEW_LOG
+        PDECISION_LOG << "IsTransferable: " << current_scenario_->Name() << " -> " << scenario->Name() << " = FALSE";
+#endif
     }
 }
 
@@ -96,6 +99,7 @@ void ScenarioManager::Reset(Frame* frame) {
     current_scenario_ = default_scenario_type_;
 #ifdef USE_NEW_LOG
     PSTATE_LOG << "SCENARIO_RESET: " << current_scenario_->Name() << " -> " << default_scenario_type_->Name();
+    PlanningLogContext::set_scenario_name(default_scenario_type_->Name());
 #endif
 }
 }  // namespace planning

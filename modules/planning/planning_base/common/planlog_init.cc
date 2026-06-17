@@ -16,6 +16,10 @@
 
 #include "modules/planning/planning_base/common/planlog_sink.h"
 
+#include <algorithm>
+#include <cstdio>
+#include <ctime>
+
 #include <boost/filesystem.hpp>
 
 #include "cyber/common/log.h"
@@ -27,6 +31,35 @@ namespace planning {
 namespace {
 
 PlanningLogSink* g_planning_log_sink = nullptr;
+
+// Max size of a log file before startup rotation (100 MB).
+constexpr uintmax_t kMaxLogFileSize = 100 * 1024 * 1024;
+
+// Rotate a log file on startup: rename old file to .N if it exceeds the size limit.
+void RotateLogFileOnStartup(const std::string& file_path) {
+    boost::system::error_code ec;
+    if (!boost::filesystem::exists(file_path, ec) || ec) {
+        return;
+    }
+    uintmax_t size = boost::filesystem::file_size(file_path, ec);
+    if (ec || size < kMaxLogFileSize) {
+        return;  // File is small enough, no rotation needed.
+    }
+    // Rotate: rename old file to .1, shift existing .N to .N+1.
+    // Keep at most 5 rotated files.
+    constexpr int kMaxRotatedFiles = 5;
+    for (int i = kMaxRotatedFiles; i >= 1; --i) {
+        std::string old_path = file_path + "." + std::to_string(i);
+        std::string new_path = file_path + "." + std::to_string(i + 1);
+        if (i == kMaxRotatedFiles && boost::filesystem::exists(new_path, ec)) {
+            boost::filesystem::remove(new_path, ec);
+        }
+        if (boost::filesystem::exists(old_path, ec)) {
+            boost::filesystem::rename(old_path, new_path, ec);
+        }
+    }
+    boost::filesystem::rename(file_path, file_path + ".1", ec);
+}
 
 }  // namespace
 
@@ -45,6 +78,11 @@ void InitPlanningLogger() {
     boost::filesystem::create_directories(log_dir, ec);
     boost::filesystem::create_directories(log_dir + "/trace", ec);
     boost::filesystem::create_directories(log_dir + "/per_scenario", ec);
+
+    // Rotate main log files on startup to prevent unbounded growth.
+    RotateLogFileOnStartup(log_dir + "/error.log");
+    RotateLogFileOnStartup(log_dir + "/summary.log");
+    RotateLogFileOnStartup(log_dir + "/decision.log");
 
     // Create and register the custom LogSink.
     g_planning_log_sink = new PlanningLogSink();

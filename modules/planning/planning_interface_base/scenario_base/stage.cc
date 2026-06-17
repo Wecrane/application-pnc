@@ -128,17 +128,37 @@ StageResult Stage::ExecuteTaskOnReferenceLine(const common::TrajectoryPoint& pla
             ADEBUG << "after task[" << task->Name() << "]: " << reference_line_info.PathSpeedDebugString();
             ADEBUG << task->Name() << " time spend: " << time_diff_ms << " ms.";
             AINFO << "Planning Perf: task name [" << task->Name() << "], " << time_diff_ms << " ms.";
+#ifdef USE_NEW_LOG
+            PDECISION_LOG << "task[" << task->Name() << "] time_ms=" << time_diff_ms
+                          << " status=" << (ret.ok() ? "OK" : "FAIL");
+#endif
             RecordDebugInfo(&reference_line_info, task->Name(), time_diff_ms);
 
             if (!ret.ok()) {
                 stage_result.SetTaskStatus(ret);
                 AERROR << "Failed to run tasks[" << task->Name() << "], Error message: " << ret.error_message();
+#ifdef USE_NEW_LOG
+                PDECISION_LOG << "task[" << task->Name() << "] FAIL: " << ret.error_message();
+                PSTATE_LOG << "Stage " << name_ << " ERROR at task=" << task->Name()
+                           << " reason=" << ret.error_message();
+#endif
                 break;
             }
         }
         // Generate fallback trajectory in case of task error.
         if (!ret.ok()) {
-            fallback_task_->Execute(frame, &reference_line_info);
+#ifdef USE_NEW_LOG
+            PSTATE_LOG << "Stage " << name_ << " FALLBACK triggered, task="
+                       << (ret.error_message().empty() ? "unknown" : ret.error_message());
+#endif
+            const double fallback_start = Clock::NowInSeconds();
+            auto fallback_ret = fallback_task_->Execute(frame, &reference_line_info);
+            const double fallback_time_ms = (Clock::NowInSeconds() - fallback_start) * 1000;
+#ifdef USE_NEW_LOG
+            PDECISION_LOG << "fallback_task[" << fallback_task_->Name()
+                          << "] time_ms=" << fallback_time_ms
+                          << " status=" << (fallback_ret.ok() ? "OK" : "FAIL");
+#endif
         }
         DiscretizedTrajectory trajectory;
         if (!reference_line_info.CombinePathAndSpeedProfile(
@@ -196,6 +216,10 @@ StageResult Stage::ExecuteTaskOnReferenceLineForOnlineLearning(
 }
 
 StageResult Stage::ExecuteTaskOnOpenSpace(Frame* frame) {
+#ifdef USE_NEW_LOG
+    PlanningLogContext::set_stage_name(name_);
+    PSTAGE_DEBUG << "Stage executing (open space): " << name_;
+#endif
     auto ret = common::Status::OK();
     StageResult stage_result;
     for (auto task : task_list_) {
@@ -238,6 +262,9 @@ StageResult Stage::ExecuteTaskOnOpenSpace(Frame* frame) {
 }
 
 StageResult Stage::FinishScenario() {
+#ifdef USE_NEW_LOG
+    PSTATE_LOG << "Stage FINISHED: " << name_;
+#endif
     next_stage_ = "";
     return StageResult(StageStatusType::FINISHED);
 }

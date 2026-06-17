@@ -74,6 +74,9 @@ private:
             const char* message,
             size_t message_len);
 
+    // Extract key=value pairs from message body into a JSON "dat" object.
+    static std::string ExtractDatFields(const char* message, size_t message_len);
+
     // ---- File routing ----
     void RouteMessage(const std::string& json_line, int level, const std::string& tag, const std::string& scenario);
 

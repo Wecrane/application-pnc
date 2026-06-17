@@ -499,5 +499,5 @@ DEFINE_int32(
         3,
         "Planning log level: 0=FATAL,1=ERROR,2=SUMMARY,"
         "3=DECISION,4=STATE,5=TRACE");
-DEFINE_string(planning_log_dir, "data/log/planning", "Planning structured log output directory");
+DEFINE_string(planning_log_dir, "/apollo_workspace/data/log/planning", "Planning structured log output directory");
 DEFINE_int32(planning_log_trace_rotate_minutes, 10, "Trace log rotation interval in minutes");

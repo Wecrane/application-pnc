@@ -62,11 +62,13 @@ bool TrafficDecider::Init(const std::shared_ptr<DependencyInjector> &injector) {
 void TrafficDecider::BuildPlanningTarget(ReferenceLineInfo *reference_line_info) {
     double min_s = std::numeric_limits<double>::infinity();
     StopPoint stop_point;
+    std::string stop_source;
     for (const auto *obstacle : reference_line_info->path_decision()->obstacles().Items()) {
         if (obstacle->IsVirtual() && obstacle->HasLongitudinalDecision() && obstacle->LongitudinalDecision().has_stop()
             && obstacle->PerceptionSLBoundary().start_s() < min_s) {
             min_s = obstacle->PerceptionSLBoundary().start_s();
             const auto &stop_code = obstacle->LongitudinalDecision().stop().reason_code();
+            stop_source = StopReasonCode_Name(stop_code);
             if (stop_code == StopReasonCode::STOP_REASON_DESTINATION
                 || stop_code == StopReasonCode::STOP_REASON_CROSSWALK
                 || stop_code == StopReasonCode::STOP_REASON_STOP_SIGN
@@ -75,7 +77,7 @@ void TrafficDecider::BuildPlanningTarget(ReferenceLineInfo *reference_line_info)
                 || stop_code == StopReasonCode::STOP_REASON_REFERENCE_END
                 || stop_code == StopReasonCode::STOP_REASON_SIGNAL) {
                 stop_point.set_type(StopPoint::HARD);
-                ADEBUG << "Hard stop at: " << min_s << "REASON: " << StopReasonCode_Name(stop_code);
+                ADEBUG << "Hard stop at: " << min_s << "REASON: " << stop_source;
             } else if (stop_code == StopReasonCode::STOP_REASON_YELLOW_SIGNAL) {
                 stop_point.set_type(StopPoint::SOFT);
                 ADEBUG << "Soft stop at: " << min_s << "  STOP_REASON_YELLOW_SIGNAL";
@@ -89,6 +91,15 @@ void TrafficDecider::BuildPlanningTarget(ReferenceLineInfo *reference_line_info)
         double front_edge_to_center = vehicle_config.vehicle_param().front_edge_to_center();
         stop_point.set_s(min_s - front_edge_to_center + FLAGS_virtual_stop_wall_length / 2.0);
         reference_line_info->SetLatticeStopPoint(stop_point);
+#ifdef USE_NEW_LOG
+        PDECISION_LOG << "planning_target stop=" << StopPoint::Type_Name(stop_point.type())
+                      << " s=" << stop_point.s() << " source=" << stop_source;
+#endif
+    } else {
+#ifdef USE_NEW_LOG
+        AWARN << "[frm:" << PlanningLogContext::frame_seq()
+              << "] No planning target found (no stop wall on any reference line)";
+#endif
     }
 }
 
@@ -109,6 +120,23 @@ Status TrafficDecider::Execute(Frame *frame, ReferenceLineInfo *reference_line_i
         ADEBUG << "Applied rule " << rule->Getname();
 #endif
     }
+
+#ifdef USE_NEW_LOG
+    // Log stop wall details for each rule.
+    for (const auto &rule : rule_list_) {
+        if (!rule) continue;
+        for (const auto *obstacle : reference_line_info->path_decision()->obstacles().Items()) {
+            if (obstacle->IsVirtual() && obstacle->HasLongitudinalDecision()
+                && obstacle->LongitudinalDecision().has_stop()) {
+                PDECISION_LOG << "traffic_rule[" << rule->Getname() << "] stop_wall: type="
+                              << (obstacle->LongitudinalDecision().stop().reason_code()
+                                  == StopReasonCode::STOP_REASON_YELLOW_SIGNAL ? "SOFT" : "HARD")
+                              << " s=" << obstacle->PerceptionSLBoundary().start_s();
+                break;
+            }
+        }
+    }
+#endif
 
     BuildPlanningTarget(reference_line_info);
     return Status::OK();

@@ -19,12 +19,16 @@
 #include <algorithm>
 #include <limits>
 #include <list>
+#include <sstream>
 #include <utility>
 
 #include "gtest/gtest_prod.h"
 
 #include "absl/strings/str_cat.h"
 
+#include "modules/common_msgs/chassis_msgs/chassis.pb.h"
+#include "modules/common_msgs/perception_msgs/perception_obstacle.pb.h"
+#include "modules/common_msgs/perception_msgs/traffic_light_detection.pb.h"
 #include "modules/common_msgs/planning_msgs/planning_internal.pb.h"
 #include "modules/common_msgs/routing_msgs/routing.pb.h"
 #include "modules/planning/planning_base/proto/planning_semantic_map_config.pb.h"
@@ -212,6 +216,9 @@ Status OnLanePlanning::InitFrame(
             segments,
             reference_line_provider_->FutureRouteWaypoints(),
             injector_->ego_info());
+#ifdef USE_NEW_LOG
+    PSCENARIO_INFO << "InitFrame ref_lines=" << reference_lines.size() << " obs=" << frame_->obstacles().size();
+#endif
     if (!status.ok()) {
         AERROR << "failed to init frame:" << status.ToString();
         return status;
@@ -249,6 +256,12 @@ void OnLanePlanning::RunOnce(const LocalView& local_view, ADCTrajectory* const p
     const double start_timestamp = Clock::NowInSeconds();
     const double start_system_timestamp
             = std::chrono::duration<double>(std::chrono::system_clock::now().time_since_epoch()).count();
+
+    // Set frame_seq early, before any early-return paths that may emit logs.
+    const uint32_t frame_num = static_cast<uint32_t>(seq_num_++);
+#ifdef USE_NEW_LOG
+    PlanningLogContext::set_frame_seq(frame_num);
+#endif
 
     // localization
     ADEBUG << "Get localization:" << local_view_.localization_estimate->DebugString();
@@ -318,10 +331,8 @@ void OnLanePlanning::RunOnce(const LocalView& local_view, ADCTrajectory* const p
             *local_view_.control_interactive_msg);
 
     injector_->ego_info()->Update(stitching_trajectory.back(), vehicle_state);
-    const uint32_t frame_num = static_cast<uint32_t>(seq_num_++);
-#ifdef USE_NEW_LOG
-    PlanningLogContext::set_frame_seq(frame_num);
-#endif
+    // NOTE: frame_num already set at start of RunOnce; seq_num_ already incremented there.
+    // This block keeps the seq_num_ increment at top for early-return path correctness.
     AINFO << "Planning start frame sequence id = [" << frame_num << "]";
     status = InitFrame(frame_num, stitching_trajectory.back(), vehicle_state);
     if (status.ok()) {
@@ -437,10 +448,93 @@ void OnLanePlanning::RunOnce(const LocalView& local_view, ADCTrajectory* const p
     AINFO << "Planning Perf: planning name [" << Name() << "], " << plnning_perf_ms << " ms.";
     AINFO << "Planning end frame sequence id = [" << frame_num << "]";
 #ifdef USE_NEW_LOG
-    PFRAME_SUMMARY << "frame complete"
-                   << " planner=" << planner_->Name() << " speed=" << vehicle_state.linear_velocity()
-                   << " traj_pts=" << ptr_trajectory_pb->trajectory_point_size() << " plan_time_ms=" << time_diff_ms
-                   << " status=" << (status.ok() ? "OK" : "FAIL");
+    // ---- Build enriched frame SUMMARY with debugging-critical data ----
+    std::ostringstream summary_dat;
+    summary_dat << "frame complete"
+                << " planner=" << planner_->Name()
+                << " speed=" << vehicle_state.linear_velocity()
+                << " accel=" << vehicle_state.linear_acceleration()
+                << " gear=" << (vehicle_state.gear() == canbus::Chassis::GEAR_DRIVE ? "D" :
+                                vehicle_state.gear() == canbus::Chassis::GEAR_REVERSE ? "R" : "P")
+                << " traj_pts=" << ptr_trajectory_pb->trajectory_point_size()
+                << " plan_time_ms=" << time_diff_ms
+                << " replan=" << (stitching_trajectory.size() == 1 ? "Y" : "N")
+                << " replan_reason=" << (replan_reason.empty() ? "none" : replan_reason)
+                << " status=" << (status.ok() ? "OK" : "FAIL");
+
+    // ---- Obstacle summary ----
+    if (frame_) {
+        int obs_cnt = 0, obs_dyn_cnt = 0;
+        double closest_dist = 999.0, closest_speed = 0.0;
+        std::string closest_type = "NONE";
+        for (const auto* obs : frame_->obstacles()) {
+            if (!obs) continue;
+            ++obs_cnt;
+            if (!obs->IsStatic()) ++obs_dyn_cnt;
+            double dist = obs->PerceptionSLBoundary().start_s();
+            if (dist > 0.0 && dist < closest_dist) {
+                closest_dist = dist;
+                closest_speed = obs->speed();
+                auto type = obs->Perception().type();
+                if (type == perception::PerceptionObstacle::VEHICLE) closest_type = "VEH";
+                else if (type == perception::PerceptionObstacle::PEDESTRIAN) closest_type = "PED";
+                else if (type == perception::PerceptionObstacle::BICYCLE) closest_type = "CYC";
+                else closest_type = "UNK";
+            }
+        }
+        summary_dat << " obs_cnt=" << obs_cnt << " obs_dyn=" << obs_dyn_cnt
+                    << " front_clear=" << injector_->ego_info()->front_clear_distance()
+                    << " close_obs=" << closest_type << "@" << closest_dist << "m " << closest_speed << "m/s";
+
+        // ---- Reference line / path ----
+        const auto& ref_line_infos = frame_->reference_line_info();
+        summary_dat << " ref_lines=" << ref_line_infos.size();
+        if (!ref_line_infos.empty()) {
+            const auto& drive_ref = frame_->DriveReferenceLineInfo();
+            if (drive_ref) {
+                // Max curvature of drive reference line (×1000 for readability).
+                double max_kappa = 0.0;
+                for (const auto& pt : drive_ref->reference_line().reference_points()) {
+                    max_kappa = std::max(max_kappa, std::abs(pt.kappa()));
+                }
+                summary_dat << " ref_len=" << drive_ref->reference_line().Length()
+                            << " max_kappa=" << (max_kappa * 1000.0)
+                            << " cruise_spd=" << drive_ref->GetCruiseSpeed()
+                            << " chg_lane=" << (drive_ref->IsChangeLanePath() ? "Y" : "N")
+                            << " drivable=" << (drive_ref->IsDrivable() ? "Y" : "N");
+
+                // ---- Stop wall ----
+                if (drive_ref->planning_target().has_stop_point()) {
+                    const auto& sp = drive_ref->planning_target().stop_point();
+                    summary_dat << " stop_type=" << StopPoint::Type_Name(sp.type())
+                                << " stop_s=" << sp.s();
+                } else {
+                    summary_dat << " stop_type=NONE";
+                }
+
+                // ---- Traffic light ----
+                std::string tl_color = "NONE";
+                for (const auto& overlap : drive_ref->FirstEncounteredOverlaps()) {
+                    if (overlap.first == ReferenceLineInfo::SIGNAL) {
+                        auto signal = frame_->GetSignal(overlap.second.object_id);
+                        switch (signal.color()) {
+                        case perception::TrafficLight::RED:   tl_color = "RED"; break;
+                        case perception::TrafficLight::YELLOW:tl_color = "YEL"; break;
+                        case perception::TrafficLight::GREEN: tl_color = "GRN"; break;
+                        default: tl_color = "UNK"; break;
+                        }
+                        break;
+                    }
+                }
+                summary_dat << " tl=" << tl_color;
+
+                // ---- Lane borrow ----
+                summary_dat << " borrow=" << (drive_ref->is_path_lane_borrow() ? "Y" : "N");
+            }
+        }
+    }
+
+    PFRAME_SUMMARY << summary_dat.str();
 #endif
     injector_->frame_history()->Add(frame_num, std::move(frame_));
 }
