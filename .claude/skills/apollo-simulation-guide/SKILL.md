@@ -96,7 +96,8 @@ description: Apollo Planning 仿真开发全流程指南。覆盖：环境安装
 - **编译（全量）**：`buildtool build -p core -j15`（首次建议执行两次）
 - **编译（只改 planning）**：`buildtool build -p modules/planning/ -j15`（快很多）
 - **编译后必须恢复 profile**：`aem profile use default`
-- **日志清理**：`find data/log/ -name "*.log.*20[0-9][0-9]*" -type f -delete`（通用）；`bash scripts/clean_logs.sh --dry-run`（新工具预览）；`bash scripts/clean_logs.sh --days 3`（新工具清理）
+- **日志清理**：`bash scripts/clean_logs.sh --planning`（Planning 专项清理，推荐）；`bash scripts/clean_logs.sh --dry-run`（预览）；`find data/log/ -name "*.log.*20[0-9][0-9]*" -type f -delete`（通用旧方式）
+- **日志分析**：`bash scripts/planlog.sh data/log/planning/summary.log --errors`（错误统计）；`grep '"status":"FAIL"' data/log/planning/summary.log`（失败帧快速定位）
 
 ---
 
@@ -162,7 +163,7 @@ flowchart TD
 | `references/07-cyber-rt.md` | CyberRT 通信/调度/组件/插件机制 | 用户问模块通信 |
 | `references/08-pnc-map-routing.md` | 参考线生成 + 全局路由 | 用户问地图/路线 |
 | `references/09-params-version.md` | 参数配置机制 + 发版说明 | 用户问调参或版本 |
-| **`references/14-log-system.md`** | **⭐ 新日志系统：planlog 结构化日志/planlog.sh 过滤/clean_logs.sh 清理/赛题调试三步法** | **用户问日志/查错/赛题调试** |
+| **`references/14-log-system.md`** | **⭐ 新日志系统：~40 字段 SUMMARY（障碍物/红绿灯/曲率/借道/自车坐标）、planlog.sh/clean_logs.sh 工具、赛题调试三步法** | **用户问日志/查错/赛题调试** |
 | `references/10-control.md` | Control 模块及 Planning 约束 | 用户问下游控制 |
 | `references/11-upstream-modules.md` | 上下游模块数据流 | 用户问感知/预测/定位接口 |
 | `references/12-algorithms.md` | 参考线平滑/路径优化/速度优化算法 | 用户问算法原理 |

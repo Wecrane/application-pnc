@@ -1,49 +1,54 @@
 # Apollo PnC 新日志系统 (planlog)
 
-> Phase 1+2 实施完成 | 2026-06-16
+> Phase 1+2+3 实施完成 | 2026-06-17
 > 设计文档：`output/log_system_redesign.md`
 
 ---
 
-## 一、改了什么
+## 一、系统概览
 
-### 新建文件（6 个）
+### 架构
+
+```
+glog (AINFO/AERROR/...) → PlanningLogSink::send()
+  → tag 检测 ([SUMMARY]/[DECISION]/[STATE]/[scn:]/[stg:]/[frm:])
+  → thread_local PlanningLogContext 注入 (frame_seq/scenario_name/stage_name)
+  → JSON 序列化 (EscapeJsonString + ExtractDatFields)
+  → RouteMessage() 按 tag+level 路由到 5 类 writer
+```
+
+### 改了什么（2026-06-17 最终状态）
+
+#### 新建文件（6 个）
 
 | 文件 | 用途 |
 |------|------|
-| `modules/planning/planning_base/common/planlog.h` | 7 个日志宏：`PFRAME_SUMMARY`、`PDECISION_LOG`、`PSTATE_LOG`、`PSCENARIO_INFO/WARN`、`PSTAGE_DEBUG`、`PLAN_LOG` |
-| `modules/planning/planning_base/common/planlog_context.h/.cc` | `thread_local` 上下文：帧号、场景名、Stage 名 |
-| `modules/planning/planning_base/common/planlog_sink.h/.cc` | 自定义 `google::LogSink`：JSON 序列化 + 按标签路由到不同文件 |
-| `modules/planning/planning_base/common/planlog_init.cc` | `InitPlanningLogger()` / `ShutdownPlanningLogger()` |
-| `scripts/clean_logs.sh` | 一键日志清理脚本（7 种策略） |
-| `scripts/planlog.sh` | grep/awk 日志过滤工具（v0.1） |
+| `modules/planning/planning_base/common/planlog.h` | 7 个日志宏 |
+| `modules/planning/planning_base/common/planlog_context.h/.cc` | `thread_local` 上下文 + `Snapshot` 跨线程传播 |
+| `modules/planning/planning_base/common/planlog_sink.h/.cc` | 自定义 `google::LogSink`：JSON 序列化 + 路由 |
+| `modules/planning/planning_base/common/planlog_init.cc` | 初始化 + 启动日志轮转（>100MB 自动 rotate） |
+| `scripts/clean_logs.sh` | 一键清理（7 种策略） |
+| `scripts/planlog.sh` | grep/awk 过滤工具（v0.1） |
 
-### 修改文件（13 个）
+#### 修改文件（13 个 + Phase 3 增强）
 
-| 文件 | 变更 |
+| 文件 | 变更要点 |
 |------|------|
-| `planning_gflags.cc/.h` | 新增 5 个 gflags：`planning_log_json`、`planning_log_level`、`planning_log_dir`、`planning_log_per_scenario`、`planning_log_trace_rotate_minutes` |
-| `planning_base/BUILD` | srcs/hdrs 列表添加 6 个新文件 |
-| `planning_component.cc/.h` | `Init()` 末尾调用 `InitPlanningLogger()`，析构调用 `ShutdownPlanningLogger()` |
-| `on_lane_planning.cc` | 帧开始设 `set_frame_seq`，帧结束写 `PFRAME_SUMMARY` |
-| `scenario_manager.cc` | 场景切换时设 `set_scenario_name` + `PDECISION_LOG`（IsTransferable），Reset 写 `PSTATE_LOG` |
-| `public_road_planner.cc` | `Plan()` 入口/出口写 `PSCENARIO_INFO`，Process 后设 `set_stage_name` |
-| `traffic_decider.cc` | 每条 TrafficRule 执行后写 `PDECISION_LOG` |
-| `stage.cc` | `ExecuteTaskOnReferenceLine` 开头设 `set_stage_name` + `PSTAGE_DEBUG` |
-| `planning.conf` | 追加 5 行日志系统配置 |
+| `planning_gflags.cc/.h` | 5 个 gflags；`planning_log_dir` 默认绝对路径 |
+| `planning_base/BUILD` | srcs/hdrs 添加全部 planlog 文件 |
+| `planning_component.cc/.h` | Init/析构中调用 `Init/ShutdownLogger()` |
+| `on_lane_planning.cc` | `set_frame_seq` 移到帧最开头；帧结束写 **~40 字段** `PFRAME_SUMMARY` |
+| `scenario_manager.cc` | 所有场景路径设 `scenario_name` + `IsTransferable` TRUE/FALSE 均记录 |
+| `public_road_planner.cc` | `Plan()` 入口/出口 + Process 后设 `stage_name` |
+| `traffic_decider.cc` | 每规则执行 + 停止墙详情（类型/s 坐标/来源规则）+ 无目标告警 |
+| `stage.cc` | `ExecuteTaskOnReferenceLine`/`ExecuteTaskOnOpenSpace` 均设 `stage_name`；FINISHED/ERROR 写 STATE 日志；Fallback 前后写决策日志 |
+| `planning.conf` | 5 行日志配置（绝对路径） |
+| `.bazelrc` | `build --copt=-DUSE_NEW_LOG` 全局启用 |
+| `planlog_sink.cc` | 微秒时间戳、JSON 控制字符 `\uXXXX` 转义、科学计数法数值识别、字段转义、文件打开失败 stderr 告警、析构加锁、Trace 首次立即打开 |
 
-### Bug 修复（2 个）— 始终生效，无需 `USE_NEW_LOG`
+#### 编译开关
 
-| 文件 | 问题 | 修复 |
-|------|------|------|
-| `scenarios/square/extricate_stage.cc:35` | `#define AINFO AERROR` 将所有 INFO 强制升级为 ERROR | 删除该宏 |
-| `tasks/rss_decider/rss_decider.cc:346-347` | `is_rss_safe` 和 `cur_dist_lon` 重复打印 | 删除重复行 |
-
-### 编译开关
-
-所有新宏/调用包裹在 `#ifdef USE_NEW_LOG` / `#endif` 中。默认编译**不激活**，向后完全兼容。
-
-激活方式：在 `.bazelrc` 中添加 `build --copt=-DUSE_NEW_LOG`，然后正常 `buildtool build -p core`。
+`.bazelrc` 中 `build --copt=-DUSE_NEW_LOG` 全局启用。该宏只影响 `modules/planning/` 下 `#ifdef USE_NEW_LOG` 块中的代码，其他模块不受影响。
 
 ---
 
@@ -52,10 +57,10 @@
 ### 2.1 日志文件结构
 
 ```
-data/log/planning/
-├── summary.log      # 每帧一行 JSON（~300B/帧）
-├── decision.log     # 决策 + 状态转换
-├── error.log        # ERROR/WARN 独立归档
+/apollo_workspace/data/log/planning/
+├── summary.log      # 每帧一行 JSON（~800B/帧，~40 字段）
+├── decision.log     # 决策 + 状态转换 + TrafficRule 详情
+├── error.log        # ERROR/WARN 独立归档（启动时 >100MB 自动 rotate）
 ├── trace/           # 开发模式全量日志（需 planning_log_level=5）
 └── per_scenario/    # 按场景分文件（需 planning_log_per_scenario=true）
 ```
@@ -63,14 +68,59 @@ data/log/planning/
 ### 2.2 配置文件（planning.conf）
 
 ```
---planning_log_json=true         # 启用 JSON 结构化输出
+--planning_log_json=true
 --planning_log_level=3           # 0=FATAL, 1=ERROR, 2=SUMMARY, 3=DECISION, 4=STATE, 5=TRACE
---planning_log_dir=data/log/planning
+--planning_log_dir=/apollo_workspace/data/log/planning
 --planning_log_per_scenario=false
 --planning_log_trace_rotate_minutes=10
 ```
 
-### 2.3 日志宏速查
+### 2.3 SUMMARY 完整字段参考（~40 字段）
+
+每条 `summary.log` 的 `msg` 和 `dat` 字段包含以下信息：
+
+| 类别 | 字段 | 含义 | 示例值 |
+|------|------|------|--------|
+| **自车** | `speed` | 当前速度 (m/s) | 8.3 |
+| | `accel` | 当前加速度 (m/s²) | -0.5 |
+| | `gear` | 档位 | D / R / P |
+| | `ego_x` / `ego_y` | 全局坐标 (m) | 586123.4, 4142567.8 |
+| | `ego_heading` | 朝向角 (rad) | 1.57 |
+| | `adc_s` / `adc_l` | 参考线 SL 坐标 | 48.4, -1.18 |
+| **规划** | `planner` | 规划器类型 | PUBLIC_ROAD |
+| | `traj_pts` | 输出轨迹点数 | 200 |
+| | `plan_time_ms` | 规划耗时 (ms) | 63.0 |
+| | `max_plan_spd` | 规划最大速度 (m/s) | 12.5 |
+| | `replan` | 是否重规划 | Y / N |
+| | `replan_reason` | 重规划原因 | gear change... |
+| | `status` | 规划结果 | OK / FAIL |
+| **障碍物** | `obs_cnt` | 障碍物总数 | 16 |
+| | `obs_dyn` | 动态障碍物数 | 13 |
+| | `front_clear` | 前方净空距离 (m) | 42.3 |
+| | `close_obs` | 最近障碍物（类型@距离 速度 lat=横向） | VEH@12.5m 8.3m/s lat=1.2 |
+| | `block_obs` | 阻塞障碍物（ID+类型@距离 速度） | VEH(obs_123)@42.3m 5.2m/s |
+| | `front_veh` | 自车道前车（类型@距离 速度） | VEH@55.2m 8.1m/s |
+| | `rear_veh` | 自车道后车（类型@距离 速度） | CYC@-15.0m 7.2m/s |
+| | `lat_obs` | 横向重叠障碍物数 | 2 |
+| | `dec_stop` | 停止决策数 | 1 |
+| | `dec_yield` | 让行决策数 | 0 |
+| | `dec_follow` | 跟随决策数 | 2 |
+| | `dec_nudge` | 绕行决策数 | 1 |
+| **参考线** | `ref_lines` | 参考线数量 | 2 |
+| | `ref_len` | 参考线长度 (m) | 229.5 |
+| | `max_kappa` | 最大曲率 (×1000) | 174.1 |
+| | `cruise_spd` | 巡航速度 (m/s) | 11.18 |
+| | `chg_lane` | 是否换道路径 | Y / N |
+| | `drivable` | 是否可行驶 | Y / N |
+| **停止** | `stop_type` | 停止类型 | HARD / SOFT / NONE |
+| | `stop_s` | 停止位置 s 坐标 (m) | 49.73 |
+| **信号** | `tl` | 红绿灯颜色 | RED / YEL / GRN / NONE |
+| **借道** | `borrow` | 是否借道绕行 | Y / N |
+
+> `NONE` 表示该维度无数据（如无前车、无红绿灯、无停止墙）。
+> `@999m` 为哨兵值，表示该类别无有效障碍物（仅旧版本，新版已改为 NONE）。
+
+### 2.4 日志宏速查
 
 ```cpp
 // 帧摘要 — 每帧 1 行，写 summary.log
@@ -79,13 +129,20 @@ PFRAME_SUMMARY << "frame complete" << " speed=" << v << " status=" << ok;
 // 决策日志 — 写 decision.log
 PDECISION_LOG << "IsTransferable: " << from << " -> " << to << " = TRUE";
 PDECISION_LOG << "traffic_rule[" << rule_name << "] = applied";
+PDECISION_LOG << "task[" << name << "] time_ms=" << t << " status=" << s;
 
 // 状态日志 — 写 decision.log
 PSTATE_LOG << "SCENARIO_RESET: " << old << " -> " << new;
+PSTATE_LOG << "Stage FINISHED: " << name;
+PSTATE_LOG << "Stage ERROR at task=" << t << " reason=" << r;
+PSTATE_LOG << "Stage FALLBACK triggered";
 
 // 场景感知日志
 PSCENARIO_INFO << "Plan() start";
 PSCENARIO_WARN << "something wrong";
+
+// Stage 调试（VLOG(1)，运行时不可见除非设置 -v）
+PSTAGE_DEBUG << "Stage executing: " << name;
 ```
 
 ### 2.4 planlog.sh 过滤工具
@@ -232,11 +289,11 @@ flowchart TD
 
 ## 四、常见问题
 
-**Q: 为什么 `scn`/`stg` 显示 "unknown"？**
-A: `.bazelrc` 中的 `-DUSE_NEW_LOG` 是否生效？用 `grep USE_NEW_LOG .bazelrc` 检查。或者 scenario_manager/planner 的上下文设置代码是否被 formatter 破坏。
+**Q: 为什么 `scn`/`stg` 显示 `<unset>`？**
+A: 该帧的日志在上下文设置之前发出（如 InitFrame 前的提前 return 路径、跨线程 Async 调用）。正常帧不会出现。如果是大量出现，检查 `.bazelrc` 中 `-DUSE_NEW_LOG` 是否生效。
 
 **Q: decision.log 为什么这么大（100MB+）？**
-A: 旧日志 APPEND 模式残留。跑仿真前 `rm -f data/log/planning/*.log` 清理。
+A: 旧日志 APPEND 残留 + 多次仿真积累。跑仿真前执行 `bash scripts/clean_logs.sh --planning` 清理。启动时 `error.log`/`summary.log`/`decision.log` 会自动 rotate（>100MB → 重命名为 `.1`/`.2`...`.5`）。
 
 **Q: 提交评测平台会有影响吗？**
-A: 不会。评测平台不会设置 `-DUSE_NEW_LOG`，所有新代码在 `#ifdef` 内不激活。两个 bug 修复始终生效（正面影响）。
+A: 不会。评测平台不设 `-DUSE_NEW_LOG`，所有新代码在 `#ifdef` 内不激活。Planlog 代码无条件编译但不激活（`InitPlanningLogger` 调用受 `#ifdef` 保护）。

@@ -448,7 +448,7 @@ void OnLanePlanning::RunOnce(const LocalView& local_view, ADCTrajectory* const p
     AINFO << "Planning Perf: planning name [" << Name() << "], " << plnning_perf_ms << " ms.";
     AINFO << "Planning end frame sequence id = [" << frame_num << "]";
 #ifdef USE_NEW_LOG
-    // ---- Build enriched frame SUMMARY with debugging-critical data ----
+    // ---- Build enriched SUMMARY with comprehensive debugging data ----
     std::ostringstream summary_dat;
     summary_dat << "frame complete"
                 << " planner=" << planner_->Name() << " speed=" << vehicle_state.linear_velocity()
@@ -457,92 +457,167 @@ void OnLanePlanning::RunOnce(const LocalView& local_view, ADCTrajectory* const p
                             : vehicle_state.gear() == canbus::Chassis::GEAR_REVERSE ? "R"
                                                                                     : "P")
                 << " traj_pts=" << ptr_trajectory_pb->trajectory_point_size() << " plan_time_ms=" << time_diff_ms
+                << " ego_x=" << vehicle_state.x() << " ego_y=" << vehicle_state.y()
+                << " ego_heading=" << vehicle_state.heading()
                 << " replan=" << (stitching_trajectory.size() == 1 ? "Y" : "N")
                 << " replan_reason=" << (replan_reason.empty() ? "none" : replan_reason)
                 << " status=" << (status.ok() ? "OK" : "FAIL");
 
-    // ---- Obstacle summary ----
+    // ---- Comprehensive obstacle / vehicle / reference-line analysis ----
     if (frame_) {
-        int obs_cnt = 0, obs_dyn_cnt = 0;
-        double closest_dist = 999.0, closest_speed = 0.0;
-        std::string closest_type = "NONE";
-        for (const auto* obs : frame_->obstacles()) {
-            if (!obs)
-                continue;
+        const auto& obstacles = frame_->obstacles();
+        int obs_cnt = 0, obs_dyn = 0, obs_stop_dec = 0, obs_yield_dec = 0, obs_follow_dec = 0, obs_nudge_dec = 0;
+        int lat_overlap_cnt = 0;
+        double closest_s = 999.0, closest_spd = 0.0, closest_lat = 0.0;
+        double front_dyn_s = 999.0, front_dyn_spd = 0.0;
+        double rear_dyn_s = -999.0, rear_dyn_spd = 0.0;
+        double min_lat_dist = 999.0;
+        std::string closest_type = "NONE", front_dyn_type = "NONE", rear_dyn_type = "NONE";
+        std::string block_id = "none", block_type = "NONE";
+        double block_dist = -1.0, block_spd = 0.0;
+
+        for (const auto* obs : obstacles) {
+            if (!obs) continue;
             ++obs_cnt;
-            if (!obs->IsStatic())
-                ++obs_dyn_cnt;
-            double dist = obs->PerceptionSLBoundary().start_s();
-            if (dist > 0.0 && dist < closest_dist) {
-                closest_dist = dist;
-                closest_speed = obs->speed();
-                auto type = obs->Perception().type();
-                if (type == perception::PerceptionObstacle::VEHICLE)
-                    closest_type = "VEH";
-                else if (type == perception::PerceptionObstacle::PEDESTRIAN)
-                    closest_type = "PED";
-                else if (type == perception::PerceptionObstacle::BICYCLE)
-                    closest_type = "CYC";
-                else
-                    closest_type = "UNK";
+            if (!obs->IsStatic()) ++obs_dyn;
+            double s = obs->PerceptionSLBoundary().start_s();
+            double l = obs->PerceptionSLBoundary().start_l();
+            double end_l = obs->PerceptionSLBoundary().end_l();
+            double spd = obs->speed();
+            auto ptype = obs->Perception().type();
+            std::string tstr = "UNK";
+            if (ptype == perception::PerceptionObstacle::VEHICLE) tstr = "VEH";
+            else if (ptype == perception::PerceptionObstacle::PEDESTRIAN) tstr = "PED";
+            else if (ptype == perception::PerceptionObstacle::BICYCLE) tstr = "CYC";
+
+            // Closest obstacle overall (any type, in front).
+            if (s > 0.0 && s < closest_s) {
+                closest_s = s; closest_spd = spd; closest_type = tstr; closest_lat = l;
+            }
+            // Front dynamic vehicle (vehicle/bicycle ahead, closest).
+            if (s > 0.0 && s < front_dyn_s && !obs->IsStatic()
+                && (ptype == perception::PerceptionObstacle::VEHICLE
+                    || ptype == perception::PerceptionObstacle::BICYCLE)) {
+                front_dyn_s = s; front_dyn_spd = spd; front_dyn_type = tstr;
+            }
+            // Rear dynamic vehicle (closest behind).
+            if (s < 0.0 && s > rear_dyn_s && !obs->IsStatic()
+                && (ptype == perception::PerceptionObstacle::VEHICLE
+                    || ptype == perception::PerceptionObstacle::BICYCLE)) {
+                rear_dyn_s = s; rear_dyn_spd = spd; rear_dyn_type = tstr;
+            }
+            // Lateral overlap: obstacle l-range overlaps ego lateral footprint.
+            if ((l <= 2.5 && end_l >= -2.5) || (l <= -2.5 && end_l >= -4.5)) {
+                ++lat_overlap_cnt;
+                double lat_d = std::min(std::abs(l), std::abs(end_l));
+                if (lat_d < min_lat_dist) min_lat_dist = lat_d;
+            }
+            // Obstacle decision counts.
+            if (obs->HasLongitudinalDecision()) {
+                const auto& d = obs->LongitudinalDecision();
+                if (d.has_stop()) ++obs_stop_dec;
+                if (d.has_yield()) ++obs_yield_dec;
+                if (d.has_follow()) ++obs_follow_dec;
+            }
+            if (obs->HasLateralDecision()) {
+                if (obs->LateralDecision().has_nudge()) ++obs_nudge_dec;
             }
         }
-        summary_dat << " obs_cnt=" << obs_cnt << " obs_dyn=" << obs_dyn_cnt
-                    << " front_clear=" << injector_->ego_info()->front_clear_distance() << " close_obs=" << closest_type
-                    << "@" << closest_dist << "m " << closest_speed << "m/s";
 
-        // ---- Reference line / path ----
+        // Blocking obstacle from drive reference line.
+        if (!frame_->reference_line_info().empty()) {
+            const auto* dr = frame_->DriveReferenceLineInfo();
+            if (dr) {
+                auto* blk = dr->GetBlockingObstacle();
+                if (blk) {
+                    block_id = blk->Id();
+                    block_dist = blk->PerceptionSLBoundary().start_s();
+                    block_spd = blk->speed();
+                    auto bt = blk->Perception().type();
+                    if (bt == perception::PerceptionObstacle::VEHICLE) block_type = "VEH";
+                    else if (bt == perception::PerceptionObstacle::PEDESTRIAN) block_type = "PED";
+                    else if (bt == perception::PerceptionObstacle::BICYCLE) block_type = "CYC";
+                }
+            }
+        }
+
+        summary_dat << " obs_cnt=" << obs_cnt << " obs_dyn=" << obs_dyn
+                    << " front_clear=" << injector_->ego_info()->front_clear_distance();
+
+        if (closest_s < 999.0)
+            summary_dat << " close_obs=" << closest_type << "@" << closest_s << "m "
+                        << closest_spd << "m/s lat=" << closest_lat;
+        else summary_dat << " close_obs=NONE";
+
+        if (block_dist >= 0.0)
+            summary_dat << " block_obs=" << block_type << "(" << block_id << ")@"
+                        << block_dist << "m " << block_spd << "m/s";
+        else summary_dat << " block_obs=NONE";
+
+        if (front_dyn_s < 999.0)
+            summary_dat << " front_veh=" << front_dyn_type << "@" << front_dyn_s
+                        << "m " << front_dyn_spd << "m/s";
+        else summary_dat << " front_veh=NONE";
+
+        if (rear_dyn_s > -999.0)
+            summary_dat << " rear_veh=" << rear_dyn_type << "@" << rear_dyn_s
+                        << "m " << rear_dyn_spd << "m/s";
+        else summary_dat << " rear_veh=NONE";
+
+        summary_dat << " lat_obs=" << lat_overlap_cnt
+                    << " dec_stop=" << obs_stop_dec << " dec_yield=" << obs_yield_dec
+                    << " dec_follow=" << obs_follow_dec << " dec_nudge=" << obs_nudge_dec;
+
+        // ---- Reference line / path / stop / tl / borrow ----
         const auto& ref_line_infos = frame_->reference_line_info();
         summary_dat << " ref_lines=" << ref_line_infos.size();
         if (!ref_line_infos.empty()) {
-            const auto& drive_ref = frame_->DriveReferenceLineInfo();
-            if (drive_ref) {
-                // Max curvature of drive reference line (×1000 for readability).
+            const auto* dr = frame_->DriveReferenceLineInfo();
+            if (dr) {
+                const auto& adc_sl = dr->AdcSlBoundary();
+                summary_dat << " adc_s=" << adc_sl.start_s() << " adc_l=" << adc_sl.start_l();
                 double max_kappa = 0.0;
-                for (const auto& pt : drive_ref->reference_line().reference_points()) {
+                for (const auto& pt : dr->reference_line().reference_points())
                     max_kappa = std::max(max_kappa, std::abs(pt.kappa()));
-                }
-                summary_dat << " ref_len=" << drive_ref->reference_line().Length()
-                            << " max_kappa=" << (max_kappa * 1000.0) << " cruise_spd=" << drive_ref->GetCruiseSpeed()
-                            << " chg_lane=" << (drive_ref->IsChangeLanePath() ? "Y" : "N")
-                            << " drivable=" << (drive_ref->IsDrivable() ? "Y" : "N");
+                summary_dat << " ref_len=" << dr->reference_line().Length()
+                            << " max_kappa=" << (max_kappa * 1000.0)
+                            << " cruise_spd=" << dr->GetCruiseSpeed()
+                            << " chg_lane=" << (dr->IsChangeLanePath() ? "Y" : "N")
+                            << " drivable=" << (dr->IsDrivable() ? "Y" : "N");
 
-                // ---- Stop wall ----
-                if (drive_ref->planning_target().has_stop_point()) {
-                    const auto& sp = drive_ref->planning_target().stop_point();
-                    summary_dat << " stop_type=" << StopPoint::Type_Name(sp.type()) << " stop_s=" << sp.s();
+                if (dr->planning_target().has_stop_point()) {
+                    const auto& sp = dr->planning_target().stop_point();
+                    summary_dat << " stop_type=" << StopPoint::Type_Name(sp.type())
+                                << " stop_s=" << sp.s();
                 } else {
                     summary_dat << " stop_type=NONE";
                 }
 
-                // ---- Traffic light ----
                 std::string tl_color = "NONE";
-                for (const auto& overlap : drive_ref->FirstEncounteredOverlaps()) {
+                for (const auto& overlap : dr->FirstEncounteredOverlaps()) {
                     if (overlap.first == ReferenceLineInfo::SIGNAL) {
                         auto signal = frame_->GetSignal(overlap.second.object_id);
                         switch (signal.color()) {
-                        case perception::TrafficLight::RED:
-                            tl_color = "RED";
-                            break;
-                        case perception::TrafficLight::YELLOW:
-                            tl_color = "YEL";
-                            break;
-                        case perception::TrafficLight::GREEN:
-                            tl_color = "GRN";
-                            break;
-                        default:
-                            tl_color = "UNK";
-                            break;
+                        case perception::TrafficLight::RED:   tl_color = "RED"; break;
+                        case perception::TrafficLight::YELLOW:tl_color = "YEL"; break;
+                        case perception::TrafficLight::GREEN: tl_color = "GRN"; break;
+                        default: tl_color = "UNK"; break;
                         }
                         break;
                     }
                 }
-                summary_dat << " tl=" << tl_color;
-
-                // ---- Lane borrow ----
-                summary_dat << " borrow=" << (drive_ref->is_path_lane_borrow() ? "Y" : "N");
+                summary_dat << " tl=" << tl_color
+                            << " borrow=" << (dr->is_path_lane_borrow() ? "Y" : "N");
             }
         }
+
+        // Max planned speed from output trajectory.
+        double max_plan_spd = 0.0;
+        for (int i = 0; i < ptr_trajectory_pb->trajectory_point_size(); ++i) {
+            double v = ptr_trajectory_pb->trajectory_point(i).v();
+            if (v > max_plan_spd) max_plan_spd = v;
+        }
+        summary_dat << " max_plan_spd=" << max_plan_spd;
     }
 
     PFRAME_SUMMARY << summary_dat.str();
