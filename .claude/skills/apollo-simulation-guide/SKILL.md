@@ -1,6 +1,6 @@
 ---
 name: apollo-simulation-guide
-description: Apollo Planning 仿真开发全流程指南。覆盖：环境安装、Planning 模块架构（17 Scenario + 10 TrafficRule + 35 Task）、插件开发实战（Scenario/Task/TrafficRule 完整模板 + ScenarioManager 切换机制 + Stage 生命周期 + 配置链路 + 参数调优）、CyberRT 通信框架、PnC Map/Routing、Control 模块、aem/buildtool/profile 工具链、编译构建、赛事场景解题、日志系统（planlog 结构化日志/planlog.sh 过滤/clean_logs.sh 清理/赛题调试三步法）。专为只改 Planning 的仿真测试场景设计。当用户提及 Apollo 安装、Planning 开发、插件开发、场景、TrafficRule、Task、参数配置、编译构建、aem、buildtool、profile、CyberRT、PnC Map、Routing、Stage、pipeline、IsTransferable、BuildStopDecision、plugins.xml、LoadConfig、日志、log、planlog、summary、decision、error.log、clean_logs 等关键词时必须使用此技能。
+description: Apollo Planning 仿真开发全流程指南。覆盖：环境安装、Planning 模块架构（17 Scenario + 10 TrafficRule + 35 Task）、插件开发实战（Scenario/Task/TrafficRule 完整模板 + ScenarioManager 切换机制 + Stage 生命周期 + 配置链路 + 参数调优）、CyberRT 通信框架、PnC Map/Routing、Control 模块、aem/buildtool/profile 工具链、编译构建、赛事场景解题、日志系统（planlog 结构化日志/planlog.sh 过滤/clean_logs.sh 清理/赛题调试三步法）、**地图与路由解析（base_map.bin/routing_map.bin/sim_map.bin 解析 + protoc --decode_raw + 路由拓扑分析 + 赛题场景路由提取 + 车道/路口/信号灯/停车位统计）**、**车辆与障碍物信息（vehicle_param.pb.txt + PerceptionObstacle 类型 + 障碍物处理参数 + 赛题障碍物分析）**。专为只改 Planning 的仿真测试场景设计。当用户提及 Apollo 安装、Planning 开发、插件开发、场景、TrafficRule、Task、参数配置、编译构建、aem、buildtool、profile、CyberRT、PnC Map、Routing、Stage、pipeline、IsTransferable、BuildStopDecision、plugins.xml、LoadConfig、日志、log、planlog、summary、decision、error.log、clean_logs、地图解析、路由解析、base_map、routing_map、sim_map、metaInfo、protoc、decode_raw、拓扑、topo、车道统计、路口分析、信号灯统计、停车位、施工区、U-Turn、LEFT_TURN、障碍物、vehicle_param、PerceptionObstacle、锥桶、ST_TRAFFICCONE 等关键词时必须使用此技能。
 ---
 
 # Apollo 仿真测试指南
@@ -41,6 +41,8 @@ description: Apollo Planning 仿真开发全流程指南。覆盖：环境安装
 | Control 模块 | `references/10-control.md` | 下游约束 |
 | 上下游模块概览 | `references/11-upstream-modules.md` | 感知/预测/定位给 Planning 的数据 |
 | 算法原理 | `references/12-algorithms.md` | 参考线平滑 QP、路径/速度优化、SL/ST 坐标系 |
+| **地图与路由解析** | **`references/15-map-routing-analysis.md`** | **base_map/routing_map 解析、拓扑分析、赛题路由** |
+| **车辆与障碍物** | **`references/15-map-routing-analysis.md`** | **车辆参数、障碍物类型、赛题障碍物** |
 | 赛事场景解题 | `references/03-pnc-development.md` | 人行道避让、借道绕行等 |
 
 ### 按文档类别查找
@@ -167,6 +169,7 @@ flowchart TD
 | `references/10-control.md` | Control 模块及 Planning 约束 | 用户问下游控制 |
 | `references/11-upstream-modules.md` | 上下游模块数据流 | 用户问感知/预测/定位接口 |
 | `references/12-algorithms.md` | 参考线平滑/路径优化/速度优化算法 | 用户问算法原理 |
+| **`references/15-map-routing-analysis.md`** | **base_map/routing_map 解析 + 拓扑分析 + 赛题路由提取 + 车辆参数/障碍物** | **用户问地图解析/路由分析/障碍物车辆信息** |
 
 完整文档集位于 `apollo_docs_md/`，当上述参考文档无法覆盖时，引导用户检索该目录下的对应文档。
 
@@ -189,8 +192,8 @@ flowchart TD
 | Scenario/TrafficRule/Task 概述 | 读 `references/03-pnc-development.md` |
 | 参数配置 / 调参 | 读 `references/09-params-version.md` |
 | aem / buildtool / profile | 读 `references/05-tools-reference.md` |
-| CyberRT / 模块通信 | 读 `references/07-cyber-rt.md` |
-| PnC Map / Routing | 读 `references/08-pnc-map-routing.md` |
+| CyberRT / 模块通信 | 读 `references/07-cyber-rt.md` || **地图解析 / 路由分析 / 赛题场景路由** | **读 `references/15-map-routing-analysis.md`** |
+| **车辆参数 / 障碍物类型 / 赛题障碍物** | **读 `references/15-map-routing-analysis.md`** || PnC Map / Routing | 读 `references/08-pnc-map-routing.md` |
 | Control 模块 | 读 `references/10-control.md` |
 | 上下游模块（感知/预测/定位） | 读 `references/11-upstream-modules.md` |
 | 算法原理（参考线平滑/路径优化/速度优化） | 读 `references/12-algorithms.md` |

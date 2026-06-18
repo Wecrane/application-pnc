@@ -1,2 +1,0 @@
-max_s_distance:10.0
-max_lateral_distance:3.0

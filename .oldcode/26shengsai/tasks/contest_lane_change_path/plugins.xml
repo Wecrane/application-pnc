@@ -1,3 +1,0 @@
-<library path="modules/planning/tasks/contest_lane_change_path/libcontest_lane_change_path.so">
-    <class type="apollo::planning::ContestLaneChangePath" base_class="apollo::planning::Task"></class>
-</library>
