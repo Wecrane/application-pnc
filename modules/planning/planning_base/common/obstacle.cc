@@ -22,6 +22,7 @@
 
 #include <algorithm>
 #include <iomanip>
+#include <mutex>
 #include <utility>
 
 #include "cyber/common/log.h"
@@ -29,6 +30,8 @@
 #include "modules/common/math/linear_interpolation.h"
 #include "modules/common/util/map_util.h"
 #include "modules/common/util/util.h"
+#include "cyber/time/clock.h"
+#include "modules/planning/planning_base/common/obstacle_blocking_analyzer.h"
 #include "modules/planning/planning_base/common/speed/st_boundary.h"
 #include "modules/planning/planning_base/gflags/planning_gflags.h"
 
@@ -44,6 +47,114 @@ namespace {
 const double kStBoundaryDeltaS = 0.2;        // meters
 const double kStBoundarySparseDeltaS = 1.0;  // meters
 const double kStBoundaryDeltaT = 0.05;       // seconds
+
+struct StaticObstacleCacheEntry {
+  perception::PerceptionObstacle perception_obstacle;
+  prediction::ObstaclePriority priority;
+  bool is_static = true;
+  double last_seen_time = 0.0;
+};
+
+std::mutex static_obstacle_cache_mutex;
+std::unordered_map<int32_t, StaticObstacleCacheEntry>
+    static_obstacle_cache_by_id;
+double last_prediction_timestamp = -1.0;
+
+double GetPredictionTimestamp(
+    const prediction::PredictionObstacles& predictions) {
+  if (predictions.has_header() && predictions.header().has_timestamp_sec()) {
+    return predictions.header().timestamp_sec();
+  }
+  return apollo::cyber::Clock::NowInSeconds();
+}
+
+void ResetStaticObstacleCache() {
+  std::lock_guard<std::mutex> lock(static_obstacle_cache_mutex);
+  static_obstacle_cache_by_id.clear();
+  last_prediction_timestamp = -1.0;
+}
+
+void UpdateStaticObstacleCache(
+    const prediction::PredictionObstacles& predictions) {
+  const double current_timestamp = GetPredictionTimestamp(predictions);
+  std::lock_guard<std::mutex> lock(static_obstacle_cache_mutex);
+  if (last_prediction_timestamp >= 0.0 &&
+      current_timestamp + 1e-3 < last_prediction_timestamp) {
+    static_obstacle_cache_by_id.clear();
+  }
+  last_prediction_timestamp = current_timestamp;
+
+  for (const auto& prediction_obstacle : predictions.prediction_obstacle()) {
+    const auto& perception_obstacle =
+        prediction_obstacle.perception_obstacle();
+    const int32_t perception_id = perception_obstacle.id();
+    if (!prediction_obstacle.is_static()) {
+      static_obstacle_cache_by_id.erase(perception_id);
+      continue;
+    }
+
+    auto& cache_entry = static_obstacle_cache_by_id[perception_id];
+    if (cache_entry.last_seen_time <= 0.0) {
+      cache_entry.perception_obstacle = perception_obstacle;
+      cache_entry.priority.CopyFrom(prediction_obstacle.priority());
+      cache_entry.is_static = prediction_obstacle.is_static();
+    }
+    cache_entry.last_seen_time = current_timestamp;
+  }
+
+  const double hold_time = FLAGS_static_obstacle_hold_time_sec;
+  for (auto it = static_obstacle_cache_by_id.begin();
+       it != static_obstacle_cache_by_id.end();) {
+    if (current_timestamp - it->second.last_seen_time > hold_time) {
+      it = static_obstacle_cache_by_id.erase(it);
+      continue;
+    }
+    ++it;
+  }
+}
+
+void ApplyStaticObstacleCache(
+    prediction::PredictionObstacles* filtered_predictions) {
+  if (filtered_predictions == nullptr) {
+    return;
+  }
+  std::lock_guard<std::mutex> lock(static_obstacle_cache_mutex);
+  std::unordered_map<int32_t, bool> current_static_ids;
+  for (auto& prediction_obstacle :
+       *filtered_predictions->mutable_prediction_obstacle()) {
+    const auto& perception_obstacle =
+        prediction_obstacle.perception_obstacle();
+    const int32_t perception_id = perception_obstacle.id();
+    if (!prediction_obstacle.is_static()) {
+      continue;
+    }
+    current_static_ids[perception_id] = true;
+    const auto cache_it = static_obstacle_cache_by_id.find(perception_id);
+    if (cache_it == static_obstacle_cache_by_id.end()) {
+      continue;
+    }
+    prediction_obstacle.mutable_perception_obstacle()->CopyFrom(
+        cache_it->second.perception_obstacle);
+    prediction_obstacle.mutable_priority()->CopyFrom(cache_it->second.priority);
+    prediction_obstacle.set_is_static(cache_it->second.is_static);
+  }
+
+  const double current_timestamp = GetPredictionTimestamp(*filtered_predictions);
+  const double hold_time = FLAGS_static_obstacle_hold_time_sec;
+  for (const auto& cache_item : static_obstacle_cache_by_id) {
+    if (current_static_ids.count(cache_item.first) > 0) {
+      continue;
+    }
+    if (current_timestamp - cache_item.second.last_seen_time > hold_time) {
+      continue;
+    }
+    auto* cached_prediction = filtered_predictions->add_prediction_obstacle();
+    cached_prediction->mutable_perception_obstacle()->CopyFrom(
+        cache_item.second.perception_obstacle);
+    cached_prediction->mutable_priority()->CopyFrom(cache_item.second.priority);
+    cached_prediction->set_is_static(cache_item.second.is_static);
+  }
+}
 }  // namespace
 
 const std::unordered_map<ObjectDecisionType::ObjectTagCase, int,
@@ -196,8 +307,13 @@ bool Obstacle::IsValidPerceptionObstacle(const PerceptionObstacle& obstacle) {
 
 std::list<std::unique_ptr<Obstacle>> Obstacle::CreateObstacles(
     const prediction::PredictionObstacles& predictions) {
+  prediction::PredictionObstacles filtered_predictions(predictions);
+  UpdateStaticObstacleCache(predictions);
+  ApplyStaticObstacleCache(&filtered_predictions);
+
   std::list<std::unique_ptr<Obstacle>> obstacles;
-  for (const auto& prediction_obstacle : predictions.prediction_obstacle()) {
+  for (const auto& prediction_obstacle :
+       filtered_predictions.prediction_obstacle()) {
     if (!IsValidPerceptionObstacle(prediction_obstacle.perception_obstacle())) {
       AERROR << "Invalid perception obstacle: "
              << prediction_obstacle.perception_obstacle().DebugString();
@@ -239,6 +355,10 @@ std::list<std::unique_ptr<Obstacle>> Obstacle::CreateObstacles(
     }
   }
   return obstacles;
+}
+
+void Obstacle::ResetStaticObstacleCacheForTest() {
+  ResetStaticObstacleCache();
 }
 
 std::unique_ptr<Obstacle> Obstacle::CreateStaticVirtualObstacles(
@@ -319,6 +439,10 @@ void Obstacle::BuildReferenceLineStBoundary(const ReferenceLine& reference_line,
       VehicleConfigHelper::Instance()->GetConfig().vehicle_param();
   const double half_adc_width = adc_param.width() / 2;
   if (is_static_ || trajectory_.trajectory_point().empty()) {
+    if (IsParkedVehicle(reference_line, this)) {
+      ADEBUG << "Skip reference line ST boundary for parked obstacle " << id_;
+      return;
+    }
     std::vector<std::pair<STPoint, STPoint>> point_pairs;
     double start_s = sl_boundary_.start_s();
     double end_s = sl_boundary_.end_s();

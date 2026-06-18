@@ -20,9 +20,12 @@
 
 #include "modules/planning/traffic_rules/reference_line_end/reference_line_end.h"
 
+#include <algorithm>
+#include <cmath>
 #include <memory>
 
 #include "modules/common_msgs/basic_msgs/pnc_point.pb.h"
+#include "modules/common/math/math_utils.h"
 #include "modules/common/configs/vehicle_config_helper.h"
 #include "modules/planning/planning_base/gflags/planning_gflags.h"
 
@@ -30,6 +33,69 @@ namespace apollo {
 namespace planning {
 
 using apollo::common::Status;
+
+namespace {
+
+constexpr double kUTurnRefEndLookBackDistance = 12.0;
+constexpr double kUTurnRefEndSampleStep = 1.0;
+constexpr double kUTurnRefEndKappaThreshold = 0.12;
+constexpr double kUTurnRefEndHeadingChangeThreshold = 1.2;
+constexpr double kUTurnRefEndMinSampleLength = 6.0;
+
+bool HasUTurnLaneTagNearEnd(const ReferenceLineInfo& reference_line_info) {
+  const double reference_line_length =
+      reference_line_info.reference_line().Length();
+  const double start_s =
+      std::max(0.0, reference_line_length - kUTurnRefEndLookBackDistance);
+  for (double s = start_s; s <= reference_line_length;
+       s += kUTurnRefEndSampleStep) {
+    if (reference_line_info.GetPathTurnType(s) == hdmap::Lane::U_TURN) {
+      return true;
+    }
+  }
+  return reference_line_info.GetPathTurnType(reference_line_length) ==
+         hdmap::Lane::U_TURN;
+}
+
+bool HasTightUTurnGeometryNearEnd(
+    const ReferenceLineInfo& reference_line_info) {
+  const auto& reference_line = reference_line_info.reference_line();
+  const double reference_line_length = reference_line.Length();
+  const double sample_start_s =
+      std::max(0.0, reference_line_length - kUTurnRefEndLookBackDistance);
+  const double sample_end_s = reference_line_length;
+  if (sample_end_s - sample_start_s < kUTurnRefEndMinSampleLength) {
+    return false;
+  }
+
+  double max_abs_kappa = 0.0;
+  for (double s = sample_start_s; s <= sample_end_s;
+       s += kUTurnRefEndSampleStep) {
+    max_abs_kappa = std::max(
+        max_abs_kappa, std::abs(reference_line.GetReferencePoint(s).kappa()));
+  }
+  const double heading_change = std::abs(common::math::NormalizeAngle(
+      reference_line.GetReferencePoint(sample_end_s).heading() -
+      reference_line.GetReferencePoint(sample_start_s).heading()));
+  return max_abs_kappa > kUTurnRefEndKappaThreshold &&
+         heading_change > kUTurnRefEndHeadingChangeThreshold;
+}
+
+bool HasDestinationStop(const ReferenceLineInfo& reference_line_info) {
+  const auto* destination =
+      reference_line_info.path_decision().Find(FLAGS_destination_obstacle_id);
+  return destination != nullptr &&
+         destination->LongitudinalDecision().has_stop();
+}
+
+bool IsSuppressibleUTurnRefEnd(
+    const ReferenceLineInfo& reference_line_info) {
+  return !HasDestinationStop(reference_line_info) &&
+         (HasUTurnLaneTagNearEnd(reference_line_info) ||
+          HasTightUTurnGeometryNearEnd(reference_line_info));
+}
+
+}  // namespace
 
 bool ReferenceLineEnd::Init(
     const std::string& name,
@@ -53,6 +119,15 @@ Status ReferenceLineEnd::ApplyRule(
   double remain_s =
       reference_line.Length() - reference_line_info->AdcSlBoundary().end_s();
   if (remain_s > config_.min_reference_line_remain_length()) {
+    return Status::OK();
+  }
+
+  if (IsSuppressibleUTurnRefEnd(*reference_line_info)) {
+    AINFO << "Skip reference line end stop wall on U-turn-like reference "
+          << "line without destination stop, id["
+          << reference_line_info->Lanes().Id()
+          << "] remain_s[" << remain_s << "] ref_length["
+          << reference_line.Length() << "]";
     return Status::OK();
   }
 

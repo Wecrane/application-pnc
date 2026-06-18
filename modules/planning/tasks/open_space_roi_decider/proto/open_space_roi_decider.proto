@@ -51,4 +51,10 @@ message OpenSpaceRoiDeciderConfig {
   optional bool use_road_boundary_from_map = 18 [default = false];
   // expand polygon of obstacle 
   optional bool expand_polygon_of_obstacle_by_distance = 19 [default = false];
+  // station shuttle departing ROI buffer on the map-boundary side
+  optional double station_departing_map_boundary_buffer = 20 [default = 0.3];
+  // station shuttle departing ROI buffer behind the parked vehicle
+  optional double station_departing_reverse_buffer = 21 [default = 0.8];
+  // heading offset applied to the parking end pose in radians
+  optional double parking_end_heading_offset = 22 [default = 0.0];
 }

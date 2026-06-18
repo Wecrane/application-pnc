@@ -49,11 +49,14 @@ using ObsTEdge = std::tuple<int, double, double, double, std::string>;
 
 void STObstaclesProcessor::Init(const double planning_distance,
                                 const double planning_time,
+                                const bool static_obstacle_stop_requires_decision,
                                 const PathData& path_data,
                                 PathDecision* const path_decision,
                                 History* const history) {
   planning_time_ = planning_time;
   planning_distance_ = planning_distance;
+  static_obstacle_stop_requires_decision_ =
+      static_obstacle_stop_requires_decision;
   path_data_ = path_data;
   vehicle_param_ = common::VehicleConfigHelper::GetConfig().vehicle_param();
   adc_path_init_s_ = path_data_.discretized_path().front().s();
@@ -173,6 +176,13 @@ Status STObstaclesProcessor::MapObstaclesToSTBoundaries(
     // Process all other obstacles than Keep-Clear zone.
     if (obs_ptr->Trajectory().trajectory_point().empty()) {
       // Obstacle is static.
+      if (static_obstacle_stop_requires_decision_ &&
+          (!obs_ptr->HasLongitudinalDecision() ||
+           !obs_ptr->LongitudinalDecision().has_stop())) {
+        ADEBUG << "Skip static obstacle without STOP decision in ST graph, id: "
+               << obs_ptr->Id();
+        continue;
+      }
       if (std::get<0>(closest_stop_obstacle) == "NULL" ||
           std::get<1>(closest_stop_obstacle).bottom_left_point().s() >
               boundary.bottom_left_point().s()) {

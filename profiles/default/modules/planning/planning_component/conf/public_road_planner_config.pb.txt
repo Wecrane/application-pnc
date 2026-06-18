@@ -1,47 +1,67 @@
-# scenario {
-#     name: "EMERGENCY_PULL_OVER"
-#     type: "EmergencyPullOverScenario"
-# }
-# scenario {
-#     name: "EMERGENCY_STOP"
-#     type: "EmergencyStopScenario"
-# }
-# scenario {
-#     name: "VALET_PARKING"
-#     type: "ValetParkingScenario"
-# }
-# scenario {
-#     name: "BARE_INTERSECTION_UNPROTECTED"
-#     type: "BareIntersectionUnprotectedScenario"
-# }
-# scenario {
-#     name: "STOP_SIGN_UNPROTECTED"
-#     type: "StopSignUnprotectedScenario"
-# }
-# scenario {
-#     name: "YIELD_SIGN"
-#     type: "YieldSignScenario"
-# }
-# scenario {
-#     name: "TRAFFIC_LIGHT_UNPROTECTED_LEFT_TURN"
-#     type: "TrafficLightUnprotectedLeftTurnScenario"
-# }
-# scenario {
-#     name: "TRAFFIC_LIGHT_UNPROTECTED_RIGHT_TURN"
-#     type: "TrafficLightUnprotectedRightTurnScenario"
-# }
-# scenario {
-#     name: "TRAFFIC_LIGHT_PROTECTED"
-#     type: "TrafficLightProtectedScenario"
-# }
-# scenario {
-#     name: "PULL_OVER"
-#     type: "PullOverScenario"
-# }
-# scenario {
-#     name: "PARK_AND_GO"
-#     type: "ParkAndGoScenario"
-# }
+scenario {
+    name: "EMERGENCY_PULL_OVER"
+    type: "EmergencyPullOverScenario"
+}
+scenario {
+    name: "EMERGENCY_STOP"
+    type: "EmergencyStopScenario"
+}
+scenario {
+    name: "BUS_BAY_TRANSFER"
+    type: "BusBayTransferScenario"
+}
+scenario {
+    name: "BARE_INTERSECTION_UNPROTECTED"
+    type: "BareIntersectionUnprotectedScenario"
+}
+scenario {
+    name: "STOP_SIGN_UNPROTECTED"
+    type: "StopSignUnprotectedScenario"
+}
+scenario {
+    name: "YIELD_SIGN"
+    type: "YieldSignScenario"
+}
+scenario {
+    name: "CONTEST_ROUNDABOUT"
+    type: "ContestRoundaboutScenario"
+}
+scenario {
+    name: "CONTEST_CONSTRUCTION_ZONE"
+    type: "ContestConstructionZoneScenario"
+}
+scenario {
+    name: "CONTEST_LANE_CHANGE"
+    type: "ContestLaneChangeScenario"
+}
+scenario {
+    name: "CONTEST_S_CURVE"
+    type: "ContestSCurveScenario"
+}
+scenario {
+    name: "CONTEST_U_TURN"
+    type: "ContestUTurnScenario"
+}
+scenario {
+    name: "TRAFFIC_LIGHT_UNPROTECTED_LEFT_TURN"
+    type: "TrafficLightUnprotectedLeftTurnScenario"
+}
+scenario {
+    name: "TRAFFIC_LIGHT_UNPROTECTED_RIGHT_TURN"
+    type: "TrafficLightUnprotectedRightTurnScenario"
+}
+scenario {
+    name: "TRAFFIC_LIGHT_PROTECTED"
+    type: "TrafficLightProtectedScenario"
+}
+scenario {
+    name: "PULL_OVER"
+    type: "PullOverScenario"
+}
+scenario {
+    name: "PARK_AND_GO"
+    type: "ParkAndGoScenario"
+}
 scenario {
     name: "LANE_FOLLOW"
     type: "LaneFollowScenario"

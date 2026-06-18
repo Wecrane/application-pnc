@@ -20,6 +20,8 @@
 
 #include "modules/planning/scenarios/valet_parking_park/valet_parking_scenario.h"
 
+#include <limits>
+
 #include "modules/planning/planning_base/common/frame.h"
 #include "modules/planning/scenarios/valet_parking_park/stage_approaching_parking_spot_park.h"
 #include "modules/planning/scenarios/valet_parking_park/stage_parking_park.h"
@@ -29,6 +31,7 @@ namespace planning {
 
 using apollo::common::VehicleState;
 using apollo::common::math::Vec2d;
+using apollo::hdmap::HDMapUtil;
 using apollo::hdmap::ParkingSpaceInfoConstPtr;
 using apollo::hdmap::Path;
 using apollo::hdmap::PathOverlap;
@@ -57,13 +60,52 @@ bool ValetParkingParkScenario::Init(std::shared_ptr<DependencyInjector> injector
 
 bool ValetParkingParkScenario::IsTransferable(const Scenario* const other_scenario,
                                           const Frame& frame) {
-  // TODO(all) Implement available parking spot detection by preception results
-  if (!frame.local_view().planning_command->has_parking_command()) {
-    AINFO << "No parking command from routing";
+  if (injector_->planning_context()->planning_status().path_decider().is_in_path_lane_borrow_scenario()) {
     return false;
   }
+
+  const auto& nearby_path = frame.reference_line_info().front().reference_line().map_path();
+  hdmap::LaneInfoConstPtr lane;
+  auto adc_point = common::util::PointFactory::ToPointENU(frame.vehicle_state());
+  double s = 0.0;
+  double l = 0.0;
+  HDMapUtil::BaseMap().GetNearestLaneWithDistance(adc_point, 5.0, &lane, &s, &l);
+
+  if (lane == nullptr || !lane->IsOnLane({adc_point.x(), adc_point.y()})) {
+    if (frame.vehicle_state().linear_velocity() < 0.2) {
+      for (auto& parkingspace : nearby_path.parking_space_overlaps()) {
+        forbiden.insert(parkingspace.object_id);
+      }
+    }
+    return false;
+  }
+
+  if (injector_->planning_context()->mutable_planning_status()->mutable_change_lane()->status()
+      == ChangeLaneStatus::IN_CHANGE_LANE) {
+    return false;
+  }
+
+  if (!frame.local_view().planning_command->has_parking_command()) {
+    PathOverlap parking_space_overlap;
+    const auto& vehicle_state = frame.vehicle_state();
+    if (!SearchForNearbyCandidate(frame, nearby_path, &parking_space_overlap)) {
+      AINFO << "No parking spot found in surrounding area";
+      return false;
+    }
+    double parking_spot_range_to_start = context_.scenario_config.parking_spot_range_to_start();
+    if (!CheckDistanceToParkingSpot(
+                frame, vehicle_state, nearby_path, parking_spot_range_to_start, parking_space_overlap)) {
+      AINFO << "target parking spot found, but too far, distance larger than "
+               "pre-defined distance"
+            << parking_space_overlap.object_id;
+      return false;
+    }
+    context_.target_parking_spot_id = parking_space_overlap.object_id;
+    AINFO << "parking nearby";
+    return true;
+  }
+
   if (other_scenario == nullptr || frame.reference_line_info().empty()) {
-    AINFO << "Other scenario is null or no reference line";
     return false;
   }
   std::string target_parking_spot_id;
@@ -74,17 +116,12 @@ bool ValetParkingParkScenario::IsTransferable(const Scenario* const other_scenar
     target_parking_spot_id = frame.local_view()
                                  .planning_command->parking_command()
                                  .parking_spot_id();
-  } else {
-    AINFO << "No parking space id from routing";
-    return false;
   }
 
   if (target_parking_spot_id.empty()) {
     return false;
   }
 
-  const auto& nearby_path =
-      frame.reference_line_info().front().reference_line().map_path();
   PathOverlap parking_space_overlap;
   const auto& vehicle_state = frame.vehicle_state();
 
@@ -123,6 +160,71 @@ bool ValetParkingParkScenario::SearchTargetParkingSpotOnPath(
     }
   }
   return false;
+}
+
+bool ValetParkingParkScenario::SearchForNearbyCandidate(
+        const Frame& frame,
+        const Path& nearby_path,
+        PathOverlap* parking_space_overlap) {
+  const hdmap::HDMap* hdmap = hdmap::HDMapUtil::BaseMapPtr();
+  const auto& parking_space_overlaps = nearby_path.parking_space_overlaps();
+  hdmap::Id id;
+  bool found = false;
+  double dist = std::numeric_limits<double>::max();
+  for (const auto& parking_overlap : parking_space_overlaps) {
+    id.set_id(parking_overlap.object_id);
+    const auto parking_space = hdmap->GetParkingSpaceById(id);
+    if (!parking_space) {
+      AINFO << "Skip parking spot because hdmap lookup failed, spot="
+            << parking_overlap.object_id;
+      continue;
+    }
+    const auto parking_box = parking_space->polygon().MinAreaBoundingBox();
+    for (auto& obs :
+         frame.reference_line_info().front().path_decision().obstacles().Items()) {
+      if (!obs->IsVirtual() && obs->IsStatic() &&
+          obs->PerceptionBoundingBox().HasOverlap(parking_box)) {
+        const bool first_latch =
+            occupied_parking_spots_.insert(parking_overlap.object_id).second;
+        AINFO << "Latch occupied parking spot, spot="
+              << parking_overlap.object_id << ", obstacle=" << obs->Id()
+              << ", perception_id=" << obs->PerceptionId()
+              << ", first_latch=" << first_latch;
+        break;
+      }
+    }
+
+    if (forbiden.find(parking_overlap.object_id) != forbiden.end()) {
+      AINFO << "Skip parking spot by forbidden set, spot="
+            << parking_overlap.object_id;
+      continue;
+    }
+    if (occupied_parking_spots_.find(parking_overlap.object_id) !=
+        occupied_parking_spots_.end()) {
+      AINFO << "Skip parking spot by occupied latch, spot="
+            << parking_overlap.object_id;
+      continue;
+    }
+
+    const double candidate_dist = std::fabs(
+        frame.reference_line_info().front().AdcSlBoundary().end_s() -
+        parking_overlap.start_s);
+    AINFO << "Parking candidate available, spot="
+          << parking_overlap.object_id << ", distance=" << candidate_dist;
+    if (candidate_dist < dist) {
+      dist = candidate_dist;
+      *parking_space_overlap = parking_overlap;
+    }
+    found = true;
+  }
+  if (found) {
+    AINFO << "Selected parking candidate, spot="
+          << parking_space_overlap->object_id << ", distance=" << dist
+          << ", occupied_latched_count=" << occupied_parking_spots_.size();
+  } else {
+    AINFO << "No available parking candidate after occupied latch filtering";
+  }
+  return found;
 }
 
 bool ValetParkingParkScenario::CheckDistanceToParkingSpot(

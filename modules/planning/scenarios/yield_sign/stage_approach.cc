@@ -52,6 +52,10 @@ StageResult YieldSignStageApproach::Process(
   if (scenario_context->current_yield_sign_overlap_ids.empty()) {
     return FinishScenario();
   }
+  injector_->planning_context()
+      ->mutable_planning_status()
+      ->mutable_yield_sign()
+      ->clear_wait_for_obstacle_id();
 
   for (const auto& yield_sign_overlap_id :
        scenario_context->current_yield_sign_overlap_ids) {

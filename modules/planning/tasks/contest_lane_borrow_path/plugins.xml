@@ -1,0 +1,3 @@
+<library path="modules/planning/tasks/contest_lane_borrow_path/libcontest_lane_borrow_path.so">
+    <class type="apollo::planning::ContestLaneBorrowPath" base_class="apollo::planning::Task"></class>
+</library>

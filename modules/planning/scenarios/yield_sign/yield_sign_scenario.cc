@@ -18,6 +18,8 @@
  * @file
  **/
 
+#include <algorithm>
+#include <cmath>
 #include <string>
 
 #include "modules/planning/scenarios/yield_sign/yield_sign_scenario.h"
@@ -30,6 +32,7 @@
 #include "modules/planning/planning_base/gflags/planning_gflags.h"
 #include "modules/planning/scenarios/yield_sign/stage_approach.h"
 #include "modules/planning/scenarios/yield_sign/stage_creep.h"
+#include "modules/common/math/math_utils.h"
 
 namespace apollo {
 namespace planning {
@@ -38,6 +41,76 @@ using apollo::hdmap::HDMapUtil;
 
 using StopSignLaneVehicles =
     std::unordered_map<std::string, std::vector<std::string>>;
+
+namespace {
+
+constexpr double kUTurnYieldMaxDistanceToRefEnd = 35.0;
+constexpr double kUTurnYieldLookBackDistance = 8.0;
+constexpr double kUTurnYieldLookAheadDistance = 24.0;
+constexpr double kUTurnYieldSampleStep = 1.0;
+constexpr double kUTurnYieldKappaThreshold = 0.12;
+constexpr double kUTurnYieldHeadingChangeThreshold = 1.7;
+constexpr double kUTurnYieldMinSampleLength = 8.0;
+
+bool HasUTurnLaneTag(const ReferenceLineInfo& reference_line_info,
+                     const hdmap::PathOverlap& yield_sign_overlap) {
+  const double reference_line_length =
+      reference_line_info.reference_line().Length();
+  const double start_s =
+      std::max(0.0, yield_sign_overlap.start_s - kUTurnYieldLookBackDistance);
+  const double end_s = std::min(reference_line_length,
+                                yield_sign_overlap.start_s +
+                                    kUTurnYieldLookAheadDistance);
+  for (double s = start_s; s <= end_s; s += kUTurnYieldSampleStep) {
+    if (reference_line_info.GetPathTurnType(s) == hdmap::Lane::U_TURN) {
+      return true;
+    }
+  }
+  return reference_line_info.GetPathTurnType(yield_sign_overlap.start_s) ==
+         hdmap::Lane::U_TURN;
+}
+
+bool HasTightUTurnGeometry(const ReferenceLineInfo& reference_line_info,
+                           const hdmap::PathOverlap& yield_sign_overlap) {
+  const auto& reference_line = reference_line_info.reference_line();
+  const double reference_line_length = reference_line.Length();
+  if (reference_line_length - yield_sign_overlap.start_s >
+      kUTurnYieldMaxDistanceToRefEnd) {
+    return false;
+  }
+
+  const double adc_front_edge_s = reference_line_info.AdcSlBoundary().end_s();
+  const double sample_start_s =
+      std::max(0.0, std::min(adc_front_edge_s, yield_sign_overlap.start_s) -
+                        kUTurnYieldLookBackDistance);
+  const double sample_end_s = std::min(
+      reference_line_length,
+      std::max(adc_front_edge_s + kUTurnYieldLookAheadDistance,
+               yield_sign_overlap.start_s + kUTurnYieldLookAheadDistance));
+  if (sample_end_s - sample_start_s < kUTurnYieldMinSampleLength) {
+    return false;
+  }
+
+  double max_abs_kappa = 0.0;
+  for (double s = sample_start_s; s <= sample_end_s;
+       s += kUTurnYieldSampleStep) {
+    max_abs_kappa = std::max(
+        max_abs_kappa, std::abs(reference_line.GetReferencePoint(s).kappa()));
+  }
+  const double heading_change = std::abs(common::math::NormalizeAngle(
+      reference_line.GetReferencePoint(sample_end_s).heading() -
+      reference_line.GetReferencePoint(sample_start_s).heading()));
+  return max_abs_kappa > kUTurnYieldKappaThreshold &&
+         heading_change > kUTurnYieldHeadingChangeThreshold;
+}
+
+bool IsYieldSignOnUTurnPath(const ReferenceLineInfo& reference_line_info,
+                            const hdmap::PathOverlap& yield_sign_overlap) {
+  return HasUTurnLaneTag(reference_line_info, yield_sign_overlap) ||
+         HasTightUTurnGeometry(reference_line_info, yield_sign_overlap);
+}
+
+}  // namespace
 
 bool YieldSignScenario::Init(std::shared_ptr<DependencyInjector> injector,
                              const std::string& name) {
@@ -71,6 +144,12 @@ bool YieldSignScenario::IsTransferable(const Scenario* other_scenario,
         overlap.first == ReferenceLineInfo::STOP_SIGN) {
       return false;
     } else if (overlap.first == ReferenceLineInfo::YIELD_SIGN) {
+      if (IsYieldSignOnUTurnPath(reference_line_info, overlap.second)) {
+        AINFO << "Skip YieldSignScenario transfer on U-turn-like yield_sign["
+              << overlap.second.object_id << "] start_s["
+              << overlap.second.start_s << "]";
+        return false;
+      }
       yield_sign_overlap = const_cast<hdmap::PathOverlap*>(&overlap.second);
       break;
     }
@@ -103,6 +182,16 @@ bool YieldSignScenario::Enter(Frame* frame) {
   const auto& overlaps = reference_line_info.FirstEncounteredOverlaps();
   for (auto overlap : overlaps) {
     if (overlap.first == ReferenceLineInfo::YIELD_SIGN) {
+      if (IsYieldSignOnUTurnPath(reference_line_info, overlap.second)) {
+        injector_->planning_context()
+            ->mutable_planning_status()
+            ->mutable_yield_sign()
+            ->Clear();
+        AINFO << "Skip entering YieldSignScenario on U-turn-like yield_sign["
+              << overlap.second.object_id << "] start_s["
+              << overlap.second.start_s << "]";
+        return false;
+      }
       current_yield_sign_overlap_id = overlap.second.object_id;
       break;
     }

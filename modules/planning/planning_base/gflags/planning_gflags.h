@@ -73,6 +73,7 @@ DECLARE_double(st_max_t);
 DECLARE_double(static_obstacle_nudge_l_buffer);
 DECLARE_double(nonstatic_obstacle_nudge_l_buffer);
 DECLARE_double(lateral_ignore_buffer);
+DECLARE_double(static_obstacle_hold_time_sec);
 DECLARE_double(min_stop_distance_obstacle);
 DECLARE_double(max_stop_distance_obstacle);
 DECLARE_double(follow_min_distance);
@@ -296,10 +297,3 @@ DECLARE_bool(enable_expand_obs_corner);
 DECLARE_double(expand_obs_corner_lon_buffer);
 DECLARE_bool(enable_adc_vertex_constraint);
 DECLARE_double(obstacle_lon_end_buffer_park);
-
-// Planning Log System
-DECLARE_bool(planning_log_json);
-DECLARE_bool(planning_log_per_scenario);
-DECLARE_int32(planning_log_level);
-DECLARE_string(planning_log_dir);
-DECLARE_int32(planning_log_trace_rotate_minutes);

@@ -33,6 +33,50 @@ namespace apollo {
 namespace planning {
 
 using apollo::perception::PerceptionObstacle;
+using apollo::prediction::PredictionObstacles;
+
+namespace {
+
+class ScopedDoubleFlagOverride {
+ public:
+  ScopedDoubleFlagOverride(double* flag, const double value)
+      : flag_(flag), old_value_(*flag) {
+    *flag_ = value;
+  }
+
+  ~ScopedDoubleFlagOverride() { *flag_ = old_value_; }
+
+ private:
+  double* flag_;
+  double old_value_;
+};
+
+PredictionObstacles MakeStaticPrediction(const int32_t id,
+                                         const double timestamp_sec,
+                                         const double x,
+                                         const double y,
+                                         const double length,
+                                         const double width) {
+  PredictionObstacles predictions;
+  predictions.mutable_header()->set_timestamp_sec(timestamp_sec);
+  auto* prediction = predictions.add_prediction_obstacle();
+  auto* perception = prediction->mutable_perception_obstacle();
+  perception->set_id(id);
+  perception->mutable_position()->set_x(x);
+  perception->mutable_position()->set_y(y);
+  perception->mutable_position()->set_z(0.0);
+  perception->mutable_velocity()->set_x(0.0);
+  perception->mutable_velocity()->set_y(0.0);
+  perception->set_length(length);
+  perception->set_width(width);
+  perception->set_height(1.0);
+  prediction->set_is_static(true);
+  prediction->mutable_priority()->set_priority(
+      prediction::ObstaclePriority::NORMAL);
+  return predictions;
+}
+
+}  // namespace
 
 TEST(Obstacle, IsValidPerceptionObstacle) {
   PerceptionObstacle perception_obstacle;
@@ -60,6 +104,7 @@ TEST(Obstacle, IsValidPerceptionObstacle) {
 class ObstacleTest : public ::testing::Test {
  public:
   virtual void SetUp() {
+    Obstacle::ResetStaticObstacleCacheForTest();
     prediction::PredictionObstacles prediction_obstacles;
     ASSERT_TRUE(cyber::common::GetProtoFromFile(
         "/apollo/modules/planning/planning_base/testdata/common/"
@@ -72,6 +117,8 @@ class ObstacleTest : public ::testing::Test {
       indexed_obstacles_.Add(id, *obstacle);
     }
   }
+
+  void TearDown() override { Obstacle::ResetStaticObstacleCacheForTest(); }
 
  protected:
   IndexedObstacles indexed_obstacles_;
@@ -191,6 +238,39 @@ TEST(Obstacle, CreateStaticVirtualObstacle) {
   EXPECT_DOUBLE_EQ(4.0, perception_box.length());
   EXPECT_DOUBLE_EQ(2.0, perception_box.width());
   EXPECT_DOUBLE_EQ(0.0, perception_box.heading());
+}
+
+TEST(Obstacle, StaticObstacleHoldAndExpire) {
+  ScopedDoubleFlagOverride hold_time_guard(&FLAGS_static_obstacle_hold_time_sec,
+                                           1.5);
+  Obstacle::ResetStaticObstacleCacheForTest();
+
+  auto first_predictions =
+      MakeStaticPrediction(100, 10.0, 1.0, 2.0, 4.0, 1.5);
+  auto obstacles = Obstacle::CreateObstacles(first_predictions);
+  ASSERT_EQ(1, obstacles.size());
+  const auto* first = obstacles.front().get();
+  ASSERT_NE(nullptr, first);
+  EXPECT_DOUBLE_EQ(1.0, first->PerceptionBoundingBox().center().x());
+  EXPECT_DOUBLE_EQ(2.0, first->PerceptionBoundingBox().center().y());
+
+  auto moved_predictions =
+      MakeStaticPrediction(100, 10.8, 8.0, 9.0, 4.0, 1.5);
+  obstacles = Obstacle::CreateObstacles(moved_predictions);
+  ASSERT_EQ(1, obstacles.size());
+  const auto* held = obstacles.front().get();
+  ASSERT_NE(nullptr, held);
+  EXPECT_DOUBLE_EQ(1.0, held->PerceptionBoundingBox().center().x());
+  EXPECT_DOUBLE_EQ(2.0, held->PerceptionBoundingBox().center().y());
+  EXPECT_DOUBLE_EQ(4.0, held->PerceptionBoundingBox().length());
+  EXPECT_DOUBLE_EQ(1.5, held->PerceptionBoundingBox().width());
+
+  PredictionObstacles missing_predictions;
+  missing_predictions.mutable_header()->set_timestamp_sec(12.2);
+  obstacles = Obstacle::CreateObstacles(missing_predictions);
+  EXPECT_TRUE(obstacles.empty());
+
+  Obstacle::ResetStaticObstacleCacheForTest();
 }
 
 TEST(IsLateralDecision, AllDecisions) {

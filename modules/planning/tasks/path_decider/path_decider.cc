@@ -27,6 +27,7 @@
 
 #include "modules/common/configs/vehicle_config_helper.h"
 #include "modules/common/util/util.h"
+#include "modules/planning/planning_base/common/obstacle_blocking_analyzer.h"
 #include "modules/planning/planning_base/common/planning_context.h"
 #include "modules/planning/planning_base/common/util/print_debug_info.h"
 #include "modules/planning/planning_base/gflags/planning_gflags.h"
@@ -149,6 +150,15 @@ bool PathDecider::MakeStaticObstacleDecision(
            << obstacle_type_name << "]";
 
     if (!obstacle->IsStatic() || obstacle->IsVirtual()) {
+      continue;
+    }
+    if (IsParkedVehicle(reference_line_info_->reference_line(), obstacle)) {
+      ObjectDecisionType object_decision;
+      object_decision.mutable_ignore();
+      path_decision->AddLongitudinalDecision("PathDecider/parked-road-edge",
+                                             obstacle->Id(), object_decision);
+      path_decision->AddLateralDecision("PathDecider/parked-road-edge",
+                                        obstacle->Id(), object_decision);
       continue;
     }
     // - skip decision making for obstacles with IGNORE/STOP decisions already.

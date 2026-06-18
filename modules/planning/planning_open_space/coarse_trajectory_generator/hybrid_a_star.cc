@@ -864,6 +864,13 @@ bool HybridAStar::Plan(
 
     if (final_node_ == nullptr) {
         AERROR << "Hybird A* cannot find a valid path";
+        AERROR << "Hybrid A* failed stats, open_pq_empty: "
+               << (open_pq_.empty() ? "true" : "false")
+               << ", open_pq_size: " << open_pq_.size()
+               << ", explored_node_num: " << explored_node_num
+               << ", max_explored_num: " << max_explored_num
+               << ", available_result_num: " << available_result_num
+               << ", desired_explored_num: " << desired_explored_num;
         print_curves.PrintToLog();
         return false;
     }

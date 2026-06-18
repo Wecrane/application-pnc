@@ -17,9 +17,11 @@
 #include "modules/planning/planning_base/common/obstacle_blocking_analyzer.h"
 
 #include <algorithm>
+#include <cmath>
+#include <limits>
 #include <memory>
 #include <vector>
-#include <limits>
+
 #include "modules/common/configs/vehicle_config_helper.h"
 #include "modules/common/util/point_factory.h"
 #include "modules/map/hdmap/hdmap_util.h"
@@ -36,6 +38,7 @@ constexpr double kAdcDistanceThreshold = 35.0;  // unit: m
 constexpr double kObstaclesDistanceThreshold = 15.0;
 constexpr double kIntersectionClearanceDist = 20.0;
 constexpr double kJunctionClearanceDist = 15.0;
+constexpr double kRoadEdgeObstacleBuffer = 0.45;
 
 bool IsNonmovableObstacle(const ReferenceLineInfo& reference_line_info,
                           const Obstacle& obstacle) {
@@ -200,20 +203,31 @@ bool IsBlockingDrivingPathObstacle(const ReferenceLine& reference_line,
 
 bool IsParkedVehicle(const ReferenceLine& reference_line,
                      const Obstacle* obstacle) {
-  if (!FLAGS_enable_scenario_side_pass_multiple_parked_obstacles) {
+  if (obstacle == nullptr || obstacle->IsVirtual() || !obstacle->IsStatic()) {
     return false;
   }
   double road_left_width = 0.0;
   double road_right_width = 0.0;
+  double max_road_left_width = 0.0;
   double max_road_right_width = 0.0;
-  reference_line.GetRoadWidth(obstacle->PerceptionSLBoundary().start_s(),
-                              &road_left_width, &road_right_width);
+  if (!reference_line.GetRoadWidth(obstacle->PerceptionSLBoundary().start_s(),
+                                   &road_left_width, &road_right_width)) {
+    return false;
+  }
+  max_road_left_width = road_left_width;
   max_road_right_width = road_right_width;
-  reference_line.GetRoadWidth(obstacle->PerceptionSLBoundary().end_s(),
-                              &road_left_width, &road_right_width);
+  if (!reference_line.GetRoadWidth(obstacle->PerceptionSLBoundary().end_s(),
+                                   &road_left_width, &road_right_width)) {
+    return false;
+  }
+  max_road_left_width = std::max(max_road_left_width, road_left_width);
   max_road_right_width = std::max(max_road_right_width, road_right_width);
-  bool is_at_road_edge = std::abs(obstacle->PerceptionSLBoundary().start_l()) >
-                         max_road_right_width - 0.1;
+  const auto& obstacle_sl = obstacle->PerceptionSLBoundary();
+  const bool is_at_left_edge =
+      obstacle_sl.end_l() > max_road_left_width - kRoadEdgeObstacleBuffer;
+  const bool is_at_right_edge =
+      -obstacle_sl.start_l() > max_road_right_width - kRoadEdgeObstacleBuffer;
+  bool is_at_road_edge = is_at_left_edge || is_at_right_edge;
 
   std::vector<std::shared_ptr<const hdmap::LaneInfo>> lanes;
   auto obstacle_box = obstacle->PerceptionBoundingBox();
@@ -228,7 +242,7 @@ bool IsParkedVehicle(const ReferenceLine& reference_line,
   }
 
   bool is_parked = is_on_parking_lane || is_at_road_edge;
-  return is_parked && obstacle->IsStatic();
+  return is_parked;
 }
 
 bool IsBlockingObstacleFarFromIntersection(

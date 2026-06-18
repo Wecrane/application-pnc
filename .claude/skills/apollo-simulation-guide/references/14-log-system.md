@@ -1,5 +1,7 @@
-# Apollo PnC 新日志系统 (planlog)
+# Apollo PnC 新日志系统 (planlog) — ⚠️ 已弃用
 
+> **本文档内容已弃用，仅供参考。** 新日志系统（planlog 结构化日志、planlog.sh、clean_logs.sh、赛题调试三步法）不再推荐使用。
+>
 > Phase 1+2+3 实施完成 | 2026-06-17
 > 设计文档：`output/log_system_redesign.md`
 

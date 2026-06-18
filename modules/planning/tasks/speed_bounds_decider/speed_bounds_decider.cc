@@ -17,6 +17,7 @@
 #include "modules/planning/tasks/speed_bounds_decider/speed_bounds_decider.h"
 
 #include <algorithm>
+#include <cmath>
 #include <limits>
 #include <memory>
 #include <string>
@@ -40,6 +41,48 @@ using apollo::common::TrajectoryPoint;
 using apollo::planning_internal::StGraphBoundaryDebug;
 using apollo::planning_internal::STGraphDebug;
 
+namespace {
+
+constexpr double kContestRoundaboutExitRelaxDistance = 75.0;
+constexpr double kContestRoundaboutExitPreviewDistance = 5.0;
+constexpr double kContestRoundaboutExitLowSpeedLimitMin = 9.0 / 3.6;
+constexpr double kContestRoundaboutExitLowSpeedLimitMax = 10.5 / 3.6;
+
+bool ShouldRelaxContestRoundaboutExitSpeedLimit(
+    const ReferenceLineInfo& reference_line_info) {
+  const double distance_to_destination =
+      reference_line_info.SDistanceToDestination();
+  if (!std::isfinite(distance_to_destination) ||
+      distance_to_destination < 0.0 ||
+      distance_to_destination > kContestRoundaboutExitRelaxDistance) {
+    return false;
+  }
+
+  const ReferenceLine& reference_line = reference_line_info.reference_line();
+  const double reference_line_length = reference_line.Length();
+  if (reference_line_length <= 0.0) {
+    return false;
+  }
+
+  const double adc_end_s = reference_line_info.AdcSlBoundary().end_s();
+  const double sample_s =
+      std::min(reference_line_length,
+               adc_end_s + kContestRoundaboutExitPreviewDistance);
+  const double map_speed_limit = reference_line.GetSpeedLimitFromS(sample_s);
+  if (map_speed_limit < kContestRoundaboutExitLowSpeedLimitMin ||
+      map_speed_limit > kContestRoundaboutExitLowSpeedLimitMax) {
+    return false;
+  }
+
+  AINFO << "[ROUNDABOUT][SpeedLimit] relax low map speed near destination, "
+        << "distance_to_destination=" << distance_to_destination
+        << ", adc_end_s=" << adc_end_s << ", sample_s=" << sample_s
+        << ", map_speed_limit=" << map_speed_limit;
+  return true;
+}
+
+}  // namespace
+
 bool SpeedBoundsDecider::Init(
     const std::string &config_dir, const std::string &name,
     const std::shared_ptr<DependencyInjector> &injector) {
@@ -62,7 +105,9 @@ Status SpeedBoundsDecider::Process(
   auto time1 = std::chrono::system_clock::now();
   STBoundaryMapper boundary_mapper(config_, reference_line, path_data,
                                    path_data.discretized_path().Length(),
-                                   config_.total_time(), injector_);
+                                   config_.total_time(),
+                                   reference_line_info->AdcSlBoundary(),
+                                   injector_);
 
   if (!FLAGS_use_st_drivable_boundary) {
     path_decision->EraseStBoundaries();
@@ -97,7 +142,11 @@ Status SpeedBoundsDecider::Process(
   const double min_s_on_st_boundaries = SetSpeedFallbackDistance(path_decision);
 
   // 2. Create speed limit along path
-  SpeedLimitDecider speed_limit_decider(config_, reference_line, path_data);
+  const bool relax_contest_roundabout_exit_speed_limit =
+      ShouldRelaxContestRoundaboutExitSpeedLimit(*reference_line_info);
+  SpeedLimitDecider speed_limit_decider(
+      config_, reference_line, path_data,
+      relax_contest_roundabout_exit_speed_limit);
 
   SpeedLimit speed_limit;
   if (!speed_limit_decider

@@ -7,4 +7,7 @@ package apollo.planning;
 
 message STBoundsDeciderConfig {
   optional double total_time = 1 [default = 7.0];
+  // If true, static obstacles are added to ST as stop boundaries only when an
+  // upstream decider has already produced a STOP decision for that obstacle.
+  optional bool static_obstacle_stop_requires_decision = 2 [default = false];
 }

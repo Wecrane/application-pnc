@@ -126,6 +126,10 @@ int BuildStopDecision(const std::string& stop_wall_id,
   stop_decision->mutable_stop_point()->set_y(stop_point.y());
   stop_decision->mutable_stop_point()->set_z(0.0);
 
+  for (size_t i = 0; i < wait_for_obstacles.size(); ++i) {
+    stop_decision->add_wait_for_obstacle(wait_for_obstacles[i]);
+  }
+
   auto* path_decision = reference_line_info->path_decision();
   path_decision->AddLongitudinalDecision(decision_tag, stop_wall->Id(), stop);
 

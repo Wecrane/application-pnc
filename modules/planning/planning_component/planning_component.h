@@ -36,70 +36,72 @@
 #include "cyber/message/raw_message.h"
 #include "modules/planning/planning_base/common/message_process.h"
 #include "modules/planning/planning_base/gflags/planning_gflags.h"
-#include "modules/planning/planning_base/common/planlog.h"
 #include "modules/planning/planning_component/planning_base.h"
 
 namespace apollo {
 namespace planning {
 
 class PlanningComponent final
-        : public cyber::
-                  Component<prediction::PredictionObstacles, canbus::Chassis, localization::LocalizationEstimate> {
-public:
-    PlanningComponent() = default;
+    : public cyber::Component<prediction::PredictionObstacles, canbus::Chassis,
+                              localization::LocalizationEstimate> {
+ public:
+  PlanningComponent() = default;
 
-    ~PlanningComponent() {
-#ifdef USE_NEW_LOG
-        apollo::planning::ShutdownPlanningLogger();
-#endif
-    }
+  ~PlanningComponent() = default;
 
-public:
-    bool Init() override;
+ public:
+  bool Init() override;
 
-    bool Proc(
-            const std::shared_ptr<prediction::PredictionObstacles>& prediction_obstacles,
+  bool Proc(const std::shared_ptr<prediction::PredictionObstacles>&
+                prediction_obstacles,
             const std::shared_ptr<canbus::Chassis>& chassis,
-            const std::shared_ptr<localization::LocalizationEstimate>& localization_estimate) override;
+            const std::shared_ptr<localization::LocalizationEstimate>&
+                localization_estimate) override;
 
-private:
-    void CheckRerouting();
-    bool CheckInput();
-    void SetLocation(ADCTrajectory* const ptr_trajectory_pb);
+ private:
+  void CheckRerouting();
+  bool CheckInput();
+  void SetLocation(ADCTrajectory* const ptr_trajectory_pb);
 
-private:
-    std::shared_ptr<cyber::Reader<perception::TrafficLightDetection>> traffic_light_reader_;
-    std::shared_ptr<
-            apollo::cyber::Client<apollo::external_command::LaneFollowCommand, apollo::external_command::CommandStatus>>
-            rerouting_client_;
-    std::shared_ptr<cyber::Reader<planning::PadMessage>> pad_msg_reader_;
-    std::shared_ptr<cyber::Reader<relative_map::MapMsg>> relative_map_reader_;
-    std::shared_ptr<cyber::Reader<storytelling::Stories>> story_telling_reader_;
-    std::shared_ptr<cyber::Reader<PlanningCommand>> planning_command_reader_;
-    std::shared_ptr<cyber::Reader<perception::PerceptionEdgeInfo>> edge_info_reader_;
-    std::shared_ptr<cyber::Reader<control::ControlInteractiveMsg>> control_interactive_reader_;
+ private:
+  std::shared_ptr<cyber::Reader<perception::TrafficLightDetection>>
+      traffic_light_reader_;
+  std::shared_ptr<
+      apollo::cyber::Client<apollo::external_command::LaneFollowCommand,
+                            apollo::external_command::CommandStatus>>
+      rerouting_client_;
+  std::shared_ptr<cyber::Reader<planning::PadMessage>> pad_msg_reader_;
+  std::shared_ptr<cyber::Reader<relative_map::MapMsg>> relative_map_reader_;
+  std::shared_ptr<cyber::Reader<storytelling::Stories>> story_telling_reader_;
+  std::shared_ptr<cyber::Reader<PlanningCommand>> planning_command_reader_;
+  std::shared_ptr<cyber::Reader<perception::PerceptionEdgeInfo>>
+      edge_info_reader_;
+  std::shared_ptr<cyber::Reader<control::ControlInteractiveMsg>>
+      control_interactive_reader_;
 
-    std::shared_ptr<cyber::Writer<ADCTrajectory>> planning_writer_;
-    std::shared_ptr<cyber::Writer<routing::RoutingRequest>> rerouting_writer_;
-    std::shared_ptr<cyber::Writer<PlanningLearningData>> planning_learning_data_writer_;
-    std::shared_ptr<cyber::Writer<external_command::CommandStatus>> command_status_writer_;
+  std::shared_ptr<cyber::Writer<ADCTrajectory>> planning_writer_;
+  std::shared_ptr<cyber::Writer<routing::RoutingRequest>> rerouting_writer_;
+  std::shared_ptr<cyber::Writer<PlanningLearningData>>
+      planning_learning_data_writer_;
+  std::shared_ptr<cyber::Writer<external_command::CommandStatus>>
+      command_status_writer_;
 
-    std::mutex mutex_;
-    perception::TrafficLightDetection traffic_light_;
-    routing::RoutingResponse routing_;
-    planning::PadMessage pad_msg_;
-    relative_map::MapMsg relative_map_;
-    storytelling::Stories stories_;
-    PlanningCommand planning_command_;
-    perception::PerceptionEdgeInfo edge_info_;
-    control::ControlInteractiveMsg control_interactive_msg_;
-    LocalView local_view_;
+  std::mutex mutex_;
+  perception::TrafficLightDetection traffic_light_;
+  routing::RoutingResponse routing_;
+  planning::PadMessage pad_msg_;
+  relative_map::MapMsg relative_map_;
+  storytelling::Stories stories_;
+  PlanningCommand planning_command_;
+  perception::PerceptionEdgeInfo edge_info_;
+  control::ControlInteractiveMsg control_interactive_msg_;
+  LocalView local_view_;
 
-    std::unique_ptr<PlanningBase> planning_base_;
-    std::shared_ptr<DependencyInjector> injector_;
+  std::unique_ptr<PlanningBase> planning_base_;
+  std::shared_ptr<DependencyInjector> injector_;
 
-    PlanningConfig config_;
-    MessageProcess message_process_;
+  PlanningConfig config_;
+  MessageProcess message_process_;
 };
 
 CYBER_REGISTER_COMPONENT(PlanningComponent)

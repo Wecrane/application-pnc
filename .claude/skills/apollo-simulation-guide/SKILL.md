@@ -1,6 +1,6 @@
 ---
 name: apollo-simulation-guide
-description: Apollo Planning 仿真开发全流程指南。覆盖：环境安装、Planning 模块架构（17 Scenario + 10 TrafficRule + 35 Task）、插件开发实战（Scenario/Task/TrafficRule 完整模板 + ScenarioManager 切换机制 + Stage 生命周期 + 配置链路 + 参数调优）、CyberRT 通信框架、PnC Map/Routing、Control 模块、aem/buildtool/profile 工具链、编译构建、赛事场景解题、日志系统（planlog 结构化日志/planlog.sh 过滤/clean_logs.sh 清理/赛题调试三步法）、**地图与路由解析（base_map.bin/routing_map.bin/sim_map.bin 解析 + protoc --decode_raw + 路由拓扑分析 + 赛题场景路由提取 + 车道/路口/信号灯/停车位统计）**、**车辆与障碍物信息（vehicle_param.pb.txt + PerceptionObstacle 类型 + 障碍物处理参数 + 赛题障碍物分析）**。专为只改 Planning 的仿真测试场景设计。当用户提及 Apollo 安装、Planning 开发、插件开发、场景、TrafficRule、Task、参数配置、编译构建、aem、buildtool、profile、CyberRT、PnC Map、Routing、Stage、pipeline、IsTransferable、BuildStopDecision、plugins.xml、LoadConfig、日志、log、planlog、summary、decision、error.log、clean_logs、地图解析、路由解析、base_map、routing_map、sim_map、metaInfo、protoc、decode_raw、拓扑、topo、车道统计、路口分析、信号灯统计、停车位、施工区、U-Turn、LEFT_TURN、障碍物、vehicle_param、PerceptionObstacle、锥桶、ST_TRAFFICCONE 等关键词时必须使用此技能。
+description: Apollo Planning 仿真开发全流程指南。覆盖：环境安装、Planning 模块架构（17 Scenario + 10 TrafficRule + 35 Task）、插件开发实战（Scenario/Task/TrafficRule 完整模板 + ScenarioManager 切换机制 + Stage 生命周期 + 配置链路 + 参数调优）、CyberRT 通信框架、PnC Map/Routing、Control 模块、aem/buildtool/profile 工具链、编译构建、赛事场景解题、**地图与路由解析（base_map.bin/routing_map.bin/sim_map.bin 解析 + protoc --decode_raw + 路由拓扑分析 + 赛题场景路由提取 + 车道/路口/信号灯/停车位统计）**、**车辆与障碍物信息（vehicle_param.pb.txt + PerceptionObstacle 类型 + 障碍物处理参数 + 赛题障碍物分析）**。专为只改 Planning 的仿真测试场景设计。当用户提及 Apollo 安装、Planning 开发、插件开发、场景、TrafficRule、Task、参数配置、编译构建、aem、buildtool、profile、CyberRT、PnC Map、Routing、Stage、pipeline、IsTransferable、BuildStopDecision、plugins.xml、LoadConfig、地图解析、路由解析、base_map、routing_map、sim_map、metaInfo、protoc、decode_raw、拓扑、topo、车道统计、路口分析、信号灯统计、停车位、施工区、U-Turn、LEFT_TURN、障碍物、vehicle_param、PerceptionObstacle、锥桶、ST_TRAFFICCONE 等关键词时必须使用此技能。
 ---
 
 # Apollo 仿真测试指南
@@ -98,8 +98,8 @@ description: Apollo Planning 仿真开发全流程指南。覆盖：环境安装
 - **编译（全量）**：`buildtool build -p core -j15`（首次建议执行两次）
 - **编译（只改 planning）**：`buildtool build -p modules/planning/ -j15`（快很多）
 - **编译后必须恢复 profile**：`aem profile use default`
-- **日志清理**：`bash scripts/clean_logs.sh --planning`（Planning 专项清理，推荐）；`bash scripts/clean_logs.sh --dry-run`（预览）；`find data/log/ -name "*.log.*20[0-9][0-9]*" -type f -delete`（通用旧方式）
-- **日志分析**：`bash scripts/planlog.sh data/log/planning/summary.log --errors`（错误统计）；`grep '"status":"FAIL"' data/log/planning/summary.log`（失败帧快速定位）
+- **日志清理**：~~`bash scripts/clean_logs.sh --planning`（Planning 专项清理，推荐）；`bash scripts/clean_logs.sh --dry-run`（预览）~~ ⚠️ 已弃用；使用通用方式：`find data/log/ -name "*.log.*20[0-9][0-9]*" -type f -delete`
+- **日志分析**：~~`bash scripts/planlog.sh data/log/planning/summary.log --errors`（错误统计）；`grep '"status":"FAIL"' data/log/planning/summary.log`（失败帧快速定位）~~ ⚠️ 已弃用
 
 ---
 
@@ -165,7 +165,7 @@ flowchart TD
 | `references/07-cyber-rt.md` | CyberRT 通信/调度/组件/插件机制 | 用户问模块通信 |
 | `references/08-pnc-map-routing.md` | 参考线生成 + 全局路由 | 用户问地图/路线 |
 | `references/09-params-version.md` | 参数配置机制 + 发版说明 | 用户问调参或版本 |
-| **`references/14-log-system.md`** | **⭐ 新日志系统：~40 字段 SUMMARY（障碍物/红绿灯/曲率/借道/自车坐标）、planlog.sh/clean_logs.sh 工具、赛题调试三步法** | **用户问日志/查错/赛题调试** |
+| ~~`references/14-log-system.md`~~ | ~~新日志系统：~40 字段 SUMMARY、planlog.sh/clean_logs.sh 工具、赛题调试三步法~~ ⚠️ **已弃用** | — |
 | `references/10-control.md` | Control 模块及 Planning 约束 | 用户问下游控制 |
 | `references/11-upstream-modules.md` | 上下游模块数据流 | 用户问感知/预测/定位接口 |
 | `references/12-algorithms.md` | 参考线平滑/路径优化/速度优化算法 | 用户问算法原理 |

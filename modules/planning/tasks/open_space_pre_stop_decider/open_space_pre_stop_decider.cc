@@ -63,6 +63,11 @@ Status OpenSpacePreStopDecider::Process(
         AERROR << msg;
         return Status(ErrorCode::PLANNING_ERROR, msg);
       }
+      // 车辆距离停车位太远时不生成 stop fence，避免提前减速
+      if (target_s > 15.0) {
+        AINFO << "Parking spot too far (s=" << target_s << "), skip stop fence";
+        break;
+      }
       SetParkingSpotStopFence(target_s, frame, reference_line_info);
       break;
     case OpenSpacePreStopDeciderConfig::PULL_OVER:
@@ -138,6 +143,42 @@ bool OpenSpacePreStopDecider::CheckParkingSpotPreStop(
   }
 
   if (!target_area_found) {
+    // 直参考线没有 parking_space_overlaps，直接从 hdmap 获取停车位坐标
+    hdmap::Id id;
+    id.set_id(target_parking_spot_id);
+    auto spot_ptr = hdmap->GetParkingSpaceById(id);
+    if (spot_ptr) {
+      const auto& pts = spot_ptr->polygon().points();
+      Vec2d center_point = (pts[0] + pts[1] + pts[2] + pts[3]) / 4.0;
+      // 直参考线从车辆位置开始，GetNearestPoint 会返回 s=0
+      // 改用投影计算：车辆在参考线上的 s + 车辆到停车位的纵向距离
+      double vehicle_s = 0.0;
+      double vehicle_l = 0.0;
+      Vec2d vehicle_pos(frame->vehicle_state().x(), frame->vehicle_state().y());
+      nearby_path.GetNearestPoint(vehicle_pos, &vehicle_s, &vehicle_l);
+      double center_l;
+      double center_s;
+      nearby_path.GetNearestPoint(center_point, &center_s, &center_l);
+      // 用停车位在参考线上的投影 s 作为 target_s
+      // 如果停车位在车辆侧面（l 很大），center_s 可能不准
+      // 此时用车辆 s + 纵向偏移
+      if (std::fabs(center_l) > 3.0) {
+        // 停车位在车辆侧面，计算纵向距离
+        double dx = center_point.x() - vehicle_pos.x();
+        double dy = center_point.y() - vehicle_pos.y();
+        double heading = frame->vehicle_state().heading();
+        double longitudinal_dist = dx * std::cos(heading) + dy * std::sin(heading);
+        target_area_center_s = vehicle_s + longitudinal_dist;
+      } else {
+        target_area_center_s = center_s;
+      }
+      target_area_found = true;
+      AINFO << "Found parking spot from hdmap, s=" << target_area_center_s << " l=" << center_l
+            << " vehicle_s=" << vehicle_s;
+    }
+  }
+
+  if (!target_area_found) {
     AERROR << "no target parking spot found on reference line";
     return false;
   }
@@ -161,8 +202,17 @@ void OpenSpacePreStopDecider::SetParkingSpotStopFence(
   double static_linear_velocity_epsilon = 1.0e-2;
   static constexpr double kStopBuffer = 0.2;
   CHECK_GE(stop_distance_to_target, 1.0e-8);
+  const double parking_spot_pre_stop_distance =
+      config_.parking_spot_pre_stop_distance();
+  CHECK_GE(parking_spot_pre_stop_distance, 0.0);
+  // 在停车位中心前方一定距离处停车，给车辆留出倒车空间。
   stop_line_s =
-      target_s + front_edge_to_center + config_.stop_buffer_to_target();
+      target_s + front_edge_to_center + parking_spot_pre_stop_distance;
+  AINFO << "Set parking spot pre-stop fence, target_s=" << target_s
+        << ", front_edge_to_center=" << front_edge_to_center
+        << ", parking_spot_pre_stop_distance="
+        << parking_spot_pre_stop_distance << ", stop_line_s=" << stop_line_s
+        << ", adc_front_edge_s=" << adc_front_edge_s;
   const std::string stop_wall_id = OPEN_SPACE_STOP_ID;
   std::vector<std::string> wait_for_obstacles;
   frame->mutable_open_space_info()->set_open_space_pre_stop_fence_s(

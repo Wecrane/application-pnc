@@ -19,3 +19,11 @@ follow_distance_scheduler {
     slope: 0.5
   }
 }
+ignore_dynamic_obstacles_in_change_lane: true
+change_lane_ignore_dynamic_obstacle_min_t: 1.2
+change_lane_ignore_dynamic_obstacle_min_s: 6.0
+change_lane_keep_dynamic_obstacle_min_t: 0.6
+change_lane_keep_dynamic_obstacle_min_s: 3.0
+ignore_front_dynamic_obstacles_in_change_lane: true
+change_lane_keep_rear_dynamic_obstacle_gap: 0.5
+ignore_static_obstacle_stop_without_decision: true
