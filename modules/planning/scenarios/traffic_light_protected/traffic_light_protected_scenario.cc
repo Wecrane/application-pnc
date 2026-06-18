@@ -20,6 +20,7 @@
 
 #include "modules/planning/scenarios/traffic_light_protected/traffic_light_protected_scenario.h"
 
+#include "modules/planning/planning_base/gflags/planning_gflags.h"
 #include "modules/planning/planning_base/proto/planning_config.pb.h"
 
 #include "cyber/common/log.h"
@@ -27,6 +28,7 @@
 #include "modules/planning/planning_base/common/planning_context.h"
 #include "modules/planning/scenarios/traffic_light_protected/stage_approach.h"
 #include "modules/planning/scenarios/traffic_light_protected/stage_intersection_cruise.h"
+#include "modules/planning/scenarios/traffic_light_protected/stage_route_cruise.h"
 
 namespace apollo {
 namespace planning {
@@ -79,50 +81,34 @@ bool TrafficLightProtectedScenario::IsTransferable(
   }
   const std::vector<hdmap::PathOverlap>& traffic_light_overlaps =
       reference_line_info.reference_line().map_path().signal_overlaps();
-  const double start_check_distance =
-      context_.scenario_config.start_traffic_light_scenario_distance();
   const double adc_front_edge_s = reference_line_info.AdcSlBoundary().end_s();
-  // find all the traffic light belong to
-  // the same group as first encountered traffic light
-  std::vector<hdmap::PathOverlap> next_traffic_lights;
-  static constexpr double kTrafficLightGroupingMaxDist = 2.0;  // unit: m
+
+  // Check if there are ANY traffic lights ahead on the route (no distance limit).
+  // The scenario will stay active from birth to destination, handling all
+  // traffic lights along the way.
+  bool has_traffic_light_ahead = false;
   for (const auto& overlap : traffic_light_overlaps) {
-    const double dist = overlap.start_s - traffic_sign_overlap->start_s;
-    if (fabs(dist) <= kTrafficLightGroupingMaxDist) {
-      next_traffic_lights.push_back(overlap);
-    }
-  }
-  bool traffic_light_scenario = false;
-  // note: need iterate all lights to check no RED/YELLOW/UNKNOWN
-  for (const auto& overlap : next_traffic_lights) {
-    const double adc_distance_to_traffic_light =
-        overlap.start_s - adc_front_edge_s;
-    ADEBUG << "traffic_light[" << overlap.object_id << "] start_s["
-           << overlap.start_s << "] adc_distance_to_traffic_light["
-           << adc_distance_to_traffic_light << "]";
-
-    // enter traffic-light scenarios: based on distance only
-    if (adc_distance_to_traffic_light <= 0.0 ||
-        adc_distance_to_traffic_light > start_check_distance) {
-      continue;
-    }
-
-    const auto& signal_color = frame.GetSignal(overlap.object_id).color();
-    ADEBUG << "traffic_light_id[" << overlap.object_id << "] start_s["
-           << overlap.start_s << "] color[" << signal_color << "]";
-
-    if (signal_color != perception::TrafficLight::GREEN &&
-        signal_color != perception::TrafficLight::BLACK) {
-      traffic_light_scenario = true;
+    if (overlap.start_s > adc_front_edge_s) {
+      has_traffic_light_ahead = true;
       break;
     }
   }
-  if (!traffic_light_scenario) {
+  if (!has_traffic_light_ahead) {
     return false;
   }
+
+  // Populate context with the first traffic light group for initial entry.
+  // RouteCruise stage will update this as it approaches each intersection.
   context_.current_traffic_light_overlap_ids.clear();
-  for (const auto& overlap : next_traffic_lights) {
-    context_.current_traffic_light_overlap_ids.push_back(overlap.object_id);
+  static constexpr double kTrafficLightGroupingMaxDist = 2.0;  // unit: m
+  for (const auto& overlap : traffic_light_overlaps) {
+    if (overlap.start_s <= adc_front_edge_s) {
+      continue;
+    }
+    const double dist = overlap.start_s - traffic_sign_overlap->start_s;
+    if (fabs(dist) <= kTrafficLightGroupingMaxDist) {
+      context_.current_traffic_light_overlap_ids.push_back(overlap.object_id);
+    }
   }
   return true;
 }
@@ -132,6 +118,11 @@ bool TrafficLightProtectedScenario::Exit(Frame* frame) {
       ->mutable_planning_status()
       ->mutable_traffic_light()
       ->Clear();
+  // Restore the original default_cruise_speed so other scenarios
+  // (LANE_FOLLOW) are not affected by the 60 km/h boost.
+  FLAGS_default_cruise_speed = saved_default_cruise_speed_;
+  AINFO << "TrafficLightProtected: restored default_cruise_speed to "
+        << saved_default_cruise_speed_ << " m/s";
   return true;
 }
 
@@ -150,6 +141,16 @@ bool TrafficLightProtectedScenario::Enter(Frame* frame) {
         ->mutable_traffic_light()
         ->add_current_traffic_light_overlap_id(overlap_id);
   }
+  // Save and raise default_cruise_speed to 60 km/h for the entire scenario.
+  // This is the only way to guarantee all Tasks, TrafficRules, and the Frame
+  // initialization use the boosted speed (SetCruiseSpeed alone isn't enough
+  // because downstream components use FLAGS_default_cruise_speed directly).
+  saved_default_cruise_speed_ = FLAGS_default_cruise_speed;
+  FLAGS_default_cruise_speed =
+      context_.scenario_config.route_cruise_speed();  // 16.667 m/s = 60 km/h
+  AINFO << "TrafficLightProtected: boosted default_cruise_speed from "
+        << saved_default_cruise_speed_ << " to " << FLAGS_default_cruise_speed
+        << " m/s";
   return true;
 }
 

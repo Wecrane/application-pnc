@@ -11,4 +11,7 @@ message ScenarioTrafficLightProtectedConfig {
   // ego-vehicle must stop at the distance of "max_valid_stop_distance" to
   // the traffic light overlap when the signal color is not green.
   optional double max_valid_stop_distance = 2 [default = 2.0];  // meter
+  // Cruise speed used during RouteCruise stage (between intersections).
+  // Traffic light zones have no speed limit, so this can be up to 60 km/h.
+  optional double route_cruise_speed = 3 [default = 16.667];  // m/s (60 km/h)
 }

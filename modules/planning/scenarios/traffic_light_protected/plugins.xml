@@ -2,4 +2,5 @@
     <class type="apollo::planning::TrafficLightProtectedScenario" base_class="apollo::planning::Scenario"></class>
     <class type="apollo::planning::TrafficLightProtectedStageApproach" base_class="apollo::planning::Stage"></class>
     <class type="apollo::planning::TrafficLightProtectedStageIntersectionCruise" base_class="apollo::planning::Stage"></class>
+    <class type="apollo::planning::TrafficLightProtectedStageRouteCruise" base_class="apollo::planning::Stage"></class>
 </library>

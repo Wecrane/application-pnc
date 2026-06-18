@@ -185,8 +185,9 @@ UTurnInnerLaneTraffic CheckUTurnInnerLaneTraffic(const ReferenceLineInfo& refere
     double nearest_blocking_s = std::numeric_limits<double>::infinity();
     double nearest_passed_s = std::numeric_limits<double>::infinity();
     bool near_uturn = reference_line_info.GetPathTurnType(adc_sl.end_s()) == hdmap::Lane::U_TURN;
-    for (double s = adc_sl.end_s(); !near_uturn && s <= adc_sl.end_s() + 20.0
-         && s <= reference_line_info.reference_line().Length(); s += 2.0) {
+    for (double s = adc_sl.end_s();
+         !near_uturn && s <= adc_sl.end_s() + 20.0 && s <= reference_line_info.reference_line().Length();
+         s += 2.0) {
         near_uturn = reference_line_info.GetPathTurnType(s) == hdmap::Lane::U_TURN;
     }
     for (const auto* obstacle : reference_line_info.path_decision().obstacles().Items()) {
@@ -524,13 +525,14 @@ apollo::common::Status ContestLaneBorrowPath::Process(Frame* frame, ReferenceLin
     if (reverse_recovery_.active && !candidate_path_data.empty()) {
         *reference_line_info->mutable_path_data() = candidate_path_data.front();
         AINFO << "[REVERSE] Path set directly (bypass AssessPath), label=" << candidate_path_data.front().path_label();
-        // 倒车限速：仅 AddSpeedLimit 区间限速，不锁全局巡航
-        constexpr double kReverseSpeedLimit = 2.2;
-        const double adc_s = reference_line_info->AdcSlBoundary().start_s();
-        reference_line_info->mutable_reference_line()->AddSpeedLimit(
-                adc_s - kReverseDistance, adc_s, kReverseSpeedLimit);
-        AINFO << "[REVERSE] speed limit " << kReverseSpeedLimit << " m/s for reverse s=[" << (adc_s - kReverseDistance)
-              << ", " << adc_s << "]";
+
+        // ── 模拟站点接驳倒车策略：限速已由 BuildReverseStraightReferenceLine
+        //     注入到倒车参考线 (reverse_recovery_.reference_line_cache)，
+        //     PiecewiseJerkSpeedOptimizer 识别 is_reverse_path 后生成三段式速度曲线。
+        //     此处不再向前向参考线添加限速（前向参考线与倒车参考线坐标系不同）。
+        constexpr double kReverseSpeedLimit = 5.0;  // m/s (~18 km/h)
+        AINFO << "[REVERSE] ready for 3-segment speed profile, limit=" << kReverseSpeedLimit
+              << " m/s, reverse_distance=" << kReverseDistance << " m";
     } else if (AssessPath(&candidate_path_data, reference_line_info->mutable_path_data())) {
         ADEBUG << "contest lane borrow path success";
     }
@@ -1460,14 +1462,13 @@ void ContestLaneBorrowPath::UpdateUTurnMergeState(const ReferenceLineInfo& refer
             ++u_turn_merge_vehicle_missing_frames_;
         }
         const bool has_pass_by_window = u_turn_merge_vehicle_confirmed_ || u_turn_inner_vehicle_confirmed_;
-        const bool merge_tracked_passed
-                = u_turn_merge_vehicle_confirmed_ && traffic.passed
-                  && (u_turn_merge_vehicle_id_.empty()
-                      || std::find(
-                              traffic.passed_obstacle_ids.begin(),
-                              traffic.passed_obstacle_ids.end(),
-                              u_turn_merge_vehicle_id_)
-                              != traffic.passed_obstacle_ids.end());
+        const bool merge_tracked_passed = u_turn_merge_vehicle_confirmed_ && traffic.passed
+                && (u_turn_merge_vehicle_id_.empty()
+                    || std::find(
+                               traffic.passed_obstacle_ids.begin(),
+                               traffic.passed_obstacle_ids.end(),
+                               u_turn_merge_vehicle_id_)
+                            != traffic.passed_obstacle_ids.end());
         if (has_pass_by_window
             && (merge_tracked_passed || u_turn_merge_vehicle_missing_frames_ >= kMissingFramesToRelease)) {
             u_turn_merge_release_ = true;
@@ -1488,8 +1489,7 @@ void ContestLaneBorrowPath::UpdateUTurnMergeState(const ReferenceLineInfo& refer
               << ", passed=" << traffic.passed << ", confirmed=" << u_turn_merge_vehicle_confirmed_
               << ", inherited_pass_by=" << u_turn_inner_vehicle_confirmed_
               << ", tracked_id=" << u_turn_merge_vehicle_id_ << ", blocking_id=" << traffic.blocking_obstacle_id
-              << ", passed_id=" << traffic.passed_obstacle_id
-              << ", seen_frames=" << u_turn_merge_vehicle_seen_frames_
+              << ", passed_id=" << traffic.passed_obstacle_id << ", seen_frames=" << u_turn_merge_vehicle_seen_frames_
               << ", missing_frames=" << u_turn_merge_vehicle_missing_frames_;
         return;
     }
@@ -1516,17 +1516,15 @@ void ContestLaneBorrowPath::UpdateUTurnMergeState(const ReferenceLineInfo& refer
     if (has_prelaunch_vehicle && !u_turn_prelaunch_stop_wait_done_) {
         const double adc_speed = std::fabs(init_sl_state_.first[1]);
         if (adc_speed < kStoppedSpeed) {
-            u_turn_prelaunch_stop_wait_frames_ =
-                    std::min(u_turn_prelaunch_stop_wait_frames_ + 1, kPreLaunchStopWaitFrames);
+            u_turn_prelaunch_stop_wait_frames_
+                    = std::min(u_turn_prelaunch_stop_wait_frames_ + 1, kPreLaunchStopWaitFrames);
         } else {
             u_turn_prelaunch_stop_wait_frames_ = 0;
         }
         if (u_turn_prelaunch_stop_wait_frames_ < kPreLaunchStopWaitFrames) {
             AINFO << "[UTURN][MERGE] stopped before launch, dwelling: blocking=" << traffic.blocking
-                  << ", confirmed=" << u_turn_inner_vehicle_confirmed_
-                  << ", speed=" << adc_speed
-                  << ", wait_frames=" << u_turn_prelaunch_stop_wait_frames_
-                  << "/" << kPreLaunchStopWaitFrames;
+                  << ", confirmed=" << u_turn_inner_vehicle_confirmed_ << ", speed=" << adc_speed
+                  << ", wait_frames=" << u_turn_prelaunch_stop_wait_frames_ << "/" << kPreLaunchStopWaitFrames;
             return;
         }
         u_turn_prelaunch_stop_wait_done_ = true;
@@ -1541,23 +1539,21 @@ void ContestLaneBorrowPath::UpdateUTurnMergeState(const ReferenceLineInfo& refer
         u_turn_prelaunch_stop_wait_frames_ = 0;
     }
 
-    const bool inner_tracked_passed
-            = u_turn_inner_vehicle_confirmed_ && traffic.passed
-              && (u_turn_inner_vehicle_id_.empty()
-                  || std::find(
-                          traffic.passed_obstacle_ids.begin(),
-                          traffic.passed_obstacle_ids.end(),
-                          u_turn_inner_vehicle_id_)
-                          != traffic.passed_obstacle_ids.end());
+    const bool inner_tracked_passed = u_turn_inner_vehicle_confirmed_ && traffic.passed
+            && (u_turn_inner_vehicle_id_.empty()
+                || std::find(
+                           traffic.passed_obstacle_ids.begin(),
+                           traffic.passed_obstacle_ids.end(),
+                           u_turn_inner_vehicle_id_)
+                        != traffic.passed_obstacle_ids.end());
     if (u_turn_inner_vehicle_confirmed_
         && (inner_tracked_passed || u_turn_inner_vehicle_missing_frames_ >= kMissingFramesToRelease)) {
         u_turn_release_after_first_vehicle_ = true;
         u_turn_prelaunch_stop_wait_frames_ = 0;
         u_turn_prelaunch_stop_wait_done_ = false;
         u_turn_release_hold_frames_ = kReleaseHoldFrames;
-        AINFO << "[UTURN][MERGE] first inner-lane vehicle passed, release now. tracked_id="
-              << u_turn_inner_vehicle_id_ << ", passed=" << traffic.passed
-              << ", passed_id=" << traffic.passed_obstacle_id
+        AINFO << "[UTURN][MERGE] first inner-lane vehicle passed, release now. tracked_id=" << u_turn_inner_vehicle_id_
+              << ", passed=" << traffic.passed << ", passed_id=" << traffic.passed_obstacle_id
               << ", missing_frames=" << u_turn_inner_vehicle_missing_frames_;
         return;
     }
@@ -1574,9 +1570,8 @@ void ContestLaneBorrowPath::UpdateUTurnMergeState(const ReferenceLineInfo& refer
 
     AINFO << "[UTURN][MERGE] waiting: blocking=" << traffic.blocking << ", passed=" << traffic.passed
           << ", confirmed=" << u_turn_inner_vehicle_confirmed_ << ", seen_frames=" << u_turn_inner_vehicle_seen_frames_
-          << ", missing_frames=" << u_turn_inner_vehicle_missing_frames_
-          << ", tracked_id=" << u_turn_inner_vehicle_id_ << ", blocking_id=" << traffic.blocking_obstacle_id
-          << ", passed_id=" << traffic.passed_obstacle_id
+          << ", missing_frames=" << u_turn_inner_vehicle_missing_frames_ << ", tracked_id=" << u_turn_inner_vehicle_id_
+          << ", blocking_id=" << traffic.blocking_obstacle_id << ", passed_id=" << traffic.passed_obstacle_id
           << ", stop_wait_frames=" << u_turn_prelaunch_stop_wait_frames_
           << ", stop_wait_done=" << u_turn_prelaunch_stop_wait_done_;
 }

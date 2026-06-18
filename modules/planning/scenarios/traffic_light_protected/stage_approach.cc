@@ -50,7 +50,9 @@ StageResult TrafficLightProtectedStageApproach::Process(
   }
 
   if (context->current_traffic_light_overlap_ids.empty()) {
-    return FinishScenario();
+    // No traffic light IDs in context — go back to RouteCruise to find next one
+    next_stage_ = "TRAFFIC_LIGHT_PROTECTED_ROUTE_CRUISE";
+    return StageResult(StageStatusType::FINISHED);
   }
 
   const auto& reference_line_info = frame->reference_line_info().front();

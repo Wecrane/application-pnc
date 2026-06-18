@@ -97,6 +97,28 @@ Status PiecewiseJerkSpeedOptimizer::Process(
         AERROR << msg;
         return Status(ErrorCode::PLANNING_ERROR, msg);
     }
+
+    // ── 倒车路径：跳过 QP + 清空被 SpeedBoundsFinalDecider 重建的 ST 边界 ──
+    // 三段式速度曲线已由 PathTimeHeuristicOptimizer (DP) 生成。
+    // SpeedBoundsFinalDecider 在 DP 之后会重新投影障碍物到 ST 图，
+    // 由于倒车路径使用倒车参考线（与前向参考线坐标系不同），障碍物位置
+    // 会被错误映射，需在最终输出前再次清空以避免 Dreamview 显示停止墙。
+    if (path_data.is_reverse_path()) {
+        StGraphData& st_graph_data = *reference_line_info_->mutable_st_graph_data();
+        std::vector<const STBoundary*> empty_boundaries;
+        st_graph_data.LoadData(empty_boundaries, 0.0,
+                               st_graph_data.init_point(),
+                               st_graph_data.speed_limit(),
+                               st_graph_data.cruise_speed(),
+                               path_data.discretized_path().Length(),
+                               st_graph_data.total_time_by_conf(),
+                               st_graph_data.mutable_st_graph_debug());
+        reference_line_info_->path_decision()->EraseStBoundaries();
+        SpeedProfileGenerator::FillEnoughSpeedPoints(speed_data);
+        AINFO << "[REVERSE][QP] skip QP optimization, boundaries cleared";
+        return Status::OK();
+    }
+
     StGraphData& st_graph_data = *reference_line_info_->mutable_st_graph_data();
     PrintCurves print_debug;
     const auto& veh_param = common::VehicleConfigHelper::GetConfig().vehicle_param();
@@ -106,14 +128,14 @@ Status PiecewiseJerkSpeedOptimizer::Process(
     const bool roundabout_launch_area
             = IsContestRoundaboutScenario(injector_) && IsRoundaboutCommitArea(reference_line_info_);
     const bool uturn_release_launch = path_data.path_label().find("uturn_release") != std::string::npos;
-    const bool window_release_launch = init_s[1] < (uturn_release_launch ? 1.8 : 1.0)
-            && (uturn_release_launch || roundabout_launch_area);
+    const bool window_release_launch
+            = init_s[1] < (uturn_release_launch ? 1.8 : 1.0) && (uturn_release_launch || roundabout_launch_area);
     if (window_release_launch) {
         init_s[2] = std::max(init_s[2], uturn_release_launch ? 3.0 : 2.0);
         AINFO << "[WINDOW][Speed] release launch boost, label=" << path_data.path_label() << ", init_v=" << init_s[1]
               << ", init_a=" << init_s[2] << ", uturn=" << uturn_release_launch
-              << ", roundabout=" << roundabout_launch_area
-              << ", adc_x=" << vehicle_state.x() << ", adc_y=" << vehicle_state.y();
+              << ", roundabout=" << roundabout_launch_area << ", adc_x=" << vehicle_state.x()
+              << ", adc_y=" << vehicle_state.y();
     }
     if (vehicle_state.gear() == canbus::Chassis::GEAR_REVERSE) {
         init_s[1] = std::max(-init_s[1], 0.0);
@@ -237,8 +259,8 @@ Status PiecewiseJerkSpeedOptimizer::Process(
             window_release_launch ? config_.jerk_weight() * 0.02 : config_.jerk_weight());
     piecewise_jerk_problem.set_scale_factor({1.0, 10.0, 100.0});
     piecewise_jerk_problem.set_x_bounds(0.0, total_length);
-    const double launch_max_acc = uturn_release_launch ? std::max(veh_param.max_acceleration(), 3.5)
-                                                       : veh_param.max_acceleration();
+    const double launch_max_acc
+            = uturn_release_launch ? std::max(veh_param.max_acceleration(), 3.5) : veh_param.max_acceleration();
     const double launch_max_jerk = uturn_release_launch ? std::max(FLAGS_longitudinal_jerk_upper_bound, 6.0)
                                                         : FLAGS_longitudinal_jerk_upper_bound;
     piecewise_jerk_problem.set_ddx_bounds(veh_param.max_deceleration(), launch_max_acc);

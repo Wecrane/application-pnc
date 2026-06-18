@@ -21,6 +21,8 @@
 #include "modules/planning/scenarios/traffic_light_protected/stage_intersection_cruise.h"
 
 #include "cyber/common/log.h"
+#include "modules/planning/planning_base/common/frame.h"
+#include "modules/planning/scenarios/traffic_light_protected/context.h"
 
 namespace apollo {
 namespace planning {
@@ -29,6 +31,12 @@ StageResult TrafficLightProtectedStageIntersectionCruise::Process(
     const common::TrajectoryPoint& planning_init_point, Frame* frame) {
   ADEBUG << "stage: IntersectionCruise";
   CHECK_NOTNULL(frame);
+
+  // Set cruise speed to route_cruise_speed (60 km/h) for intersection crossing.
+  auto context = GetContextAs<TrafficLightProtectedContext>();
+  auto& reference_line_info = frame->mutable_reference_line_info()->front();
+  reference_line_info.SetCruiseSpeed(
+      context->scenario_config.route_cruise_speed());
 
   StageResult result = ExecuteTaskOnReferenceLine(planning_init_point, frame);
   if (result.HasError()) {
@@ -44,7 +52,8 @@ StageResult TrafficLightProtectedStageIntersectionCruise::Process(
 }
 
 StageResult TrafficLightProtectedStageIntersectionCruise::FinishStage() {
-  return FinishScenario();
+  next_stage_ = "TRAFFIC_LIGHT_PROTECTED_ROUTE_CRUISE";
+  return StageResult(StageStatusType::FINISHED);
 }
 
 }  // namespace planning

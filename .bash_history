@@ -31,3 +31,33 @@ buildtool build -p modules/planning/ -j15
 aem profile use default
 buildtool build -p modules/planning/ -j15
 aem profile use default
+buildtool build -p modules/planning/ -j15
+aem profile use default
+buildtool build -p modules/planning/ -j15
+aem profile use default
+buildtool build -p modules/planning/ -j15
+aem profile use default
+buildtool build -p modules/planning/ -j15
+aem profile use default
+buildtool build -p modules/planning/ -j15
+aem profile use default
+buildtool build -p modules/planning/ -j15
+aem profile use default
+buildtool build -p modules/planning/ -j15
+aem profile use default
+buildtool build -p modules/planning/ -j15
+aem profile use default
+buildtool build -p modules/planning/ -j15
+aem profile use default
+buildtool build -p modules/planning/ -j15
+aem profile use default
+buildtool build -p modules/planning/ -j15
+aem profile use default
+buildtool build -p modules/planning/ -j15
+aem profile use default
+buildtool build -p modules/planning/ -j15
+aem profile use default
+buildtool build -p modules/planning/ -j15
+aem profile use default
+buildtool build -p modules/planning/ -j15
+aem profile use default

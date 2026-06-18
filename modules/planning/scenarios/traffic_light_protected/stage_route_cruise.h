@@ -22,43 +22,24 @@
 
 #include <memory>
 #include <string>
-#include <vector>
 
-// #include "modules/common/util/factory.h"
-// #include "modules/common_msgs/planning_msgs/planning.pb.h"
-#include "modules/planning/scenarios/traffic_light_protected/proto/traffic_light_protected.pb.h"
 #include "cyber/plugin_manager/plugin_manager.h"
-#include "modules/planning/planning_interface_base/scenario_base/scenario.h"
-#include "modules/planning/scenarios/traffic_light_protected/context.h"
+#include "modules/planning/planning_interface_base/scenario_base/stage.h"
 
 namespace apollo {
 namespace planning {
 
-class TrafficLightProtectedScenario : public Scenario {
+class TrafficLightProtectedStageRouteCruise : public Stage {
  public:
-  bool Init(std::shared_ptr<DependencyInjector> injector,
-            const std::string& name) override;
-
-  /**
-   * @brief Get the scenario context.
-   */
-  TrafficLightProtectedContext* GetContext() override { return &context_; }
-
-  bool IsTransferable(const Scenario* const other_scenario,
-                      const Frame& frame) override;
-
-  bool Exit(Frame* frame) override;
-
-  bool Enter(Frame* frame) override;
+  StageResult Process(const common::TrajectoryPoint& planning_init_point,
+                      Frame* frame) override;
 
  private:
-  bool init_ = false;
-  TrafficLightProtectedContext context_;
-  double saved_default_cruise_speed_ = 8.056;  // saved from LANE_FOLLOW
+  StageResult FinishStage();
 };
 
 CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(
-    apollo::planning::TrafficLightProtectedScenario, Scenario)
+    apollo::planning::TrafficLightProtectedStageRouteCruise, Stage)
 
 }  // namespace planning
 }  // namespace apollo
