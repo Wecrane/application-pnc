@@ -146,22 +146,22 @@ delete_file() {
 
     if [[ -L "$file" ]]; then
         print_yellow "  [SKIP] 符号链接: $file"
-        ((FILES_SKIPPED++))
-        ((SYMLINKS_PROTECTED++))
+        ((FILES_SKIPPED++)) || true
+        ((SYMLINKS_PROTECTED++)) || true
         return 1
     fi
 
     if is_info_symlink "$file"; then
         print_yellow "  [SKIP] .INFO 链接（glog 需要）: $file"
-        ((FILES_SKIPPED++))
-        ((SYMLINKS_PROTECTED++))
+        ((FILES_SKIPPED++)) || true
+        ((SYMLINKS_PROTECTED++)) || true
         return 1
     fi
 
     if is_file_in_use "$file"; then
         print_yellow "  [SKIP] 文件正在使用中: $file"
-        ((FILES_SKIPPED++))
-        ((IN_USE_PROTECTED++))
+        ((FILES_SKIPPED++)) || true
+        ((IN_USE_PROTECTED++)) || true
         return 1
     fi
 
@@ -170,19 +170,19 @@ delete_file() {
 
     if $DRY_RUN; then
         print_blue "  [DRY-RUN] 将删除: $file ($(format_size $fsize))"
-        ((FILES_DELETED++))
-        ((SIZE_DELETED += fsize))
+        ((FILES_DELETED++)) || true
+        ((SIZE_DELETED += fsize)) || true
         return 0
     fi
 
     if rm -f "$file"; then
         print_green "  [DEL] $file ($(format_size $fsize))"
-        ((FILES_DELETED++))
-        ((SIZE_DELETED += fsize))
+        ((FILES_DELETED++)) || true
+        ((SIZE_DELETED += fsize)) || true
         return 0
     else
         print_red "  [ERR] 删除失败: $file"
-        ((FILES_ERROR++))
+        ((FILES_ERROR++)) || true
         return 1
     fi
 }
@@ -333,7 +333,7 @@ collect_stats_before() {
     while IFS= read -r -d '' file; do
         if [[ -f "$file" ]] && [[ ! -L "$file" ]]; then
             if is_log_file "$file"; then
-                ((FILES_BEFORE++))
+                ((FILES_BEFORE++)) || true
                 SIZE_BEFORE=$((SIZE_BEFORE + $(get_file_size "$file")))
             fi
         fi
@@ -523,6 +523,7 @@ clean_keep_latest() {
         if [[ -n "${module_latest[$mod_name]:-}" ]] && [[ "$file" == "${module_latest[$mod_name]}" ]]; then
             print_cyan "  [KEEP] 保留最新文件: $file"
             ((count++)) || true
+            ((FILES_SKIPPED++)) || true
         else
             delete_file "$file"
             ((count++)) || true
@@ -607,7 +608,9 @@ print_summary() {
         print_red "  删除失败:     ${FILES_ERROR}"
     fi
     echo ""
-    echo "  剩余文件数: $((FILES_BEFORE - FILES_DELETED))"
+    local remaining_files=$((FILES_BEFORE - FILES_DELETED))
+    if (( remaining_files < 0 )); then remaining_files=0; fi
+    echo "  剩余文件数: ${remaining_files}"
     local remaining_size=$((SIZE_BEFORE - SIZE_DELETED))
     if (( remaining_size < 0 )); then remaining_size=0; fi
     echo "  剩余总大小: $(format_size $remaining_size)"
