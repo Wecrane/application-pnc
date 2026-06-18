@@ -164,13 +164,13 @@ Status PathTimeHeuristicOptimizer::Process(
     }
 
     if (!SearchPathTimeGraph(speed_data)) {
-    const std::string msg = absl::StrCat(Name(), ": Failed to search graph with dynamic programming.");
-    AERROR << msg;
+        const std::string msg = absl::StrCat(Name(), ": Failed to search graph with dynamic programming.");
+        AERROR << msg;
+        RecordDebugInfo(*speed_data, reference_line_info_->mutable_st_graph_data()->mutable_st_graph_debug());
+        return Status(ErrorCode::PLANNING_ERROR, msg);
+    }
     RecordDebugInfo(*speed_data, reference_line_info_->mutable_st_graph_data()->mutable_st_graph_debug());
-    return Status(ErrorCode::PLANNING_ERROR, msg);
-}
-RecordDebugInfo(*speed_data, reference_line_info_->mutable_st_graph_data()->mutable_st_graph_debug());
-return Status::OK();
+    return Status::OK();
 }
 
 }  // namespace planning

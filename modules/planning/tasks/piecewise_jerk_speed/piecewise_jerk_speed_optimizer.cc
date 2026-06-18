@@ -106,13 +106,15 @@ Status PiecewiseJerkSpeedOptimizer::Process(
     if (path_data.is_reverse_path()) {
         StGraphData& st_graph_data = *reference_line_info_->mutable_st_graph_data();
         std::vector<const STBoundary*> empty_boundaries;
-        st_graph_data.LoadData(empty_boundaries, 0.0,
-                               st_graph_data.init_point(),
-                               st_graph_data.speed_limit(),
-                               st_graph_data.cruise_speed(),
-                               path_data.discretized_path().Length(),
-                               st_graph_data.total_time_by_conf(),
-                               st_graph_data.mutable_st_graph_debug());
+        st_graph_data.LoadData(
+                empty_boundaries,
+                0.0,
+                st_graph_data.init_point(),
+                st_graph_data.speed_limit(),
+                st_graph_data.cruise_speed(),
+                path_data.discretized_path().Length(),
+                st_graph_data.total_time_by_conf(),
+                st_graph_data.mutable_st_graph_debug());
         reference_line_info_->path_decision()->EraseStBoundaries();
         SpeedProfileGenerator::FillEnoughSpeedPoints(speed_data);
         AINFO << "[REVERSE][QP] skip QP optimization, boundaries cleared";

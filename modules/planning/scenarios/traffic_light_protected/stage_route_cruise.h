@@ -30,16 +30,14 @@ namespace apollo {
 namespace planning {
 
 class TrafficLightProtectedStageRouteCruise : public Stage {
- public:
-  StageResult Process(const common::TrajectoryPoint& planning_init_point,
-                      Frame* frame) override;
+public:
+    StageResult Process(const common::TrajectoryPoint& planning_init_point, Frame* frame) override;
 
- private:
-  StageResult FinishStage();
+private:
+    StageResult FinishStage();
 };
 
-CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(
-    apollo::planning::TrafficLightProtectedStageRouteCruise, Stage)
+CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(apollo::planning::TrafficLightProtectedStageRouteCruise, Stage)
 
 }  // namespace planning
 }  // namespace apollo
