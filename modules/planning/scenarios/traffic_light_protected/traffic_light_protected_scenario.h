@@ -35,29 +35,29 @@ namespace apollo {
 namespace planning {
 
 class TrafficLightProtectedScenario : public Scenario {
- public:
-  bool Init(std::shared_ptr<DependencyInjector> injector,
-            const std::string& name) override;
+public:
+    bool Init(std::shared_ptr<DependencyInjector> injector, const std::string& name) override;
 
-  /**
-   * @brief Get the scenario context.
-   */
-  TrafficLightProtectedContext* GetContext() override { return &context_; }
+    /**
+     * @brief Get the scenario context.
+     */
+    TrafficLightProtectedContext* GetContext() override {
+        return &context_;
+    }
 
-  bool IsTransferable(const Scenario* const other_scenario,
-                      const Frame& frame) override;
+    bool IsTransferable(const Scenario* const other_scenario, const Frame& frame) override;
 
-  bool Exit(Frame* frame) override;
+    bool Exit(Frame* frame) override;
 
-  bool Enter(Frame* frame) override;
+    bool Enter(Frame* frame) override;
 
- private:
-  bool init_ = false;
-  TrafficLightProtectedContext context_;
+private:
+    bool init_ = false;
+    TrafficLightProtectedContext context_;
+    double saved_default_cruise_speed_ = 8.056;  // saved from LANE_FOLLOW
 };
 
-CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(
-    apollo::planning::TrafficLightProtectedScenario, Scenario)
+CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(apollo::planning::TrafficLightProtectedScenario, Scenario)
 
 }  // namespace planning
 }  // namespace apollo
