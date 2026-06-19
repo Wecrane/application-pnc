@@ -15,14 +15,12 @@ apollo_plugin(
     srcs = [
         "stage_approach.cc",
         "stage_intersection_cruise.cc",
-        "stage_route_cruise.cc",
         "traffic_light_protected_scenario.cc",
     ],
     hdrs = [
         "context.h",
         "stage_approach.h",
         "stage_intersection_cruise.h",
-        "stage_route_cruise.h",
         "traffic_light_protected_scenario.h",
     ],
     copts = ["-DMODULE_NAME=\\\"planning\\\""],
