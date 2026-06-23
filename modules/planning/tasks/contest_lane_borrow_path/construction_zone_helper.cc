@@ -249,6 +249,30 @@ bool MergeConstructionZoneWallPoint(bool to_left, double s, double l, Constructi
     return false;
 }
 
+// 墙壁趋势外推：对墙最后 num_pts 个点做线性回归，预测 s 处的 l 值。
+// 返回 NaN 表示点数不足或回归失败。
+double ExtrapolateWallL(const std::vector<std::pair<double, double>>& wall, double s, int num_pts = 5) {
+    const int n = std::min(num_pts, static_cast<int>(wall.size()));
+    if (n < 2) {
+        return std::numeric_limits<double>::quiet_NaN();
+    }
+    // 取最后 n 个点
+    double sum_s = 0.0, sum_l = 0.0, sum_ss = 0.0, sum_sl = 0.0;
+    for (int i = static_cast<int>(wall.size()) - n; i < static_cast<int>(wall.size()); ++i) {
+        sum_s += wall[i].first;
+        sum_l += wall[i].second;
+        sum_ss += wall[i].first * wall[i].first;
+        sum_sl += wall[i].first * wall[i].second;
+    }
+    const double denom = n * sum_ss - sum_s * sum_s;
+    if (std::fabs(denom) < 1e-12) {
+        return std::numeric_limits<double>::quiet_NaN();
+    }
+    const double slope = (n * sum_sl - sum_s * sum_l) / denom;
+    const double intercept = (sum_l - slope * sum_s) / n;
+    return intercept + slope * s;
+}
+
 void ApplyConstructionZoneNudgeChoices(
         const ConstructionZoneState& construction_zone,
         const std::unordered_map<std::string, bool>& frame_wall_choice,
@@ -268,6 +292,11 @@ void ApplyConstructionZoneNudgeChoices(
         const double left_wall_l = InterpolateWallL(construction_zone.left_wall, s);
         const double right_wall_l = InterpolateWallL(construction_zone.right_wall, s);
         if (std::isnan(left_wall_l) && std::isnan(right_wall_l)) {
+            // 墙壁不可用：fallback 到道路边界
+            cone.SetNudgeInfo(
+                    std::fabs(l - construction_zone.max_left_bound) < std::fabs(l - construction_zone.max_right_bound)
+                            ? SLPolygon::RIGHT_NUDGE
+                            : SLPolygon::LEFT_NUDGE);
             continue;
         }
         if (std::isnan(left_wall_l)) {
@@ -296,7 +325,7 @@ void ComputeConstructionZoneBoundary(
     const double road_left = construction_zone->max_left_bound;
     const double road_right = construction_zone->max_right_bound;
 
-    auto dbg = [](const std::string& msg) { AINFO << "[WALL] " << msg; };
+    auto dbg = [](const std::string& msg) { ADEBUG << "[WALL] " << msg; };
     dbg("FRAME|cones=" + std::to_string(cones->size()) + "|lw=" + std::to_string(construction_zone->left_wall.size())
         + "|rw=" + std::to_string(construction_zone->right_wall.size()) + "|road=[" + FormatDouble(road_right) + ","
         + FormatDouble(road_left) + "]");
@@ -355,8 +384,8 @@ void ComputeConstructionZoneBoundary(
                 why = "mem";
                 from_memory = true;
                 if (!construction_zone->classified_left_xy.empty() && !construction_zone->classified_right_xy.empty()) {
-                    constexpr double kMemoryOverrideDist = 12.0;
-                    constexpr double kMemoryOverrideMargin = 1.0;
+                    constexpr double kMemoryOverrideDist = 25.0;
+                    constexpr double kMemoryOverrideMargin = 2.0;
                     const double nl = NearestXYDistance(cx, cy, construction_zone->classified_left_xy);
                     const double nr = NearestXYDistance(cx, cy, construction_zone->classified_right_xy);
                     if (to_left && nr < kMemoryOverrideDist && nr + kMemoryOverrideMargin < nl) {
@@ -370,12 +399,32 @@ void ComputeConstructionZoneBoundary(
             }
         }
 
+        // 全局尾部锚点：靠近全局最远锥桶且贴近右侧道路边界的锥桶，强制归类为右侧。
+        // 这解决了墙壁插值在尾部不可靠时，最后几个右侧锥桶被错误归类为左侧的问题。
+        // 仅当 cone 确实靠近全局最远锥桶（非雷达范围中途截断）时生效。
+        if (!from_memory && xy_it != cone_xy.end() && construction_zone->farthest_cone_x > 0.0) {
+            const double cx = xy_it->second.first;
+            const double cy = xy_it->second.second;
+            constexpr double kGlobalTailDist = 10.0;
+            constexpr double kRightRoadDist = 7.0;
+            if (std::hypot(cx - construction_zone->farthest_cone_x,
+                           cy - construction_zone->farthest_cone_y) < kGlobalTailDist
+                && std::fabs(l - road_right) < kRightRoadDist) {
+                to_left = false;
+                why = "globalTail";
+                from_memory = true;
+            }
+        }
+
         if (!from_memory) {
             pl = InterpolateWallL(construction_zone->left_wall, s);
             pr = InterpolateWallL(construction_zone->right_wall, s);
 
             if (std::isnan(pl) && std::isnan(pr)) {
-                continue;
+                // 两面墙都无法覆盖此 s：用道路边界做 fallback 分类，
+                // 避免 cone 被跳过导致后续 frame_wall_choice 缺失
+                to_left = std::fabs(l - road_left) < std::fabs(l - road_right);
+                why = "fallback";
             } else if (std::isnan(pl)) {
                 const double d_to_rw = std::fabs(l - pr);
                 const double d_to_road_l = std::fabs(l - road_left);
@@ -419,16 +468,55 @@ void ComputeConstructionZoneBoundary(
             } else {
                 const double dl = std::fabs(l - pl);
                 const double dr = std::fabs(l - pr);
-                if ((std::fabs(dl - dr) < 3.5 || std::min(dl, dr) > 1.5) && xy_it != cone_xy.end()) {
-                    const double cx = xy_it->second.first;
-                    const double cy = xy_it->second.second;
-                    const double nl = NearestXYDistance(cx, cy, construction_zone->classified_left_xy);
-                    const double nr = NearestXYDistance(cx, cy, construction_zone->classified_right_xy);
-                    to_left = nl < nr;
-                    why = "nnL=" + FormatDouble(nl) + " nnR=" + FormatDouble(nr);
-                } else {
-                    to_left = dl < dr;
-                    why = "dL=" + FormatDouble(dl) + " dR=" + FormatDouble(dr);
+
+                // 先走标准 XY/距离判断
+                {
+                    if ((std::fabs(dl - dr) < 1.5 || std::min(dl, dr) > 3.0) && xy_it != cone_xy.end()) {
+                        const double cx = xy_it->second.first;
+                        const double cy = xy_it->second.second;
+                        const double nl = NearestXYDistance(cx, cy, construction_zone->classified_left_xy);
+                        const double nr = NearestXYDistance(cx, cy, construction_zone->classified_right_xy);
+                        to_left = nl < nr;
+                        why = "nnL=" + FormatDouble(nl) + " nnR=" + FormatDouble(nr);
+                    } else {
+                        to_left = dl < dr;
+                        why = "dL=" + FormatDouble(dl) + " dR=" + FormatDouble(dr);
+                    }
+                }
+
+                // 趋势/lGap 修正：仅当标准判断为 R 且左墙稀疏时，尝试翻转为 L
+                if (!to_left && construction_zone->left_wall.size() >= 2) {
+                    // 方法1: 墙壁趋势外推
+                    const double pl_trend = ExtrapolateWallL(
+                            construction_zone->left_wall, s,
+                            std::min(5, static_cast<int>(construction_zone->left_wall.size())));
+                    if (!std::isnan(pl_trend)) {
+                        const double d_trend = std::fabs(l - pl_trend);
+                        if (d_trend < dr - 0.5 && d_trend < dl) {
+                            to_left = true;
+                            why = "trend";
+                        }
+                    }
+                    // 方法2: lGap 兜底 — l 高于右墙且（显著高于 或 左墙插值滞后）
+                    if (!to_left && l > pr + 0.5
+                        && (l > pr + 0.8 || pl > l + 2.0)
+                        && s - construction_zone->left_wall.back().first < 15.0) {
+                        to_left = true;
+                        why = "lGap";
+                        // XY 复核：若锥桶明显更靠近右墙 XY 参考集，撤销 lGap 翻转
+                        if (xy_it != cone_xy.end()
+                            && !construction_zone->classified_left_xy.empty()
+                            && !construction_zone->classified_right_xy.empty()) {
+                            const double cx = xy_it->second.first;
+                            const double cy = xy_it->second.second;
+                            const double nl = NearestXYDistance(cx, cy, construction_zone->classified_left_xy);
+                            const double nr = NearestXYDistance(cx, cy, construction_zone->classified_right_xy);
+                            if (nr < nl && nr < 12.0) {
+                                to_left = false;
+                                why = "lGapXY";
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -478,7 +566,7 @@ void UpdateConstructionZoneTrackingState(
     (void)low_cone_exit_threshold;
 
     auto reset_state = [construction_zone](const std::string& reason) {
-        AINFO << "[WALL] EXIT construct_zone by " << reason;
+        ADEBUG << "[WALL] EXIT construct_zone by " << reason;
         construction_zone->Reset();
     };
 
@@ -554,7 +642,7 @@ void UpdateConstructionZoneTrackingState(
     const bool should_hold = hold_by_s || hold_by_xy;
 
     if (construction_zone->active && total_cone_estimate < 3 && should_hold) {
-        AINFO << "[WALL] HOLD construct_zone tail|total=" << total_cone_estimate << "|by_s=" << hold_by_s
+        ADEBUG << "[WALL] HOLD construct_zone tail|total=" << total_cone_estimate << "|by_s=" << hold_by_s
               << "|by_xy=" << hold_by_xy << "|last_xy=(" << construction_zone->farthest_cone_x << ","
               << construction_zone->farthest_cone_y << ")|adc_xy=(" << adc_x << "," << adc_y
               << ")|rel_s=" << last_cone_rel_s;

@@ -867,8 +867,26 @@ bool ContestLaneBorrowPath::OptimizePath(
         // U 弯模式用外侧大半径参考；施工区继续用 corridor 中点。
         const bool use_corridor_center = (path_boundary.label().find("construct_zone") != std::string::npos)
                 || (path_boundary.label().find("uturn_wide") != std::string::npos);
+
+        // 施工区场景：锥桶密集导致走廊极窄，默认 ddl bounds（基于车辆物理参数，约 ±0.2）
+        // 在需要大幅横向绕障时过紧，导致 piecewise jerk 优化器 primal infeasible。
+        // 对 construct_zone 路径放宽 ddl 约束，允许更灵活的曲率变化。
+        constexpr double kConstructZoneDdlRelaxFactor = 3.0;
+        if (path_boundary.label().find("construct_zone") != std::string::npos) {
+            for (auto& bound : ddl_bounds) {
+                bound.first *= kConstructZoneDdlRelaxFactor;
+                bound.second *= kConstructZoneDdlRelaxFactor;
+            }
+            AINFO << "[CZ] ddl bounds relaxed by factor " << kConstructZoneDdlRelaxFactor;
+        }
         if (!u_turn_construct_ && !use_corridor_center)
             ref_weight = 50;
+        // 施工区场景兜底：防止 config 中 ref_weight 被意外清零导致优化器无参考引导
+        if (use_corridor_center && ref_weight < 1.0) {
+            ref_weight = 50.0;
+            AINFO << "[CZ] ref_weight was " << config.path_reference_l_weight()
+                  << ", clamped to " << ref_weight;
+        }
         if (use_corridor_center) {
             if (path_boundary.label().find("uturn_wide") != std::string::npos && u_turn_construct_) {
                 BuildUTurnLargeRadiusReference(

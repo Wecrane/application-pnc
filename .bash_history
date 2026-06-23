@@ -119,3 +119,5 @@ buildtool profile config init --package planning --profile=default
 aem profile use default
 aem bootstrap restart --plus
 buildtool build -p modules/planning/ -j15
+aem bootstrap start --plus
+buildtool build -p modules/planning/ -j15

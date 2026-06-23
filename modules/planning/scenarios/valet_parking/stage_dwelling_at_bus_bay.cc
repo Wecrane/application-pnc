@@ -124,9 +124,32 @@ StageResult StageDwellingAtBusBay::Process(const common::TrajectoryPoint& planni
     double elapsed = now - dwell_start_timestamp_;
     AINFO << "Bus-bay dwell: waiting, elapsed=" << elapsed << ", target=" << kDwellDurationSeconds << "s";
     if (elapsed >= kDwellDurationSeconds) {
-        AINFO << "Bus-bay dwell: complete, switch to departing stage";
-        next_stage_ = "BUS_BAY_TRANSFER_DEPARTING";
-        return result.SetStageStatus(StageStatusType::FINISHED);
+        AINFO << "Bus-bay dwell: complete, skip departing, return to lane follow directly";
+
+        // Pre-activate lane borrow for the upcoming LaneFollow,
+        // so that it skips the strict Nudge/IsEnableNudge checks
+        // and can immediately bypass the blocking obstacle.
+        auto* path_decider = injector_->planning_context()
+                ->mutable_planning_status()->mutable_path_decider();
+        path_decider->set_is_in_path_lane_borrow_scenario(true);
+        path_decider->set_left_borrow(true);
+        path_decider->set_right_borrow(true);
+        AINFO << "Bus-bay dwell: pre-activated lane borrow for lane follow exit";
+
+        // Clear open-space flag so LaneFollow uses ReferenceLine tasks
+        frame->mutable_open_space_info()->set_is_on_open_space_trajectory(false);
+        frame->mutable_open_space_info()->set_openspace_planning_finish(false);
+
+        // Mark destination as passed to suppress the destination stop wall,
+        // so LaneFollow can drive past the parking spot without stopping.
+        injector_->planning_context()
+                ->mutable_planning_status()
+                ->mutable_destination()
+                ->set_has_passed_destination(true);
+        AINFO << "Bus-bay dwell: marked destination as passed to remove stop wall";
+
+        sc->shuttle_mission_completed = true;
+        return FinishScenario();
     }
 
     return result.SetStageStatus(StageStatusType::RUNNING);

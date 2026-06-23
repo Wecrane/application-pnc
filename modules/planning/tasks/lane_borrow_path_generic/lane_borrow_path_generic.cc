@@ -407,6 +407,12 @@ bool LaneBorrowPathGeneric::GetBoundaryFromNeighborLane(
                 }
             }
         }
+        // Ensure minimum borrow width when map-provided neighbor lane
+        // width is insufficient and there's a blocking obstacle to bypass.
+        constexpr double kMinBorrowWidth = 7.0;  // ~2 lanes
+        if (curr_neighbor_lane_width < kMinBorrowWidth && !blocking_obstacle_id_.empty()) {
+            curr_neighbor_lane_width = kMinBorrowWidth;
+        }
         // 3. Calculate the proper boundary based on lane-width, ADC's position,
         //    and ADC's velocity.
         double offset_to_map = 0.0;
