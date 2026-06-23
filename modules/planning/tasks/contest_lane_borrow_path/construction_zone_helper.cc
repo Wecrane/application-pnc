@@ -42,9 +42,8 @@ double InterpolateWallL(const std::vector<std::pair<double, double>>& wall, doub
     if (wall.empty()) {
         return std::numeric_limits<double>::quiet_NaN();
     }
-    auto it = std::lower_bound(wall.begin(), wall.end(), s, [](const auto& point, double value) {
-        return point.first < value;
-    });
+    auto it = std::lower_bound(
+            wall.begin(), wall.end(), s, [](const auto& point, double value) { return point.first < value; });
     if (it == wall.end()) {
         if (s - wall.back().first > 20.0) {
             return std::numeric_limits<double>::quiet_NaN();
@@ -117,9 +116,7 @@ void PruneWallBehind(double adc_back_s, double cleanup_dist, std::vector<std::pa
             std::remove_if(
                     wall->begin(),
                     wall->end(),
-                    [adc_back_s, cleanup_dist](const auto& point) {
-                        return point.first < adc_back_s - cleanup_dist;
-                    }),
+                    [adc_back_s, cleanup_dist](const auto& point) { return point.first < adc_back_s - cleanup_dist; }),
             wall->end());
 }
 
@@ -279,9 +276,8 @@ void ApplyConstructionZoneNudgeChoices(
             cone.SetNudgeInfo(std::fabs(l - left_wall_l) > 5.0 ? SLPolygon::LEFT_NUDGE : SLPolygon::RIGHT_NUDGE);
         } else {
             cone.SetNudgeInfo(
-                    std::fabs(l - left_wall_l) < std::fabs(l - right_wall_l)
-                            ? SLPolygon::RIGHT_NUDGE
-                            : SLPolygon::LEFT_NUDGE);
+                    std::fabs(l - left_wall_l) < std::fabs(l - right_wall_l) ? SLPolygon::RIGHT_NUDGE
+                                                                             : SLPolygon::LEFT_NUDGE);
         }
     }
 }
@@ -302,8 +298,8 @@ void ComputeConstructionZoneBoundary(
 
     auto dbg = [](const std::string& msg) { AINFO << "[WALL] " << msg; };
     dbg("FRAME|cones=" + std::to_string(cones->size()) + "|lw=" + std::to_string(construction_zone->left_wall.size())
-        + "|rw=" + std::to_string(construction_zone->right_wall.size()) + "|road=[" + FormatDouble(road_right)
-        + "," + FormatDouble(road_left) + "]");
+        + "|rw=" + std::to_string(construction_zone->right_wall.size()) + "|road=[" + FormatDouble(road_right) + ","
+        + FormatDouble(road_left) + "]");
 
     PruneConstructionZoneWallState(cone_xy, adc_back_s, construction_zone);
     SeedConstructionZoneWalls(*cones, road_left, road_right, construction_zone);
@@ -311,8 +307,7 @@ void ComputeConstructionZoneBoundary(
     bool has_tail_right_seed = false;
     double tail_right_seed_x = 0.0;
     double tail_right_seed_y = 0.0;
-    if (construction_zone->left_wall.size() >= 8 && construction_zone->right_wall.size() >= 8
-        && cones->size() <= 6) {
+    if (construction_zone->left_wall.size() >= 8 && construction_zone->right_wall.size() >= 8 && cones->size() <= 6) {
         double best_seed_x = -std::numeric_limits<double>::infinity();
         for (const auto& cone : *cones) {
             auto xy_it = cone_xy.find(cone.id());
@@ -452,13 +447,11 @@ void ComputeConstructionZoneBoundary(
         }
 
         const bool merged = MergeConstructionZoneWallPoint(to_left, s, l, construction_zone);
-        dbg(std::string("CONE|id=") + cone.id()
-            + "|xy=" + (xy_it != cone_xy.end()
-                            ? FormatDouble(xy_it->second.first) + "," + FormatDouble(xy_it->second.second)
-                            : "nan,nan")
-            + "|s=" + FormatDouble(s) + "|l=" + FormatDouble(l)
-            + "|pL=" + (std::isnan(pl) ? "nan" : FormatDouble(pl)) + "|pR="
-            + (std::isnan(pr) ? "nan" : FormatDouble(pr)) + "|->" + (to_left ? "L" : "R") + "|" + why
+        dbg(std::string("CONE|id=") + cone.id() + "|xy="
+            + (xy_it != cone_xy.end() ? FormatDouble(xy_it->second.first) + "," + FormatDouble(xy_it->second.second)
+                                      : "nan,nan")
+            + "|s=" + FormatDouble(s) + "|l=" + FormatDouble(l) + "|pL=" + (std::isnan(pl) ? "nan" : FormatDouble(pl))
+            + "|pR=" + (std::isnan(pr) ? "nan" : FormatDouble(pr)) + "|->" + (to_left ? "L" : "R") + "|" + why
             + (merged ? "|m" : "|n"));
     }
     ApplyConstructionZoneNudgeChoices(*construction_zone, frame_wall_choice, cones);
@@ -506,8 +499,7 @@ void UpdateConstructionZoneTrackingState(
         }
         const auto& sl = obstacle->PerceptionSLBoundary();
         const double obs_s = sl.end_s();
-        if (obs_s <= adc_start_s
-            || sl.start_s() - adc_end_s >= contest::kDefaultConstructionLookForwardDistance) {
+        if (obs_s <= adc_start_s || sl.start_s() - adc_end_s >= contest::kDefaultConstructionLookForwardDistance) {
             continue;
         }
 
@@ -529,8 +521,7 @@ void UpdateConstructionZoneTrackingState(
         const double obs_l = (sl.start_l() + sl.end_l()) * 0.5;
         bool already_recorded = false;
         for (const auto& history_cone : construction_zone->cone_history) {
-            if (std::fabs(history_cone.first - obs_s) < 1.0
-                && std::fabs(history_cone.second - obs_l) < 1.0) {
+            if (std::fabs(history_cone.first - obs_s) < 1.0 && std::fabs(history_cone.second - obs_l) < 1.0) {
                 already_recorded = true;
                 break;
             }
@@ -556,8 +547,8 @@ void UpdateConstructionZoneTrackingState(
             && adc_end_s < construction_zone->farthest_cone_s + kExitPastLastConeDist;
     const double last_cone_rel_s = (construction_zone->farthest_cone_x - adc_x) * std::cos(adc_heading)
             + (construction_zone->farthest_cone_y - adc_y) * std::sin(adc_heading);
-    const double last_cone_xy_dist =
-            std::hypot(adc_x - construction_zone->farthest_cone_x, adc_y - construction_zone->farthest_cone_y);
+    const double last_cone_xy_dist
+            = std::hypot(adc_x - construction_zone->farthest_cone_x, adc_y - construction_zone->farthest_cone_y);
     const bool hold_by_xy = construction_zone->active && construction_zone->farthest_cone_x > 0.0
             && last_cone_rel_s > -kExitPastLastConeDist && last_cone_xy_dist < 80.0;
     const bool should_hold = hold_by_s || hold_by_xy;

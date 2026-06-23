@@ -1452,14 +1452,13 @@ void ContestLaneBorrowPath::UpdateUTurnMergeState(const ReferenceLineInfo& refer
             ++u_turn_merge_vehicle_missing_frames_;
         }
         const bool has_pass_by_window = u_turn_merge_vehicle_confirmed_ || u_turn_inner_vehicle_confirmed_;
-        const bool merge_tracked_passed
-                = u_turn_merge_vehicle_confirmed_ && traffic.passed
-                  && (u_turn_merge_vehicle_id_.empty()
-                      || std::find(
-                              traffic.passed_obstacle_ids.begin(),
-                              traffic.passed_obstacle_ids.end(),
-                              u_turn_merge_vehicle_id_)
-                              != traffic.passed_obstacle_ids.end());
+        const bool merge_tracked_passed = u_turn_merge_vehicle_confirmed_ && traffic.passed
+                && (u_turn_merge_vehicle_id_.empty()
+                    || std::find(
+                               traffic.passed_obstacle_ids.begin(),
+                               traffic.passed_obstacle_ids.end(),
+                               u_turn_merge_vehicle_id_)
+                            != traffic.passed_obstacle_ids.end());
         if (has_pass_by_window
             && (merge_tracked_passed || u_turn_merge_vehicle_missing_frames_ >= kMissingFramesToRelease)) {
             u_turn_merge_release_ = true;
@@ -1480,8 +1479,7 @@ void ContestLaneBorrowPath::UpdateUTurnMergeState(const ReferenceLineInfo& refer
               << ", passed=" << traffic.passed << ", confirmed=" << u_turn_merge_vehicle_confirmed_
               << ", inherited_pass_by=" << u_turn_inner_vehicle_confirmed_
               << ", tracked_id=" << u_turn_merge_vehicle_id_ << ", blocking_id=" << traffic.blocking_obstacle_id
-              << ", passed_id=" << traffic.passed_obstacle_id
-              << ", seen_frames=" << u_turn_merge_vehicle_seen_frames_
+              << ", passed_id=" << traffic.passed_obstacle_id << ", seen_frames=" << u_turn_merge_vehicle_seen_frames_
               << ", missing_frames=" << u_turn_merge_vehicle_missing_frames_;
         return;
     }
@@ -1508,17 +1506,15 @@ void ContestLaneBorrowPath::UpdateUTurnMergeState(const ReferenceLineInfo& refer
     if (has_prelaunch_vehicle && !u_turn_prelaunch_stop_wait_done_) {
         const double adc_speed = std::fabs(init_sl_state_.first[1]);
         if (adc_speed < kStoppedSpeed) {
-            u_turn_prelaunch_stop_wait_frames_ =
-                    std::min(u_turn_prelaunch_stop_wait_frames_ + 1, kPreLaunchStopWaitFrames);
+            u_turn_prelaunch_stop_wait_frames_
+                    = std::min(u_turn_prelaunch_stop_wait_frames_ + 1, kPreLaunchStopWaitFrames);
         } else {
             u_turn_prelaunch_stop_wait_frames_ = 0;
         }
         if (u_turn_prelaunch_stop_wait_frames_ < kPreLaunchStopWaitFrames) {
             AINFO << "[UTURN][MERGE] stopped before launch, dwelling: blocking=" << traffic.blocking
-                  << ", confirmed=" << u_turn_inner_vehicle_confirmed_
-                  << ", speed=" << adc_speed
-                  << ", wait_frames=" << u_turn_prelaunch_stop_wait_frames_
-                  << "/" << kPreLaunchStopWaitFrames;
+                  << ", confirmed=" << u_turn_inner_vehicle_confirmed_ << ", speed=" << adc_speed
+                  << ", wait_frames=" << u_turn_prelaunch_stop_wait_frames_ << "/" << kPreLaunchStopWaitFrames;
             return;
         }
         u_turn_prelaunch_stop_wait_done_ = true;
@@ -1533,23 +1529,21 @@ void ContestLaneBorrowPath::UpdateUTurnMergeState(const ReferenceLineInfo& refer
         u_turn_prelaunch_stop_wait_frames_ = 0;
     }
 
-    const bool inner_tracked_passed
-            = u_turn_inner_vehicle_confirmed_ && traffic.passed
-              && (u_turn_inner_vehicle_id_.empty()
-                  || std::find(
-                          traffic.passed_obstacle_ids.begin(),
-                          traffic.passed_obstacle_ids.end(),
-                          u_turn_inner_vehicle_id_)
-                          != traffic.passed_obstacle_ids.end());
+    const bool inner_tracked_passed = u_turn_inner_vehicle_confirmed_ && traffic.passed
+            && (u_turn_inner_vehicle_id_.empty()
+                || std::find(
+                           traffic.passed_obstacle_ids.begin(),
+                           traffic.passed_obstacle_ids.end(),
+                           u_turn_inner_vehicle_id_)
+                        != traffic.passed_obstacle_ids.end());
     if (u_turn_inner_vehicle_confirmed_
         && (inner_tracked_passed || u_turn_inner_vehicle_missing_frames_ >= kMissingFramesToRelease)) {
         u_turn_release_after_first_vehicle_ = true;
         u_turn_prelaunch_stop_wait_frames_ = 0;
         u_turn_prelaunch_stop_wait_done_ = false;
         u_turn_release_hold_frames_ = kReleaseHoldFrames;
-        AINFO << "[UTURN][MERGE] first inner-lane vehicle passed, release now. tracked_id="
-              << u_turn_inner_vehicle_id_ << ", passed=" << traffic.passed
-              << ", passed_id=" << traffic.passed_obstacle_id
+        AINFO << "[UTURN][MERGE] first inner-lane vehicle passed, release now. tracked_id=" << u_turn_inner_vehicle_id_
+              << ", passed=" << traffic.passed << ", passed_id=" << traffic.passed_obstacle_id
               << ", missing_frames=" << u_turn_inner_vehicle_missing_frames_;
         return;
     }
@@ -1566,9 +1560,8 @@ void ContestLaneBorrowPath::UpdateUTurnMergeState(const ReferenceLineInfo& refer
 
     AINFO << "[UTURN][MERGE] waiting: blocking=" << traffic.blocking << ", passed=" << traffic.passed
           << ", confirmed=" << u_turn_inner_vehicle_confirmed_ << ", seen_frames=" << u_turn_inner_vehicle_seen_frames_
-          << ", missing_frames=" << u_turn_inner_vehicle_missing_frames_
-          << ", tracked_id=" << u_turn_inner_vehicle_id_ << ", blocking_id=" << traffic.blocking_obstacle_id
-          << ", passed_id=" << traffic.passed_obstacle_id
+          << ", missing_frames=" << u_turn_inner_vehicle_missing_frames_ << ", tracked_id=" << u_turn_inner_vehicle_id_
+          << ", blocking_id=" << traffic.blocking_obstacle_id << ", passed_id=" << traffic.passed_obstacle_id
           << ", stop_wait_frames=" << u_turn_prelaunch_stop_wait_frames_
           << ", stop_wait_done=" << u_turn_prelaunch_stop_wait_done_;
 }
@@ -2375,8 +2368,7 @@ void ContestLaneBorrowPath::ComputeConstructZoneBoundary(
         // 1. 参考线 waypoints (每0.5m采样，最多500个点)
         double total_s = 0.0;
         for (size_t i = 1; i < ref_pts.size(); ++i) {
-            total_s += std::hypot(ref_pts[i].x() - ref_pts[i-1].x(),
-                                  ref_pts[i].y() - ref_pts[i-1].y());
+            total_s += std::hypot(ref_pts[i].x() - ref_pts[i - 1].x(), ref_pts[i].y() - ref_pts[i - 1].y());
         }
         const double sample_step = 0.5;
         const int max_samples = 500;
@@ -2388,43 +2380,49 @@ void ContestLaneBorrowPath::ComputeConstructZoneBoundary(
             auto pt = ref_line.GetReferencePoint(s);
             char buf[128];
             snprintf(buf, sizeof(buf), "(%.6f,%.6f)", pt.x(), pt.y());
-            if (i > 0) rl_pts_str += ",";
+            if (i > 0)
+                rl_pts_str += ",";
             rl_pts_str += buf;
         }
         {
             char buf[256];
-            snprintf(buf, sizeof(buf),
-                     "[CONE_DIAG] REFLINE|total_s=%.6f|n_pts=%zu",
-                     total_s, ref_pts.size());
+            snprintf(buf, sizeof(buf), "[CONE_DIAG] REFLINE|total_s=%.6f|n_pts=%zu", total_s, ref_pts.size());
             AINFO << buf << "|waypoints=[" << rl_pts_str << "]";
         }
 
         // 2. ADC 状态
         {
             char buf[256];
-            snprintf(buf, sizeof(buf),
-                     "[CONE_DIAG] ADC|adc_back_s=%.6f|adc_front_s=%.6f|adc_x=%.6f|adc_y=%.6f|adc_heading=%.6f",
-                     adc_back_s,
-                     reference_line_info_->AdcSlBoundary().end_s(),
-                     frame_->vehicle_state().x(),
-                     frame_->vehicle_state().y(),
-                     frame_->vehicle_state().heading());
+            snprintf(
+                    buf,
+                    sizeof(buf),
+                    "[CONE_DIAG] ADC|adc_back_s=%.6f|adc_front_s=%.6f|adc_x=%.6f|adc_y=%.6f|adc_heading=%.6f",
+                    adc_back_s,
+                    reference_line_info_->AdcSlBoundary().end_s(),
+                    frame_->vehicle_state().x(),
+                    frame_->vehicle_state().y(),
+                    frame_->vehicle_state().heading());
             AINFO << buf;
         }
 
         // 3. 道路边界
         {
-            const double adc_lane_width = PathBoundsDeciderUtil::GetADCLaneWidth(
-                    ref_line, init_sl_state_.first[0]);
+            const double adc_lane_width = PathBoundsDeciderUtil::GetADCLaneWidth(ref_line, init_sl_state_.first[0]);
             double offset_to_map = 0.0;
             ref_line.GetOffsetToMap(init_sl_state_.first[0], &offset_to_map);
             char buf[256];
-            snprintf(buf, sizeof(buf),
-                     "[CONE_DIAG] ROAD|max_left_bound=%.6f|max_right_bound=%.6f|adc_lane_width=%.6f|offset_to_map=%.6f|adc_s=%.6f|adc_l=%.6f",
-                     construction_zone_.max_left_bound,
-                     construction_zone_.max_right_bound,
-                     adc_lane_width, offset_to_map,
-                     init_sl_state_.first[0], init_sl_state_.second[0]);
+            snprintf(
+                    buf,
+                    sizeof(buf),
+                    "[CONE_DIAG] "
+                    "ROAD|max_left_bound=%.6f|max_right_bound=%.6f|adc_lane_width=%.6f|offset_to_map=%.6f|adc_s=%.6f|"
+                    "adc_l=%.6f",
+                    construction_zone_.max_left_bound,
+                    construction_zone_.max_right_bound,
+                    adc_lane_width,
+                    offset_to_map,
+                    init_sl_state_.first[0],
+                    init_sl_state_.second[0]);
             AINFO << buf;
         }
 
@@ -2437,20 +2435,30 @@ void ContestLaneBorrowPath::ComputeConstructZoneBoundary(
                 cy = xy_it->second.second;
             }
             char buf[512];
-            snprintf(buf, sizeof(buf),
-                     "[CONE_DIAG] CONE|id=%s|s_min=%.6f|s_max=%.6f|l_min=%.6f|l_max=%.6f|cx=%.6f|cy=%.6f",
-                     cone.id().c_str(),
-                     cone.MinS(), cone.MaxS(), cone.MinL(), cone.MaxL(),
-                     cx, cy);
+            snprintf(
+                    buf,
+                    sizeof(buf),
+                    "[CONE_DIAG] CONE|id=%s|s_min=%.6f|s_max=%.6f|l_min=%.6f|l_max=%.6f|cx=%.6f|cy=%.6f",
+                    cone.id().c_str(),
+                    cone.MinS(),
+                    cone.MaxS(),
+                    cone.MinL(),
+                    cone.MaxL(),
+                    cx,
+                    cy);
             AINFO << buf;
         }
 
         // 5. cone_xy 中所有条目（包括不在当前 cones 中的）
         for (const auto& kv : cone_xy) {
             char buf[256];
-            snprintf(buf, sizeof(buf),
-                     "[CONE_DIAG] CONEXY|id=%s|x=%.6f|y=%.6f",
-                     kv.first.c_str(), kv.second.first, kv.second.second);
+            snprintf(
+                    buf,
+                    sizeof(buf),
+                    "[CONE_DIAG] CONEXY|id=%s|x=%.6f|y=%.6f",
+                    kv.first.c_str(),
+                    kv.second.first,
+                    kv.second.second);
             AINFO << buf;
         }
     }
