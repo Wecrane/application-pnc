@@ -129,8 +129,7 @@ StageResult StageDwellingAtBusBay::Process(const common::TrajectoryPoint& planni
         // Pre-activate lane borrow for the upcoming LaneFollow,
         // so that it skips the strict Nudge/IsEnableNudge checks
         // and can immediately bypass the blocking obstacle.
-        auto* path_decider = injector_->planning_context()
-                ->mutable_planning_status()->mutable_path_decider();
+        auto* path_decider = injector_->planning_context()->mutable_planning_status()->mutable_path_decider();
         path_decider->set_is_in_path_lane_borrow_scenario(true);
         path_decider->set_left_borrow(true);
         path_decider->set_right_borrow(true);
@@ -142,10 +141,8 @@ StageResult StageDwellingAtBusBay::Process(const common::TrajectoryPoint& planni
 
         // Mark destination as passed to suppress the destination stop wall,
         // so LaneFollow can drive past the parking spot without stopping.
-        injector_->planning_context()
-                ->mutable_planning_status()
-                ->mutable_destination()
-                ->set_has_passed_destination(true);
+        injector_->planning_context()->mutable_planning_status()->mutable_destination()->set_has_passed_destination(
+                true);
         AINFO << "Bus-bay dwell: marked destination as passed to remove stop wall";
 
         sc->shuttle_mission_completed = true;
