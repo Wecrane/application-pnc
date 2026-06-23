@@ -42,8 +42,9 @@ double InterpolateWallL(const std::vector<std::pair<double, double>>& wall, doub
     if (wall.empty()) {
         return std::numeric_limits<double>::quiet_NaN();
     }
-    auto it = std::lower_bound(
-            wall.begin(), wall.end(), s, [](const auto& point, double value) { return point.first < value; });
+    auto it = std::lower_bound(wall.begin(), wall.end(), s, [](const auto& point, double value) {
+        return point.first < value;
+    });
     if (it == wall.end()) {
         if (s - wall.back().first > 20.0) {
             return std::numeric_limits<double>::quiet_NaN();
@@ -116,7 +117,9 @@ void PruneWallBehind(double adc_back_s, double cleanup_dist, std::vector<std::pa
             std::remove_if(
                     wall->begin(),
                     wall->end(),
-                    [adc_back_s, cleanup_dist](const auto& point) { return point.first < adc_back_s - cleanup_dist; }),
+                    [adc_back_s, cleanup_dist](const auto& point) {
+                        return point.first < adc_back_s - cleanup_dist;
+                    }),
             wall->end());
 }
 
@@ -215,17 +218,11 @@ void SeedConstructionZoneWalls(
         } else if (std::isnan(left_wall_l)) {
             const double dist_to_right_wall = std::fabs(l - right_wall_l);
             const double dist_to_road_left = std::fabs(l - road_left);
-            to_left = dist_to_right_wall > 3.5 && dist_to_right_wall > dist_to_road_left;
-            if (!to_left && dist_to_right_wall <= 3.5) {
-                to_left = std::fabs(l - road_left) < std::fabs(l - road_right);
-            }
+            to_left = dist_to_right_wall > 5.0 && dist_to_right_wall > dist_to_road_left;
         } else if (std::isnan(right_wall_l)) {
             const double dist_to_left_wall = std::fabs(l - left_wall_l);
             const double dist_to_road_right = std::fabs(l - road_right);
-            to_left = !(dist_to_left_wall > 3.5 && dist_to_left_wall > dist_to_road_right);
-            if (to_left && dist_to_left_wall <= 3.5) {
-                to_left = std::fabs(l - road_left) < std::fabs(l - road_right);
-            }
+            to_left = !(dist_to_left_wall > 5.0 && dist_to_left_wall > dist_to_road_right);
         } else {
             to_left = std::fabs(l - left_wall_l) < std::fabs(l - right_wall_l);
         }
@@ -277,13 +274,14 @@ void ApplyConstructionZoneNudgeChoices(
             continue;
         }
         if (std::isnan(left_wall_l)) {
-            cone.SetNudgeInfo(std::fabs(l - right_wall_l) > 3.5 ? SLPolygon::RIGHT_NUDGE : SLPolygon::LEFT_NUDGE);
+            cone.SetNudgeInfo(std::fabs(l - right_wall_l) > 5.0 ? SLPolygon::RIGHT_NUDGE : SLPolygon::LEFT_NUDGE);
         } else if (std::isnan(right_wall_l)) {
-            cone.SetNudgeInfo(std::fabs(l - left_wall_l) > 3.5 ? SLPolygon::LEFT_NUDGE : SLPolygon::RIGHT_NUDGE);
+            cone.SetNudgeInfo(std::fabs(l - left_wall_l) > 5.0 ? SLPolygon::LEFT_NUDGE : SLPolygon::RIGHT_NUDGE);
         } else {
             cone.SetNudgeInfo(
-                    std::fabs(l - left_wall_l) < std::fabs(l - right_wall_l) ? SLPolygon::RIGHT_NUDGE
-                                                                             : SLPolygon::LEFT_NUDGE);
+                    std::fabs(l - left_wall_l) < std::fabs(l - right_wall_l)
+                            ? SLPolygon::RIGHT_NUDGE
+                            : SLPolygon::LEFT_NUDGE);
         }
     }
 }
@@ -304,8 +302,8 @@ void ComputeConstructionZoneBoundary(
 
     auto dbg = [](const std::string& msg) { ADEBUG << "[WALL] " << msg; };
     dbg("FRAME|cones=" + std::to_string(cones->size()) + "|lw=" + std::to_string(construction_zone->left_wall.size())
-        + "|rw=" + std::to_string(construction_zone->right_wall.size()) + "|road=[" + FormatDouble(road_right) + ","
-        + FormatDouble(road_left) + "]");
+        + "|rw=" + std::to_string(construction_zone->right_wall.size()) + "|road=[" + FormatDouble(road_right)
+        + "," + FormatDouble(road_left) + "]");
 
     PruneConstructionZoneWallState(cone_xy, adc_back_s, construction_zone);
     SeedConstructionZoneWalls(*cones, road_left, road_right, construction_zone);
@@ -313,7 +311,8 @@ void ComputeConstructionZoneBoundary(
     bool has_tail_right_seed = false;
     double tail_right_seed_x = 0.0;
     double tail_right_seed_y = 0.0;
-    if (construction_zone->left_wall.size() >= 8 && construction_zone->right_wall.size() >= 8 && cones->size() <= 6) {
+    if (construction_zone->left_wall.size() >= 8 && construction_zone->right_wall.size() >= 8
+        && cones->size() <= 6) {
         double best_seed_x = -std::numeric_limits<double>::infinity();
         for (const auto& cone : *cones) {
             auto xy_it = cone_xy.find(cone.id());
@@ -381,17 +380,16 @@ void ComputeConstructionZoneBoundary(
             pr = InterpolateWallL(construction_zone->right_wall, s);
 
             if (std::isnan(pl) && std::isnan(pr)) {
-                to_left = std::fabs(l - road_left) < std::fabs(l - road_right);
-                why = "road_fb";
+                continue;
             } else if (std::isnan(pl)) {
                 const double d_to_rw = std::fabs(l - pr);
                 const double d_to_road_l = std::fabs(l - road_left);
-                if (d_to_rw > 3.5 && d_to_rw > d_to_road_l) {
+                if (d_to_rw > 5.0 && d_to_rw > d_to_road_l) {
                     to_left = true;
                     why = "farL";
-                } else if (d_to_rw > 3.5) {
-                    to_left = std::fabs(l - road_left) < std::fabs(l - road_right);
-                    why = "newL_fb";
+                } else if (d_to_rw > 5.0) {
+                    to_left = false;
+                    why = "newL";
                 } else if (xy_it != cone_xy.end() && !construction_zone->classified_left_xy.empty()) {
                     const double cx = xy_it->second.first;
                     const double cy = xy_it->second.second;
@@ -400,18 +398,18 @@ void ComputeConstructionZoneBoundary(
                     to_left = nl < nr && nl < 15.0;
                     why = "nnL=" + FormatDouble(nl) + " nnR=" + FormatDouble(nr);
                 } else {
-                    to_left = std::fabs(l - road_left) < std::fabs(l - road_right);
-                    why = "noL_fb";
+                    to_left = false;
+                    why = "noL";
                 }
             } else if (std::isnan(pr)) {
                 const double d_to_lw = std::fabs(l - pl);
                 const double d_to_road_r = std::fabs(l - road_right);
-                if (d_to_lw > 3.5 && d_to_lw > d_to_road_r) {
+                if (d_to_lw > 5.0 && d_to_lw > d_to_road_r) {
                     to_left = false;
                     why = "farR";
-                } else if (d_to_lw > 3.5) {
-                    to_left = std::fabs(l - road_left) < std::fabs(l - road_right);
-                    why = "newR_fb";
+                } else if (d_to_lw > 5.0) {
+                    to_left = true;
+                    why = "newR";
                 } else if (xy_it != cone_xy.end() && !construction_zone->classified_right_xy.empty()) {
                     const double cx = xy_it->second.first;
                     const double cy = xy_it->second.second;
@@ -420,28 +418,13 @@ void ComputeConstructionZoneBoundary(
                     to_left = !(nr < nl && nr < 15.0);
                     why = "nnL=" + FormatDouble(nl) + " nnR=" + FormatDouble(nr);
                 } else {
-                    to_left = std::fabs(l - road_left) < std::fabs(l - road_right);
-                    why = "noR_fb";
+                    to_left = true;
+                    why = "noR";
                 }
             } else {
                 const double dl = std::fabs(l - pl);
                 const double dr = std::fabs(l - pr);
-                // Only use XY nearest-neighbor voting when wall distance is truly
-                // ambiguous. Previously fabs(dl-dr) < 3.5 was too loose: it could
-                // trigger XY voting even when wall distance clearly favored one side
-                // (e.g. dl=0.5, dr=3.5), causing misclassification when a cone on
-                // one side happened to be physically close to a cone on the other.
-                bool use_xy = false;
-                if (xy_it != cone_xy.end()) {
-                    if (std::min(dl, dr) > 1.5) {
-                        // Cone far from both walls, wall signal unreliable → use XY
-                        use_xy = true;
-                    } else if (std::fabs(dl - dr) < 2.0) {
-                        // Wall distances very close, hard to distinguish → use XY
-                        use_xy = true;
-                    }
-                }
-                if (use_xy) {
+                if ((std::fabs(dl - dr) < 3.5 || std::min(dl, dr) > 1.5) && xy_it != cone_xy.end()) {
                     const double cx = xy_it->second.first;
                     const double cy = xy_it->second.second;
                     const double nl = NearestXYDistance(cx, cy, construction_zone->classified_left_xy);
@@ -469,11 +452,13 @@ void ComputeConstructionZoneBoundary(
         }
 
         const bool merged = MergeConstructionZoneWallPoint(to_left, s, l, construction_zone);
-        dbg(std::string("CONE|id=") + cone.id() + "|xy="
-            + (xy_it != cone_xy.end() ? FormatDouble(xy_it->second.first) + "," + FormatDouble(xy_it->second.second)
-                                      : "nan,nan")
-            + "|s=" + FormatDouble(s) + "|l=" + FormatDouble(l) + "|pL=" + (std::isnan(pl) ? "nan" : FormatDouble(pl))
-            + "|pR=" + (std::isnan(pr) ? "nan" : FormatDouble(pr)) + "|->" + (to_left ? "L" : "R") + "|" + why
+        dbg(std::string("CONE|id=") + cone.id()
+            + "|xy=" + (xy_it != cone_xy.end()
+                            ? FormatDouble(xy_it->second.first) + "," + FormatDouble(xy_it->second.second)
+                            : "nan,nan")
+            + "|s=" + FormatDouble(s) + "|l=" + FormatDouble(l)
+            + "|pL=" + (std::isnan(pl) ? "nan" : FormatDouble(pl)) + "|pR="
+            + (std::isnan(pr) ? "nan" : FormatDouble(pr)) + "|->" + (to_left ? "L" : "R") + "|" + why
             + (merged ? "|m" : "|n"));
     }
     ApplyConstructionZoneNudgeChoices(*construction_zone, frame_wall_choice, cones);
@@ -521,7 +506,8 @@ void UpdateConstructionZoneTrackingState(
         }
         const auto& sl = obstacle->PerceptionSLBoundary();
         const double obs_s = sl.end_s();
-        if (obs_s <= adc_start_s || sl.start_s() - adc_end_s >= contest::kDefaultConstructionLookForwardDistance) {
+        if (obs_s <= adc_start_s
+            || sl.start_s() - adc_end_s >= contest::kDefaultConstructionLookForwardDistance) {
             continue;
         }
 
@@ -543,7 +529,8 @@ void UpdateConstructionZoneTrackingState(
         const double obs_l = (sl.start_l() + sl.end_l()) * 0.5;
         bool already_recorded = false;
         for (const auto& history_cone : construction_zone->cone_history) {
-            if (std::fabs(history_cone.first - obs_s) < 1.0 && std::fabs(history_cone.second - obs_l) < 1.0) {
+            if (std::fabs(history_cone.first - obs_s) < 1.0
+                && std::fabs(history_cone.second - obs_l) < 1.0) {
                 already_recorded = true;
                 break;
             }
@@ -569,8 +556,8 @@ void UpdateConstructionZoneTrackingState(
             && adc_end_s < construction_zone->farthest_cone_s + kExitPastLastConeDist;
     const double last_cone_rel_s = (construction_zone->farthest_cone_x - adc_x) * std::cos(adc_heading)
             + (construction_zone->farthest_cone_y - adc_y) * std::sin(adc_heading);
-    const double last_cone_xy_dist
-            = std::hypot(adc_x - construction_zone->farthest_cone_x, adc_y - construction_zone->farthest_cone_y);
+    const double last_cone_xy_dist =
+            std::hypot(adc_x - construction_zone->farthest_cone_x, adc_y - construction_zone->farthest_cone_y);
     const bool hold_by_xy = construction_zone->active && construction_zone->farthest_cone_x > 0.0
             && last_cone_rel_s > -kExitPastLastConeDist && last_cone_xy_dist < 80.0;
     const bool should_hold = hold_by_s || hold_by_xy;

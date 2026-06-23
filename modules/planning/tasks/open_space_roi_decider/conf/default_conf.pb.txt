@@ -1,6 +1,5 @@
 roi_longitudinal_range_start: 15
-roi_longitudinal_range_end: 50
-end_pose_s_distance: 30.0
+roi_longitudinal_range_end: 15
 parking_start_range: 20.0
 parking_inwards: true
 enable_perception_obstacles: true

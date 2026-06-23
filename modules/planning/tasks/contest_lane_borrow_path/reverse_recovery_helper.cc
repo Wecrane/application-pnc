@@ -46,8 +46,8 @@ bool BuildReverseStraightReferenceLine(
     if (state == nullptr) {
         return false;
     }
-    const double straight_ref_length
-            = std::max(kMinStraightReferenceLineLength, reverse_distance + kStraightReferenceLineMargin);
+    const double straight_ref_length =
+            std::max(kMinStraightReferenceLineLength, reverse_distance + kStraightReferenceLineMargin);
     if (straight_ref_length < reverse_distance + 1.0) {
         AERROR << "[CZ][REVERSE] straight reference line length is too short.";
         return false;
@@ -61,7 +61,8 @@ bool BuildReverseStraightReferenceLine(
     adc_point.set_x(adc_x);
     adc_point.set_y(adc_y);
     adc_point.set_z(0.0);
-    hdmap::HDMapUtil::BaseMap().GetNearestLaneWithDistance(adc_point, 5.0, &main_lane, &lane_s, &lane_l);
+    hdmap::HDMapUtil::BaseMap().GetNearestLaneWithDistance(
+            adc_point, 5.0, &main_lane, &lane_s, &lane_l);
     if (main_lane == nullptr) {
         AERROR << "[CZ][REVERSE] failed to build straight reference line: no nearby lane.";
         return false;
@@ -75,8 +76,10 @@ bool BuildReverseStraightReferenceLine(
     const double adc_ref_s = straight_ref_length;
 
     std::vector<ReferencePoint> ref_points;
-    ref_points.reserve(static_cast<size_t>((straight_ref_length * 2.0) / kStraightReferenceLineStep + 1.0));
-    for (double ref_s = 0.0; ref_s <= straight_ref_length * 2.0 + 1e-6; ref_s += kStraightReferenceLineStep) {
+    ref_points.reserve(static_cast<size_t>(
+            (straight_ref_length * 2.0) / kStraightReferenceLineStep + 1.0));
+    for (double ref_s = 0.0; ref_s <= straight_ref_length * 2.0 + 1e-6;
+         ref_s += kStraightReferenceLineStep) {
         const double px = ref_start_x + ref_s * cos_heading;
         const double py = ref_start_y + ref_s * sin_heading;
         hdmap::MapPathPoint map_point({px, py}, heading);
@@ -98,23 +101,17 @@ bool BuildReverseStraightReferenceLine(
     state->fixed_start_x = adc_x;
     state->fixed_start_y = adc_y;
     state->fixed_heading = heading;
-
-    // ── 模拟站点接驳倒车策略：直接在倒车参考线上注入限速 ──
-    // 站点接驳 OpenSpace 使用 max_speed_reverse: 1.0 m/s 用于精细泊车，
-    // 施工区倒车是直线远离锥桶，可用更高速度。
-    // 三段式速度曲线（加速→匀速→减速）由 PiecewiseJerkSpeedOptimizer 生成，
-    // 此处的 AddSpeedLimit 提供速度上界约束，确保不超速。
-    constexpr double kReverseSpeedLimit = 5.0;  // m/s (~18 km/h)，快速倒车
-    state->reference_line_cache->AddSpeedLimit(state->fixed_end_s, state->fixed_start_s, kReverseSpeedLimit);
-
-    AINFO << "[CZ][REVERSE] built straight reference line, points=" << ref_points.size() << ", ref_start_xy=("
-          << ref_start_x << "," << ref_start_y << "), adc_ref_s=" << adc_ref_s << ", end_s=" << state->fixed_end_s
-          << ", reverse_distance=" << reverse_distance << ", speed_limit=" << kReverseSpeedLimit
+    AINFO << "[CZ][REVERSE] built straight reference line, points=" << ref_points.size()
+          << ", ref_start_xy=(" << ref_start_x << "," << ref_start_y
+          << "), adc_ref_s=" << adc_ref_s << ", end_s=" << state->fixed_end_s
+          << ", reverse_distance=" << reverse_distance
           << ", heading=" << heading << ", lane_s=" << lane_s << ", lane_l=" << lane_l;
     return true;
 }
 
-bool GenerateCachedReversePathBoundary(const ReverseRecoveryState& state, PathBoundary* boundary) {
+bool GenerateCachedReversePathBoundary(
+        const ReverseRecoveryState& state,
+        PathBoundary* boundary) {
     if (boundary == nullptr || state.reference_line_cache == nullptr) {
         return false;
     }
@@ -124,8 +121,8 @@ bool GenerateCachedReversePathBoundary(const ReverseRecoveryState& state, PathBo
     const double actual_target = state.fixed_end_s;
 
     if (adc_s <= actual_target) {
-        AERROR << "[CZ][REVERSE] failed to generate cached reverse boundary: invalid s range, start=" << adc_s
-               << ", end=" << actual_target;
+        AERROR << "[CZ][REVERSE] failed to generate cached reverse boundary: invalid s range, start="
+               << adc_s << ", end=" << actual_target;
         return false;
     }
 

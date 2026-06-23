@@ -21,39 +21,30 @@
 #include "modules/planning/scenarios/traffic_light_protected/stage_intersection_cruise.h"
 
 #include "cyber/common/log.h"
-#include "modules/planning/planning_base/common/frame.h"
-#include "modules/planning/scenarios/traffic_light_protected/context.h"
 
 namespace apollo {
 namespace planning {
 
 StageResult TrafficLightProtectedStageIntersectionCruise::Process(
-        const common::TrajectoryPoint& planning_init_point,
-        Frame* frame) {
-    ADEBUG << "stage: IntersectionCruise";
-    CHECK_NOTNULL(frame);
+    const common::TrajectoryPoint& planning_init_point, Frame* frame) {
+  ADEBUG << "stage: IntersectionCruise";
+  CHECK_NOTNULL(frame);
 
-    // Set cruise speed to route_cruise_speed (60 km/h) for intersection crossing.
-    auto context = GetContextAs<TrafficLightProtectedContext>();
-    auto& reference_line_info = frame->mutable_reference_line_info()->front();
-    reference_line_info.SetCruiseSpeed(context->scenario_config.route_cruise_speed());
+  StageResult result = ExecuteTaskOnReferenceLine(planning_init_point, frame);
+  if (result.HasError()) {
+    AERROR << "TrafficLightProtectedStageIntersectionCruise plan error";
+  }
 
-    StageResult result = ExecuteTaskOnReferenceLine(planning_init_point, frame);
-    if (result.HasError()) {
-        AERROR << "TrafficLightProtectedStageIntersectionCruise plan error";
-    }
+  bool stage_done = CheckDone(*frame, injector_->planning_context(), true);
 
-    bool stage_done = CheckDone(*frame, injector_->planning_context(), true);
-
-    if (stage_done) {
-        return FinishStage();
-    }
-    return result.SetStageStatus(StageStatusType::RUNNING);
+  if (stage_done) {
+    return FinishStage();
+  }
+  return result.SetStageStatus(StageStatusType::RUNNING);
 }
 
 StageResult TrafficLightProtectedStageIntersectionCruise::FinishStage() {
-    next_stage_ = "TRAFFIC_LIGHT_PROTECTED_ROUTE_CRUISE";
-    return StageResult(StageStatusType::FINISHED);
+  return FinishScenario();
 }
 
 }  // namespace planning

@@ -31,10 +31,10 @@ namespace planning {
 
 namespace {
 
-constexpr double kMaxReturnLateral = 1.5;
-constexpr double kMaxReturnHeadingDiff = 0.5;
+constexpr double kMaxReturnLateral = 0.6;
+constexpr double kMaxReturnHeadingDiff = 0.25;
 constexpr double kMinEarlyReturnSpeed = 0.4;
-constexpr double kMaxEarlyReturnDist = 15.0;
+constexpr double kMaxEarlyReturnDist = 6.0;
 
 }  // namespace
 

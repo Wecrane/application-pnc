@@ -61,3 +61,60 @@ buildtool build -p modules/planning/ -j15
 aem profile use default
 buildtool build -p modules/planning/ -j15
 aem profile use default
+buildtool build -p modules/planning/ -j15
+aem profile use default
+aem bootstrap start --plus
+buildtool build -p modules/planning/ -j15
+aem profile use default
+buildtool build -p modules/planning/ -j15
+aem profile use default
+buildtool build -p modules/planning/ -j15
+aem profile use default
+buildtool build -p modules/planning/ -j15
+aem profile use default
+buildtool build -p modules/planning/ -j15
+aem profile use default
+buildtool build -p modules/planning/ -j15
+aem profile use default
+buildtool build -p modules/planning/ -j15
+aem profile use default
+buildtool build -p modules/planning/ -j15
+aem profile use default
+buildtool build -p modules/planning/ -j15
+aem profile use default
+buildtool build -p modules/planning/ -j15
+aem profile use default
+buildtool build -p modules/planning/ -j15
+aem profile use default
+buildtool build -p modules/planning/ -j15
+aem profile use default
+buildtool build -p modules/planning/ -j15
+aem profile use default
+buildtool build -p modules/planning/ -j15
+aem profile use default
+buildtool build -p modules/planning/ -j15
+aem profile use default
+buildtool build -p modules/planning/ -j15
+aem profile use default
+buildtool build -p modules/planning/ -j15
+aem profile use default
+buildtool build -p modules/planning/ -j15
+aem profile use default
+buildtool build -p modules/planning/ -j15
+aem profile use default
+buildtool build -p modules/planning/ -j15
+aem profile use default
+buildtool build -p modules/planning/ -j15
+aem profile use default
+buildtool build -p modules/planning/ -j15
+aem profile use default
+buildtool build -p modules/planning/ -j15
+aem profile use default
+aem profile use sample
+buildtool build -p modules/planning/ -j15
+buildtool build -p core -j15
+aem bootstrap start --plus
+aem bootstrap restart --plus
+buildtool profile config init --package planning --profile=default
+aem profile use default
+aem bootstrap restart --plus
