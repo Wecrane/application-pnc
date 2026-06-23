@@ -300,7 +300,7 @@ void ComputeConstructionZoneBoundary(
     const double road_left = construction_zone->max_left_bound;
     const double road_right = construction_zone->max_right_bound;
 
-    auto dbg = [](const std::string& msg) { ADEBUG << "[WALL] " << msg; };
+    auto dbg = [](const std::string& msg) { AINFO << "[WALL] " << msg; };
     dbg("FRAME|cones=" + std::to_string(cones->size()) + "|lw=" + std::to_string(construction_zone->left_wall.size())
         + "|rw=" + std::to_string(construction_zone->right_wall.size()) + "|road=[" + FormatDouble(road_right)
         + "," + FormatDouble(road_left) + "]");

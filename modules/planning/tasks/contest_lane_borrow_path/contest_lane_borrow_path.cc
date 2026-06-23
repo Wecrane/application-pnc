@@ -19,6 +19,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <cstdio>
 #include <limits>
 #include <memory>
 #include <set>
@@ -2365,6 +2366,96 @@ void ContestLaneBorrowPath::ComputeConstructZoneBoundary(
         return;
     }
     const double adc_back_s = reference_line_info_->AdcSlBoundary().start_s();
+
+    // ========== 诊断日志: 输出所有输入数据，便于 Python 仿真对比 ==========
+    {
+        const auto& ref_line = reference_line_info_->reference_line();
+        const auto& ref_pts = ref_line.reference_points();
+
+        // 1. 参考线 waypoints (每0.5m采样，最多500个点)
+        double total_s = 0.0;
+        for (size_t i = 1; i < ref_pts.size(); ++i) {
+            total_s += std::hypot(ref_pts[i].x() - ref_pts[i-1].x(),
+                                  ref_pts[i].y() - ref_pts[i-1].y());
+        }
+        const double sample_step = 0.5;
+        const int max_samples = 500;
+        int n_samples = std::min(max_samples, static_cast<int>(total_s / sample_step) + 1);
+        std::string rl_pts_str;
+        rl_pts_str.reserve(n_samples * 50);
+        for (int i = 0; i < n_samples; ++i) {
+            double s = (n_samples > 1) ? (total_s * i / (n_samples - 1)) : 0.0;
+            auto pt = ref_line.GetReferencePoint(s);
+            char buf[128];
+            snprintf(buf, sizeof(buf), "(%.6f,%.6f)", pt.x(), pt.y());
+            if (i > 0) rl_pts_str += ",";
+            rl_pts_str += buf;
+        }
+        {
+            char buf[256];
+            snprintf(buf, sizeof(buf),
+                     "[CONE_DIAG] REFLINE|total_s=%.6f|n_pts=%zu",
+                     total_s, ref_pts.size());
+            AINFO << buf << "|waypoints=[" << rl_pts_str << "]";
+        }
+
+        // 2. ADC 状态
+        {
+            char buf[256];
+            snprintf(buf, sizeof(buf),
+                     "[CONE_DIAG] ADC|adc_back_s=%.6f|adc_front_s=%.6f|adc_x=%.6f|adc_y=%.6f|adc_heading=%.6f",
+                     adc_back_s,
+                     reference_line_info_->AdcSlBoundary().end_s(),
+                     frame_->vehicle_state().x(),
+                     frame_->vehicle_state().y(),
+                     frame_->vehicle_state().heading());
+            AINFO << buf;
+        }
+
+        // 3. 道路边界
+        {
+            const double adc_lane_width = PathBoundsDeciderUtil::GetADCLaneWidth(
+                    ref_line, init_sl_state_.first[0]);
+            double offset_to_map = 0.0;
+            ref_line.GetOffsetToMap(init_sl_state_.first[0], &offset_to_map);
+            char buf[256];
+            snprintf(buf, sizeof(buf),
+                     "[CONE_DIAG] ROAD|max_left_bound=%.6f|max_right_bound=%.6f|adc_lane_width=%.6f|offset_to_map=%.6f|adc_s=%.6f|adc_l=%.6f",
+                     construction_zone_.max_left_bound,
+                     construction_zone_.max_right_bound,
+                     adc_lane_width, offset_to_map,
+                     init_sl_state_.first[0], init_sl_state_.second[0]);
+            AINFO << buf;
+        }
+
+        // 4. 所有锥桶 SL + XY 数据（使用 snprintf 确保精度）
+        for (const auto& cone : cones) {
+            double cx = 0.0, cy = 0.0;
+            auto xy_it = cone_xy.find(cone.id());
+            if (xy_it != cone_xy.end()) {
+                cx = xy_it->second.first;
+                cy = xy_it->second.second;
+            }
+            char buf[512];
+            snprintf(buf, sizeof(buf),
+                     "[CONE_DIAG] CONE|id=%s|s_min=%.6f|s_max=%.6f|l_min=%.6f|l_max=%.6f|cx=%.6f|cy=%.6f",
+                     cone.id().c_str(),
+                     cone.MinS(), cone.MaxS(), cone.MinL(), cone.MaxL(),
+                     cx, cy);
+            AINFO << buf;
+        }
+
+        // 5. cone_xy 中所有条目（包括不在当前 cones 中的）
+        for (const auto& kv : cone_xy) {
+            char buf[256];
+            snprintf(buf, sizeof(buf),
+                     "[CONE_DIAG] CONEXY|id=%s|x=%.6f|y=%.6f",
+                     kv.first.c_str(), kv.second.first, kv.second.second);
+            AINFO << buf;
+        }
+    }
+    // ========== 诊断日志结束 ==========
+
     ComputeConstructionZoneBoundary(&cones, cone_xy, adc_back_s, &construction_zone_);
 }
 
