@@ -166,12 +166,11 @@ bool ShouldPreferLeftChainContinuation(
     const double slope = (last_left.second - prev_left.second) / prev_gap_x;
     const double predicted_y = last_left.second + slope * gap_x;
     const double y_error = std::fabs(y - predicted_y);
-    const bool straight_extension = last_dist < 11.5 && y_error < 1.6
-            && (!std::isfinite(right_dist) || last_dist + 0.8 < right_dist);
+    const bool straight_extension
+            = last_dist < 11.5 && y_error < 1.6 && (!std::isfinite(right_dist) || last_dist + 0.8 < right_dist);
 
     const bool left_tail_turn = construction_zone.classified_left_xy.size() >= 4 && last_dist < 8.5
-            && y + 0.5 >= last_left.second
-            && (!std::isfinite(right_dist) || last_dist + 0.8 < right_dist);
+            && y + 0.5 >= last_left.second && (!std::isfinite(right_dist) || last_dist + 0.8 < right_dist);
 
     if (!straight_extension && !left_tail_turn) {
         return false;
@@ -183,7 +182,12 @@ bool ShouldPreferLeftChainContinuation(
     return true;
 }
 
-bool IsGlobalTailRightCone(double x, double y, double l, double road_right, const ConstructionZoneState& construction_zone) {
+bool IsGlobalTailRightCone(
+        double x,
+        double y,
+        double l,
+        double road_right,
+        const ConstructionZoneState& construction_zone) {
     if (construction_zone.farthest_cone_x <= 0.0) {
         return false;
     }
@@ -197,8 +201,7 @@ bool IsGlobalTailRightCone(double x, double y, double l, double road_right, cons
     constexpr double kRightRoadDist = 7.0;
     constexpr double kLeftTailDrop = 2.8;
     return std::hypot(x - construction_zone.farthest_cone_x, y - construction_zone.farthest_cone_y) < kGlobalTailDist
-            && std::fabs(l - road_right) < kRightRoadDist
-            && x > last_left.first + 1.0
+            && std::fabs(l - road_right) < kRightRoadDist && x > last_left.first + 1.0
             && last_left.second - y > kLeftTailDrop;
 }
 
@@ -602,7 +605,8 @@ void ComputeConstructionZoneBoundary(
                 if (!to_left && construction_zone->left_wall.size() >= 2) {
                     // 方法1: 墙壁趋势外推
                     const double pl_trend = ExtrapolateWallL(
-                            construction_zone->left_wall, s,
+                            construction_zone->left_wall,
+                            s,
                             std::min(5, static_cast<int>(construction_zone->left_wall.size())));
                     if (!std::isnan(pl_trend)) {
                         const double d_trend = std::fabs(l - pl_trend);
@@ -612,14 +616,12 @@ void ComputeConstructionZoneBoundary(
                         }
                     }
                     // 方法2: lGap 兜底 — l 高于右墙且（显著高于 或 左墙插值滞后）
-                    if (!to_left && l > pr + 0.5
-                        && (l > pr + 0.8 || pl > l + 2.0)
+                    if (!to_left && l > pr + 0.5 && (l > pr + 0.8 || pl > l + 2.0)
                         && s - construction_zone->left_wall.back().first < 15.0) {
                         to_left = true;
                         why = "lGap";
                         // XY 复核：若锥桶明显更靠近右墙 XY 参考集，撤销 lGap 翻转
-                        if (xy_it != cone_xy.end()
-                            && !construction_zone->classified_left_xy.empty()
+                        if (xy_it != cone_xy.end() && !construction_zone->classified_left_xy.empty()
                             && !construction_zone->classified_right_xy.empty()) {
                             const double cx = xy_it->second.first;
                             const double cy = xy_it->second.second;
@@ -772,9 +774,9 @@ void UpdateConstructionZoneTrackingState(
 
     if (construction_zone->active && total_cone_estimate < 3 && should_hold) {
         ADEBUG << "[WALL] HOLD construct_zone tail|total=" << total_cone_estimate << "|by_s=" << hold_by_s
-              << "|by_xy=" << hold_by_xy << "|last_xy=(" << construction_zone->farthest_cone_x << ","
-              << construction_zone->farthest_cone_y << ")|adc_xy=(" << adc_x << "," << adc_y
-              << ")|rel_s=" << last_cone_rel_s;
+               << "|by_xy=" << hold_by_xy << "|last_xy=(" << construction_zone->farthest_cone_x << ","
+               << construction_zone->farthest_cone_y << ")|adc_xy=(" << adc_x << "," << adc_y
+               << ")|rel_s=" << last_cone_rel_s;
     }
 
     if (total_cone_estimate > 0) {
