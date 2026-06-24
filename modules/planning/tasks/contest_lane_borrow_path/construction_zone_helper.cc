@@ -84,6 +84,124 @@ double NearestXYDistance(double x, double y, const std::vector<std::pair<double,
     return best;
 }
 
+double NearestXYDistanceExceptNear(
+        double x,
+        double y,
+        const std::vector<std::pair<double, double>>& points,
+        double min_dist) {
+    double best = std::numeric_limits<double>::infinity();
+    for (const auto& point : points) {
+        const double dist = std::hypot(point.first - x, point.second - y);
+        if (dist > min_dist) {
+            best = std::min(best, dist);
+        }
+    }
+    return best;
+}
+
+bool FindTwoRecentPointsByX(
+        const std::vector<std::pair<double, double>>& points,
+        double x,
+        std::pair<double, double>* prev,
+        std::pair<double, double>* last) {
+    if (prev == nullptr || last == nullptr) {
+        return false;
+    }
+    bool has_last = false;
+    bool has_prev = false;
+    std::pair<double, double> best_last;
+    std::pair<double, double> best_prev;
+    for (const auto& point : points) {
+        if (point.first >= x - 1.0) {
+            continue;
+        }
+        if (!has_last || point.first > best_last.first) {
+            if (has_last) {
+                best_prev = best_last;
+                has_prev = true;
+            }
+            best_last = point;
+            has_last = true;
+        } else if (!has_prev || point.first > best_prev.first) {
+            best_prev = point;
+            has_prev = true;
+        }
+    }
+    if (!has_prev || !has_last) {
+        return false;
+    }
+    *prev = best_prev;
+    *last = best_last;
+    return true;
+}
+
+bool ShouldPreferLeftChainContinuation(
+        double x,
+        double y,
+        double l,
+        double road_right,
+        const ConstructionZoneState& construction_zone,
+        std::string* why) {
+    std::pair<double, double> prev_left;
+    std::pair<double, double> last_left;
+    if (!FindTwoRecentPointsByX(construction_zone.classified_left_xy, x, &prev_left, &last_left)) {
+        return false;
+    }
+
+    const double gap_x = x - last_left.first;
+    if (gap_x < 2.0 || gap_x > 14.0) {
+        return false;
+    }
+    if (l - road_right < 3.2) {
+        return false;
+    }
+
+    const double last_dist = std::hypot(x - last_left.first, y - last_left.second);
+    const double right_dist = NearestXYDistanceExceptNear(x, y, construction_zone.classified_right_xy, 1.0);
+    const double prev_gap_x = last_left.first - prev_left.first;
+    if (std::fabs(prev_gap_x) < 1.0) {
+        return false;
+    }
+
+    const double slope = (last_left.second - prev_left.second) / prev_gap_x;
+    const double predicted_y = last_left.second + slope * gap_x;
+    const double y_error = std::fabs(y - predicted_y);
+    const bool straight_extension = last_dist < 11.5 && y_error < 1.6
+            && (!std::isfinite(right_dist) || last_dist + 0.8 < right_dist);
+
+    const bool left_tail_turn = construction_zone.classified_left_xy.size() >= 4 && last_dist < 8.5
+            && y + 0.5 >= last_left.second
+            && (!std::isfinite(right_dist) || last_dist + 0.8 < right_dist);
+
+    if (!straight_extension && !left_tail_turn) {
+        return false;
+    }
+    if (why != nullptr) {
+        *why = std::string(straight_extension ? "leftChain" : "leftTurn") + " dL=" + FormatDouble(last_dist)
+                + " dR=" + FormatDouble(right_dist) + " yErr=" + FormatDouble(y_error);
+    }
+    return true;
+}
+
+bool IsGlobalTailRightCone(double x, double y, double l, double road_right, const ConstructionZoneState& construction_zone) {
+    if (construction_zone.farthest_cone_x <= 0.0) {
+        return false;
+    }
+    std::pair<double, double> prev_left;
+    std::pair<double, double> last_left;
+    if (construction_zone.classified_left_xy.size() < 8
+        || !FindTwoRecentPointsByX(construction_zone.classified_left_xy, x, &prev_left, &last_left)) {
+        return false;
+    }
+    constexpr double kGlobalTailDist = 10.0;
+    constexpr double kRightRoadDist = 7.0;
+    constexpr double kLeftTailDrop = 2.8;
+    return std::hypot(x - construction_zone.farthest_cone_x, y - construction_zone.farthest_cone_y) < kGlobalTailDist
+            && std::fabs(l - road_right) < kRightRoadDist
+            && x > last_left.first + 1.0
+            && last_left.second - y > kLeftTailDrop;
+}
+
 void AddUniqueXY(std::vector<std::pair<double, double>>* points, double x, double y) {
     if (points == nullptr) {
         return;
@@ -325,7 +443,7 @@ void ComputeConstructionZoneBoundary(
     const double road_left = construction_zone->max_left_bound;
     const double road_right = construction_zone->max_right_bound;
 
-    auto dbg = [](const std::string& msg) { ADEBUG << "[WALL] " << msg; };
+    auto dbg = [](const std::string& msg) { AINFO << "[WALL] " << msg; };
     dbg("FRAME|cones=" + std::to_string(cones->size()) + "|lw=" + std::to_string(construction_zone->left_wall.size())
         + "|rw=" + std::to_string(construction_zone->right_wall.size()) + "|road=[" + FormatDouble(road_right) + ","
         + FormatDouble(road_left) + "]");
@@ -402,14 +520,10 @@ void ComputeConstructionZoneBoundary(
         // 全局尾部锚点：靠近全局最远锥桶且贴近右侧道路边界的锥桶，强制归类为右侧。
         // 这解决了墙壁插值在尾部不可靠时，最后几个右侧锥桶被错误归类为左侧的问题。
         // 仅当 cone 确实靠近全局最远锥桶（非雷达范围中途截断）时生效。
-        if (!from_memory && xy_it != cone_xy.end() && construction_zone->farthest_cone_x > 0.0) {
+        if (!from_memory && xy_it != cone_xy.end()) {
             const double cx = xy_it->second.first;
             const double cy = xy_it->second.second;
-            constexpr double kGlobalTailDist = 10.0;
-            constexpr double kRightRoadDist = 7.0;
-            if (std::hypot(cx - construction_zone->farthest_cone_x,
-                           cy - construction_zone->farthest_cone_y) < kGlobalTailDist
-                && std::fabs(l - road_right) < kRightRoadDist) {
+            if (IsGlobalTailRightCone(cx, cy, l, road_right, *construction_zone)) {
                 to_left = false;
                 why = "globalTail";
                 from_memory = true;
@@ -519,6 +633,21 @@ void ComputeConstructionZoneBoundary(
                     }
                 }
             }
+        }
+
+        if (!to_left && why != "tailR" && why != "globalTail" && xy_it != cone_xy.end()) {
+            std::string chain_why;
+            if (ShouldPreferLeftChainContinuation(
+                        xy_it->second.first, xy_it->second.second, l, road_right, *construction_zone, &chain_why)) {
+                to_left = true;
+                why = chain_why;
+            }
+        }
+
+        if (xy_it != cone_xy.end()
+            && IsGlobalTailRightCone(xy_it->second.first, xy_it->second.second, l, road_right, *construction_zone)) {
+            to_left = false;
+            why = "globalTail";
         }
 
         frame_wall_choice[cone.id()] = to_left;
