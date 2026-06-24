@@ -20,11 +20,34 @@
 #include <string>
 
 #include "modules/planning/planning_base/common/frame.h"
+#include "modules/planning/planning_base/gflags/planning_gflags.h"
 #include "modules/planning/scenarios/contest/contest_scenario_util.h"
 #include "modules/planning/scenarios/contest/stage_contest_lane_follow.h"
 
 namespace apollo {
 namespace planning {
+
+namespace {
+
+bool IsBusBayLaneFollowExitContext(const std::shared_ptr<DependencyInjector>& injector,
+                                   const Frame& frame) {
+    if (injector == nullptr || injector->planning_context() == nullptr || frame.reference_line_info().empty()) {
+        return false;
+    }
+    const auto& planning_status = injector->planning_context()->planning_status();
+    if (!planning_status.destination().has_passed_destination()) {
+        return false;
+    }
+    const auto& reference_line_info = frame.reference_line_info().front();
+    if (reference_line_info.reference_line().map_path().parking_space_overlaps().empty()) {
+        return false;
+    }
+    const double distance_to_destination = reference_line_info.SDistanceToDestination();
+    return std::isfinite(distance_to_destination)
+           && distance_to_destination > FLAGS_destination_check_distance;
+}
+
+}  // namespace
 
 bool ContestScenarioBase::Init(std::shared_ptr<DependencyInjector> injector, const std::string& name) {
     if (init_) {
@@ -135,7 +158,15 @@ bool ContestRoundaboutScenario::IsTransferable(const Scenario* other_scenario, c
 
     // 不让 U 型弯和站点接驳场景被环岛抢走
     const std::string other_name = other_scenario->Name();
-    if (other_name == "CONTEST_U_TURN" || other_name == "CONTEST_STATION_SHUTTLE") {
+    if (other_name == "CONTEST_U_TURN" || other_name == "CONTEST_STATION_SHUTTLE"
+        || other_name == "BUS_BAY_TRANSFER" || other_name == "BusBayTransferScenario") {
+        return false;
+    }
+    if ((other_name == "LANE_FOLLOW" || other_name == "LaneFollowScenario")
+        && IsBusBayLaneFollowExitContext(injector_, frame)) {
+        AINFO << "[ROUNDABOUT][Scenario] skip transfer during bus-bay lane-follow exit"
+              << ", dist_to_dest=" << frame.reference_line_info().front().SDistanceToDestination()
+              << ", adc_x=" << frame.vehicle_state().x() << ", adc_y=" << frame.vehicle_state().y();
         return false;
     }
     const double adc_x = frame.vehicle_state().x();

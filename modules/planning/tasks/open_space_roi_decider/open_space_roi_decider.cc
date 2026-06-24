@@ -22,14 +22,17 @@
 
 #include <limits>
 #include <memory>
+#include <string>
 #include <utility>
 
 #include "modules/common/math/polygon2d.h"
 #include "modules/common/math/vec2d.h"
 #include "modules/common/util/point_factory.h"
+#include "modules/planning/planning_base/common/contest_scenario_status.h"
 #include "modules/planning/planning_base/common/planning_context.h"
 #include "modules/planning/planning_base/common/util/print_debug_info.h"
 #include "modules/planning/planning_open_space/utils/open_space_roi_util.h"
+
 namespace apollo {
 namespace planning {
 
@@ -42,6 +45,54 @@ using apollo::hdmap::LaneInfoConstPtr;
 using apollo::hdmap::LaneSegment;
 using apollo::hdmap::ParkingSpaceInfoConstPtr;
 using apollo::hdmap::Path;
+
+namespace {
+
+bool IsBusBayTransferOpenSpace(const std::shared_ptr<DependencyInjector>& injector,
+                               const Frame& frame) {
+  if (injector == nullptr) {
+    return false;
+  }
+  const std::string scenario = contest::CurrentScenarioName(injector);
+  if (scenario != "BUS_BAY_TRANSFER" && scenario != "BusBayTransferScenario") {
+    return false;
+  }
+  return frame.open_space_info().is_on_open_space_trajectory() &&
+         !frame.open_space_info().target_parking_spot_id().empty();
+}
+
+bool IsSmallStaticObstacle(const Obstacle& obstacle) {
+  if (obstacle.IsVirtual() || !obstacle.IsStatic()) {
+    return false;
+  }
+  const auto& perception = obstacle.Perception();
+  return perception.length() <= 0.6 && perception.width() <= 0.6;
+}
+
+bool HasSmallStaticObstacle(const Frame& frame) {
+  for (const auto* obstacle : frame.obstacles()) {
+    if (obstacle != nullptr && IsSmallStaticObstacle(*obstacle)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool IsBusBayOuterSideObstacle(const Obstacle& obstacle,
+                               const double obstacle_y_max,
+                               const double end_pose_y) {
+  if (obstacle.IsVirtual() || !obstacle.IsStatic()) {
+    return false;
+  }
+  const auto& perception = obstacle.Perception();
+  const bool is_sizeable_static_obstacle =
+      perception.length() > 1.0 || perception.width() > 1.0;
+  constexpr double kOuterSideIgnoreBuffer = 2.0;
+  return is_sizeable_static_obstacle &&
+         obstacle_y_max < end_pose_y - kOuterSideIgnoreBuffer;
+}
+
+}  // namespace
 
 bool OpenSpaceRoiDecider::Init(
     const std::string &config_dir, const std::string &name,
@@ -995,7 +1046,11 @@ bool OpenSpaceRoiDecider::GetParkingBoundary(
     constexpr double kRoiBackBuffer = 3.0;
     constexpr double kRoiForwardBuffer = 10.0;
     constexpr double kRoiParkingOuterBuffer = 1.0;
-    constexpr double kRoiVehicleLateralBuffer = 2.0;
+    const double kRoiVehicleLateralBuffer =
+        IsBusBayTransferOpenSpace(injector_, *frame) &&
+                HasSmallStaticObstacle(*frame)
+            ? 3.5
+            : 2.0;
 
     std::vector<Vec2d> parking_corners{left_top, left_down, right_down,
                                        right_top};
@@ -1729,6 +1784,14 @@ bool OpenSpaceRoiDecider::FilterOutObstacle(const Frame &frame,
     AINFO << "Open space use latched static obstacle, id=" << obstacle.Id()
           << ", perception_id=" << obstacle.PerceptionId();
   }
+  if (IsBusBayTransferOpenSpace(injector_, frame) &&
+      IsSmallStaticObstacle(obstacle)) {
+    AINFO << "Bus-bay open-space ROI filters small static obstacle, id="
+          << obstacle.Id() << ", perception_id=" << obstacle.PerceptionId()
+          << ", length=" << obstacle.Perception().length()
+          << ", width=" << obstacle.Perception().width();
+    return true;
+  }
 
   const auto &open_space_info = frame.open_space_info();
   const auto &origin_point = open_space_info.origin_point();
@@ -1756,6 +1819,20 @@ bool OpenSpaceRoiDecider::FilterOutObstacle(const Frame &frame,
     obstacle_y_min = std::min(obstacle_y_min, obstacle_corner.y());
     obstacle_y_max = std::max(obstacle_y_max, obstacle_corner.y());
   }
+
+  const auto &end_pose = open_space_info.open_space_end_pose();
+  if (IsBusBayTransferOpenSpace(injector_, frame) &&
+      HasSmallStaticObstacle(frame) && end_pose.size() >= 2U &&
+      IsBusBayOuterSideObstacle(obstacle, obstacle_y_max, end_pose[1])) {
+    AINFO << "Bus-bay open-space ROI filters outer-side static obstacle, id="
+          << obstacle.Id() << ", perception_id=" << obstacle.PerceptionId()
+          << ", length=" << obstacle.Perception().length()
+          << ", width=" << obstacle.Perception().width()
+          << ", obstacle_y_range=[" << obstacle_y_min << ", "
+          << obstacle_y_max << "], end_pose_y=" << end_pose[1];
+    return true;
+  }
+
   if (obstacle_x_max < roi_xy_boundary[0] ||
       obstacle_x_min > roi_xy_boundary[1] ||
       obstacle_y_max < roi_xy_boundary[2] ||
@@ -1772,7 +1849,6 @@ bool OpenSpaceRoiDecider::FilterOutObstacle(const Frame &frame,
   }
 
   // Translate the end pose back to world frame with endpose in x, y, phi, v
-  const auto &end_pose = open_space_info.open_space_end_pose();
   Vec2d end_pose_x_y(end_pose[0], end_pose[1]);
   end_pose_x_y.SelfRotate(origin_heading);
   end_pose_x_y += origin_point;

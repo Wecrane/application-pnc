@@ -26,6 +26,7 @@
 #include "modules/common/vehicle_state/proto/vehicle_state.pb.h"
 
 #include "cyber/task/task.h"
+#include "modules/planning/planning_base/common/contest_scenario_status.h"
 #include "modules/planning/planning_base/common/planning_context.h"
 #include "modules/planning/planning_base/common/trajectory/publishable_trajectory.h"
 #include "modules/planning/planning_base/common/trajectory_stitcher.h"
@@ -39,6 +40,23 @@ using apollo::common::Status;
 using apollo::common::TrajectoryPoint;
 using apollo::common::math::Vec2d;
 using apollo::cyber::Clock;
+
+namespace {
+
+bool IsBusBayTransferOpenSpace(
+    const std::shared_ptr<DependencyInjector>& injector, const Frame* frame) {
+  if (injector == nullptr || frame == nullptr) {
+    return false;
+  }
+  const std::string scenario = contest::CurrentScenarioName(injector);
+  if (scenario != "BUS_BAY_TRANSFER" && scenario != "BusBayTransferScenario") {
+    return false;
+  }
+  return frame->open_space_info().is_on_open_space_trajectory() &&
+         !frame->open_space_info().target_parking_spot_id().empty();
+}
+
+}  // namespace
 
 bool OpenSpaceTrajectoryProvider::Init(
     const std::string& config_dir, const std::string& name,
@@ -122,9 +140,14 @@ Status OpenSpaceTrajectoryProvider::Process() {
           previous_frame->open_space_info().fallback_flag(), vehicle_state)) {
     is_stop_due_to_fallback = true;
   }
-  if (!is_planned_ || is_stop_due_to_fallback) {
+  const bool is_bus_bay_replan_after_optimizer_error =
+      IsBusBayTransferOpenSpace(injector_, frame_) && trajectory_error_.load();
+  if (!is_planned_ || is_stop_due_to_fallback ||
+      is_bus_bay_replan_after_optimizer_error) {
     AINFO << "need to fallback: is_planned" << is_planned_
-          << "is_stop_due_to_fallback" << is_stop_due_to_fallback;
+          << "is_stop_due_to_fallback" << is_stop_due_to_fallback
+          << "is_bus_bay_replan_after_optimizer_error"
+          << is_bus_bay_replan_after_optimizer_error;
     const double planning_cycle_time =
         1.0 / static_cast<double>(FLAGS_planning_loop_rate);
     stitching_trajectory = TrajectoryStitcher::ComputeReinitStitchingTrajectory(

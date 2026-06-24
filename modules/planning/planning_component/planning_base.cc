@@ -16,6 +16,8 @@
 
 #include "modules/planning/planning_component/planning_base.h"
 
+#include <cmath>
+
 #include "modules/common_msgs/planning_msgs/planning_internal.pb.h"
 
 #include "cyber/plugin_manager/plugin_manager.h"
@@ -91,6 +93,16 @@ bool PlanningBase::IsPlanningFinished(
                                          .destination()
                                          .has_passed_destination();
     AINFO << "Current passed destination:" << is_has_passed_destination;
+    if (is_has_passed_destination) {
+      const double distance_to_destination =
+          reference_line_info.SDistanceToDestination();
+      if (std::isfinite(distance_to_destination) &&
+          distance_to_destination > FLAGS_destination_check_distance) {
+        AINFO << "Destination passed flag is set but destination is still "
+              << distance_to_destination << "m ahead; keep planning.";
+        return false;
+      }
+    }
     return is_has_passed_destination;
   }
 }
