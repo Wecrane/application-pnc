@@ -55,6 +55,60 @@ namespace {
 
 constexpr double kConstructionConeRearBuffer = 6.0;
 constexpr double kConstructionConeMaxRelativeL = 12.0;
+constexpr int kBusBayExitSmallObstacleMinCount = 3;
+constexpr double kBusBayExitSmallObstacleLookForward = 12.0;
+constexpr double kBusBayExitSmallObstacleRearBuffer = 1.0;
+constexpr double kBusBayExitSmallObstacleMaxAbsL = 2.5;
+
+bool IsBusBayExitContext(
+        const std::shared_ptr<DependencyInjector>& injector,
+        const ReferenceLineInfo* reference_line_info) {
+    if (injector == nullptr || injector->planning_context() == nullptr || reference_line_info == nullptr) {
+        return false;
+    }
+    const auto& planning_status = injector->planning_context()->planning_status();
+    if (!planning_status.destination().has_passed_destination()) {
+        return false;
+    }
+    return !reference_line_info->reference_line().map_path().parking_space_overlaps().empty();
+}
+
+int CountBusBayExitSmallObstaclesAhead(const ReferenceLineInfo& reference_line_info) {
+    const double adc_start_s = reference_line_info.AdcSlBoundary().start_s();
+    const double adc_end_s = reference_line_info.AdcSlBoundary().end_s();
+    int small_obstacle_count = 0;
+    for (const auto* obstacle : reference_line_info.path_decision().obstacles().Items()) {
+        if (!contest::IsSmallRealObstacle(obstacle)) {
+            continue;
+        }
+        const auto& sl = obstacle->PerceptionSLBoundary();
+        const double center_l = 0.5 * (sl.start_l() + sl.end_l());
+        if (sl.end_s() < adc_start_s - kBusBayExitSmallObstacleRearBuffer
+            || sl.start_s() > adc_end_s + kBusBayExitSmallObstacleLookForward
+            || std::fabs(center_l) > kBusBayExitSmallObstacleMaxAbsL) {
+            continue;
+        }
+        ++small_obstacle_count;
+    }
+    return small_obstacle_count;
+}
+
+bool HasBusBayExitSmallObstacleCluster(
+        const std::shared_ptr<DependencyInjector>& injector,
+        const ReferenceLineInfo* reference_line_info,
+        int* small_obstacle_count) {
+    if (small_obstacle_count != nullptr) {
+        *small_obstacle_count = 0;
+    }
+    if (!IsBusBayExitContext(injector, reference_line_info)) {
+        return false;
+    }
+    const int count = CountBusBayExitSmallObstaclesAhead(*reference_line_info);
+    if (small_obstacle_count != nullptr) {
+        *small_obstacle_count = count;
+    }
+    return count >= kBusBayExitSmallObstacleMinCount;
+}
 
 int CountConstructionConesAhead(const ReferenceLineInfo& reference_line_info, double look_forward_distance) {
     const double adc_back_s = reference_line_info.AdcSlBoundary().start_s();
@@ -452,7 +506,10 @@ apollo::common::Status ContestLaneBorrowPath::Process(Frame* frame, ReferenceLin
     }
     const bool is_contest_construction = IsContestConstructionScenario();
     const bool is_contest_u_turn = IsContestUTurnScenario();
-    if (!is_contest_construction && construction_zone_.active) {
+    int bus_bay_exit_small_obstacle_count = 0;
+    const bool is_bus_bay_exit_small_obstacle_cluster =
+            HasBusBayExitSmallObstacleCluster(injector_, reference_line_info, &bus_bay_exit_small_obstacle_count);
+    if (!is_contest_construction && !is_bus_bay_exit_small_obstacle_cluster && construction_zone_.active) {
         // 倒车中不退出施工区模式：倒车是为了绕过锥桶重新找路，
         // 退出模式会导致路径生成逻辑切换，倒车中断。
         if (!reverse_recovery_.active) {
@@ -476,11 +533,24 @@ apollo::common::Status ContestLaneBorrowPath::Process(Frame* frame, ReferenceLin
     if (is_contest_construction && early_cone_count > 0) {
         ForceConstructionLaneBorrow(early_cone_count);
     }
+    if (is_bus_bay_exit_small_obstacle_cluster) {
+        auto* mutable_path_decider_status
+                = injector_->planning_context()->mutable_planning_status()->mutable_path_decider();
+        mutable_path_decider_status->set_is_in_path_lane_borrow_scenario(true);
+        mutable_path_decider_status->set_left_borrow(true);
+        mutable_path_decider_status->set_right_borrow(false);
+        construction_zone_.active = true;
+        construction_zone_.low_cone_counter = 0;
+        construction_zone_.no_cone_counter = 0;
+        decided_side_pass_direction_.clear();
+        decided_side_pass_direction_.push_back(SidePassDirection::LEFT_BORROW);
+        AINFO << "Bus-bay exit forces small-obstacle bypass, count=" << bus_bay_exit_small_obstacle_count;
+    }
 
     // 施工区锥桶检测优先：跳过 IsNecessaryToBorrowLane() 中 use_self_lane_ 的退出逻辑，
     // 防止刚被强制打开的借道模式又被 UpdateSelfPathInfo → use_self_lane_≥6 关掉，
     // 导致 Force lane borrow → Switch to SELF-LANE → Force lane borrow 的死循环振荡。
-    if (!is_contest_construction || early_cone_count <= 0) {
+    if ((!is_contest_construction || early_cone_count <= 0) && !is_bus_bay_exit_small_obstacle_cluster) {
         if (!IsNecessaryToBorrowLane()) {
             ADEBUG << "No need to borrow lane";
             return Status::OK();
@@ -498,6 +568,18 @@ apollo::common::Status ContestLaneBorrowPath::Process(Frame* frame, ReferenceLin
     if (is_contest_construction && construction_zone_.active) {
         config_.mutable_path_optimizer_config()->set_l_weight(0.0);
         config_.mutable_path_optimizer_config()->set_path_reference_l_weight(0.0);
+    } else if (is_bus_bay_exit_small_obstacle_cluster && construction_zone_.active) {
+        config_.mutable_path_optimizer_config()->set_l_weight(15.0);
+        config_.mutable_path_optimizer_config()->set_dl_weight(30.0);
+        config_.mutable_path_optimizer_config()->set_ddl_weight(1200.0);
+        config_.mutable_path_optimizer_config()->set_dddl_weight(7000.0);
+        config_.mutable_path_optimizer_config()->set_path_reference_l_weight(1000.0);
+        AINFO << "Bus-bay exit small-obstacle bypass optimizer weights: l="
+              << config_.path_optimizer_config().l_weight()
+              << ", dl=" << config_.path_optimizer_config().dl_weight()
+              << ", ddl=" << config_.path_optimizer_config().ddl_weight()
+              << ", dddl=" << config_.path_optimizer_config().dddl_weight()
+              << ", ref_l=" << config_.path_optimizer_config().path_reference_l_weight();
     }
     if (!OptimizePath(candidate_path_boundaries, &candidate_path_data)) {
         return Status::OK();
@@ -526,10 +608,18 @@ apollo::common::Status ContestLaneBorrowPath::Process(Frame* frame, ReferenceLin
     } else if (AssessPath(&candidate_path_data, reference_line_info->mutable_path_data())) {
         ADEBUG << "contest lane borrow path success";
     }
+    if (is_bus_bay_exit_small_obstacle_cluster && !reference_line_info->path_data().Empty()) {
+        reference_line_info->mutable_path_data()->set_blocking_obstacle_id("");
+        reference_line_info->mutable_path_data()->set_path_label("regular/bus_bay_small_obstacle_bypass");
+        AINFO << "Bus-bay exit small-obstacle bypass path selected.";
+    }
 
     ApplyConstructionZoneSpeedLimitAndLabel(reference_line_info);
     if ((is_contest_construction && construction_zone_.active) || (is_contest_u_turn && u_turn_construct_)) {
         IgnoreAllObstacles(reference_line_info);
+    }
+    if (is_bus_bay_exit_small_obstacle_cluster) {
+        IgnoreStaticObstaclesForUTurn(reference_line_info);
     }
 
     return Status::OK();
@@ -537,11 +627,14 @@ apollo::common::Status ContestLaneBorrowPath::Process(Frame* frame, ReferenceLin
 
 bool ContestLaneBorrowPath::DecidePathBounds(std::vector<PathBoundary>* boundary) {
     const bool is_contest_construction = IsContestConstructionScenario();
+    int bus_bay_exit_small_obstacle_count = 0;
+    const bool is_bus_bay_exit_small_obstacle_cluster =
+            HasBusBayExitSmallObstacleCluster(injector_, reference_line_info_, &bus_bay_exit_small_obstacle_count);
     // 注意：u_turn_construct_ 不再在此处重置。
     // 其生命周期由 U-turn fast path 管理：
     // - 进入时设为 true
     // - 退出时由 HasUTurnGeometryAhead() 判断后设为 false
-    if (!is_contest_construction && construction_zone_.active) {
+    if (!is_contest_construction && !is_bus_bay_exit_small_obstacle_cluster && construction_zone_.active) {
         ResetConstructZoneState("skip construction boundary outside construction scenario");
     }
 
@@ -550,11 +643,14 @@ bool ContestLaneBorrowPath::DecidePathBounds(std::vector<PathBoundary>* boundary
     }
 
     // ── construct_zone 模式：生成跨全部可用车道的双向边界 ──
-    if (is_contest_construction && construction_zone_.active) {
-        if (MaybeGenerateReverseRecoveryBoundary(boundary)) {
+    if ((is_contest_construction || is_bus_bay_exit_small_obstacle_cluster) && construction_zone_.active) {
+        if (is_contest_construction && MaybeGenerateReverseRecoveryBoundary(boundary)) {
             return !boundary->empty();
         }
-
+        if (is_bus_bay_exit_small_obstacle_cluster) {
+            AINFO << "Bus-bay exit uses construct-zone boundary for small obstacles, count="
+                  << bus_bay_exit_small_obstacle_count;
+        }
         return DecideConstructZoneBoundary(boundary);
     }
 
@@ -2315,7 +2411,8 @@ void ContestLaneBorrowPath::GetConstructZoneBoundary(PathBoundary* const path_bo
 
         // 2. Get ALL left-side neighbor lanes (recursive: neighbor + neighbor-of-neighbor).
         double left_neighbor_width = 0.0;
-        if (CheckLaneBoundaryType(*reference_line_info_, curr_s, SidePassDirection::LEFT_BORROW)) {
+        if (CheckLaneBoundaryType(*reference_line_info_, curr_s, SidePassDirection::LEFT_BORROW)
+            || IsBusBayExitContext(injector_, reference_line_info_)) {
             hdmap::Id neighbor_lane_id;
             double nb_width = 0.0;
             if (reference_line_info_->GetNeighborLaneInfo(
@@ -2330,6 +2427,10 @@ void ContestLaneBorrowPath::GetConstructZoneBoundary(PathBoundary* const path_bo
                     left_neighbor_width += hdmap::HDMapUtil::BaseMapPtr()->GetLaneById(id)->GetWidth(curr_s);
                 }
             }
+        }
+        if (IsBusBayExitContext(injector_, reference_line_info_)) {
+            constexpr double kBusBayExitFallbackLeftWidth = 4.2;
+            left_neighbor_width = std::max(left_neighbor_width, kBusBayExitFallbackLeftWidth);
         }
 
         // 3. Get ALL right-side neighbor lanes (recursive: neighbor + neighbor-of-neighbor).

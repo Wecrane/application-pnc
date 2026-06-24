@@ -58,6 +58,35 @@ constexpr double kRoundaboutInnerLaneHoldSec = 3.0;
 // 提交后最少保持帧数（防止闪烁导致撤销）
 constexpr int kRoundaboutCommitMinHoldFrames = 30;
 
+bool IsBusBayLaneFollowExitContext(
+        const std::shared_ptr<DependencyInjector>& injector,
+        const ReferenceLineInfo* reference_line_info) {
+    if (injector == nullptr || injector->planning_context() == nullptr || reference_line_info == nullptr) {
+        return false;
+    }
+    const auto& planning_status = injector->planning_context()->planning_status();
+    if (!planning_status.destination().has_passed_destination()) {
+        return false;
+    }
+    return !reference_line_info->reference_line().map_path().parking_space_overlaps().empty();
+}
+
+bool IsBusBayExitStaticBypassObstacle(
+        const Obstacle& obstacle,
+        const std::shared_ptr<DependencyInjector>& injector,
+        const ReferenceLineInfo* reference_line_info) {
+    if (!IsBusBayLaneFollowExitContext(injector, reference_line_info) || obstacle.IsVirtual() || !obstacle.IsStatic()) {
+        return false;
+    }
+    const auto& path_decider_status = injector->planning_context()->planning_status().path_decider();
+    if (!path_decider_status.is_in_path_lane_borrow_scenario()) {
+        return false;
+    }
+    const std::string& front_static_obstacle_id = path_decider_status.front_static_obstacle_id();
+    return obstacle.IsBlockingObstacle()
+            || (!front_static_obstacle_id.empty() && front_static_obstacle_id == obstacle.Id());
+}
+
 bool IsContestUTurnScenario(const std::shared_ptr<DependencyInjector>& injector) {
     return injector != nullptr && injector->planning_context() != nullptr
             && injector->planning_context()->planning_status().scenario().scenario_type() == kContestUTurnScenarioName;
@@ -428,6 +457,14 @@ Status SpeedDecider::MakeObjectDecision(const SpeedData& speed_profile, PathDeci
             break;
         case CROSS:
             if (mutable_obstacle->IsBlockingObstacle()) {
+                if (IsBusBayExitStaticBypassObstacle(*mutable_obstacle, injector_, reference_line_info_)) {
+                    ObjectDecisionType ignore;
+                    ignore.mutable_ignore();
+                    mutable_obstacle->AddLongitudinalDecision("dp_st_graph/bus_bay_exit", ignore);
+                    AINFO << "Bus-bay lane-follow exit ignores crossing static bypass obstacle: "
+                          << mutable_obstacle->Id();
+                    break;
+                }
                 ObjectDecisionType stop_decision;
                 if (CreateStopDecision(*mutable_obstacle, &stop_decision, -FLAGS_min_stop_distance_obstacle)) {
                     mutable_obstacle->AddLongitudinalDecision("dp_st_graph/cross", stop_decision);
