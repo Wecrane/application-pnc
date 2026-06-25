@@ -26,6 +26,7 @@
 #include <vector>
 
 #include "cyber/plugin_manager/plugin_manager.h"
+#include "modules/common/math/box2d.h"
 #include "modules/planning/planning_interface_base/task_base/common/path_generation.h"
 #include "modules/planning/tasks/contest_lane_borrow_path/construction_zone_helper.h"
 #include "modules/planning/tasks/contest_lane_borrow_path/reverse_recovery_helper.h"
@@ -98,6 +99,14 @@ private:
     void ApplyUTurnConeNudge(std::vector<SLPolygon>* obs_sl_polygons) const;
     void ForceConstructionLaneBorrow(int cone_count);
     void UpdateConstructionZoneState();
+    void UpdateBusBayExitSmallObstacleMemory(ReferenceLineInfo* reference_line_info);
+    int CountBusBayExitSmallObstacleMemoryAhead(const ReferenceLineInfo& reference_line_info) const;
+    bool UpdateBusBayExitSmallObstacleCluster(ReferenceLineInfo* reference_line_info, int* small_obstacle_count);
+    void AppendBusBayExitLatchedSmallObstacleSLPolygons(
+            const ReferenceLineInfo& reference_line_info,
+            std::vector<SLPolygon>* obs_sl_polygons,
+            ConstructionConeXYMap* cone_xy) const;
+    void ApplyBusBayExitSmallObstacleBlockNudge(std::vector<SLPolygon>* obs_sl_polygons) const;
     bool MaybeGenerateReverseRecoveryBoundary(std::vector<PathBoundary>* boundary);
     void ApplyConstructionZoneSpeedLimitAndLabel(ReferenceLineInfo* reference_line_info) const;
     void IgnoreAllObstacles(ReferenceLineInfo* reference_line_info) const;
@@ -181,6 +190,8 @@ private:
     int u_turn_merge_vehicle_missing_frames_ = 0;
     int u_turn_release_hold_frames_ = 0;
     int u_turn_merge_abort_hold_frames_ = 0;
+    int bus_bay_exit_small_obstacle_hold_frames_ = 0;
+    std::vector<common::math::Box2d> bus_bay_exit_latched_small_obstacle_boxes_;
     std::unique_ptr<PathData> last_frame_;
     static constexpr int kLowConeExitThreshold = 30;  // 3秒@10Hz，锥桶持续消失才退出
 

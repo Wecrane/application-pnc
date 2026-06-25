@@ -59,6 +59,19 @@ constexpr int kBusBayExitSmallObstacleMinCount = 3;
 constexpr double kBusBayExitSmallObstacleLookForward = 12.0;
 constexpr double kBusBayExitSmallObstacleRearBuffer = 1.0;
 constexpr double kBusBayExitSmallObstacleMaxAbsL = 2.5;
+constexpr int kBusBayExitSmallObstacleHoldFrames = 70;
+constexpr double kBusBayExitMemoryMatchDist = 0.9;
+constexpr double kBusBayExitMemoryRearPrune = 8.0;
+constexpr double kBusBayExitMemoryLookForward = 20.0;
+constexpr double kBusBayExitMemoryMaxAbsL = 4.0;
+constexpr size_t kBusBayExitMemoryMaxCount = 12;
+constexpr double kBusBayExitClusterLonBackBuffer = 1.2;
+constexpr double kBusBayExitClusterLonFrontBuffer = 2.0;
+constexpr double kBusBayExitClusterRightLatBuffer = 0.05;
+constexpr double kBusBayExitClusterLeftLatBuffer = 0.18;
+constexpr double kBusBayExitClusterMinAdcLeftGap = 0.5;
+constexpr double kBusBayExitInitialProtectLength = 2.0;
+constexpr double kBusBayExitInitialLateralMargin = 0.12;
 
 bool IsBusBayExitContext(
         const std::shared_ptr<DependencyInjector>& injector,
@@ -93,37 +106,43 @@ int CountBusBayExitSmallObstaclesAhead(const ReferenceLineInfo& reference_line_i
     return small_obstacle_count;
 }
 
-bool HasBusBayExitSmallObstacleCluster(
-        const std::shared_ptr<DependencyInjector>& injector,
-        const ReferenceLineInfo* reference_line_info,
-        int* small_obstacle_count) {
-    if (small_obstacle_count != nullptr) {
-        *small_obstacle_count = 0;
+void KeepInitialBoundaryAroundAdc(
+        const SLState& init_sl_state,
+        const double protect_length,
+        const double lateral_margin,
+        PathBoundary* path_bound) {
+    if (path_bound == nullptr || path_bound->empty()) {
+        return;
     }
-    if (!IsBusBayExitContext(injector, reference_line_info)) {
-        return false;
+    const double adc_s = init_sl_state.first[0];
+    const double adc_l = init_sl_state.second[0];
+    for (auto& point : *path_bound) {
+        if (point.s > adc_s + protect_length) {
+            break;
+        }
+        if (adc_l > point.l_upper.l - lateral_margin) {
+            point.l_upper.l = adc_l + lateral_margin;
+        }
+        if (adc_l < point.l_lower.l + lateral_margin) {
+            point.l_lower.l = adc_l - lateral_margin;
+        }
     }
-    const int count = CountBusBayExitSmallObstaclesAhead(*reference_line_info);
-    if (small_obstacle_count != nullptr) {
-        *small_obstacle_count = count;
-    }
-    return count >= kBusBayExitSmallObstacleMinCount;
 }
 
-int CountConstructionConesAhead(const ReferenceLineInfo& reference_line_info, double look_forward_distance) {
-    const double adc_back_s = reference_line_info.AdcSlBoundary().start_s();
-    const double adc_end_s = reference_line_info.AdcSlBoundary().end_s();
-    int cone_count = 0;
-    for (const auto* obstacle : reference_line_info.path_decision().obstacles().Items()) {
-        if (!contest::IsSmallRealObstacle(obstacle)) {
-            continue;
-        }
-        const auto& sl = obstacle->PerceptionSLBoundary();
-        if (sl.end_s() > adc_back_s - 6.0 && sl.start_s() < adc_end_s + look_forward_distance) {
-            ++cone_count;
-        }
+bool BoxCenterInBusBayExitWindow(
+        const ReferenceLineInfo& reference_line_info,
+        const common::math::Box2d& box,
+        const double rear_buffer,
+        const double look_forward,
+        const double max_abs_l) {
+    common::SLPoint center_sl;
+    if (!reference_line_info.reference_line().XYToSL(box.center(), &center_sl)) {
+        return false;
     }
-    return cone_count;
+    const double adc_start_s = reference_line_info.AdcSlBoundary().start_s();
+    const double adc_end_s = reference_line_info.AdcSlBoundary().end_s();
+    return center_sl.s() >= adc_start_s - rear_buffer && center_sl.s() <= adc_end_s + look_forward
+            && std::fabs(center_sl.l()) <= max_abs_l;
 }
 
 int CountConstructionConesAheadAllLanes(
@@ -402,6 +421,232 @@ void BuildUTurnLargeRadiusReference(
 
 }  // namespace
 
+void ContestLaneBorrowPath::UpdateBusBayExitSmallObstacleMemory(ReferenceLineInfo* reference_line_info) {
+    if (!IsBusBayExitContext(injector_, reference_line_info)) {
+        bus_bay_exit_latched_small_obstacle_boxes_.clear();
+        return;
+    }
+
+    for (const auto* obstacle : reference_line_info->path_decision()->obstacles().Items()) {
+        if (!contest::IsSmallRealObstacle(obstacle)) {
+            continue;
+        }
+        const auto& sl = obstacle->PerceptionSLBoundary();
+        const double center_l = 0.5 * (sl.start_l() + sl.end_l());
+        if (sl.end_s() < reference_line_info->AdcSlBoundary().start_s() - kBusBayExitMemoryRearPrune
+            || sl.start_s() > reference_line_info->AdcSlBoundary().end_s() + kBusBayExitMemoryLookForward
+            || std::fabs(center_l) > kBusBayExitMemoryMaxAbsL) {
+            continue;
+        }
+
+        const auto box = obstacle->PerceptionBoundingBox();
+        bool merged = false;
+        for (auto& latched_box : bus_bay_exit_latched_small_obstacle_boxes_) {
+            if (latched_box.center().DistanceTo(box.center()) < kBusBayExitMemoryMatchDist) {
+                latched_box = box;
+                merged = true;
+                AINFO << "Bus-bay exit obstacle memory merged, obs_id=" << obstacle->Id() << ", xy=("
+                      << box.center().x() << "," << box.center().y()
+                      << "), count=" << bus_bay_exit_latched_small_obstacle_boxes_.size();
+                break;
+            }
+        }
+        if (!merged && bus_bay_exit_latched_small_obstacle_boxes_.size() < kBusBayExitMemoryMaxCount) {
+            bus_bay_exit_latched_small_obstacle_boxes_.push_back(box);
+            AINFO << "Bus-bay exit obstacle memory latched, obs_id=" << obstacle->Id() << ", xy=("
+                  << box.center().x() << "," << box.center().y()
+                  << "), count=" << bus_bay_exit_latched_small_obstacle_boxes_.size();
+        }
+    }
+
+    const size_t old_size = bus_bay_exit_latched_small_obstacle_boxes_.size();
+    bus_bay_exit_latched_small_obstacle_boxes_.erase(
+            std::remove_if(
+                    bus_bay_exit_latched_small_obstacle_boxes_.begin(),
+                    bus_bay_exit_latched_small_obstacle_boxes_.end(),
+                    [reference_line_info](const auto& box) {
+                        return !BoxCenterInBusBayExitWindow(
+                                *reference_line_info,
+                                box,
+                                kBusBayExitMemoryRearPrune,
+                                kBusBayExitMemoryLookForward,
+                                kBusBayExitMemoryMaxAbsL);
+                    }),
+            bus_bay_exit_latched_small_obstacle_boxes_.end());
+    if (old_size != bus_bay_exit_latched_small_obstacle_boxes_.size()) {
+        AINFO << "Bus-bay exit obstacle memory pruned, count="
+              << bus_bay_exit_latched_small_obstacle_boxes_.size();
+    }
+}
+
+int ContestLaneBorrowPath::CountBusBayExitSmallObstacleMemoryAhead(
+        const ReferenceLineInfo& reference_line_info) const {
+    int count = 0;
+    for (const auto& box : bus_bay_exit_latched_small_obstacle_boxes_) {
+        if (BoxCenterInBusBayExitWindow(
+                    reference_line_info,
+                    box,
+                    kBusBayExitSmallObstacleRearBuffer,
+                    kBusBayExitSmallObstacleLookForward,
+                    kBusBayExitSmallObstacleMaxAbsL)) {
+            ++count;
+        }
+    }
+    return count;
+}
+
+void ContestLaneBorrowPath::AppendBusBayExitLatchedSmallObstacleSLPolygons(
+        const ReferenceLineInfo& reference_line_info,
+        std::vector<SLPolygon>* obs_sl_polygons,
+        ConstructionConeXYMap* cone_xy) const {
+    if (obs_sl_polygons == nullptr || cone_xy == nullptr || bus_bay_exit_latched_small_obstacle_boxes_.empty()) {
+        return;
+    }
+
+    int appended = 0;
+    for (size_t i = 0; i < bus_bay_exit_latched_small_obstacle_boxes_.size(); ++i) {
+        const auto& box = bus_bay_exit_latched_small_obstacle_boxes_[i];
+        if (!BoxCenterInBusBayExitWindow(
+                    reference_line_info,
+                    box,
+                    kBusBayExitMemoryRearPrune,
+                    kBusBayExitMemoryLookForward,
+                    kBusBayExitMemoryMaxAbsL)) {
+            continue;
+        }
+
+        bool duplicate = false;
+        for (const auto& kv : *cone_xy) {
+            if (std::hypot(kv.second.first - box.center().x(), kv.second.second - box.center().y())
+                < kBusBayExitMemoryMatchDist) {
+                duplicate = true;
+                break;
+            }
+        }
+        if (duplicate) {
+            continue;
+        }
+
+        SLBoundary sl_boundary;
+        if (!reference_line_info.reference_line().GetSLBoundary(box, &sl_boundary)) {
+            continue;
+        }
+        const std::string id = "bus_bay_latched_small_" + std::to_string(i);
+        obs_sl_polygons->emplace_back(sl_boundary, id);
+        (*cone_xy)[id] = {box.center().x(), box.center().y()};
+        ++appended;
+    }
+    if (appended > 0) {
+        AINFO << "Bus-bay exit appended latched small obstacles, appended=" << appended
+              << ", memory=" << bus_bay_exit_latched_small_obstacle_boxes_.size();
+    }
+}
+
+void ContestLaneBorrowPath::ApplyBusBayExitSmallObstacleBlockNudge(std::vector<SLPolygon>* obs_sl_polygons) const {
+    if (obs_sl_polygons == nullptr || bus_bay_exit_small_obstacle_hold_frames_ <= 0
+        || obs_sl_polygons->size() < kBusBayExitSmallObstacleMinCount) {
+        return;
+    }
+
+    const double adc_l = init_sl_state_.second[0];
+    const double adc_back_s = reference_line_info_->AdcSlBoundary().start_s();
+    const double adc_front_s = reference_line_info_->AdcSlBoundary().end_s();
+    double min_s = std::numeric_limits<double>::max();
+    double max_s = std::numeric_limits<double>::lowest();
+    double min_l = std::numeric_limits<double>::max();
+    double max_l = std::numeric_limits<double>::lowest();
+    std::vector<size_t> cluster_indices;
+
+    for (size_t i = 0; i < obs_sl_polygons->size(); ++i) {
+        const auto& polygon = obs_sl_polygons->at(i);
+        const double center_s = 0.5 * (polygon.MinS() + polygon.MaxS());
+        const double center_l = 0.5 * (polygon.MinL() + polygon.MaxL());
+        if (polygon.MaxS() < adc_back_s - kBusBayExitMemoryRearPrune
+            || polygon.MinS() > adc_front_s + kBusBayExitMemoryLookForward
+            || std::fabs(center_l) > kBusBayExitMemoryMaxAbsL) {
+            continue;
+        }
+        cluster_indices.push_back(i);
+        min_s = std::min(min_s, polygon.MinS());
+        max_s = std::max(max_s, polygon.MaxS());
+        min_l = std::min(min_l, polygon.MinL());
+        max_l = std::max(max_l, polygon.MaxL());
+    }
+
+    if (cluster_indices.size() < kBusBayExitSmallObstacleMinCount) {
+        return;
+    }
+    if (adc_l <= max_l + kBusBayExitClusterMinAdcLeftGap) {
+        AINFO << "Bus-bay exit skips cluster block nudge, adc_l=" << adc_l << ", cluster_max_l=" << max_l
+              << ", cluster_count=" << cluster_indices.size();
+        return;
+    }
+
+    for (const size_t index : cluster_indices) {
+        obs_sl_polygons->at(index).SetNudgeInfo(SLPolygon::LEFT_NUDGE);
+    }
+
+    SLBoundary cluster_boundary;
+    const double block_min_s = min_s - kBusBayExitClusterLonBackBuffer;
+    const double block_max_s = max_s + kBusBayExitClusterLonFrontBuffer;
+    const double block_min_l = min_l - kBusBayExitClusterRightLatBuffer;
+    const double block_max_l = max_l + kBusBayExitClusterLeftLatBuffer;
+    auto* point = cluster_boundary.add_boundary_point();
+    point->set_s(block_min_s);
+    point->set_l(block_min_l);
+    point = cluster_boundary.add_boundary_point();
+    point->set_s(block_min_s);
+    point->set_l(block_max_l);
+    point = cluster_boundary.add_boundary_point();
+    point->set_s(block_max_s);
+    point->set_l(block_max_l);
+    point = cluster_boundary.add_boundary_point();
+    point->set_s(block_max_s);
+    point->set_l(block_min_l);
+
+    obs_sl_polygons->emplace_back(cluster_boundary, "bus_bay_small_obstacle_cluster_block");
+    obs_sl_polygons->back().SetNudgeInfo(SLPolygon::LEFT_NUDGE);
+    std::sort(obs_sl_polygons->begin(), obs_sl_polygons->end(), [](const SLPolygon& a, const SLPolygon& b) {
+        return a.MinS() < b.MinS();
+    });
+
+    AINFO << "Bus-bay exit applies cluster block nudge, count=" << cluster_indices.size()
+          << ", s=[" << block_min_s << "," << block_max_s << "], l=[" << block_min_l << "," << block_max_l
+          << "], adc_l=" << adc_l;
+}
+
+bool ContestLaneBorrowPath::UpdateBusBayExitSmallObstacleCluster(
+        ReferenceLineInfo* reference_line_info,
+        int* small_obstacle_count) {
+    if (small_obstacle_count != nullptr) {
+        *small_obstacle_count = 0;
+    }
+    if (!IsBusBayExitContext(injector_, reference_line_info)) {
+        bus_bay_exit_small_obstacle_hold_frames_ = 0;
+        bus_bay_exit_latched_small_obstacle_boxes_.clear();
+        return false;
+    }
+
+    UpdateBusBayExitSmallObstacleMemory(reference_line_info);
+    const int count = std::max(
+            CountBusBayExitSmallObstaclesAhead(*reference_line_info),
+            CountBusBayExitSmallObstacleMemoryAhead(*reference_line_info));
+    if (small_obstacle_count != nullptr) {
+        *small_obstacle_count = count;
+    }
+    if (count >= kBusBayExitSmallObstacleMinCount) {
+        bus_bay_exit_small_obstacle_hold_frames_ = kBusBayExitSmallObstacleHoldFrames;
+        return true;
+    }
+    if (bus_bay_exit_small_obstacle_hold_frames_ > 0) {
+        --bus_bay_exit_small_obstacle_hold_frames_;
+        AINFO << "Bus-bay exit keeps small-obstacle bypass latch, current_count=" << count
+              << ", hold_frames=" << bus_bay_exit_small_obstacle_hold_frames_;
+        return true;
+    }
+    return false;
+}
+
 bool ContestLaneBorrowPath::Init(
         const std::string& config_dir,
         const std::string& name,
@@ -508,7 +753,7 @@ apollo::common::Status ContestLaneBorrowPath::Process(Frame* frame, ReferenceLin
     const bool is_contest_u_turn = IsContestUTurnScenario();
     int bus_bay_exit_small_obstacle_count = 0;
     const bool is_bus_bay_exit_small_obstacle_cluster =
-            HasBusBayExitSmallObstacleCluster(injector_, reference_line_info, &bus_bay_exit_small_obstacle_count);
+            UpdateBusBayExitSmallObstacleCluster(reference_line_info, &bus_bay_exit_small_obstacle_count);
     if (!is_contest_construction && !is_bus_bay_exit_small_obstacle_cluster && construction_zone_.active) {
         // 倒车中不退出施工区模式：倒车是为了绕过锥桶重新找路，
         // 退出模式会导致路径生成逻辑切换，倒车中断。
@@ -629,7 +874,7 @@ bool ContestLaneBorrowPath::DecidePathBounds(std::vector<PathBoundary>* boundary
     const bool is_contest_construction = IsContestConstructionScenario();
     int bus_bay_exit_small_obstacle_count = 0;
     const bool is_bus_bay_exit_small_obstacle_cluster =
-            HasBusBayExitSmallObstacleCluster(injector_, reference_line_info_, &bus_bay_exit_small_obstacle_count);
+            UpdateBusBayExitSmallObstacleCluster(reference_line_info_, &bus_bay_exit_small_obstacle_count);
     // 注意：u_turn_construct_ 不再在此处重置。
     // 其生命周期由 U-turn fast path 管理：
     // - 进入时设为 true
@@ -1395,12 +1640,15 @@ void ContestLaneBorrowPath::ForceConstructionLaneBorrow(int cone_count) {
 }
 
 void ContestLaneBorrowPath::ApplyConstructionZoneSpeedLimitAndLabel(ReferenceLineInfo* reference_line_info) const {
-    if (!IsContestConstructionScenario() || !construction_zone_.active || reference_line_info == nullptr) {
+    const bool is_bus_bay_exit_small_obstacle =
+            IsBusBayExitContext(injector_, reference_line_info) && bus_bay_exit_small_obstacle_hold_frames_ > 0;
+    if ((!IsContestConstructionScenario() && !is_bus_bay_exit_small_obstacle) || !construction_zone_.active
+        || reference_line_info == nullptr) {
         return;
     }
     constexpr double kMinPassengerArea = 0.1;
-    constexpr double kSpeedLimit = 8.33;  // 30 km/h
-    constexpr double kBuffer = 10.0;
+    const double speed_limit = is_bus_bay_exit_small_obstacle ? 1.2 : 8.33;  // 8.33 m/s = 30 km/h.
+    const double buffer = is_bus_bay_exit_small_obstacle ? 6.0 : 10.0;
 
     double lower_bound = std::numeric_limits<double>::infinity();
     double upper_bound = -std::numeric_limits<double>::infinity();
@@ -1412,12 +1660,27 @@ void ContestLaneBorrowPath::ApplyConstructionZoneSpeedLimitAndLabel(ReferenceLin
         lower_bound = std::min(lower_bound, sl.start_s());
         upper_bound = std::max(upper_bound, sl.end_s());
     }
+    if (is_bus_bay_exit_small_obstacle) {
+        for (const auto& box : bus_bay_exit_latched_small_obstacle_boxes_) {
+            SLBoundary sl_boundary;
+            if (!reference_line_info->reference_line().GetSLBoundary(box, &sl_boundary)) {
+                continue;
+            }
+            lower_bound = std::min(lower_bound, sl_boundary.start_s());
+            upper_bound = std::max(upper_bound, sl_boundary.end_s());
+        }
+    }
     if (!std::isfinite(lower_bound) || !std::isfinite(upper_bound)) {
         return;
     }
     reference_line_info->mutable_reference_line()->AddSpeedLimit(
-            lower_bound - kBuffer, upper_bound + kBuffer, kSpeedLimit);
-    reference_line_info->mutable_path_data()->set_path_label("regular/construct_zone");
+            lower_bound - buffer, upper_bound + buffer, speed_limit);
+    reference_line_info->mutable_path_data()->set_path_label(
+            is_bus_bay_exit_small_obstacle ? "regular/bus_bay_small_obstacle_bypass" : "regular/construct_zone");
+    if (is_bus_bay_exit_small_obstacle) {
+        AINFO << "Bus-bay exit applies small-obstacle speed limit " << speed_limit << " m/s for s=["
+              << (lower_bound - buffer) << ", " << (upper_bound + buffer) << "]";
+    }
 }
 
 void ContestLaneBorrowPath::IgnoreAllObstacles(ReferenceLineInfo* reference_line_info) const {
@@ -2335,6 +2598,9 @@ bool ContestLaneBorrowPath::DecideConstructZoneBoundary(std::vector<PathBoundary
                 cone_xy[obs->Id()] = {cx, cy};
             }
         }
+        if (IsBusBayExitContext(injector_, reference_line_info_)) {
+            AppendBusBayExitLatchedSmallObstacleSLPolygons(*reference_line_info_, &obs_sl_polygons, &cone_xy);
+        }
         std::sort(obs_sl_polygons.begin(), obs_sl_polygons.end(), [](const SLPolygon& a, const SLPolygon& b) {
             return a.MinS() < b.MinS();
         });
@@ -2345,6 +2611,9 @@ bool ContestLaneBorrowPath::DecideConstructZoneBoundary(std::vector<PathBoundary
 
     // 5. 墙追踪分类锥桶 + 分配nudge方向(在函数内部完成)
     ComputeConstructZoneBoundary(obs_sl_polygons, cone_xy, &path_bound);
+    if (IsBusBayExitContext(injector_, reference_line_info_)) {
+        ApplyBusBayExitSmallObstacleBlockNudge(&obs_sl_polygons);
+    }
 
     // 6. 标准nudge系统计算边界
     {
@@ -2360,6 +2629,14 @@ bool ContestLaneBorrowPath::DecideConstructZoneBoundary(std::vector<PathBoundary
                 &blocking_obstacle_id,
                 &path_narrowest_width);
         FLAGS_obstacle_lat_buffer = temp_lat;
+    }
+    if (IsBusBayExitContext(injector_, reference_line_info_) && bus_bay_exit_small_obstacle_hold_frames_ > 0) {
+        KeepInitialBoundaryAroundAdc(
+                init_sl_state_, kBusBayExitInitialProtectLength, kBusBayExitInitialLateralMargin, &path_bound);
+        AINFO << "Bus-bay exit protects initial construct-zone boundary around adc_l=" << init_sl_state_.second[0]
+              << ", length=" << kBusBayExitInitialProtectLength
+              << ", margin=" << kBusBayExitInitialLateralMargin
+              << ", hold_frames=" << bus_bay_exit_small_obstacle_hold_frames_;
     }
 
     // 7. 尾部补齐 + 日志。

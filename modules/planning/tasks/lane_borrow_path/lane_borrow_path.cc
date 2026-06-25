@@ -47,7 +47,7 @@ using apollo::common::math::Vec2d;
 
 namespace {
 
-constexpr double kBusBayFallbackBorrowWidth = 4.2;
+constexpr double kBusBayFallbackBorrowWidth = 5.2;
 
 bool IsBusBayTransferActive(const std::shared_ptr<DependencyInjector>& injector) {
     const std::string scenario = contest::CurrentScenarioName(injector);
@@ -607,6 +607,15 @@ bool LaneBorrowPath::IsNecessaryToBorrowLane() {
     if (mutable_path_decider_status->right_borrow()) {
         decided_side_pass_direction_.push_back(SidePassDirection::RIGHT_BORROW);
     }
+    if (forced_lane_borrow && !reference_line_info_->IsChangeLanePath()) {
+        is_in_path_lane_borrow_scenario_ = true;
+        decided_side_pass_direction_.clear();
+        decided_side_pass_direction_.push_back(SidePassDirection::LEFT_BORROW);
+        mutable_path_decider_status->set_is_in_path_lane_borrow_scenario(true);
+        mutable_path_decider_status->set_left_borrow(true);
+        mutable_path_decider_status->set_right_borrow(false);
+        AINFO << "Bus-bay forced lane borrow uses left-only direction.";
+    }
     if (bus_bay_blocking_obstacle && IsBusBayLaneFollowExitContext(injector_, reference_line_info_)) {
         is_in_path_lane_borrow_scenario_ = true;
         decided_side_pass_direction_.clear();
@@ -626,9 +635,20 @@ bool LaneBorrowPath::IsNecessaryToBorrowLane() {
         bool last_frame_not_in_lane_borrow = nullptr != last_frame && nullptr != last_frame->DriveReferenceLineInfo()
                 && (last_frame->DriveReferenceLineInfo()->path_data().path_label().find("lane_change")
                     != std::string::npos);
-        if (!bus_bay_blocking_obstacle
-            && (use_self_lane_ >= 6 || last_frame_not_in_lane_borrow
-                || frame_->reference_line_info().size() != last_frame->reference_line_info().size())) {
+        const bool hold_forced_bus_bay_borrow = forced_lane_borrow && !reference_line_info_->IsChangeLanePath();
+        if (hold_forced_bus_bay_borrow) {
+            is_in_path_lane_borrow_scenario_ = true;
+            decided_side_pass_direction_.clear();
+            decided_side_pass_direction_.push_back(SidePassDirection::LEFT_BORROW);
+            mutable_path_decider_status->set_is_in_path_lane_borrow_scenario(true);
+            mutable_path_decider_status->set_left_borrow(true);
+            mutable_path_decider_status->set_right_borrow(false);
+            use_self_lane_ = 0;
+            AINFO << "Bus-bay forced lane borrow holds left-only state.";
+        } else if (
+                !bus_bay_blocking_obstacle
+                && (use_self_lane_ >= 6 || last_frame_not_in_lane_borrow
+                    || frame_->reference_line_info().size() != last_frame->reference_line_info().size())) {
             // If have been able to use self-lane for some time, then switch to
             // non-lane-borrowing.
             is_in_path_lane_borrow_scenario_ = false;
@@ -806,7 +826,8 @@ void LaneBorrowPath::CheckLaneBorrow(
     *left_neighbor_lane_borrowable = true;
     *right_neighbor_lane_borrowable = true;
     if (HasForcedLaneBorrowContext(injector_, &reference_line_info)) {
-        AINFO << "Bus-bay lane-follow exit bypasses neighbor-lane id gate.";
+        *right_neighbor_lane_borrowable = false;
+        AINFO << "Bus-bay forced lane borrow uses left-only neighbor lane.";
         return;
     }
 
@@ -971,6 +992,11 @@ void LaneBorrowPath::GetSLPolygons(std::vector<SLPolygon>* polygons, LaneBorrowI
         const auto obstacle_sl = obstacle->PerceptionSLBoundary();
         // AINFO << "GetSLPolygonsWithNudgeDecision: " << obstacle->Id();
         polygons->emplace_back(obstacle_sl, obstacle->Id());
+        if (HasForcedLaneBorrowContext(injector_, reference_line_info_)) {
+            polygons->back().SetNudgeInfo(SLPolygon::LEFT_NUDGE);
+            AINFO << "Bus-bay forced lane borrow shrinks right bound for obs " << obstacle->Id();
+            continue;
+        }
         if (nudge_info.NeedCheckObsCollision(obstacle->Id())) {
             if (lane_borrow_info == LaneBorrowInfo::LEFT_BORROW) {
                 polygons->back().SetNudgeInfo(SLPolygon::LEFT_NUDGE);
