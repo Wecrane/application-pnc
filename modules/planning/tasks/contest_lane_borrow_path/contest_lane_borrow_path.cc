@@ -843,13 +843,19 @@ apollo::common::Status ContestLaneBorrowPath::Process(Frame* frame, ReferenceLin
     if (reverse_recovery_.active && !candidate_path_data.empty()) {
         *reference_line_info->mutable_path_data() = candidate_path_data.front();
         AINFO << "[REVERSE] Path set directly (bypass AssessPath), label=" << candidate_path_data.front().path_label();
-        // 倒车限速：仅 AddSpeedLimit 区间限速，不锁全局巡航
-        constexpr double kReverseSpeedLimit = 2.2;
-        const double adc_s = reference_line_info->AdcSlBoundary().start_s();
-        reference_line_info->mutable_reference_line()->AddSpeedLimit(
-                adc_s - kReverseDistance, adc_s, kReverseSpeedLimit);
-        AINFO << "[REVERSE] speed limit " << kReverseSpeedLimit << " m/s for reverse s=[" << (adc_s - kReverseDistance)
-              << ", " << adc_s << "]";
+        // 倒车路径使用自建参考线，限速区间要覆盖 path 的 Frenet s。
+        constexpr double kReverseSpeedLimit = 4.0;
+        const auto& reverse_frenet = reference_line_info->path_data().frenet_frame_path();
+        if (!reverse_frenet.empty()) {
+            const double start_s = std::min(reverse_frenet.front().s(), reverse_frenet.back().s());
+            const double end_s = std::max(reverse_frenet.front().s(), reverse_frenet.back().s());
+            reference_line_info->mutable_reference_line()->AddSpeedLimit(
+                    start_s, end_s, kReverseSpeedLimit);
+            reference_line_info->SetCruiseSpeed(kReverseSpeedLimit);
+            AINFO << "[REVERSE] speed limit " << kReverseSpeedLimit
+                  << " m/s for reverse path frenet s=[" << start_s << ", " << end_s
+                  << "], path_len=" << reference_line_info->path_data().discretized_path().Length();
+        }
     } else if (AssessPath(&candidate_path_data, reference_line_info->mutable_path_data())) {
         ADEBUG << "contest lane borrow path success";
     }

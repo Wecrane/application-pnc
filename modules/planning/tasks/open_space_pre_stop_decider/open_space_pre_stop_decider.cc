@@ -38,6 +38,10 @@ using apollo::common::VehicleState;
 using apollo::common::math::Vec2d;
 using apollo::hdmap::ParkingSpaceInfoConstPtr;
 
+namespace {
+constexpr double kParkingPreStopFenceBuildRange = 60.0;
+}  // namespace
+
 bool OpenSpacePreStopDecider::Init(
     const std::string& config_dir, const std::string& name,
     const std::shared_ptr<DependencyInjector>& injector) {
@@ -63,9 +67,12 @@ Status OpenSpacePreStopDecider::Process(
         AERROR << msg;
         return Status(ErrorCode::PLANNING_ERROR, msg);
       }
-      // 车辆距离停车位太远时不生成 stop fence，避免提前减速
-      if (target_s > 15.0) {
-        AINFO << "Parking spot too far (s=" << target_s << "), skip stop fence";
+      // Build the pre-stop fence early enough for high-speed bus-bay approach,
+      // while still avoiding very distant parking spots.
+      if (target_s > kParkingPreStopFenceBuildRange) {
+        AINFO << "Parking spot too far (s=" << target_s
+              << "), skip stop fence, build_range="
+              << kParkingPreStopFenceBuildRange;
         break;
       }
       SetParkingSpotStopFence(target_s, frame, reference_line_info);

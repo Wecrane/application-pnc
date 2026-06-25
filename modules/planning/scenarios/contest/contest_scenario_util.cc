@@ -247,8 +247,17 @@ bool IsContestConstructionZone(
         return false;
     }
     // 使用跨三车道锥桶统计，确保施工区域入口判定覆盖全部锥桶
-    return CountContestConstructionConesAhead(frame, self_rli, config.construction_look_forward_distance())
-            >= config.construction_min_cone_count();
+    const int cone_count = CountContestConstructionConesAhead(
+            frame, self_rli, config.construction_look_forward_distance());
+    const int min_count = config.construction_min_cone_count();
+    const int log_count = std::max(1, min_count / 2);
+    if (cone_count >= log_count) {
+        AINFO << "[CONSTRUCTION][Scenario] cone_count=" << cone_count << ", min_count=" << min_count
+              << ", look_forward=" << config.construction_look_forward_distance()
+              << ", adc_x=" << frame.vehicle_state().x() << ", adc_y=" << frame.vehicle_state().y()
+              << ", transferable=" << (cone_count >= min_count);
+    }
+    return cone_count >= min_count;
 }
 
 bool IsContestStationShuttle(

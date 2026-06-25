@@ -7,7 +7,7 @@ message ScenarioContestConfig {
   optional double construction_max_x = 2 [default = 424210.0];
   optional double construction_min_y = 3 [default = 4437580.0];
   optional double construction_max_y = 4 [default = 4437650.0];
-  optional int32 construction_min_cone_count = 5 [default = 20];
+  optional int32 construction_min_cone_count = 5 [default = 8];
   optional double construction_look_forward_distance = 6 [default = 100.0];
 
   optional int32 s_curve_min_cone_count = 7 [default = 4];
