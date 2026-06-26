@@ -24,7 +24,7 @@ default_speed_config {
     positive_jerk_coeff: 1.0
     negative_jerk_coeff: 1.0
 
-    max_acceleration: 2.5
+    max_acceleration: 2.8
     max_deceleration: -4.0
     spatial_potential_penalty: 1.0e2
     enable_multi_thread_in_dp_st_graph: false
@@ -56,7 +56,7 @@ lane_change_speed_config {
     positive_jerk_coeff: 1.0
     negative_jerk_coeff: 1.0
 
-    max_acceleration: 2.0
+    max_acceleration: 2.8
     max_deceleration: -2.5
     spatial_potential_penalty: 1.0e5
     is_lane_changing: true

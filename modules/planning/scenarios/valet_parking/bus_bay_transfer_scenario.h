@@ -80,6 +80,7 @@ private:
     bool SearchForNearbyCandidate(
             const Frame& frame,
             const hdmap::Path& nearby_path,
+            double parking_start_range,
             hdmap::PathOverlap* parking_space_overlap);
 
 private:

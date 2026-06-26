@@ -19,9 +19,9 @@ message ScenarioContestConfig {
   optional double u_turn_kappa_threshold = 12 [default = 0.12];
   optional double u_turn_heading_change_threshold = 13 [default = 2.0];
 
-  optional double station_shuttle_look_forward_distance = 14 [default = 80.0];
+  optional double station_shuttle_look_forward_distance = 14 [default = 140.0];
   optional double station_shuttle_dwell_time_sec = 15 [default = 5.0];
-  optional double station_shuttle_speed_limit = 16 [default = 8.33];
+  optional double station_shuttle_speed_limit = 16 [default = 8.333];
 
   optional double roundabout_entry_look_forward_distance = 17 [default = 80.0];
   optional double roundabout_inside_junction_buffer = 18 [default = 25.0];

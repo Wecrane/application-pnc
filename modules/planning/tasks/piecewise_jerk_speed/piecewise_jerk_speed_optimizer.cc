@@ -200,14 +200,17 @@ Status PiecewiseJerkSpeedOptimizer::Process(
         v_upper_bound = std::fmin(speed_limit.GetSpeedLimitByS(path_s), v_upper_bound);
         // 预留余量使有效限速 = 28.5 km/h，防止优化器在 jerk 最小化时略微超调
         constexpr double kSpeedLimitMargin = 1.5 / 3.6;  // 1.5 km/h → m/s
-        const bool reverse_launch = reverse_speed_profile && curr_t <= 2.0;
+        const bool reverse_launch = reverse_speed_profile && curr_t <= 1.6;
         v_upper_bound = std::fmax(
                 0.0,
                 v_upper_bound - ((window_release_launch || reverse_launch) ? 0.0 : kSpeedLimitMargin));
         if (reverse_launch) {
-            dx_ref_weight[i] = std::max(dx_ref_weight[i], 120.0);
-            dx_ref[i] = v_upper_bound;
-            x_ref[i] = std::min(total_length, init_s[1] * curr_t + 0.5 * 2.5 * curr_t * curr_t);
+            constexpr double kReverseLaunchAccelRef = 1.6;
+            constexpr double kReverseLaunchSpeedRatio = 0.85;
+            dx_ref_weight[i] = std::max(dx_ref_weight[i], 70.0);
+            dx_ref[i] = v_upper_bound * kReverseLaunchSpeedRatio;
+            x_ref[i] = std::min(total_length, init_s[1] * curr_t
+                                    + 0.5 * kReverseLaunchAccelRef * curr_t * curr_t);
         } else if (window_release_launch && curr_t <= 3.0) {
             const double launch_accel_ref = uturn_release_launch ? 4.5 : 3.0;
             dx_ref_weight[i] = std::max(dx_ref_weight[i], uturn_release_launch ? 120.0 : 80.0);
@@ -247,19 +250,21 @@ Status PiecewiseJerkSpeedOptimizer::Process(
     }
     PiecewiseJerkSpeedProblem piecewise_jerk_problem(num_of_knots, delta_t, init_s);
     piecewise_jerk_problem.set_weight_ddx(
-            reverse_speed_profile ? config_.acc_weight() * 0.08
+            reverse_speed_profile ? config_.acc_weight() * 0.35
                                   : (window_release_launch ? config_.acc_weight() * 0.08 : config_.acc_weight()));
     piecewise_jerk_problem.set_weight_dddx(
-            reverse_speed_profile ? config_.jerk_weight() * 0.02
+            reverse_speed_profile ? config_.jerk_weight() * 0.20
                                   : (window_release_launch ? config_.jerk_weight() * 0.02 : config_.jerk_weight()));
     piecewise_jerk_problem.set_scale_factor({1.0, 10.0, 100.0});
     piecewise_jerk_problem.set_x_bounds(0.0, total_length);
-    const double launch_max_acc = reverse_speed_profile ? std::max(veh_param.max_acceleration(), 3.0)
-                                  : uturn_release_launch ? std::max(veh_param.max_acceleration(), 3.5)
-                                                         : veh_param.max_acceleration();
-    const double launch_max_jerk = (reverse_speed_profile || uturn_release_launch)
-                                           ? std::max(FLAGS_longitudinal_jerk_upper_bound, 6.0)
-                                           : FLAGS_longitudinal_jerk_upper_bound;
+    constexpr double kForwardEvalMaxAcc = 2.8;
+    constexpr double kReverseLaunchMaxAcc = 2.6;
+    constexpr double kReverseLaunchMaxJerk = 3.5;
+    const double launch_max_acc = reverse_speed_profile ? kReverseLaunchMaxAcc
+                                  : kForwardEvalMaxAcc;
+    const double launch_max_jerk = reverse_speed_profile ? kReverseLaunchMaxJerk
+                                   : uturn_release_launch ? std::max(FLAGS_longitudinal_jerk_upper_bound, 6.0)
+                                                          : FLAGS_longitudinal_jerk_upper_bound;
     piecewise_jerk_problem.set_ddx_bounds(veh_param.max_deceleration(), launch_max_acc);
     piecewise_jerk_problem.set_dddx_bound(FLAGS_longitudinal_jerk_lower_bound, launch_max_jerk);
     piecewise_jerk_problem.set_x_bounds(std::move(s_bounds));

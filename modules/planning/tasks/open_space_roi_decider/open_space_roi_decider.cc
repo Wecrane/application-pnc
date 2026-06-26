@@ -20,6 +20,7 @@
 
 #include "modules/planning/tasks/open_space_roi_decider/open_space_roi_decider.h"
 
+#include <algorithm>
 #include <limits>
 #include <memory>
 #include <string>
@@ -67,6 +68,18 @@ bool IsSmallStaticObstacle(const Obstacle& obstacle) {
   }
   const auto& perception = obstacle.Perception();
   return perception.length() <= 0.6 && perception.width() <= 0.6;
+}
+
+bool IsDuplicateSmallStaticObstacle(const Box2d& candidate,
+                                    const std::vector<Box2d>& included_boxes) {
+  constexpr double kSmallObstacleMergeDistance = 0.6;
+  for (const auto& included_box : included_boxes) {
+    if (candidate.center().DistanceTo(included_box.center()) <
+        kSmallObstacleMergeDistance) {
+      return true;
+    }
+  }
+  return false;
 }
 
 bool HasSmallStaticObstacle(const Frame& frame) {
@@ -1690,11 +1703,38 @@ bool OpenSpaceRoiDecider::LoadObstacleInVertices(
     const auto &origin_heading = open_space_info.origin_heading();
     size_t perception_obstacles_total = 0;
     size_t perception_obstacles_filtered = 0;
+    std::vector<Box2d> included_small_obstacle_boxes;
     for (const auto &obstacle : obstacles_by_frame_->Items()) {
       ++perception_obstacles_total;
       if (FilterOutObstacle(*frame, *obstacle)) {
         ++perception_obstacles_filtered;
         continue;
+      }
+
+      double obstacle_buffer = config_.perception_obstacle_buffer();
+      if (IsBusBayTransferOpenSpace(injector_, *frame) &&
+          IsSmallStaticObstacle(*obstacle)) {
+        const auto obstacle_box = obstacle->PerceptionBoundingBox();
+        if (IsDuplicateSmallStaticObstacle(obstacle_box,
+                                           included_small_obstacle_boxes)) {
+          ++perception_obstacles_filtered;
+          AINFO << "Bus-bay open-space ROI filters duplicate small static "
+                << "obstacle, id=" << obstacle->Id() << ", perception_id="
+                << obstacle->PerceptionId() << ", center=("
+                << obstacle_box.center().x() << ","
+                << obstacle_box.center().y() << ")";
+          continue;
+        }
+        included_small_obstacle_boxes.push_back(obstacle_box);
+
+        constexpr double kBusBaySmallObstacleBuffer = 1.0;
+        obstacle_buffer = std::max(obstacle_buffer, kBusBaySmallObstacleBuffer);
+        AINFO << "Bus-bay open-space ROI includes small static obstacle, id="
+              << obstacle->Id() << ", perception_id="
+              << obstacle->PerceptionId() << ", length="
+              << obstacle->Perception().length() << ", width="
+              << obstacle->Perception().width() << ", buffer="
+              << obstacle_buffer;
       }
       ++perception_obstacles_num;
 
@@ -1702,14 +1742,14 @@ bool OpenSpaceRoiDecider::LoadObstacleInVertices(
       if (config_.expand_polygon_of_obstacle_by_distance()) {
         common::math::Polygon2d original_polygon =
             obstacle->PerceptionPolygon();
-        original_polygon.ExpandByDistance(config_.perception_obstacle_buffer());
+        original_polygon.ExpandByDistance(obstacle_buffer);
         original_polygon.CalculateVertices(-1.0 * origin_point);
         vertices_ccw = original_polygon.GetAllVertices();
       } else {
         Box2d original_box = obstacle->PerceptionBoundingBox();
         original_box.Shift(-1.0 * origin_point);
-        original_box.LongitudinalExtend(config_.perception_obstacle_buffer());
-        original_box.LateralExtend(config_.perception_obstacle_buffer());
+        original_box.LongitudinalExtend(obstacle_buffer);
+        original_box.LateralExtend(obstacle_buffer);
         vertices_ccw = original_box.GetAllCorners();
       }
 
@@ -1784,15 +1824,6 @@ bool OpenSpaceRoiDecider::FilterOutObstacle(const Frame &frame,
     AINFO << "Open space use latched static obstacle, id=" << obstacle.Id()
           << ", perception_id=" << obstacle.PerceptionId();
   }
-  if (IsBusBayTransferOpenSpace(injector_, frame) &&
-      IsSmallStaticObstacle(obstacle)) {
-    AINFO << "Bus-bay open-space ROI filters small static obstacle, id="
-          << obstacle.Id() << ", perception_id=" << obstacle.PerceptionId()
-          << ", length=" << obstacle.Perception().length()
-          << ", width=" << obstacle.Perception().width();
-    return true;
-  }
-
   const auto &open_space_info = frame.open_space_info();
   const auto &origin_point = open_space_info.origin_point();
   const auto &origin_heading = open_space_info.origin_heading();

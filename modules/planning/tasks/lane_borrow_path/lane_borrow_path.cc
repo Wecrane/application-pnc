@@ -48,6 +48,11 @@ using apollo::common::math::Vec2d;
 namespace {
 
 constexpr double kBusBayFallbackBorrowWidth = 5.2;
+constexpr double kBusBayExitLeftRefL = 2.4;
+constexpr double kBusBayExitHoldLeftDistance = 30.0;
+constexpr double kBusBayExitReturnDistance = 25.0;
+constexpr double kBusBayExitBoundaryClearance = 0.8;
+constexpr double kBusBayExitRefWeight = 6000.0;
 
 bool IsBusBayTransferActive(const std::shared_ptr<DependencyInjector>& injector) {
     const std::string scenario = contest::CurrentScenarioName(injector);
@@ -78,6 +83,19 @@ bool IsBusBayLaneFollowExitContext(
     return !IsBusBayTransferActive(injector) && HasForcedLaneBorrowContext(injector, reference_line_info);
 }
 
+bool IsBusBayExitLeftReferenceContext(
+        const std::shared_ptr<DependencyInjector>& injector,
+        const ReferenceLineInfo* reference_line_info) {
+    if (!HasForcedLaneBorrowContext(injector, reference_line_info)) {
+        return false;
+    }
+    if (IsBusBayLaneFollowExitContext(injector, reference_line_info)) {
+        return true;
+    }
+    return injector != nullptr && injector->planning_context() != nullptr
+            && injector->planning_context()->planning_status().destination().has_passed_destination();
+}
+
 std::string FindBusBayObstacleOnStraightPreview(const ReferenceLineInfo& reference_line_info) {
     constexpr double kLookForwardDistance = 80.0;
     constexpr double kRearBuffer = 2.0;
@@ -102,6 +120,41 @@ std::string FindBusBayObstacleOnStraightPreview(const ReferenceLineInfo& referen
         }
     }
     return nearest_obstacle_id;
+}
+
+void ApplyBusBayExitLeftReference(const PathBoundary& path_boundary,
+                                  std::vector<double>* ref_l,
+                                  std::vector<double>* weight_ref_l) {
+    if (path_boundary.empty() || ref_l == nullptr || weight_ref_l == nullptr
+        || ref_l->size() != path_boundary.size() || weight_ref_l->size() != path_boundary.size()) {
+        return;
+    }
+
+    const double start_s = path_boundary.front().s;
+    for (size_t i = 0; i < path_boundary.size(); ++i) {
+        const double local_s = path_boundary[i].s - start_s;
+        double ratio = 1.0;
+        if (local_s > kBusBayExitHoldLeftDistance) {
+            ratio = 1.0 - (local_s - kBusBayExitHoldLeftDistance) / kBusBayExitReturnDistance;
+            ratio = std::max(0.0, std::min(1.0, ratio));
+        }
+        if (ratio <= 0.0) {
+            continue;
+        }
+
+        const double lower = path_boundary[i].l_lower.l + kBusBayExitBoundaryClearance;
+        const double upper = path_boundary[i].l_upper.l - kBusBayExitBoundaryClearance;
+        if (lower >= upper) {
+            continue;
+        }
+        const double target_l = std::max(lower, std::min(upper, kBusBayExitLeftRefL * ratio));
+        ref_l->at(i) = target_l;
+        weight_ref_l->at(i) = std::max(weight_ref_l->at(i), kBusBayExitRefWeight * ratio);
+    }
+    AINFO << "Bus-bay lane-follow exit applies left reference, target_l="
+          << kBusBayExitLeftRefL << ", hold=" << kBusBayExitHoldLeftDistance
+          << ", return=" << kBusBayExitReturnDistance
+          << ", weight=" << kBusBayExitRefWeight;
 }
 
 }  // namespace
@@ -301,6 +354,9 @@ bool LaneBorrowPath::OptimizePath(
         bool is_left_side_pass = path_boundary.label().find("left") != std::string::npos;
         PathOptimizerUtil::UpdatePathRefWithBoundInSidePassDirection(
                 path_boundary, config.path_reference_l_weight(), &ref_l, &weight_ref_l, is_left_side_pass);
+        if (IsBusBayExitLeftReferenceContext(injector_, reference_line_info_) && is_left_side_pass) {
+            ApplyBusBayExitLeftReference(path_boundary, &ref_l, &weight_ref_l);
+        }
 
         bool res_opt = PathOptimizerUtil::OptimizePath(
                 init_sl_state_,

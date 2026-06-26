@@ -162,11 +162,17 @@ void ContestLaneFollowStage::InjectStationShuttleStop(Frame* frame) {
         }
     }
 
-    // 站点区域限速
+    // 站点区域限速：入口红线在泊车位上游，提前覆盖才能在进站前降到 30km/h。
     const double speed_limit = ctx->scenario_config.station_shuttle_speed_limit();
-    constexpr double kZoneRadius = 40.0;
+    constexpr double kStationEntryLimitDistance = 80.0;
+    constexpr double kStationExitLimitDistance = 40.0;
+    const double limit_start_s = std::max(0.0, target_spot_s - kStationEntryLimitDistance);
+    const double limit_end_s = target_spot_s + kStationExitLimitDistance;
     ref_line_info.mutable_reference_line()->AddSpeedLimit(
-            std::max(0.0, target_spot_s - kZoneRadius), target_spot_s + kZoneRadius, speed_limit);
+            limit_start_s, limit_end_s, speed_limit);
+    AINFO << "[SS] station speed limit " << speed_limit << " m/s, adc_s=" << adc_end_s
+          << ", target_s=" << target_spot_s << ", limit_s=[" << limit_start_s << ", " << limit_end_s
+          << "], dist_to_limit=" << limit_start_s - adc_end_s;
 }
 
 bool ContestLaneFollowStage::StillInScenario(const Frame& frame) const {

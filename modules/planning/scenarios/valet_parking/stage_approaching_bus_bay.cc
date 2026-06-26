@@ -20,6 +20,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -43,6 +44,11 @@ constexpr double kPreviewStep = 0.5;
 constexpr double kHeadingSampleDist = 0.5;
 constexpr double kHalfPi = 1.5707963267948966;
 constexpr double kPi = 3.1415926535897932;
+constexpr double kBusBayStationSpeedLimit = 8.333;
+constexpr double kBusBayStationLimitLength = 140.0;
+constexpr double kBusBayStationEntryToShelterDistance = 36.0;
+constexpr double kBusBayShelterMaxL = 8.0;
+constexpr double kBusBayShelterMaxAheadDistance = 120.0;
 
 double ComputeLaneHeading(const hdmap::LaneInfoConstPtr& lane, double lane_s, double fallback) {
     double fwd_s = std::min(lane_s + kHeadingSampleDist, lane->total_length());
@@ -75,6 +81,37 @@ std::vector<ReferencePoint> BuildStraightReferencePoints(
         points.emplace_back(mp, 0.0, 0.0);
     }
     return points;
+}
+
+bool FindStationShelterS(
+        const ReferenceLineInfo& reference_line_info,
+        const std::vector<common::math::Box2d>& latched_boxes,
+        double adc_front_s,
+        double* shelter_s) {
+    if (shelter_s == nullptr) {
+        return false;
+    }
+    bool found = false;
+    double best_s = -std::numeric_limits<double>::infinity();
+    for (const auto& box : latched_boxes) {
+        common::SLPoint sl;
+        if (!reference_line_info.reference_line().XYToSL(box.center(), &sl)) {
+            continue;
+        }
+        const double ahead_distance = sl.s() - adc_front_s;
+        if (ahead_distance < 0.0 || ahead_distance > kBusBayShelterMaxAheadDistance
+            || std::fabs(sl.l()) > kBusBayShelterMaxL) {
+            continue;
+        }
+        if (!found || sl.s() > best_s) {
+            best_s = sl.s();
+            found = true;
+        }
+    }
+    if (found) {
+        *shelter_s = best_s;
+    }
+    return found;
 }
 
 }  // namespace
@@ -191,6 +228,26 @@ StageResult StageApproachingBusBay::Process(const common::TrajectoryPoint& plann
         decision.mutable_ignore();
         dest->EraseDecision();
         dest->AddLongitudinalDecision("ignore-dest-in-bus-bay", decision);
+    }
+
+    // Station area is limited to 30km/h from the red entry line onward. Infer
+    // that line from the station shelter so this keeps working when map
+    // coordinates shift between evaluations.
+    for (auto& rl : *frame->mutable_reference_line_info()) {
+        const double adc_front_s = rl.AdcSlBoundary().end_s();
+        double shelter_s = 0.0;
+        if (!FindStationShelterS(rl, sc->latched_static_obstacle_boxes, adc_front_s, &shelter_s)) {
+            AINFO << "Bus-bay approach: station shelter not found for speed limit, adc_s=" << adc_front_s
+                  << ", latched=" << sc->latched_static_obstacle_boxes.size();
+            continue;
+        }
+        const double limit_start_s = std::max(0.0, shelter_s - kBusBayStationEntryToShelterDistance);
+        const double limit_end_s = limit_start_s + kBusBayStationLimitLength;
+        rl.mutable_reference_line()->AddSpeedLimit(limit_start_s, limit_end_s, kBusBayStationSpeedLimit);
+        AINFO << "Bus-bay approach: station speed limit " << kBusBayStationSpeedLimit
+              << " m/s, adc_s=" << adc_front_s << ", shelter_s=" << shelter_s
+              << ", entry_offset=" << kBusBayStationEntryToShelterDistance
+              << ", limit_s=[" << limit_start_s << ", " << limit_end_s << "]";
     }
 
     result = ExecuteTaskOnReferenceLine(planning_init_point, frame);

@@ -32,7 +32,7 @@ namespace planning {
 
 namespace {
 
-constexpr double kFallbackDistThreshold = 1.6;
+constexpr double kFallbackDistThreshold = 2.0;
 constexpr double kFallbackHeadingThreshold = 0.45;
 constexpr double kDwellDurationSeconds = 5.0;
 
@@ -126,16 +126,9 @@ StageResult StageDwellingAtBusBay::Process(const common::TrajectoryPoint& planni
     if (elapsed >= kDwellDurationSeconds) {
         AINFO << "Bus-bay dwell: complete, skip departing, return to lane follow directly";
 
-        // Clear open-space flag so LaneFollow uses ReferenceLine tasks
         frame->mutable_open_space_info()->set_is_on_open_space_trajectory(false);
         frame->mutable_open_space_info()->set_openspace_planning_finish(false);
 
-        // Mark destination as passed to suppress the destination stop wall,
-        // so LaneFollow can drive past the parking spot without stopping.
-        // This also serves as the "recently exited bus bay" signal that
-        // HasForcedLaneBorrowContext() checks to enable all bus-bay bypasses
-        // (CheckLaneBorrow, IsEnableNudge, boundary type ignore, etc.)
-        // without forcing lane borrow pre-activation.
         injector_->planning_context()->mutable_planning_status()->mutable_destination()->set_has_passed_destination(
                 true);
         AINFO << "Bus-bay dwell: marked destination as passed to remove stop wall";

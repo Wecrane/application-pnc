@@ -5,7 +5,7 @@ package apollo.planning;
 message ScenarioBusBayTransferConfig {
   // Only when the distance between the vehicle and bus bay parking spot is
   // smaller than this value, "BusBayTransferScenario" can be entered
-  optional double parking_spot_range_to_start = 1 [default = 20.0];
+  optional double parking_spot_range_to_start = 1 [default = 140.0];
   // Only when the distance between the vehicle and pre-stop distance is smaller
   // than this value, "StageApproachingBusBay" can be finished
   optional double max_valid_stop_distance = 2 [default = 1.0];  // meter

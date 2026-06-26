@@ -131,3 +131,5 @@ aem bootstrap start --plus
 buildtool build -p modules/planning/ -j15
 aem bootstrap start --plus
 buildtool build -p modules/planning/ -j15
+aem bootstrap start --plus
+buildtool build -p modules/planning/ -j15

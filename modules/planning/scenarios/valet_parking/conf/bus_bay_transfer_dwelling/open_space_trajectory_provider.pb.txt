@@ -6,11 +6,11 @@ open_space_trajectory_optimizer_config {
         traj_kappa_contraint_ratio: 0.8
         next_node_num: 16
         step_size: 0.1
-        traj_forward_penalty: 1.0
+        traj_forward_penalty: 80.0
         traj_back_penalty: 1.0
-        traj_gear_switch_penalty: 3.0
+        traj_gear_switch_penalty: 1200.0
         max_explored_num:10000
-        traj_short_length_penalty:20
+        traj_short_length_penalty:200
         traj_expected_shortest_length:2.0
         traj_steer_penalty: 3.0
         traj_steer_change_penalty: 1.0
@@ -35,7 +35,7 @@ open_space_trajectory_optimizer_config {
         ipopt_recalc_y: "yes"
         }
         qp_format: OSQP
-        min_safety_distance: 0.01
+        min_safety_distance: 0.25
         osqp_config {
         alpha: 1.0
         eps_abs: 1.0e-3
@@ -60,9 +60,9 @@ open_space_trajectory_optimizer_config {
         weight_second_order_time: 13.5
         weight_end_state: 1.0
         weight_slack: 1.0
-        min_safety_distance: 0.01
+        min_safety_distance: 0.25
         max_speed_forward: 2.0
-        max_speed_reverse: 1.0
+        max_speed_reverse: 1.5
         max_acceleration_forward: 2.0
         max_acceleration_reverse: 1.0
         min_time_sample_scaling: 0.8
@@ -120,7 +120,7 @@ open_space_trajectory_optimizer_config {
         }
         collision_decrease_ratio: 0.0
         max_forward_v: 1.0
-        max_reverse_v: 1.0
+        max_reverse_v: 1.5
         max_forward_acc: 0.5
         max_reverse_acc: 0.3
         max_acc_jerk: 0.5

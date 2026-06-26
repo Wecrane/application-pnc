@@ -2069,11 +2069,10 @@ void ContestLaneBorrowPath::AddUTurnSpeedLimit(ReferenceLineInfo* reference_line
     if (reference_line_info == nullptr) {
         return;
     }
-    // 评测向心加速度阈值约 2.0m/s^2，日志里 10km/h 弯中峰值到 2.5，
-    // 这里把 U 弯本体收到 8.8km/h，出弯/回内侧再释放速度。
-    constexpr double kUTurnCurveCruiseSpeed = 8.8 / 3.6;
-    constexpr double kUTurnCurveSpeedLimit = 10.0 / 3.6;
-    constexpr double kReleaseMergeSpeed = 29.0 / 3.6;  // 出弯回内侧最高 29km/h
+    // U 弯本体沿用保守慢速；出弯/回内侧释放到全局上限 60km/h。
+    constexpr double kUTurnCurveCruiseSpeed = 11.5 / 3.6;
+    constexpr double kUTurnCurveSpeedLimit = 13.0 / 3.6;
+    constexpr double kReleaseMergeSpeed = 60.0 / 3.6;
     constexpr double kTightKappa = 0.035;              // 紧弯曲率阈值
     constexpr double kCurveRangeKappa = 0.015;         // U 弯限速区间识别阈值
     constexpr double kCurveLookAhead = 28.0;           // 紧弯判定前探距离

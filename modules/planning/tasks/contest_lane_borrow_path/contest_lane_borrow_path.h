@@ -198,8 +198,8 @@ private:
     ReverseRecoveryState reverse_recovery_;
     static constexpr double kReverseDistance = 18.0;    // 倒车参考线距离 (m)，保留加速余量
     static constexpr double kMinReverseDistance = 0.5;  // 倒车目标距离配置下限
-    // 倒车完成：参考线 18m 保持不变，剩余约 13m 时切回前进，实际倒车约 5m。
-    static constexpr double kReverseTargetRemainThreshold = 13.0;
+    // 倒车完成：参考线 18m 保持不变，剩余约 7m 时切回前进，实际倒车约 11m。
+    static constexpr double kReverseTargetRemainThreshold = 7.0;
     static constexpr double kMinReverseTargetRemainThreshold = 0.05;
     // 防止定位/启动瞬间抖动导致倒车刚开始就结束。
     static constexpr int kReverseMinFrames = 4;

@@ -60,37 +60,41 @@ Status OpenSpacePreStopDecider::Process(
   CHECK_NOTNULL(reference_line_info);
   double target_s = 0.0;
   const auto& stop_type = config_.stop_type();
-  switch (stop_type) {
-    case OpenSpacePreStopDeciderConfig::PARKING:
-      if (!CheckParkingSpotPreStop(frame, reference_line_info, &target_s)) {
-        const std::string msg = "Checking parking spot pre stop fails";
-        AERROR << msg;
-        return Status(ErrorCode::PLANNING_ERROR, msg);
-      }
-      // Build the pre-stop fence early enough for high-speed bus-bay approach,
-      // while still avoiding very distant parking spots.
-      if (target_s > kParkingPreStopFenceBuildRange) {
-        AINFO << "Parking spot too far (s=" << target_s
-              << "), skip stop fence, build_range="
-              << kParkingPreStopFenceBuildRange;
-        break;
-      }
-      SetParkingSpotStopFence(target_s, frame, reference_line_info);
-      break;
-    case OpenSpacePreStopDeciderConfig::PULL_OVER:
-      if (!CheckPullOverPreStop(frame, reference_line_info, &target_s)) {
-        const std::string msg = "Checking pull over pre stop fails";
-        AERROR << msg;
-        return Status(ErrorCode::PLANNING_ERROR, msg);
-      }
-      SetPullOverStopFence(target_s, frame, reference_line_info);
-      break;
-    default:
-      const std::string msg = "This stop type not implemented";
+  if (stop_type == OpenSpacePreStopDeciderConfig::PARKING) {
+    if (!CheckParkingSpotPreStop(frame, reference_line_info, &target_s)) {
+      const std::string msg = "Checking parking spot pre stop fails";
       AERROR << msg;
       return Status(ErrorCode::PLANNING_ERROR, msg);
+    }
+    // Build the pre-stop fence early enough for high-speed bus-bay approach,
+    // while still avoiding very distant parking spots.  Use distance from the
+    // ADC instead of absolute reference-line s so straight-reference rebuilds
+    // do not change when the wall appears.
+    const double adc_front_s = reference_line_info->AdcSlBoundary().end_s();
+    const double distance_to_target = target_s - adc_front_s;
+    if (distance_to_target > kParkingPreStopFenceBuildRange) {
+      AINFO << "Parking spot too far (target_s=" << target_s
+            << ", adc_front_s=" << adc_front_s
+            << ", distance_to_target=" << distance_to_target
+            << "), skip stop fence, build_range="
+            << kParkingPreStopFenceBuildRange;
+      return Status::OK();
+    }
+    SetParkingSpotStopFence(target_s, frame, reference_line_info);
+    return Status::OK();
   }
-  return Status::OK();
+  if (stop_type == OpenSpacePreStopDeciderConfig::PULL_OVER) {
+    if (!CheckPullOverPreStop(frame, reference_line_info, &target_s)) {
+      const std::string msg = "Checking pull over pre stop fails";
+      AERROR << msg;
+      return Status(ErrorCode::PLANNING_ERROR, msg);
+    }
+    SetPullOverStopFence(target_s, frame, reference_line_info);
+    return Status::OK();
+  }
+  const std::string msg = "This stop type not implemented";
+  AERROR << msg;
+  return Status(ErrorCode::PLANNING_ERROR, msg);
 }
 
 bool OpenSpacePreStopDecider::CheckPullOverPreStop(
@@ -196,18 +200,13 @@ bool OpenSpacePreStopDecider::CheckParkingSpotPreStop(
 void OpenSpacePreStopDecider::SetParkingSpotStopFence(
     const double target_s, Frame* const frame,
     ReferenceLineInfo* const reference_line_info) {
-  const auto& nearby_path = reference_line_info->reference_line().map_path();
   const double adc_front_edge_s = reference_line_info->AdcSlBoundary().end_s();
   const double front_edge_to_center = common::VehicleConfigHelper::Instance()
                                           ->GetConfig()
                                           .vehicle_param()
                                           .front_edge_to_center();
-  double ego_s = adc_front_edge_s - front_edge_to_center;
-  const VehicleState& vehicle_state = frame->vehicle_state();
   double stop_line_s = 0.0;
   double stop_distance_to_target = config_.stop_distance_to_target();
-  double static_linear_velocity_epsilon = 1.0e-2;
-  static constexpr double kStopBuffer = 0.2;
   CHECK_GE(stop_distance_to_target, 1.0e-8);
   const double parking_spot_pre_stop_distance =
       config_.parking_spot_pre_stop_distance();

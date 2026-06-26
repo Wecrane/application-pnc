@@ -31,7 +31,7 @@ namespace {
 constexpr double kLaneChangeWatchFrontBuffer = 1.0;
 constexpr double kLaneChangeWatchLateralBuffer = 0.8;
 constexpr double kLaneChangeHoldLateralHalfWidth = 0.5;
-constexpr double kLaneChangeSpeedLimit = 29.0 / 3.6;
+constexpr double kLaneChangeSpeedLimit = 60.0 / 3.6;
 constexpr double kMinLaneChangeSpeedKmh = 10.0;
 
 }  // namespace
@@ -130,6 +130,7 @@ void ApplyContestLaneChangeSpeedLimit(bool is_contest_lane_change, ReferenceLine
     if (!is_contest_lane_change || reference_line_info == nullptr) {
         return;
     }
+    reference_line_info->SetCruiseSpeed(kLaneChangeSpeedLimit);
     reference_line_info->mutable_reference_line()->AddSpeedLimit(
             reference_line_info->AdcSlBoundary().start_s(),
             reference_line_info->reference_line().Length(),

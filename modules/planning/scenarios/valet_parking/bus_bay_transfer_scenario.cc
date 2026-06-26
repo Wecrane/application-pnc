@@ -20,8 +20,8 @@
 
 #include "modules/planning/scenarios/valet_parking/bus_bay_transfer_scenario.h"
 
+#include <algorithm>
 #include <cmath>
-#include <limits>
 
 #include "modules/common_msgs/basic_msgs/pnc_point.pb.h"
 #include "modules/planning/planning_base/common/frame.h"
@@ -43,7 +43,7 @@ bool BoxesAreSimilar(const common::math::Box2d& a, const common::math::Box2d& b)
             && std::fabs(std::remainder(a.heading() - b.heading(), 2.0 * M_PI)) < kBoxHeadingMatchTol;
 }
 
-constexpr double kMaxObstacleLatchRange = 40.0;
+constexpr double kMaxObstacleLatchRange = 80.0;
 constexpr size_t kMaxLatchedBoxCount = 16;
 
 bool TryMergeIntoLatched(
@@ -250,11 +250,11 @@ bool BusBayTransferScenario::IsTransferable(const Scenario* const other_scenario
     if (!frame.local_view().planning_command->has_parking_command()) {
         PathOverlap candidate;
         const auto& vstate = frame.vehicle_state();
-        if (!SearchForNearbyCandidate(frame, nearby_path, &candidate)) {
+        double range = context_.scenario_config.parking_spot_range_to_start();
+        if (!SearchForNearbyCandidate(frame, nearby_path, range, &candidate)) {
             AINFO << "Bus-bay: no available bay spot nearby";
             return false;
         }
-        double range = context_.scenario_config.parking_spot_range_to_start();
         if (!CheckDistanceToParkingSpot(frame, vstate, nearby_path, range, candidate)) {
             AINFO << "Bus-bay: candidate spot too far: " << candidate.object_id;
             return false;
@@ -320,12 +320,19 @@ bool BusBayTransferScenario::SearchTargetParkingSpotOnPath(
 bool BusBayTransferScenario::SearchForNearbyCandidate(
         const Frame& frame,
         const Path& nearby_path,
+        const double parking_start_range,
         PathOverlap* parking_space_overlap) {
     const hdmap::HDMap* hdmap = hdmap::HDMapUtil::BaseMapPtr();
     const auto& overlaps = nearby_path.parking_space_overlaps();
     hdmap::Id id;
-    bool found = false;
-    double best_dist = std::numeric_limits<double>::max();
+    const double adc_front_s = frame.reference_line_info().front().AdcSlBoundary().end_s();
+    struct CandidateSpot {
+        PathOverlap overlap;
+        double ahead_dist = 0.0;
+        bool forbidden = false;
+        bool occupied = false;
+    };
+    std::vector<CandidateSpot> candidates;
 
     for (const auto& overlap : overlaps) {
         id.set_id(overlap.object_id);
@@ -346,31 +353,45 @@ bool BusBayTransferScenario::SearchForNearbyCandidate(
             }
         }
 
-        if (forbiden.find(overlap.object_id) != forbiden.end()) {
-            AINFO << "Bus-bay: skip spot (forbidden): " << overlap.object_id;
+        const double ahead_dist = overlap.start_s - adc_front_s;
+        AINFO << "Bus-bay: candidate spot=" << overlap.object_id << ", ahead_dist=" << ahead_dist;
+        if (ahead_dist < 0.0) {
+            AINFO << "Bus-bay: skip spot (behind adc): " << overlap.object_id;
             continue;
         }
-        if (occupied_parking_spots_.find(overlap.object_id) != occupied_parking_spots_.end()) {
-            AINFO << "Bus-bay: skip spot (occupied): " << overlap.object_id;
+        if (ahead_dist > parking_start_range) {
+            AINFO << "Bus-bay: skip spot (out of start range): " << overlap.object_id
+                  << ", start_range=" << parking_start_range;
             continue;
         }
-
-        double dist = std::fabs(frame.reference_line_info().front().AdcSlBoundary().end_s() - overlap.start_s);
-        AINFO << "Bus-bay: candidate spot=" << overlap.object_id << ", dist=" << dist;
-        if (dist < best_dist) {
-            best_dist = dist;
-            *parking_space_overlap = overlap;
-        }
-        found = true;
+        candidates.push_back(
+                {overlap, ahead_dist, forbiden.find(overlap.object_id) != forbiden.end(),
+                 occupied_parking_spots_.find(overlap.object_id) != occupied_parking_spots_.end()});
     }
 
-    if (found) {
-        AINFO << "Bus-bay: selected candidate spot=" << parking_space_overlap->object_id << ", dist=" << best_dist
+    if (!candidates.empty()) {
+        std::sort(candidates.begin(), candidates.end(), [](const CandidateSpot& lhs, const CandidateSpot& rhs) {
+            return lhs.ahead_dist < rhs.ahead_dist;
+        });
+        const auto& selected = candidates[candidates.size() / 2];
+        if (selected.forbidden) {
+            AINFO << "Bus-bay: middle candidate is forbidden, spot=" << selected.overlap.object_id
+                  << ", candidate_count=" << candidates.size();
+            return false;
+        }
+        if (selected.occupied) {
+            AINFO << "Bus-bay: middle candidate is occupied, spot=" << selected.overlap.object_id
+                  << ", candidate_count=" << candidates.size();
+            return false;
+        }
+        *parking_space_overlap = selected.overlap;
+        AINFO << "Bus-bay: selected candidate spot=" << parking_space_overlap->object_id
+              << ", ahead_dist=" << selected.ahead_dist << ", candidate_count=" << candidates.size()
               << ", occupied_count=" << occupied_parking_spots_.size();
     } else {
         AINFO << "Bus-bay: no candidate after filtering";
     }
-    return found;
+    return !candidates.empty();
 }
 
 bool BusBayTransferScenario::CheckDistanceToParkingSpot(
@@ -392,7 +413,10 @@ bool BusBayTransferScenario::CheckDistanceToParkingSpot(
     Vec2d adc_vec(vehicle_state.x(), vehicle_state.y());
     nearby_path.GetNearestPoint(adc_vec, &adc_s, &adc_l);
 
-    return std::abs(spot_s - adc_s) < parking_start_range;
+    const double ahead_dist = spot_s - adc_s;
+    AINFO << "Bus-bay: spot distance check, spot=" << parking_space_overlap.object_id << ", spot_s=" << spot_s
+          << ", adc_s=" << adc_s << ", ahead_dist=" << ahead_dist << ", start_range=" << parking_start_range;
+    return ahead_dist >= 0.0 && ahead_dist < parking_start_range;
 }
 
 }  // namespace planning
