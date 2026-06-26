@@ -198,8 +198,8 @@ private:
     ReverseRecoveryState reverse_recovery_;
     static constexpr double kReverseDistance = 18.0;    // 倒车参考线距离 (m)，保留加速余量
     static constexpr double kMinReverseDistance = 0.5;  // 倒车目标距离配置下限
-    // 倒车完成：参考线 18m 保持不变，剩余约 7m 时切回前进，实际倒车约 11m。
-    static constexpr double kReverseTargetRemainThreshold = 7.0;
+    // 倒车完成：参考线 18m 保持不变，剩余约 13m 时切回前进，实际倒车约 5m。
+    static constexpr double kReverseTargetRemainThreshold = 13.0;
     static constexpr double kMinReverseTargetRemainThreshold = 0.05;
     // 防止定位/启动瞬间抖动导致倒车刚开始就结束。
     static constexpr int kReverseMinFrames = 4;
@@ -207,10 +207,12 @@ private:
     static constexpr double kStuckSpeedThreshold = 0.3;           // 判定"卡死"的速度阈值 (m/s)
     static constexpr int kStuckFrameThreshold = 15;               // 连续低速帧数阈值
     static constexpr int kReverseRetriggerHoldFrames = 100;       // 倒车完成后 10s 内禁止再次贴脸触发
+    static constexpr int kReverseForwardRecoveryHoldFrames = 18;  // 倒车后切回前进的柔和恢复窗口
     static constexpr int kRepeatReverseStuckFrameThreshold = 80;  // 二次倒车必须真实卡住 8s
     static constexpr double kReverseRetriggerMinMove = 12.0;      // 完成倒车后前进足够距离才允许二次倒车
     bool construction_reverse_completed_ = false;
     int reverse_retrigger_hold_frames_ = 0;
+    int reverse_forward_recovery_hold_frames_ = 0;
     double reverse_finish_x_ = 0.0;
     double reverse_finish_y_ = 0.0;
 

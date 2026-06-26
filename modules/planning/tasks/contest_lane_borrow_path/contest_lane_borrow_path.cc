@@ -1502,6 +1502,9 @@ bool ContestLaneBorrowPath::MaybeGenerateReverseRecoveryBoundary(std::vector<Pat
     if (reverse_retrigger_hold_frames_ > 0) {
         --reverse_retrigger_hold_frames_;
     }
+    if (reverse_forward_recovery_hold_frames_ > 0 && !reverse_recovery_.active) {
+        --reverse_forward_recovery_hold_frames_;
+    }
 
     // ── 倒车执行中 ──
     if (reverse_recovery_.active) {
@@ -1537,6 +1540,7 @@ bool ContestLaneBorrowPath::MaybeGenerateReverseRecoveryBoundary(std::vector<Pat
             reverse_recovery_.Reset();
             construction_reverse_completed_ = true;
             reverse_retrigger_hold_frames_ = kReverseRetriggerHoldFrames;
+            reverse_forward_recovery_hold_frames_ = kReverseForwardRecoveryHoldFrames;
             reverse_finish_x_ = adc_x;
             reverse_finish_y_ = adc_y;
             return false;
@@ -1648,8 +1652,22 @@ void ContestLaneBorrowPath::ForceConstructionLaneBorrow(int cone_count) {
 void ContestLaneBorrowPath::ApplyConstructionZoneSpeedLimitAndLabel(ReferenceLineInfo* reference_line_info) const {
     const bool is_bus_bay_exit_small_obstacle =
             IsBusBayExitContext(injector_, reference_line_info) && bus_bay_exit_small_obstacle_hold_frames_ > 0;
+    const bool reverse_forward_recovery = reverse_forward_recovery_hold_frames_ > 0;
     if ((!IsContestConstructionScenario() && !is_bus_bay_exit_small_obstacle) || !construction_zone_.active
         || reference_line_info == nullptr) {
+        return;
+    }
+    if (reverse_forward_recovery) {
+        constexpr double kRecoverySpeedLimit = 2.0;
+        constexpr double kRecoveryLimitDistance = 18.0;
+        const double adc_back_s = reference_line_info->AdcSlBoundary().start_s();
+        reference_line_info->mutable_reference_line()->AddSpeedLimit(
+                adc_back_s, adc_back_s + kRecoveryLimitDistance, kRecoverySpeedLimit);
+        reference_line_info->mutable_path_data()->set_path_label(
+                "regular/construct_zone/reverse_forward_recovery");
+        AINFO << "[CZ][REVERSE] forward recovery speed limit " << kRecoverySpeedLimit
+              << " m/s for s=[" << adc_back_s << ", " << (adc_back_s + kRecoveryLimitDistance)
+              << "], hold_frames=" << reverse_forward_recovery_hold_frames_;
         return;
     }
     constexpr double kMinPassengerArea = 0.1;
@@ -1971,6 +1989,7 @@ void ContestLaneBorrowPath::ResetConstructZoneState(const std::string& reason) {
     reverse_recovery_.Reset();
     construction_reverse_completed_ = false;
     reverse_retrigger_hold_frames_ = 0;
+    reverse_forward_recovery_hold_frames_ = 0;
     reverse_finish_x_ = 0.0;
     reverse_finish_y_ = 0.0;
     AINFO << "[WALL] EXIT construct_zone by " << reason;
@@ -2572,50 +2591,92 @@ bool ContestLaneBorrowPath::DecideConstructZoneBoundary(std::vector<PathBoundary
 
     // 2. Build a bidirectional boundary spanning all available lanes.
     GetConstructZoneBoundary(&path_bound);
-    path_bound.set_label("regular/construct_zone");
+    path_bound.set_label(reverse_forward_recovery_hold_frames_ > 0
+                                 ? "regular/construct_zone/reverse_forward_recovery"
+                                 : "regular/construct_zone");
 
     // 3. Save a temp copy for tail padding.
     PathBound temp_path_bound = path_bound;
 
-    // 4. 绕过 GetSLPolygons 的默认过滤逻辑，直接收集所有小障碍物。
+    // 4. 绕过 GetSLPolygons 的默认过滤逻辑，直接收集施工区障碍物。
     //    默认的 GetSLPolygons 只返回"阻塞"障碍物 + |l| ≤ 3.5m 的小障碍物。
     //    施工区 S 弯锥桶横跨 3 车道，|l| 可达 5~8m，必须全部纳入。
     std::vector<SLPolygon> obs_sl_polygons;
+    std::vector<SLPolygon> cone_sl_polygons;
     std::unordered_map<std::string, std::pair<double, double>> cone_xy;  // id -> (x, y)
     {
         const double adc_back_s = reference_line_info_->AdcSlBoundary().start_s();
         const double adc_front_s = reference_line_info_->AdcSlBoundary().end_s();
+        auto in_construction_range = [adc_back_s, adc_front_s](const SLBoundary& sl) {
+            return sl.end_s() >= adc_back_s
+                    && sl.start_s() - adc_front_s <= contest::kDefaultConstructionLookForwardDistance;
+        };
+        auto is_static_construction_block = [this](const Obstacle* obs, const SLBoundary& sl) {
+            if (obs == nullptr || obs->IsVirtual() || !obs->IsStatic() || contest::IsSmallRealObstacle(obs)) {
+                return false;
+            }
+            const auto box = obs->PerceptionBoundingBox();
+            const double long_side = std::max(box.length(), box.width());
+            const double short_side = std::min(box.length(), box.width());
+            if (long_side < 1.0 || short_side > 3.5) {
+                return false;
+            }
+            return sl.end_l() > construction_zone_.max_right_bound - 1.0
+                    && sl.start_l() < construction_zone_.max_left_bound + 1.0;
+        };
         for (const auto* obs : reference_line_info_->path_decision()->obstacles().Items()) {
-            if (!contest::IsSmallRealObstacle(obs)) {
+            if (obs == nullptr) {
                 continue;
             }
             const auto& sl = obs->PerceptionSLBoundary();
-            if (sl.end_s() < adc_back_s) {
+            if (!in_construction_range(sl)) {
                 continue;
             }
-            if (sl.start_s() - adc_front_s > contest::kDefaultConstructionLookForwardDistance) {
-                continue;
-            }
-            obs_sl_polygons.emplace_back(sl, obs->Id());
-            double cx = 0.0;
-            double cy = 0.0;
-            if (contest::GetObstacleCenterXY(obs, &cx, &cy)) {
-                cone_xy[obs->Id()] = {cx, cy};
+            if (contest::IsSmallRealObstacle(obs)) {
+                cone_sl_polygons.emplace_back(sl, obs->Id());
+                obs_sl_polygons.emplace_back(sl, obs->Id());
+                double cx = 0.0;
+                double cy = 0.0;
+                if (contest::GetObstacleCenterXY(obs, &cx, &cy)) {
+                    cone_xy[obs->Id()] = {cx, cy};
+                }
+            } else if (is_static_construction_block(obs, sl)) {
+                obs_sl_polygons.emplace_back(sl, obs->Id());
+                const double block_center_l = 0.5 * (sl.start_l() + sl.end_l());
+                const double road_center_l = 0.5 * (construction_zone_.max_left_bound + construction_zone_.max_right_bound);
+                obs_sl_polygons.back().SetNudgeInfo(
+                        block_center_l <= road_center_l ? SLPolygon::LEFT_NUDGE : SLPolygon::RIGHT_NUDGE);
+                AINFO << "[CONSTRUCT_ZONE] include static block obstacle, id=" << obs->Id()
+                      << ", s=[" << sl.start_s() << ", " << sl.end_s() << "]"
+                      << ", l=[" << sl.start_l() << ", " << sl.end_l() << "]"
+                      << ", nudge=" << obs_sl_polygons.back().NudgeInfo();
             }
         }
         if (IsBusBayExitContext(injector_, reference_line_info_)) {
+            AppendBusBayExitLatchedSmallObstacleSLPolygons(*reference_line_info_, &cone_sl_polygons, &cone_xy);
             AppendBusBayExitLatchedSmallObstacleSLPolygons(*reference_line_info_, &obs_sl_polygons, &cone_xy);
         }
+        std::sort(cone_sl_polygons.begin(), cone_sl_polygons.end(), [](const SLPolygon& a, const SLPolygon& b) {
+            return a.MinS() < b.MinS();
+        });
         std::sort(obs_sl_polygons.begin(), obs_sl_polygons.end(), [](const SLPolygon& a, const SLPolygon& b) {
             return a.MinS() < b.MinS();
         });
     }
-    ADEBUG << "[CONSTRUCT_ZONE] collected " << obs_sl_polygons.size()
-           << " small obstacles, mx_left=" << construction_zone_.max_left_bound
+    ADEBUG << "[CONSTRUCT_ZONE] collected " << cone_sl_polygons.size()
+           << " cones and " << obs_sl_polygons.size() << " static obstacles, mx_left=" << construction_zone_.max_left_bound
            << " mx_right=" << construction_zone_.max_right_bound;
 
     // 5. 墙追踪分类锥桶 + 分配nudge方向(在函数内部完成)
-    ComputeConstructZoneBoundary(obs_sl_polygons, cone_xy, &path_bound);
+    ComputeConstructZoneBoundary(cone_sl_polygons, cone_xy, &path_bound);
+    for (const auto& cone : cone_sl_polygons) {
+        for (auto& obstacle : obs_sl_polygons) {
+            if (obstacle.id() == cone.id()) {
+                obstacle.SetNudgeInfo(cone.NudgeInfo());
+                break;
+            }
+        }
+    }
     if (IsBusBayExitContext(injector_, reference_line_info_)) {
         ApplyBusBayExitSmallObstacleBlockNudge(&obs_sl_polygons);
     }

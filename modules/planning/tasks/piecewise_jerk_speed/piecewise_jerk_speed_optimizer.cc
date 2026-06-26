@@ -106,6 +106,8 @@ Status PiecewiseJerkSpeedOptimizer::Process(
     const bool roundabout_launch_area
             = IsContestRoundaboutScenario(injector_) && IsRoundaboutCommitArea(reference_line_info_);
     const bool uturn_release_launch = path_data.path_label().find("uturn_release") != std::string::npos;
+    const bool reverse_forward_recovery_launch =
+            path_data.path_label().find("reverse_forward_recovery") != std::string::npos;
     const bool window_release_launch = init_s[1] < (uturn_release_launch ? 1.8 : 1.0)
             && (uturn_release_launch || roundabout_launch_area);
     if (window_release_launch) {
@@ -201,9 +203,16 @@ Status PiecewiseJerkSpeedOptimizer::Process(
         // 预留余量使有效限速 = 28.5 km/h，防止优化器在 jerk 最小化时略微超调
         constexpr double kSpeedLimitMargin = 1.5 / 3.6;  // 1.5 km/h → m/s
         const bool reverse_launch = reverse_speed_profile && curr_t <= 1.6;
+        const bool reverse_forward_recovery = reverse_forward_recovery_launch && curr_t <= 2.0;
+        if (reverse_forward_recovery) {
+            constexpr double kReverseForwardRecoverySpeedLimit = 2.0;
+            v_upper_bound = std::min(v_upper_bound, kReverseForwardRecoverySpeedLimit);
+        }
         v_upper_bound = std::fmax(
                 0.0,
-                v_upper_bound - ((window_release_launch || reverse_launch) ? 0.0 : kSpeedLimitMargin));
+                v_upper_bound
+                        - ((window_release_launch || reverse_launch || reverse_forward_recovery) ? 0.0
+                                                                                                  : kSpeedLimitMargin));
         if (reverse_launch) {
             constexpr double kReverseLaunchAccelRef = 1.6;
             constexpr double kReverseLaunchSpeedRatio = 0.85;
@@ -211,6 +220,12 @@ Status PiecewiseJerkSpeedOptimizer::Process(
             dx_ref[i] = v_upper_bound * kReverseLaunchSpeedRatio;
             x_ref[i] = std::min(total_length, init_s[1] * curr_t
                                     + 0.5 * kReverseLaunchAccelRef * curr_t * curr_t);
+        } else if (reverse_forward_recovery) {
+            constexpr double kReverseForwardRecoveryAccelRef = 1.2;
+            dx_ref_weight[i] = std::max(dx_ref_weight[i], 90.0);
+            dx_ref[i] = v_upper_bound;
+            x_ref[i] = std::min(total_length, init_s[1] * curr_t
+                                                + 0.5 * kReverseForwardRecoveryAccelRef * curr_t * curr_t);
         } else if (window_release_launch && curr_t <= 3.0) {
             const double launch_accel_ref = uturn_release_launch ? 4.5 : 3.0;
             dx_ref_weight[i] = std::max(dx_ref_weight[i], uturn_release_launch ? 120.0 : 80.0);
@@ -259,8 +274,10 @@ Status PiecewiseJerkSpeedOptimizer::Process(
     piecewise_jerk_problem.set_x_bounds(0.0, total_length);
     constexpr double kForwardEvalMaxAcc = 2.8;
     constexpr double kReverseLaunchMaxAcc = 2.6;
+    constexpr double kReverseForwardRecoveryMaxAcc = 1.6;
     constexpr double kReverseLaunchMaxJerk = 3.5;
     const double launch_max_acc = reverse_speed_profile ? kReverseLaunchMaxAcc
+                                  : reverse_forward_recovery_launch ? kReverseForwardRecoveryMaxAcc
                                   : kForwardEvalMaxAcc;
     const double launch_max_jerk = reverse_speed_profile ? kReverseLaunchMaxJerk
                                    : uturn_release_launch ? std::max(FLAGS_longitudinal_jerk_upper_bound, 6.0)
