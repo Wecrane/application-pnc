@@ -67,8 +67,8 @@ constexpr double kBusBayExitMemoryMaxAbsL = 4.0;
 constexpr size_t kBusBayExitMemoryMaxCount = 12;
 constexpr double kBusBayExitClusterLonBackBuffer = 1.2;
 constexpr double kBusBayExitClusterLonFrontBuffer = 2.0;
-constexpr double kBusBayExitClusterRightLatBuffer = 0.05;
-constexpr double kBusBayExitClusterLeftLatBuffer = 0.18;
+constexpr double kBusBayExitClusterRightLatBuffer = 0.25;
+constexpr double kBusBayExitClusterLeftLatBuffer = 0.35;
 constexpr double kBusBayExitClusterMinAdcLeftGap = 0.5;
 constexpr double kBusBayExitInitialProtectLength = 2.0;
 constexpr double kBusBayExitInitialLateralMargin = 0.12;
@@ -814,12 +814,12 @@ apollo::common::Status ContestLaneBorrowPath::Process(Frame* frame, ReferenceLin
         config_.mutable_path_optimizer_config()->set_l_weight(0.0);
         config_.mutable_path_optimizer_config()->set_path_reference_l_weight(0.0);
     } else if (is_bus_bay_exit_small_obstacle_cluster && construction_zone_.active) {
-        config_.mutable_path_optimizer_config()->set_l_weight(15.0);
-        config_.mutable_path_optimizer_config()->set_dl_weight(30.0);
-        config_.mutable_path_optimizer_config()->set_ddl_weight(1200.0);
-        config_.mutable_path_optimizer_config()->set_dddl_weight(7000.0);
-        config_.mutable_path_optimizer_config()->set_path_reference_l_weight(1000.0);
-        AINFO << "Bus-bay exit small-obstacle bypass optimizer weights: l="
+        config_.mutable_path_optimizer_config()->set_l_weight(0.0);
+        config_.mutable_path_optimizer_config()->set_dl_weight(5.0);
+        config_.mutable_path_optimizer_config()->set_ddl_weight(100.0);
+        config_.mutable_path_optimizer_config()->set_dddl_weight(500.0);
+        config_.mutable_path_optimizer_config()->set_path_reference_l_weight(0.0);
+        AINFO << "Bus-bay exit small-obstacle bypass (relaxed smoothness): l="
               << config_.path_optimizer_config().l_weight()
               << ", dl=" << config_.path_optimizer_config().dl_weight()
               << ", ddl=" << config_.path_optimizer_config().ddl_weight()
@@ -1671,7 +1671,7 @@ void ContestLaneBorrowPath::ApplyConstructionZoneSpeedLimitAndLabel(ReferenceLin
         return;
     }
     constexpr double kMinPassengerArea = 0.1;
-    const double speed_limit = is_bus_bay_exit_small_obstacle ? 1.2 : 8.33;  // 8.33 m/s = 30 km/h.
+    const double speed_limit = is_bus_bay_exit_small_obstacle ? 5.0 : 8.33;  // 8.33 m/s = 30 km/h.
     const double buffer = is_bus_bay_exit_small_obstacle ? 6.0 : 10.0;
 
     double lower_bound = std::numeric_limits<double>::infinity();

@@ -206,14 +206,18 @@ std::vector<TrajectoryPoint> TrajectoryStitcher::ComputeStitchingTrajectory(
     }
 
     if (std::fabs(lon_diff) > FLAGS_replan_longitudinal_distance_threshold) {
-      const std::string msg = absl::StrCat(
-          "the distance between matched point and actual position is too "
-          "large. Replan is triggered. lon_diff = ",
-          lon_diff);
-      AERROR << msg;
-      *replan_reason = msg;
-      return ComputeReinitStitchingTrajectory(planning_cycle_time,
-                                              vehicle_state);
+      // 倒车轨迹的 s 坐标被取反，导致 lon_diff 始终很大。
+      // 倒车时跳过纵向偏移检测，避免每帧都触发 replan 造成瞬移。
+      if (!prev_trajectory->IsReversed()) {
+        const std::string msg = absl::StrCat(
+            "the distance between matched point and actual position is too "
+            "large. Replan is triggered. lon_diff = ",
+            lon_diff);
+        AERROR << msg;
+        *replan_reason = msg;
+        return ComputeReinitStitchingTrajectory(planning_cycle_time,
+                                                vehicle_state);
+      }
     }
 
     if (std::fabs(time_diff) > FLAGS_replan_time_threshold) {

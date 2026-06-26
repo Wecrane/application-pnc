@@ -168,11 +168,9 @@ void ContestLaneFollowStage::InjectStationShuttleStop(Frame* frame) {
     constexpr double kStationExitLimitDistance = 40.0;
     const double limit_start_s = std::max(0.0, target_spot_s - kStationEntryLimitDistance);
     const double limit_end_s = target_spot_s + kStationExitLimitDistance;
-    ref_line_info.mutable_reference_line()->AddSpeedLimit(
-            limit_start_s, limit_end_s, speed_limit);
-    AINFO << "[SS] station speed limit " << speed_limit << " m/s, adc_s=" << adc_end_s
-          << ", target_s=" << target_spot_s << ", limit_s=[" << limit_start_s << ", " << limit_end_s
-          << "], dist_to_limit=" << limit_start_s - adc_end_s;
+    ref_line_info.mutable_reference_line()->AddSpeedLimit(limit_start_s, limit_end_s, speed_limit);
+    AINFO << "[SS] station speed limit " << speed_limit << " m/s, adc_s=" << adc_end_s << ", target_s=" << target_spot_s
+          << ", limit_s=[" << limit_start_s << ", " << limit_end_s << "], dist_to_limit=" << limit_start_s - adc_end_s;
 }
 
 bool ContestLaneFollowStage::StillInScenario(const Frame& frame) const {

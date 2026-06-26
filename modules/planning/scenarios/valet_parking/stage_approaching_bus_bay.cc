@@ -46,7 +46,7 @@ constexpr double kHalfPi = 1.5707963267948966;
 constexpr double kPi = 3.1415926535897932;
 constexpr double kBusBayStationSpeedLimit = 8.333;
 constexpr double kBusBayStationLimitLength = 140.0;
-constexpr double kBusBayStationEntryToShelterDistance = 36.0;
+constexpr double kBusBayStationEntryToShelterDistance = 65.0;
 constexpr double kBusBayShelterMaxL = 8.0;
 constexpr double kBusBayShelterMaxAheadDistance = 120.0;
 
