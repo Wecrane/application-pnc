@@ -1727,7 +1727,10 @@ bool OpenSpaceRoiDecider::LoadObstacleInVertices(
         }
         included_small_obstacle_boxes.push_back(obstacle_box);
 
-        constexpr double kBusBaySmallObstacleBuffer = 1.35;
+        // The open-space path is rear-axle based. In the bus-bay reverse
+        // parking scene, a cylinder can be clear of the rear-axle path while
+        // still being swept by the front corner during steering.
+        constexpr double kBusBaySmallObstacleBuffer = 1.8;
         obstacle_buffer = std::max(obstacle_buffer, kBusBaySmallObstacleBuffer);
         AINFO << "Bus-bay open-space ROI includes small static obstacle, id="
               << obstacle->Id() << ", perception_id="

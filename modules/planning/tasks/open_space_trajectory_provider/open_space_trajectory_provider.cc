@@ -20,6 +20,7 @@
 
 #include "modules/planning/tasks/open_space_trajectory_provider/open_space_trajectory_provider.h"
 
+#include <cmath>
 #include <memory>
 #include <string>
 
@@ -54,6 +55,16 @@ bool IsBusBayTransferOpenSpace(
   }
   return frame->open_space_info().is_on_open_space_trajectory() &&
          !frame->open_space_info().target_parking_spot_id().empty();
+}
+
+bool IsRepeatedStopTrajectory(const DiscretizedTrajectory& trajectory) {
+  if (trajectory.size() < 2) {
+    return true;
+  }
+  const auto& first_point = trajectory.front().path_point();
+  const auto& last_point = trajectory.back().path_point();
+  return std::hypot(last_point.x() - first_point.x(),
+                    last_point.y() - first_point.y()) < 1.0e-3;
 }
 
 }  // namespace
@@ -255,6 +266,22 @@ Status OpenSpaceTrajectoryProvider::Process() {
       return Status(ErrorCode::OK,
                     "Waiting for open_space_trajectory_optimizer in "
                     "open_space_trajectory_provider");
+    } else if (previous_frame && !need_replan &&
+               IsBusBayTransferOpenSpace(injector_, frame_) &&
+               !previous_frame->open_space_info()
+                    .stitched_trajectory_result()
+                    .empty() &&
+               !IsRepeatedStopTrajectory(
+                   previous_frame->open_space_info()
+                       .stitched_trajectory_result())) {
+      ReuseLastFrameResult(previous_frame, trajectory_data);
+      if (FLAGS_enable_record_debug) {
+        ReuseLastFrameDebug(previous_frame);
+      }
+      AINFO << "Bus-bay reuse previous moving open-space trajectory while "
+               "waiting for optimizer";
+      return Status(ErrorCode::OK,
+                    "Bus-bay waiting for open_space_trajectory_optimizer");
     } else {
       AINFO << "Stop due to computation not finished";
       GenerateStopTrajectory(trajectory_data);

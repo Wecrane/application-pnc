@@ -27,7 +27,7 @@ open_space_trajectory_optimizer_config {
         mumps_pivtol: 1e-06
         ipopt_max_iter: 100
         ipopt_tol: 1e-05
-        ipopt_acceptable_constr_viol_tol: 0.1
+        ipopt_acceptable_constr_viol_tol: 0.02
         ipopt_min_hessian_perturbation: 1e-12
         ipopt_jacobian_regularization_value: 1e-07
         ipopt_print_timing_statistics: "yes"
@@ -35,7 +35,7 @@ open_space_trajectory_optimizer_config {
         ipopt_recalc_y: "yes"
         }
         qp_format: OSQP
-        min_safety_distance: 0.35
+        min_safety_distance: 0.6
         osqp_config {
         alpha: 1.0
         eps_abs: 1.0e-3
@@ -59,12 +59,12 @@ open_space_trajectory_optimizer_config {
         weight_first_order_time: 4.25
         weight_second_order_time: 13.5
         weight_end_state: 1.0
-        weight_slack: 1.0
-        min_safety_distance: 0.35
+        weight_slack: 500.0
+        min_safety_distance: 0.6
         max_speed_forward: 2.0
-        max_speed_reverse: 1.5
+        max_speed_reverse: 0.6
         max_acceleration_forward: 2.0
-        max_acceleration_reverse: 1.0
+        max_acceleration_reverse: 0.3
         min_time_sample_scaling: 0.8
         max_time_sample_scaling: 1.2
         use_fix_time: false
@@ -74,7 +74,7 @@ open_space_trajectory_optimizer_config {
         mumps_pivtol: 1e-06
         ipopt_max_iter: 1000
         ipopt_tol: 0.0001
-        ipopt_acceptable_constr_viol_tol: 0.1
+        ipopt_acceptable_constr_viol_tol: 0.02
         ipopt_min_hessian_perturbation: 1e-12
         ipopt_jacobian_regularization_value: 1e-07
         ipopt_print_timing_statistics: "yes"
@@ -120,9 +120,9 @@ open_space_trajectory_optimizer_config {
         }
         collision_decrease_ratio: 0.0
         max_forward_v: 1.0
-        max_reverse_v: 1.5
+        max_reverse_v: 0.6
         max_forward_acc: 0.5
-        max_reverse_acc: 0.3
+        max_reverse_acc: 0.1
         max_acc_jerk: 0.5
         delta_t: 0.2
     }

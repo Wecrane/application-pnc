@@ -11,4 +11,4 @@ lateral_offset_to_midpoint: 0.5
 longitudinal_offset_to_midpoint: 0.5
 vehicle_box_iou_threshold_to_midpoint:0.5
 linear_velocity_threshold_on_ego: 0.1
-use_gear_shift_trajectory: true
+use_gear_shift_trajectory: false
