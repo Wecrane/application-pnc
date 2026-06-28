@@ -56,6 +56,7 @@ Node3d::Node3d(
     traversed_phi_.push_back(phi);
 
     index_ = ComputeStringIndex(x_grid_, y_grid_, phi_grid_);
+    int_index_ = ComputeIntIndex(x_grid_, y_grid_, phi_grid_);
 }
 
 Node3d::Node3d(
@@ -82,6 +83,7 @@ Node3d::Node3d(
     traversed_phi_ = traversed_phi;
 
     index_ = ComputeStringIndex(x_grid_, y_grid_, phi_grid_);
+    int_index_ = ComputeIntIndex(x_grid_, y_grid_, phi_grid_);
     step_size_ = traversed_x.size();
 }
 
@@ -106,6 +108,7 @@ Node3d::Node3d(
     traversed_phi_.push_back(phi);
 
     index_ = ComputeStringIndex(x_grid_, y_grid_, phi_grid_);
+    int_index_ = ComputeIntIndex(x_grid_, y_grid_, phi_grid_);
 }
 
 Node3d::Node3d(
@@ -132,6 +135,7 @@ Node3d::Node3d(
     traversed_phi_ = traversed_phi;
 
     index_ = ComputeStringIndex(x_grid_, y_grid_, phi_grid_);
+    int_index_ = ComputeIntIndex(x_grid_, y_grid_, phi_grid_);
     step_size_ = traversed_x.size();
 }
 

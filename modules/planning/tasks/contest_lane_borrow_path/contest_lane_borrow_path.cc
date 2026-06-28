@@ -71,7 +71,7 @@ constexpr double kBusBayExitClusterRightLatBuffer = 0.25;
 constexpr double kBusBayExitClusterLeftLatBuffer = 0.35;
 constexpr double kBusBayExitClusterMinAdcLeftGap = 0.5;
 constexpr double kBusBayExitInitialProtectLength = 2.0;
-constexpr double kBusBayExitInitialLateralMargin = 0.12;
+constexpr double kBusBayExitInitialLateralMargin = 0.2;
 
 bool IsBusBayExitContext(
         const std::shared_ptr<DependencyInjector>& injector,
@@ -220,7 +220,7 @@ bool HasCloseConstructionConeAhead(const Frame& frame, const ReferenceLineInfo& 
 }
 
 double ClampLToPathBoundary(double target_l, const PathBoundPoint& point) {
-    constexpr double kBoundaryMargin = 0.25;
+    constexpr double kBoundaryMargin = 0.35;
     double lower = point.l_lower.l + kBoundaryMargin;
     double upper = point.l_upper.l - kBoundaryMargin;
     if (lower > upper) {
@@ -453,8 +453,9 @@ void ContestLaneBorrowPath::UpdateBusBayExitSmallObstacleMemory(ReferenceLineInf
         }
         if (!merged && bus_bay_exit_latched_small_obstacle_boxes_.size() < kBusBayExitMemoryMaxCount) {
             bus_bay_exit_latched_small_obstacle_boxes_.push_back(box);
-            AINFO << "Bus-bay exit obstacle memory latched, obs_id=" << obstacle->Id() << ", xy=(" << box.center().x()
-                  << "," << box.center().y() << "), count=" << bus_bay_exit_latched_small_obstacle_boxes_.size();
+            AINFO << "Bus-bay exit obstacle memory latched, obs_id=" << obstacle->Id() << ", xy=("
+                  << box.center().x() << "," << box.center().y()
+                  << "), count=" << bus_bay_exit_latched_small_obstacle_boxes_.size();
         }
     }
 
@@ -473,11 +474,13 @@ void ContestLaneBorrowPath::UpdateBusBayExitSmallObstacleMemory(ReferenceLineInf
                     }),
             bus_bay_exit_latched_small_obstacle_boxes_.end());
     if (old_size != bus_bay_exit_latched_small_obstacle_boxes_.size()) {
-        AINFO << "Bus-bay exit obstacle memory pruned, count=" << bus_bay_exit_latched_small_obstacle_boxes_.size();
+        AINFO << "Bus-bay exit obstacle memory pruned, count="
+              << bus_bay_exit_latched_small_obstacle_boxes_.size();
     }
 }
 
-int ContestLaneBorrowPath::CountBusBayExitSmallObstacleMemoryAhead(const ReferenceLineInfo& reference_line_info) const {
+int ContestLaneBorrowPath::CountBusBayExitSmallObstacleMemoryAhead(
+        const ReferenceLineInfo& reference_line_info) const {
     int count = 0;
     for (const auto& box : bus_bay_exit_latched_small_obstacle_boxes_) {
         if (BoxCenterInBusBayExitWindow(
@@ -607,8 +610,9 @@ void ContestLaneBorrowPath::ApplyBusBayExitSmallObstacleBlockNudge(std::vector<S
         return a.MinS() < b.MinS();
     });
 
-    AINFO << "Bus-bay exit applies cluster block nudge, count=" << cluster_indices.size() << ", s=[" << block_min_s
-          << "," << block_max_s << "], l=[" << block_min_l << "," << block_max_l << "], adc_l=" << adc_l;
+    AINFO << "Bus-bay exit applies cluster block nudge, count=" << cluster_indices.size()
+          << ", s=[" << block_min_s << "," << block_max_s << "], l=[" << block_min_l << "," << block_max_l
+          << "], adc_l=" << adc_l;
 }
 
 bool ContestLaneBorrowPath::UpdateBusBayExitSmallObstacleCluster(
@@ -748,8 +752,8 @@ apollo::common::Status ContestLaneBorrowPath::Process(Frame* frame, ReferenceLin
     const bool is_contest_construction = IsContestConstructionScenario();
     const bool is_contest_u_turn = IsContestUTurnScenario();
     int bus_bay_exit_small_obstacle_count = 0;
-    const bool is_bus_bay_exit_small_obstacle_cluster
-            = UpdateBusBayExitSmallObstacleCluster(reference_line_info, &bus_bay_exit_small_obstacle_count);
+    const bool is_bus_bay_exit_small_obstacle_cluster =
+            UpdateBusBayExitSmallObstacleCluster(reference_line_info, &bus_bay_exit_small_obstacle_count);
     if (!is_contest_construction && !is_bus_bay_exit_small_obstacle_cluster && construction_zone_.active) {
         // 倒车中不退出施工区模式：倒车是为了绕过锥桶重新找路，
         // 退出模式会导致路径生成逻辑切换，倒车中断。
@@ -816,7 +820,8 @@ apollo::common::Status ContestLaneBorrowPath::Process(Frame* frame, ReferenceLin
         config_.mutable_path_optimizer_config()->set_dddl_weight(500.0);
         config_.mutable_path_optimizer_config()->set_path_reference_l_weight(0.0);
         AINFO << "Bus-bay exit small-obstacle bypass (relaxed smoothness): l="
-              << config_.path_optimizer_config().l_weight() << ", dl=" << config_.path_optimizer_config().dl_weight()
+              << config_.path_optimizer_config().l_weight()
+              << ", dl=" << config_.path_optimizer_config().dl_weight()
               << ", ddl=" << config_.path_optimizer_config().ddl_weight()
               << ", dddl=" << config_.path_optimizer_config().dddl_weight()
               << ", ref_l=" << config_.path_optimizer_config().path_reference_l_weight();
@@ -844,10 +849,12 @@ apollo::common::Status ContestLaneBorrowPath::Process(Frame* frame, ReferenceLin
         if (!reverse_frenet.empty()) {
             const double start_s = std::min(reverse_frenet.front().s(), reverse_frenet.back().s());
             const double end_s = std::max(reverse_frenet.front().s(), reverse_frenet.back().s());
-            reference_line_info->mutable_reference_line()->AddSpeedLimit(start_s, end_s, kReverseSpeedLimit);
+            reference_line_info->mutable_reference_line()->AddSpeedLimit(
+                    start_s, end_s, kReverseSpeedLimit);
             reference_line_info->SetCruiseSpeed(kReverseSpeedLimit);
-            AINFO << "[REVERSE] speed limit " << kReverseSpeedLimit << " m/s for reverse path frenet s=[" << start_s
-                  << ", " << end_s << "], path_len=" << reference_line_info->path_data().discretized_path().Length();
+            AINFO << "[REVERSE] speed limit " << kReverseSpeedLimit
+                  << " m/s for reverse path frenet s=[" << start_s << ", " << end_s
+                  << "], path_len=" << reference_line_info->path_data().discretized_path().Length();
         }
     } else if (AssessPath(&candidate_path_data, reference_line_info->mutable_path_data())) {
         ADEBUG << "contest lane borrow path success";
@@ -872,8 +879,8 @@ apollo::common::Status ContestLaneBorrowPath::Process(Frame* frame, ReferenceLin
 bool ContestLaneBorrowPath::DecidePathBounds(std::vector<PathBoundary>* boundary) {
     const bool is_contest_construction = IsContestConstructionScenario();
     int bus_bay_exit_small_obstacle_count = 0;
-    const bool is_bus_bay_exit_small_obstacle_cluster
-            = UpdateBusBayExitSmallObstacleCluster(reference_line_info_, &bus_bay_exit_small_obstacle_count);
+    const bool is_bus_bay_exit_small_obstacle_cluster =
+            UpdateBusBayExitSmallObstacleCluster(reference_line_info_, &bus_bay_exit_small_obstacle_count);
     // 注意：u_turn_construct_ 不再在此处重置。
     // 其生命周期由 U-turn fast path 管理：
     // - 进入时设为 true
@@ -936,7 +943,7 @@ bool ContestLaneBorrowPath::DecidePathBounds(std::vector<PathBoundary>* boundary
         }
         double temp = FLAGS_obstacle_lat_buffer;
         if (obs_sl_polygons.size() >= 4)
-            FLAGS_obstacle_lat_buffer = 0.2;
+            FLAGS_obstacle_lat_buffer = 0.5;
         FLAGS_obstacle_lon_end_buffer_park = 5.0;
         if (!PathBoundsDeciderUtil::GetBoundaryFromStaticObstacles(
                     *reference_line_info_,
@@ -1224,7 +1231,8 @@ bool ContestLaneBorrowPath::OptimizePath(
         // 施工区场景兜底：防止 config 中 ref_weight 被意外清零导致优化器无参考引导
         if (use_corridor_center && ref_weight < 1.0) {
             ref_weight = 50.0;
-            AINFO << "[CZ] ref_weight was " << config.path_reference_l_weight() << ", clamped to " << ref_weight;
+            AINFO << "[CZ] ref_weight was " << config.path_reference_l_weight()
+                  << ", clamped to " << ref_weight;
         }
         if (use_corridor_center) {
             if (path_boundary.label().find("uturn_wide") != std::string::npos && u_turn_construct_) {
@@ -1642,8 +1650,8 @@ void ContestLaneBorrowPath::ForceConstructionLaneBorrow(int cone_count) {
 }
 
 void ContestLaneBorrowPath::ApplyConstructionZoneSpeedLimitAndLabel(ReferenceLineInfo* reference_line_info) const {
-    const bool is_bus_bay_exit_small_obstacle
-            = IsBusBayExitContext(injector_, reference_line_info) && bus_bay_exit_small_obstacle_hold_frames_ > 0;
+    const bool is_bus_bay_exit_small_obstacle =
+            IsBusBayExitContext(injector_, reference_line_info) && bus_bay_exit_small_obstacle_hold_frames_ > 0;
     const bool reverse_forward_recovery = reverse_forward_recovery_hold_frames_ > 0;
     if ((!IsContestConstructionScenario() && !is_bus_bay_exit_small_obstacle) || !construction_zone_.active
         || reference_line_info == nullptr) {
@@ -1655,9 +1663,10 @@ void ContestLaneBorrowPath::ApplyConstructionZoneSpeedLimitAndLabel(ReferenceLin
         const double adc_back_s = reference_line_info->AdcSlBoundary().start_s();
         reference_line_info->mutable_reference_line()->AddSpeedLimit(
                 adc_back_s, adc_back_s + kRecoveryLimitDistance, kRecoverySpeedLimit);
-        reference_line_info->mutable_path_data()->set_path_label("regular/construct_zone/reverse_forward_recovery");
-        AINFO << "[CZ][REVERSE] forward recovery speed limit " << kRecoverySpeedLimit << " m/s for s=[" << adc_back_s
-              << ", " << (adc_back_s + kRecoveryLimitDistance)
+        reference_line_info->mutable_path_data()->set_path_label(
+                "regular/construct_zone/reverse_forward_recovery");
+        AINFO << "[CZ][REVERSE] forward recovery speed limit " << kRecoverySpeedLimit
+              << " m/s for s=[" << adc_back_s << ", " << (adc_back_s + kRecoveryLimitDistance)
               << "], hold_frames=" << reverse_forward_recovery_hold_frames_;
         return;
     }
@@ -2083,9 +2092,9 @@ void ContestLaneBorrowPath::AddUTurnSpeedLimit(ReferenceLineInfo* reference_line
     constexpr double kUTurnCurveCruiseSpeed = 11.5 / 3.6;
     constexpr double kUTurnCurveSpeedLimit = 13.0 / 3.6;
     constexpr double kReleaseMergeSpeed = 60.0 / 3.6;
-    constexpr double kTightKappa = 0.035;       // 紧弯曲率阈值
-    constexpr double kCurveRangeKappa = 0.015;  // U 弯限速区间识别阈值
-    constexpr double kCurveLookAhead = 28.0;    // 紧弯判定前探距离
+    constexpr double kTightKappa = 0.035;              // 紧弯曲率阈值
+    constexpr double kCurveRangeKappa = 0.015;         // U 弯限速区间识别阈值
+    constexpr double kCurveLookAhead = 28.0;           // 紧弯判定前探距离
     constexpr double kCurveRangeLookBack = 12.0;
     constexpr double kCurveRangeLookAhead = 190.0;
     constexpr double kCurveEntryBuffer = 4.0;
@@ -2582,9 +2591,9 @@ bool ContestLaneBorrowPath::DecideConstructZoneBoundary(std::vector<PathBoundary
 
     // 2. Build a bidirectional boundary spanning all available lanes.
     GetConstructZoneBoundary(&path_bound);
-    path_bound.set_label(
-            reverse_forward_recovery_hold_frames_ > 0 ? "regular/construct_zone/reverse_forward_recovery"
-                                                      : "regular/construct_zone");
+    path_bound.set_label(reverse_forward_recovery_hold_frames_ > 0
+                                 ? "regular/construct_zone/reverse_forward_recovery"
+                                 : "regular/construct_zone");
 
     // 3. Save a temp copy for tail padding.
     PathBound temp_path_bound = path_bound;
@@ -2634,12 +2643,11 @@ bool ContestLaneBorrowPath::DecideConstructZoneBoundary(std::vector<PathBoundary
             } else if (is_static_construction_block(obs, sl)) {
                 obs_sl_polygons.emplace_back(sl, obs->Id());
                 const double block_center_l = 0.5 * (sl.start_l() + sl.end_l());
-                const double road_center_l
-                        = 0.5 * (construction_zone_.max_left_bound + construction_zone_.max_right_bound);
+                const double road_center_l = 0.5 * (construction_zone_.max_left_bound + construction_zone_.max_right_bound);
                 obs_sl_polygons.back().SetNudgeInfo(
                         block_center_l <= road_center_l ? SLPolygon::LEFT_NUDGE : SLPolygon::RIGHT_NUDGE);
-                AINFO << "[CONSTRUCT_ZONE] include static block obstacle, id=" << obs->Id() << ", s=[" << sl.start_s()
-                      << ", " << sl.end_s() << "]"
+                AINFO << "[CONSTRUCT_ZONE] include static block obstacle, id=" << obs->Id()
+                      << ", s=[" << sl.start_s() << ", " << sl.end_s() << "]"
                       << ", l=[" << sl.start_l() << ", " << sl.end_l() << "]"
                       << ", nudge=" << obs_sl_polygons.back().NudgeInfo();
             }
@@ -2655,8 +2663,8 @@ bool ContestLaneBorrowPath::DecideConstructZoneBoundary(std::vector<PathBoundary
             return a.MinS() < b.MinS();
         });
     }
-    ADEBUG << "[CONSTRUCT_ZONE] collected " << cone_sl_polygons.size() << " cones and " << obs_sl_polygons.size()
-           << " static obstacles, mx_left=" << construction_zone_.max_left_bound
+    ADEBUG << "[CONSTRUCT_ZONE] collected " << cone_sl_polygons.size()
+           << " cones and " << obs_sl_polygons.size() << " static obstacles, mx_left=" << construction_zone_.max_left_bound
            << " mx_right=" << construction_zone_.max_right_bound;
 
     // 5. 墙追踪分类锥桶 + 分配nudge方向(在函数内部完成)
@@ -2677,7 +2685,7 @@ bool ContestLaneBorrowPath::DecideConstructZoneBoundary(std::vector<PathBoundary
     {
         double temp_lat = FLAGS_obstacle_lat_buffer;
         if (obs_sl_polygons.size() >= 4)
-            FLAGS_obstacle_lat_buffer = 0.5;
+            FLAGS_obstacle_lat_buffer = 0.7;
         FLAGS_obstacle_lon_end_buffer_park = 0.1;
         PathBoundsDeciderUtil::GetBoundaryFromStaticObstacles(
                 *reference_line_info_,
@@ -2692,7 +2700,8 @@ bool ContestLaneBorrowPath::DecideConstructZoneBoundary(std::vector<PathBoundary
         KeepInitialBoundaryAroundAdc(
                 init_sl_state_, kBusBayExitInitialProtectLength, kBusBayExitInitialLateralMargin, &path_bound);
         AINFO << "Bus-bay exit protects initial construct-zone boundary around adc_l=" << init_sl_state_.second[0]
-              << ", length=" << kBusBayExitInitialProtectLength << ", margin=" << kBusBayExitInitialLateralMargin
+              << ", length=" << kBusBayExitInitialProtectLength
+              << ", margin=" << kBusBayExitInitialLateralMargin
               << ", hold_frames=" << bus_bay_exit_small_obstacle_hold_frames_;
     }
 

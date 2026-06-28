@@ -50,9 +50,20 @@ bool GridSearch::CheckConstraints(std::shared_ptr<Node2d> node) {
     if (obstacles_linesegments_vec_.empty()) {
         return true;
     }
+    // P0-1: O(1) occupancy grid lookup (fast path)
+    if (!occupancy_grid_cache_.empty()) {
+        int gx = static_cast<int>(node_grid_x * xy_grid_resolution_ / occ_grid_res_);
+        int gy = static_cast<int>(node_grid_y * xy_grid_resolution_ / occ_grid_res_);
+        if (gx >= 0 && gx < occ_grid_w_ && gy >= 0 && gy < occ_grid_h_) {
+            return occupancy_grid_cache_[gy * occ_grid_w_ + gx] == 0;
+        }
+    }
+    // Fallback: original per-segment distance check (convert grid coords to world)
+    double wx = node->GetGridX() * xy_grid_resolution_ + XYbounds_[0];
+    double wy = node->GetGridY() * xy_grid_resolution_ + XYbounds_[2];
     for (const auto& obstacle_linesegments : obstacles_linesegments_vec_) {
         for (const common::math::LineSegment2d& linesegment : obstacle_linesegments) {
-            if (linesegment.DistanceTo({node->GetGridX(), node->GetGridY()}) < node_radius_) {
+            if (linesegment.DistanceTo({wx, wy}) < node_radius_) {
                 return false;
             }
         }
@@ -70,7 +81,7 @@ void GridSearch::AddSoftCost(const std::vector<std::vector<common::math::LineSeg
             Vec2d unit = linesegment.unit_direction();
             Vec2d node = linesegment.start();
             for (double i = 0; i < max; i++) {
-                std::unordered_set<std::string> close_set;
+                std::unordered_set<uint64_t> close_set;
                 node += unit * node_radius_;
                 int grid_x = static_cast<int>((node.x() - XYbounds_[0]) / xy_grid_resolution_);
                 int grid_y = static_cast<int>((node.y() - XYbounds_[2]) / xy_grid_resolution_);
@@ -81,7 +92,7 @@ void GridSearch::AddSoftCost(const std::vector<std::vector<common::math::LineSeg
             int grid_x = static_cast<int>((node.x() - XYbounds_[0]) / xy_grid_resolution_);
             int grid_y = static_cast<int>((node.y() - XYbounds_[2]) / xy_grid_resolution_);
             Vec2d origin_index = {grid_x, grid_y};
-            std::unordered_set<std::string> close_set;
+            std::unordered_set<uint64_t> close_set;
             ExtendNode(grid_x, grid_y, origin_index, close_set);
         }
     }
@@ -91,7 +102,7 @@ void GridSearch::ExtendNode(
         const int& x,
         const int& y,
         Vec2d origin_index,
-        std::unordered_set<std::string>& close_set) {
+        std::unordered_set<uint64_t>& close_set) {
     Vec2d node = {x, y};
     double min_dist = (node - origin_index).Length() * xy_grid_resolution_;
     // AINFO << "x: " << x << " y: " << y << "origin x: "
@@ -102,7 +113,7 @@ void GridSearch::ExtendNode(
     }
     // AINFO << "debug dist: " << min_dist;
 
-    std::string index = absl::StrCat(x, "_", y);
+    uint64_t index = Node2d::ComputeIntIndex(x, y);
     if (close_set.find(index) == close_set.end() && dp_map_.find(index) != dp_map_.end()
         && dp_map_[index]->GetDistanceToObstacle() > min_dist) {
         dp_map_[index]->SetDistanceToObstacle(min_dist);
@@ -160,21 +171,21 @@ bool GridSearch::GenerateAStarPath(
         const std::vector<double>& XYbounds,
         const std::vector<std::vector<common::math::LineSegment2d>>& obstacles_linesegments_vec,
         GridAStartResult* result) {
-    std::priority_queue<std::pair<std::string, double>, std::vector<std::pair<std::string, double>>, cmp> open_pq;
-    std::unordered_map<std::string, std::shared_ptr<Node2d>> open_set;
-    std::unordered_map<std::string, std::shared_ptr<Node2d>> close_set;
+    std::priority_queue<std::pair<uint64_t, double>, std::vector<std::pair<uint64_t, double>>, cmp> open_pq;
+    std::unordered_map<uint64_t, std::shared_ptr<Node2d>> open_set;
+    std::unordered_map<uint64_t, std::shared_ptr<Node2d>> close_set;
     XYbounds_ = XYbounds;
     std::shared_ptr<Node2d> start_node = std::make_shared<Node2d>(sx, sy, xy_grid_resolution_, XYbounds_);
     std::shared_ptr<Node2d> end_node = std::make_shared<Node2d>(ex, ey, xy_grid_resolution_, XYbounds_);
     std::shared_ptr<Node2d> final_node_ = nullptr;
     obstacles_linesegments_vec_ = obstacles_linesegments_vec;
-    open_set.emplace(start_node->GetIndex(), start_node);
-    open_pq.emplace(start_node->GetIndex(), start_node->GetCost());
+    open_set.emplace(start_node->GetIntIndex(), start_node);
+    open_pq.emplace(start_node->GetIntIndex(), start_node->GetCost());
 
     // Grid a star begins
     size_t explored_node_num = 0;
     while (!open_pq.empty()) {
-        std::string current_id = open_pq.top().first;
+        uint64_t current_id = open_pq.top().first;
         open_pq.pop();
         std::shared_ptr<Node2d> current_node = open_set[current_id];
         // Check destination
@@ -182,22 +193,22 @@ bool GridSearch::GenerateAStarPath(
             final_node_ = current_node;
             break;
         }
-        close_set.emplace(current_node->GetIndex(), current_node);
+        close_set.emplace(current_node->GetIntIndex(), current_node);
         std::vector<std::shared_ptr<Node2d>> next_nodes = std::move(GenerateNextNodes(current_node));
         for (auto& next_node : next_nodes) {
             if (!CheckConstraints(next_node)) {
                 continue;
             }
-            if (close_set.find(next_node->GetIndex()) != close_set.end()) {
+            if (close_set.find(next_node->GetIntIndex()) != close_set.end()) {
                 continue;
             }
-            if (open_set.find(next_node->GetIndex()) == open_set.end()) {
+            if (open_set.find(next_node->GetIntIndex()) == open_set.end()) {
                 ++explored_node_num;
                 next_node->SetHeuristic(EuclidDistance(
                         next_node->GetGridX(), next_node->GetGridY(), end_node->GetGridX(), end_node->GetGridY()));
                 next_node->SetPreNode(current_node);
-                open_set.emplace(next_node->GetIndex(), next_node);
-                open_pq.emplace(next_node->GetIndex(), next_node->GetCost());
+                open_set.emplace(next_node->GetIntIndex(), next_node);
+                open_pq.emplace(next_node->GetIntIndex(), next_node->GetCost());
             }
         }
     }
@@ -217,8 +228,8 @@ bool GridSearch::GenerateDpMap(
         const std::vector<double>& XYbounds,
         const std::vector<std::vector<common::math::LineSegment2d>>& obstacles_linesegments_vec,
         const std::vector<std::vector<common::math::LineSegment2d>>& soft_boundary_linesegments_vec) {
-    std::priority_queue<std::pair<std::string, double>, std::vector<std::pair<std::string, double>>, cmp> open_pq;
-    std::unordered_map<std::string, std::shared_ptr<Node2d>> open_set;
+    std::priority_queue<std::pair<uint64_t, double>, std::vector<std::pair<uint64_t, double>>, cmp> open_pq;
+    std::unordered_map<uint64_t, std::shared_ptr<Node2d>> open_set;
     dp_map_ = decltype(dp_map_)();
     XYbounds_ = XYbounds;
     // XYbounds with xmin, xmax, ymin, ymax
@@ -226,33 +237,33 @@ bool GridSearch::GenerateDpMap(
     max_grid_x_ = std::round((XYbounds_[1] - XYbounds_[0]) / xy_grid_resolution_);
     std::shared_ptr<Node2d> end_node = std::make_shared<Node2d>(ex, ey, xy_grid_resolution_, XYbounds_);
     obstacles_linesegments_vec_ = obstacles_linesegments_vec;
-    open_set.emplace(end_node->GetIndex(), end_node);
-    open_pq.emplace(end_node->GetIndex(), end_node->GetCost());
+    open_set.emplace(end_node->GetIntIndex(), end_node);
+    open_pq.emplace(end_node->GetIntIndex(), end_node->GetCost());
 
     // Grid a star begins
     size_t explored_node_num = 0;
     while (!open_pq.empty()) {
-        const std::string current_id = open_pq.top().first;
+        const uint64_t current_id = open_pq.top().first;
         open_pq.pop();
         std::shared_ptr<Node2d> current_node = open_set[current_id];
-        dp_map_.emplace(current_node->GetIndex(), current_node);
+        dp_map_.emplace(current_node->GetIntIndex(), current_node);
         std::vector<std::shared_ptr<Node2d>> next_nodes = std::move(GenerateNextNodes(current_node));
         for (auto& next_node : next_nodes) {
             if (!CheckConstraints(next_node)) {
                 continue;
             }
-            if (dp_map_.find(next_node->GetIndex()) != dp_map_.end()) {
+            if (dp_map_.find(next_node->GetIntIndex()) != dp_map_.end()) {
                 continue;
             }
-            if (open_set.find(next_node->GetIndex()) == open_set.end()) {
+            if (open_set.find(next_node->GetIntIndex()) == open_set.end()) {
                 ++explored_node_num;
                 next_node->SetPreNode(current_node);
-                open_set.emplace(next_node->GetIndex(), next_node);
-                open_pq.emplace(next_node->GetIndex(), next_node->GetCost());
+                open_set.emplace(next_node->GetIntIndex(), next_node);
+                open_pq.emplace(next_node->GetIntIndex(), next_node->GetCost());
             } else {
-                if (open_set[next_node->GetIndex()]->GetCost() > next_node->GetCost()) {
-                    open_set[next_node->GetIndex()]->SetCost(next_node->GetCost());
-                    open_set[next_node->GetIndex()]->SetPreNode(current_node);
+                if (open_set[next_node->GetIntIndex()]->GetCost() > next_node->GetCost()) {
+                    open_set[next_node->GetIntIndex()]->SetCost(next_node->GetCost());
+                    open_set[next_node->GetIntIndex()]->SetPreNode(current_node);
                 }
             }
         }
@@ -265,7 +276,9 @@ bool GridSearch::GenerateDpMap(
 }
 
 double GridSearch::CheckDpMap(const double sx, const double sy) {
-    std::string index = Node2d::CalcIndex(sx, sy, xy_grid_resolution_, XYbounds_);
+    int grid_x = static_cast<int>((sx - XYbounds_[0]) / xy_grid_resolution_);
+    int grid_y = static_cast<int>((sy - XYbounds_[2]) / xy_grid_resolution_);
+    uint64_t index = Node2d::ComputeIntIndex(grid_x, grid_y);
     if (dp_map_.find(index) != dp_map_.end()) {
         return dp_map_[index]->GetCost() * xy_grid_resolution_;
     } else {
@@ -274,7 +287,9 @@ double GridSearch::CheckDpMap(const double sx, const double sy) {
 }
 
 double GridSearch::GetObstacleDistance(const double x, const double y) {
-    std::string index = Node2d::CalcIndex(x, y, xy_grid_resolution_, XYbounds_);
+    int grid_x = static_cast<int>((x - XYbounds_[0]) / xy_grid_resolution_);
+    int grid_y = static_cast<int>((y - XYbounds_[2]) / xy_grid_resolution_);
+    uint64_t index = Node2d::ComputeIntIndex(grid_x, grid_y);
     if (dp_map_.find(index) != dp_map_.end()) {
         return dp_map_[index]->GetDistanceToObstacle();
     } else {

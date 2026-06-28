@@ -112,6 +112,10 @@ private:
     double max_reverse_acc_ = 0.0;
     double max_acc_jerk_ = 0.0;
     double arc_length_ = 0.0;
+    // P2-1: Precomputed trigonometric lookup tables
+    std::vector<double> tan_steer_;
+    std::vector<double> cos_dphi_;
+    std::vector<double> sin_dphi_;
     std::vector<double> XYbounds_;
     std::shared_ptr<Node3d> start_node_;
     std::shared_ptr<Node3d> end_node_;
@@ -120,20 +124,29 @@ private:
 
     struct cmp {
         bool operator()(
-                const std::pair<std::shared_ptr<Node3d>, double>& left,
-                const std::pair<std::shared_ptr<Node3d>, double>& right) const {
+                const std::pair<uint64_t, double>& left,
+                const std::pair<uint64_t, double>& right) const {
             return left.second >= right.second;
         }
     };
     std::priority_queue<
-            std::pair<std::shared_ptr<Node3d>, double>,
-            std::vector<std::pair<std::shared_ptr<Node3d>, double>>,
+            std::pair<uint64_t, double>,
+            std::vector<std::pair<uint64_t, double>>,
             cmp>
             open_pq_;
-    std::unordered_set<std::string> open_set_;
-    std::unordered_set<std::string> close_set_;
+    std::unordered_map<uint64_t, std::shared_ptr<Node3d>> node_map_;
+    std::unordered_set<uint64_t> open_set_;
+    std::unordered_set<uint64_t> close_set_;
     std::unique_ptr<ReedShepp> reed_shepp_generator_;
     std::unique_ptr<GridSearch> grid_a_star_heuristic_generator_;
+
+    // Occupancy grid for fast collision lookup (P0-1 optimization)
+    std::vector<uint8_t> occupancy_grid_;
+    int occ_grid_w_ = 0;
+    int occ_grid_h_ = 0;
+    double occ_grid_res_ = 0.2;
+    void BuildOccupancyGrid(
+            const std::vector<std::vector<common::math::Vec2d>>& obstacles_vertices_vec);
 
     // park generic
 public:

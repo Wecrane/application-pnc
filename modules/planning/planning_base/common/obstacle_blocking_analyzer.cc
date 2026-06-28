@@ -275,6 +275,12 @@ bool IsBlockingObstacleFarFromIntersection(
     }
 
     auto distance = overlap.second.start_s - blocking_obstacle_s;
+    // 若信号灯已被通过（在障碍物后方），不再阻塞借道
+    // 右转等场景中信号灯 overlap 的 start_s 远小于障碍物 s，
+    // distance 为负值时会错误地阻止 lane borrow
+    if (distance < 0.0) {
+      continue;
+    }
     if (overlap.first == ReferenceLineInfo::SIGNAL ||
         overlap.first == ReferenceLineInfo::STOP_SIGN) {
       if (distance < kIntersectionClearanceDist) {
