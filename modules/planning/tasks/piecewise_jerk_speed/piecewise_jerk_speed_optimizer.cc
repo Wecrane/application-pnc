@@ -230,7 +230,7 @@ Status PiecewiseJerkSpeedOptimizer::Process(
             x_ref[i] = std::min(total_length, init_s[1] * curr_t
                                                 + 0.5 * kReverseForwardRecoveryAccelRef * curr_t * curr_t);
         } else if (construction_zone_forward_launch) {
-            constexpr double kConstructionZoneForwardAccelRef = 2.9;
+            constexpr double kConstructionZoneForwardAccelRef = 2.75;
             dx_ref_weight[i] = std::max(dx_ref_weight[i], 80.0);
             dx_ref[i] = v_upper_bound;
             x_ref[i] = std::min(total_length, init_s[1] * curr_t
@@ -283,7 +283,7 @@ Status PiecewiseJerkSpeedOptimizer::Process(
     piecewise_jerk_problem.set_x_bounds(0.0, total_length);
     constexpr double kForwardEvalMaxAcc = 2.8;
     constexpr double kConstructionZoneForwardMaxAcc = 3.0;
-    constexpr double kReverseLaunchMaxAcc = 2.6;
+    constexpr double kReverseLaunchMaxAcc = 2.3;
     constexpr double kReverseForwardRecoveryMaxAcc = 1.6;
     constexpr double kReverseLaunchMaxJerk = 3.5;
     const double launch_max_acc = reverse_speed_profile ? kReverseLaunchMaxAcc
