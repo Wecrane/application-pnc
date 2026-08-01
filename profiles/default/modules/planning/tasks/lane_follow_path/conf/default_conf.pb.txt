@@ -1,0 +1,16 @@
+# lane_follow_path 路径优化配置（default profile 覆盖层）
+# 赛题五(停止标志)右转弯切内弯修复：
+#   dddl_weight 50000→10000(proto默认)。50000 偏重平滑，在急弯(半径8.3m)处
+#   强制低横向jerk → 路径提前拉直切内弯(偏内0.93m) → 云端碰路肩停仿真。
+#   调回 10000 让路径更贴合车道中心，不再切内弯。
+is_extend_lane_bounds_to_include_adc: true
+extend_buffer: 0.2
+path_optimizer_config {
+  l_weight: 1.0
+  dl_weight: 20.0
+  ddl_weight: 1000.0
+  # dddl_weight: 50000.0  → 10000.0 (proto默认)
+  dddl_weight: 10000.0
+  lateral_derivative_bound_default: 2.0
+  path_reference_l_weight:100
+}
