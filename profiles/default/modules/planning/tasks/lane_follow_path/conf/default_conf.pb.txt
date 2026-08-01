@@ -1,17 +1,16 @@
 # lane_follow_path 路径优化配置（default profile 覆盖层）
-# 停止标志右转——最优组合修正（2026-08-01 回放实测）：
-#   1834回放: l_ref=10000 反而右转偏移 1.0m(间隙仅0.245m,危险)!
-#   原因: l_ref(贴参考线权重)高 → 路径贴参考线, 而参考线本身在急弯
-#   切内弯 → 路径跟着切内弯。
-#   本地验证最优: l_ref=100(默认, 不贴参考线) + dddl=10000(允许急转)
-#   → 右转偏移 0.75m, 间隙 0.55m (1559 回放 COMPLETE@58.6s)
+# 停止标志右转——进一步贴线（2026-08-01 回放实测）：
+#   1847回放: dddl=10000 规划弯中偏移仍 0.77m + 跟踪0.19m = 车辆实际 0.96m
+#   (间隙仅0.285m, 用户观察'非常切内弯')
+#   进一步: dddl=1000(更允许急转) + l_weight=2.0(更贴车道中心)
+#   预期: 规划偏移 <0.6m, 实际 <0.8m, 间隙 >0.45m
 is_extend_lane_bounds_to_include_adc: true
 extend_buffer: 0.2
 path_optimizer_config {
-  l_weight: 1.0
+  l_weight: 2.0
   dl_weight: 20.0
   ddl_weight: 1000.0
-  dddl_weight: 10000.0
+  dddl_weight: 1000.0
   lateral_derivative_bound_default: 2.0
   path_reference_l_weight: 100.0
 }
