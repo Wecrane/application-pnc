@@ -15,11 +15,18 @@ import sys
 import os
 import json
 
-# 容器内 locale 可能为 ASCII，强制 UTF-8 输出，避免中文报错
-for _stream in (sys.stdout, sys.stderr):
+# Container locale may be ASCII; force UTF-8 output to avoid Unicode errors.
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+except (AttributeError, ValueError):
     try:
-        _stream.reconfigure(encoding="utf-8", errors="replace")
-    except (AttributeError, ValueError):
+        import io
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8",
+                                      errors="replace")
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8",
+                                      errors="replace")
+    except (AttributeError, ValueError, io.UnsupportedOperation):
         pass
 
 # ---------------------------------------------------------------------------
@@ -81,7 +88,7 @@ def load_map(base_map_path):
             m.ParseFromString(f.read())
         return m, "python-map_pb2"
     except Exception as e:
-        print(f"[warn] python map_pb2 导入失败: {e}", file=sys.stderr)
+        print(f"[warn] python map_pb2 import failed: {e}", file=sys.stderr)
 
     # 方式 B：protoc --decode_raw 兜底（输出原始字段，人工对照 proto 字段号）
     import subprocess
@@ -94,7 +101,7 @@ def load_map(base_map_path):
         if raw.returncode == 0:
             return raw.stdout.decode("utf-8", errors="replace"), "protoc-decode_raw"
     except Exception as e:
-        print(f"[warn] protoc --decode_raw 失败: {e}", file=sys.stderr)
+        print(f"[warn] protoc --decode_raw failed: {e}", file=sys.stderr)
 
     return None, "failed"
 
@@ -153,39 +160,41 @@ def main():
     want_json = "--json" in sys.argv
 
     if not os.path.exists(base_map):
-        print(f"错误：找不到地图文件 {base_map}", file=sys.stderr)
-        print("用法：python3 scripts/parse_speed_bump.py [base_map.bin路径] [--json]")
+        print(f"ERROR: map file not found: {base_map}", file=sys.stderr)
+        print("Usage: python3 scripts/parse_speed_bump.py [base_map.bin path] [--json]")
         sys.exit(1)
 
     m, mode = load_map(base_map)
     if m is None:
-        print("解析失败：python map_pb2 和 protoc 均不可用。", file=sys.stderr)
+        print("Parse failed: neither python map_pb2 nor protoc is available.",
+              file=sys.stderr)
         sys.exit(2)
 
-    print(f"=== 解析方式: {mode} ===")
-    print(f"地图: {base_map}")
+    print(f"=== Parse mode: {mode} ===")
+    print(f"Map: {base_map}")
 
     if mode == "python-map_pb2":
         result = analyze_python(m)
 
-        print("\n--- 地图中的减速带 ---")
+        print("\n--- Speed bumps in map ---")
         for sb in result["map_speed_bumps"]:
             print(f"  {sb['id']}: overlaps={sb['overlaps']}")
 
-        print("\n--- 减速带关联的车道（含限速）---")
+        print("\n--- Lanes overlapped with speed bumps (with speed limit) ---")
         for lid, info in sorted(result["speed_bump_lanes"].items()):
             print(f"  {lid}: speed_limit={info['speed_limit']} m/s "
-                  f"({info['speed_limit']*3.6:.1f} km/h), 减速带={info['speed_bumps']}")
+                  f"({info['speed_limit']*3.6:.1f} km/h), "
+                  f"speed_bumps={info['speed_bumps']}")
 
-        print("\n--- 减速带车道限速分布 ---")
+        print("\n--- Speed bump lane speed limit distribution ---")
         for sl, cnt in sorted(result["speed_bump_lane_speed_limit_distribution"].items()):
-            print(f"  {sl} m/s ({sl*3.6:.1f} km/h): {cnt} 条车道")
+            print(f"  {sl} m/s ({sl*3.6:.1f} km/h): {cnt} lanes")
 
-        print("\n--- 全地图车道限速分布 ---")
+        print("\n--- All lane speed limit distribution ---")
         for sl, cnt in sorted(result["all_lane_speed_limit_distribution"].items()):
-            print(f"  {sl} m/s ({sl*3.6:.1f} km/h): {cnt} 条车道")
+            print(f"  {sl} m/s ({sl*3.6:.1f} km/h): {cnt} lanes")
 
-        print("\n--- 减速带车道是否在主路线（有前后继连接）---")
+        print("\n--- Are speed bump lanes on main route (has pred/succ) ---")
         connected = 0
         for lid, info in sorted(result["speed_bump_lanes"].items()):
             lane = next((l for l in m.lane if l.id.id == lid), None)
@@ -196,19 +205,20 @@ def main():
             if npre > 0 and nsucc > 0:
                 connected += 1
             else:
-                print(f"  ⚠️ {lid}: 前后继 {npre}/{nsucc}（可能不在主路线）")
-        print(f"  减速带车道总数: {len(result['speed_bump_lanes'])}, 主路线连接数: {connected}")
+                print(f"  ! {lid}: pred/succ {npre}/{nsucc} (maybe not on main route)")
+        print(f"  Total speed bump lanes: {len(result['speed_bump_lanes'])}, "
+              f"main-route connected: {connected}")
 
         if want_json:
             out = "output/speed_bump_analysis.json"
             os.makedirs(os.path.dirname(out), exist_ok=True)
             with open(out, "w") as f:
                 json.dump(result, f, ensure_ascii=False, indent=1)
-            print(f"\nJSON 已写入: {out}")
+            print(f"\nJSON written to: {out}")
     else:
-        # protoc --decode_raw 兜底：直接打印前 3000 行
+        # protoc --decode_raw fallback: print first 3000 lines of raw output
         lines = m.splitlines()
-        print(f"共 {len(lines)} 行原始输出，显示前 3000 行：")
+        print(f"Total {len(lines)} lines of raw output, showing first 3000:")
         print("\n".join(lines[:3000]))
 
 
