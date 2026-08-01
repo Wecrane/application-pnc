@@ -159,6 +159,19 @@ bool PathDecider::MakeStaticObstacleDecision(
             path_decision->AddLateralDecision("PathDecider/road_furniture", obstacle->Id(), object_decision);
             continue;
         }
+        // mayaochang add10: a PEDESTRIAN (incl. stationary) is handled entirely
+        // by speed_decider's HandlePedestrianStop (fixed fence). PathDecider
+        // computes its STOP point from PerceptionSLBoundary().start_s();
+        // perception SL noise can throw that point far BEHIND the pedestrian
+        // (2026 replay: stop_point at 423501 vs pedestrian at 423446), so the
+        // ego never stops and drives straight through the pedestrian. Its
+        // distance_s also wins MergeLongitudinalDecision over the fixed fence.
+        // Skip pedestrians here -> no wrong STOP; st_boundary_mapper still
+        // builds an ST boundary via overlap detection; speed_decider takes
+        // over with the fixed fence.
+        if (obstacle->Perception().type() == apollo::perception::PerceptionObstacle::PEDESTRIAN) {
+            continue;
+        }
         // - skip decision making for obstacles with IGNORE/STOP decisions already.
         if (obstacle->HasLongitudinalDecision() && obstacle->LongitudinalDecision().has_ignore()
             && obstacle->HasLateralDecision() && obstacle->LateralDecision().has_ignore()) {

@@ -702,9 +702,17 @@ void SpeedDecider::HandlePedestrianStop(Obstacle* obstacle) const {
         double fence_s;
         auto it = ped_fixed_fence_s_.find(id);
         if (it == ped_fixed_fence_s_.end()) {
-            // mayaochang add9: use the perception SL s (stable even when the
-            // ST boundary is empty) instead of boundary.min_s().
-            fence_s = obs_s + stop_dist;
+            // mayaochang add10: prefer the ST boundary s (reliable, relative to
+            // the path start) for the fence; fall back to the perception SL s
+            // only when the ST boundary is empty (add9 case). The perception SL
+            // s can be noisy and land far behind the pedestrian (2026 replay:
+            // 423507 vs pedestrian at 423446) -> fence in the wrong place and
+            // the ego drives through the pedestrian.
+            if (!boundary.IsEmpty()) {
+                fence_s = adc_sl_boundary_.end_s() + boundary.min_s() + stop_dist;
+            } else {
+                fence_s = obs_s + stop_dist;
+            }
             ped_fixed_fence_s_[id] = fence_s;
             ADEBUG << "ped_fixed: record fence_s=" << fence_s << " id=" << id;
         } else {
