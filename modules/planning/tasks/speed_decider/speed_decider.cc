@@ -283,15 +283,56 @@ Status SpeedDecider::MakeObjectDecision(
           // distance (pedestrian_stop_distance, default 1.75m) so that the
           // crosswalk rule's 1.5~2.0m stop is NOT overridden by the 6m
           // min_stop_distance_obstacle fence.
-          double stop_dist = -FLAGS_min_stop_distance_obstacle;
-          if (obstacle->Perception().type() == PerceptionObstacle::PEDESTRIAN) {
-            stop_dist = -FLAGS_pedestrian_stop_distance;
-          }
-          ObjectDecisionType stop_decision;
-          if (CreateStopDecision(*mutable_obstacle, &stop_decision,
-                                 stop_dist)) {
-            mutable_obstacle->AddLongitudinalDecision("dp_st_graph",
-                                                      stop_decision);
+          // mayaochang add2: if the "static" obstacle is actually a vehicle
+          // already moving (e.g. the leading car just started accelerating in
+          // scenario 4), do NOT build a STOP on its stale position - fall
+          // through to FOLLOW/YIELD so the ego recovers quickly within the
+          // tight 60s simulation budget.
+          const bool is_pedestrian =
+              obstacle->Perception().type() == PerceptionObstacle::PEDESTRIAN;
+          const double obs_speed = std::hypot(
+              obstacle->Perception().velocity().x(),
+              obstacle->Perception().velocity().y());
+          static constexpr double kMovingVehicleSpeedThreshold = 0.5;
+          const bool moving_vehicle =
+              !is_pedestrian &&
+              obstacle->Perception().type() == PerceptionObstacle::VEHICLE &&
+              obs_speed > kMovingVehicleSpeedThreshold;
+          if (moving_vehicle) {
+            if (CheckIsFollow(*obstacle, boundary)) {
+              if (IsFollowTooClose(*mutable_obstacle)) {
+                ObjectDecisionType stop_decision;
+                if (CreateStopDecision(*mutable_obstacle, &stop_decision,
+                                       -FLAGS_min_stop_distance_obstacle)) {
+                  mutable_obstacle->AddLongitudinalDecision(
+                      "dp_st_graph/too_close", stop_decision);
+                }
+              } else {
+                ObjectDecisionType follow_decision;
+                if (CreateFollowDecision(*mutable_obstacle,
+                                         &follow_decision)) {
+                  mutable_obstacle->AddLongitudinalDecision("dp_st_graph",
+                                                            follow_decision);
+                }
+              }
+            } else {
+              ObjectDecisionType yield_decision;
+              if (CreateYieldDecision(*mutable_obstacle, &yield_decision)) {
+                mutable_obstacle->AddLongitudinalDecision("dp_st_graph",
+                                                          yield_decision);
+              }
+            }
+          } else {
+            double stop_dist = -FLAGS_min_stop_distance_obstacle;
+            if (is_pedestrian) {
+              stop_dist = -FLAGS_pedestrian_stop_distance;
+            }
+            ObjectDecisionType stop_decision;
+            if (CreateStopDecision(*mutable_obstacle, &stop_decision,
+                                   stop_dist)) {
+              mutable_obstacle->AddLongitudinalDecision("dp_st_graph",
+                                                        stop_decision);
+            }
           }
         } else if (CheckIsFollow(*obstacle, boundary)) {
           // stop for low_speed decelerating
