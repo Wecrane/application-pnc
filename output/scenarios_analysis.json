@@ -1,0 +1,435 @@
+[
+ {
+  "id": "67d938f854cb7763ce6083c2",
+  "name": "xh_2026_gsxx_停车标志",
+  "mapId": "67ee4d4c1abf4bf0a1d417ef",
+  "map": "xh_2025_contest",
+  "start": [
+   424425.7518514601,
+   4437773.893630951
+  ],
+  "end": [
+   424292.1543070187,
+   4437632.007482182
+  ],
+  "start_lane": "Lane_842",
+  "end_lane": "Lane_697",
+  "_debug": {
+   "start_id": "Lane_842",
+   "end_id": "Lane_697",
+   "n_parent": 7,
+   "route_type": "list",
+   "route_len": 4,
+   "route_head": [
+    "Lane_842",
+    "Lane_817",
+    "Lane_1353",
+    "Lane_697"
+   ]
+  },
+  "route_lanes": [
+   "Lane_842",
+   "Lane_817",
+   "Lane_1353",
+   "Lane_697"
+  ],
+  "route_elements": {
+   "SpeedBump": [],
+   "TrafficLight": [],
+   "Crosswalk": [
+    "Crosswalk_30"
+   ],
+   "StopSign": [
+    "StopSign_1"
+   ],
+   "Junction": [
+    "Junction_12"
+   ],
+   "YieldSign": [],
+   "ParkingSpace": []
+  },
+  "map_element_counts": {
+   "SpeedBump": 4,
+   "TrafficLight": 25,
+   "Crosswalk": 38,
+   "StopSign": 1,
+   "Junction": 11,
+   "YieldSign": 0,
+   "ParkingSpace": 0
+  }
+ },
+ {
+  "id": "67e4bc95cf6d730104b25ec1",
+  "name": "xh_2026_gsxx_人行道场景",
+  "mapId": "67ee4d4c1abf4bf0a1d417ef",
+  "map": "xh_2025_contest",
+  "start": [
+   423781.4413942477,
+   4437629.946991814
+  ],
+  "end": [
+   423567.7683206752,
+   4437630.325650376
+  ],
+  "start_lane": "Lane_1674",
+  "end_lane": "Lane_1674",
+  "_debug": {
+   "start_id": "Lane_1674",
+   "end_id": "Lane_1674",
+   "n_parent": 0,
+   "route_type": "list",
+   "route_len": 1,
+   "route_head": [
+    "Lane_1674"
+   ]
+  },
+  "route_lanes": [
+   "Lane_1674"
+  ],
+  "route_elements": {
+   "SpeedBump": [],
+   "TrafficLight": [],
+   "Crosswalk": [
+    "Crosswalk_62"
+   ],
+   "StopSign": [],
+   "Junction": [
+    "Junction_14"
+   ],
+   "YieldSign": [],
+   "ParkingSpace": []
+  },
+  "map_element_counts": {
+   "SpeedBump": 4,
+   "TrafficLight": 25,
+   "Crosswalk": 38,
+   "StopSign": 1,
+   "Junction": 11,
+   "YieldSign": 0,
+   "ParkingSpace": 0
+  }
+ },
+ {
+  "id": "69d420a3b58e96002b6da084",
+  "name": "xh_2026_gsxx_交通灯路口减速通行",
+  "mapId": "69d51ffd0e41e1217f2fda19",
+  "map": "Xh_2026_contest",
+  "start": [
+   423254.57576769503,
+   4438082.201703013
+  ],
+  "end": [
+   423258.2215546447,
+   4438364.433478896
+  ],
+  "start_lane": "Lane_1870",
+  "end_lane": "Lane_1960",
+  "_debug": {
+   "start_id": "Lane_1870",
+   "end_id": "Lane_1960",
+   "n_parent": 7,
+   "route_type": "list",
+   "route_len": 6,
+   "route_head": [
+    "Lane_1870",
+    "Lane_1691",
+    "Lane_710",
+    "Lane_736",
+    "Lane_731"
+   ]
+  },
+  "route_lanes": [
+   "Lane_1870",
+   "Lane_1691",
+   "Lane_710",
+   "Lane_736",
+   "Lane_731",
+   "Lane_1960"
+  ],
+  "route_elements": {
+   "SpeedBump": [],
+   "TrafficLight": [],
+   "Crosswalk": [
+    "Crosswalk_11",
+    "Crosswalk_12"
+   ],
+   "StopSign": [],
+   "Junction": [
+    "Junction_9"
+   ],
+   "YieldSign": [],
+   "ParkingSpace": []
+  },
+  "map_element_counts": {
+   "SpeedBump": 6,
+   "TrafficLight": 24,
+   "Crosswalk": 34,
+   "StopSign": 1,
+   "Junction": 9,
+   "YieldSign": 0,
+   "ParkingSpace": 0
+  }
+ },
+ {
+  "id": "6a699aefabf06e2936590839",
+  "name": "xh_2026_gsxx_障碍物停车避让场景",
+  "mapId": "69d51ffd0e41e1217f2fda19",
+  "map": "Xh_2026_contest",
+  "start": [
+   423278.1921700501,
+   4437610.951445828
+  ],
+  "end": [
+   423491.1058530354,
+   4437610.338116104
+  ],
+  "start_lane": "Lane_1725",
+  "end_lane": "Lane_1724",
+  "_debug": {
+   "start_id": "Lane_1725",
+   "end_id": "Lane_1724",
+   "n_parent": 1,
+   "route_type": "list",
+   "route_len": 2,
+   "route_head": [
+    "Lane_1725",
+    "Lane_1724"
+   ]
+  },
+  "route_lanes": [
+   "Lane_1725",
+   "Lane_1724"
+  ],
+  "route_elements": {
+   "SpeedBump": [],
+   "TrafficLight": [],
+   "Crosswalk": [],
+   "StopSign": [],
+   "Junction": [],
+   "YieldSign": [],
+   "ParkingSpace": []
+  },
+  "map_element_counts": {
+   "SpeedBump": 6,
+   "TrafficLight": 24,
+   "Crosswalk": 34,
+   "StopSign": 1,
+   "Junction": 9,
+   "YieldSign": 0,
+   "ParkingSpace": 0
+  }
+ },
+ {
+  "id": "6a699d15395ab133a4433b3a",
+  "name": "xh_2026_gsxx_障碍物车辆跟随场景",
+  "mapId": "69d51ffd0e41e1217f2fda19",
+  "map": "Xh_2026_contest",
+  "start": [
+   423278.1921700501,
+   4437610.951445828
+  ],
+  "end": [
+   423491.1058530354,
+   4437610.338116104
+  ],
+  "start_lane": "Lane_1725",
+  "end_lane": "Lane_1724",
+  "_debug": {
+   "start_id": "Lane_1725",
+   "end_id": "Lane_1724",
+   "n_parent": 1,
+   "route_type": "list",
+   "route_len": 2,
+   "route_head": [
+    "Lane_1725",
+    "Lane_1724"
+   ]
+  },
+  "route_lanes": [
+   "Lane_1725",
+   "Lane_1724"
+  ],
+  "route_elements": {
+   "SpeedBump": [],
+   "TrafficLight": [],
+   "Crosswalk": [],
+   "StopSign": [],
+   "Junction": [],
+   "YieldSign": [],
+   "ParkingSpace": []
+  },
+  "map_element_counts": {
+   "SpeedBump": 6,
+   "TrafficLight": 24,
+   "Crosswalk": 34,
+   "StopSign": 1,
+   "Junction": 9,
+   "YieldSign": 0,
+   "ParkingSpace": 0
+  }
+ },
+ {
+  "id": "6a6c3d8babf06e0e5f59083c",
+  "name": "xh_2026_gsxx_减速带通行",
+  "mapId": "69d51ffd0e41e1217f2fda19",
+  "map": "Xh_2026_contest",
+  "start": [
+   423754.57397392514,
+   4438475.911438216
+  ],
+  "end": [
+   423477.6690185181,
+   4438475.74286203
+  ],
+  "start_lane": "Lane_1962",
+  "end_lane": "Lane_1961",
+  "_debug": {
+   "start_id": "Lane_1962",
+   "end_id": "Lane_1961",
+   "n_parent": 1,
+   "route_type": "list",
+   "route_len": 2,
+   "route_head": [
+    "Lane_1962",
+    "Lane_1961"
+   ]
+  },
+  "route_lanes": [
+   "Lane_1962",
+   "Lane_1961"
+  ],
+  "route_elements": {
+   "SpeedBump": [
+    "SpeedBump_4",
+    "SpeedBump_3"
+   ],
+   "TrafficLight": [],
+   "Crosswalk": [],
+   "StopSign": [],
+   "Junction": [],
+   "YieldSign": [],
+   "ParkingSpace": []
+  },
+  "map_element_counts": {
+   "SpeedBump": 6,
+   "TrafficLight": 24,
+   "Crosswalk": 34,
+   "StopSign": 1,
+   "Junction": 9,
+   "YieldSign": 0,
+   "ParkingSpace": 0
+  }
+ },
+ {
+  "id": "6a6c3ea5abf06e7b4a59083d",
+  "name": "xh_2026_gsxx_人行道路口减速通行",
+  "mapId": "69d51ffd0e41e1217f2fda19",
+  "map": "Xh_2026_contest",
+  "start": [
+   423781.4413942477,
+   4437629.946991814
+  ],
+  "end": [
+   423567.7683206752,
+   4437630.325650376
+  ],
+  "start_lane": "Lane_1674",
+  "end_lane": "Lane_1674",
+  "_debug": {
+   "start_id": "Lane_1674",
+   "end_id": "Lane_1674",
+   "n_parent": 0,
+   "route_type": "list",
+   "route_len": 1,
+   "route_head": [
+    "Lane_1674"
+   ]
+  },
+  "route_lanes": [
+   "Lane_1674"
+  ],
+  "route_elements": {
+   "SpeedBump": [],
+   "TrafficLight": [],
+   "Crosswalk": [
+    "Crosswalk_62"
+   ],
+   "StopSign": [],
+   "Junction": [
+    "Junction_14"
+   ],
+   "YieldSign": [],
+   "ParkingSpace": []
+  },
+  "map_element_counts": {
+   "SpeedBump": 6,
+   "TrafficLight": 24,
+   "Crosswalk": 34,
+   "StopSign": 1,
+   "Junction": 9,
+   "YieldSign": 0,
+   "ParkingSpace": 0
+  }
+ },
+ {
+  "id": "6a6c3f21abf06e3f1359083e",
+  "name": "xh_2026_gsxx_红绿灯场景",
+  "mapId": "69d51ffd0e41e1217f2fda19",
+  "map": "Xh_2026_contest",
+  "start": [
+   423254.57576769503,
+   4438082.201703013
+  ],
+  "end": [
+   423258.2215546447,
+   4438364.433478896
+  ],
+  "start_lane": "Lane_1870",
+  "end_lane": "Lane_1960",
+  "_debug": {
+   "start_id": "Lane_1870",
+   "end_id": "Lane_1960",
+   "n_parent": 7,
+   "route_type": "list",
+   "route_len": 6,
+   "route_head": [
+    "Lane_1870",
+    "Lane_1691",
+    "Lane_710",
+    "Lane_736",
+    "Lane_731"
+   ]
+  },
+  "route_lanes": [
+   "Lane_1870",
+   "Lane_1691",
+   "Lane_710",
+   "Lane_736",
+   "Lane_731",
+   "Lane_1960"
+  ],
+  "route_elements": {
+   "SpeedBump": [],
+   "TrafficLight": [],
+   "Crosswalk": [
+    "Crosswalk_11",
+    "Crosswalk_12"
+   ],
+   "StopSign": [],
+   "Junction": [
+    "Junction_9"
+   ],
+   "YieldSign": [],
+   "ParkingSpace": []
+  },
+  "map_element_counts": {
+   "SpeedBump": 6,
+   "TrafficLight": 24,
+   "Crosswalk": 34,
+   "StopSign": 1,
+   "Junction": 9,
+   "YieldSign": 0,
+   "ParkingSpace": 0
+  }
+ }
+]
