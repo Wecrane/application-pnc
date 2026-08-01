@@ -16,7 +16,12 @@ try:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 except (AttributeError, ValueError):
-    pass
+    try:
+        import io
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
+    except (AttributeError, ValueError, io.UnsupportedOperation):
+        pass
 
 # 尝试导入 cyber record
 try:
@@ -47,8 +52,8 @@ def analyze(path):
     rec_files = list_records(path)
     print(f"Records: {rec_files}")
 
-    # 1. 车辆位置/速度（localization）
-    print("\n=== 车辆轨迹（localization/pose）===")
+    # 1. vehicle position/speed (localization)
+    print("\n=== Vehicle trajectory (localization/pose) ===")
     positions = []
     for rf in rec_files:
         try:
@@ -69,21 +74,18 @@ def analyze(path):
             print(f"[warn] {rf} localization: {e}", file=sys.stderr)
 
     if positions:
-        # 采样输出（每 50 帧一条）
-        print(f"总帧数: {len(positions)}")
+        print(f"Total frames: {len(positions)}")
         for i in range(0, len(positions), 50):
             p = positions[i]
             print(f"  frame{i}: x={p['x']:.3f} y={p['y']:.3f} v={p['v']:.3f} m/s")
-        # 停车点：速度最低处
         min_v = min(positions, key=lambda p: p["v"])
-        print(f"\n最低速点: x={min_v['x']:.3f} y={min_v['y']:.3f} v={min_v['v']:.3f} m/s")
-        # 轨迹范围
+        print(f"\nMin speed point: x={min_v['x']:.3f} y={min_v['y']:.3f} v={min_v['v']:.3f} m/s")
         xs = [p["x"] for p in positions]
         ys = [p["y"] for p in positions]
-        print(f"轨迹范围: x[{min(xs):.2f},{max(xs):.2f}] y[{min(ys):.2f},{max(ys):.2f}]")
+        print(f"Traj range: x[{min(xs):.2f},{max(xs):.2f}] y[{min(ys):.2f},{max(ys):.2f}]")
 
-    # 2. 感知障碍物（行人）
-    print("\n=== 感知障碍物（perception/obstacles）===")
+    # 2. perception obstacles (pedestrians)
+    print("\n=== Obstacles (perception/obstacles) ===")
     obs_seen = {}
     for rf in rec_files:
         try:
@@ -108,8 +110,8 @@ def analyze(path):
               f"pos=({info['pos'].get('x',0):.2f},{info['pos'].get('y',0):.2f}) "
               f"vel=({info['vel'].get('x',0):.2f},{info['vel'].get('y',0):.2f})")
 
-    # 3. 规划决策（ADCTrajectory 尾部，看是否 STOP）
-    print("\n=== 规划（planning/ADCTrajectory，抽样）===")
+    # 3. planning decisions (ADCTrajectory tail)
+    print("\n=== Planning (ADCTrajectory, sample) ===")
     for rf in rec_files:
         try:
             n = 0
@@ -126,7 +128,7 @@ def analyze(path):
                         n += 1
                 except Exception:
                     pass
-            print(f"  {rf}: planning帧数={n} 末帧轨迹点={last}")
+            print(f"  {rf}: planning_frames={n} last_pt={last}")
         except Exception as e:
             print(f"[warn] {rf} planning: {e}", file=sys.stderr)
 
