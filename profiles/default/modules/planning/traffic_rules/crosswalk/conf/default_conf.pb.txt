@@ -7,4 +7,6 @@ min_pass_s_distance: 1.0
 expand_s_distance: 2.0
 stop_strict_l_distance: 5.0
 stop_loose_l_distance: 5.0
-stop_timeout: 10.0
+# stop_timeout 10→30s：行人横穿人行道需 ~26s（13m÷0.5m/s），
+# 10s 会在行人未走完时放行 → 车蠕动/过早通过，避让检测失败
+stop_timeout: 30.0
