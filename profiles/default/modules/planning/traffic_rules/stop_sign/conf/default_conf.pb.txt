@@ -1,0 +1,4 @@
+# stop_sign 停止标志规则配置（default profile 覆盖层）
+# 赛题四：遇停止标志需完全停止在停止线前 1.5~2.0m（原官方 1.0m 不达标）
+enabled: true
+stop_distance: 1.75
