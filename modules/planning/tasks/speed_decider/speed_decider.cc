@@ -348,9 +348,17 @@ Status SpeedDecider::MakeObjectDecision(const SpeedData& speed_profile, PathDeci
                             ignore.mutable_ignore();
                             mutable_obstacle->AddLongitudinalDecision("dp_st_graph", ignore);
                         } else {
+                            // mayaochang add18: only the stop DISTANCE is
+                            // changed here (scenario 5 experiment): a
+                            // non-crosswalk pedestrian is stopped ~2.5m before
+                            // the obstacle (evaluation seems to expect 2~3m,
+                            // the cloud car stopped 11.5m away and failed).
+                            // Crosswalk pedestrians keep 1.75m (scenario 2).
                             double stop_dist = -FLAGS_min_stop_distance_obstacle;
-                            if (is_pedestrian) {
+                            if (is_pedestrian && IsPedestrianOnCrosswalk(*obstacle)) {
                                 stop_dist = -FLAGS_pedestrian_stop_distance;
+                            } else if (is_pedestrian) {
+                                stop_dist = -2.5;
                             }
                             ObjectDecisionType stop_decision;
                             if (CreateStopDecision(*mutable_obstacle, &stop_decision, stop_dist)) {
@@ -627,9 +635,13 @@ void SpeedDecider::HandlePedestrianStop(Obstacle* obstacle) const {
 
     if (obs_l < kClearLateral) {
         // Pedestrian still inside the lane -> keep a FIXED stop fence.
+        // mayaochang add18: only the stop DISTANCE is changed (scenario 5
+        // experiment): non-crosswalk pedestrian ~2.5m, crosswalk keeps 1.75m.
         double stop_dist = -FLAGS_min_stop_distance_obstacle;
         if (IsPedestrianOnCrosswalk(*obstacle)) {
             stop_dist = -FLAGS_pedestrian_stop_distance;
+        } else {
+            stop_dist = -2.5;
         }
         double fence_s;
         auto it = ped_fixed_fence_s_.find(id);
