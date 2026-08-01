@@ -15,6 +15,13 @@ import sys
 import os
 import json
 
+# 容器内 locale 可能为 ASCII，强制 UTF-8 输出，避免中文报错
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except (AttributeError, ValueError):
+        pass
+
 # ---------------------------------------------------------------------------
 # 1. 尝试定位 map_pb2 的 python 编译产物（容器内多路径候选）
 # ---------------------------------------------------------------------------
