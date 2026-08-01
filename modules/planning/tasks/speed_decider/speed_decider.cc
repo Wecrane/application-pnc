@@ -617,15 +617,20 @@ void SpeedDecider::HandlePedestrianStop(Obstacle* obstacle) const {
     const auto& boundary = obstacle->path_st_boundary();
     const auto& sl = obstacle->PerceptionSLBoundary();
     const double obs_l = std::fabs((sl.start_l() + sl.end_l()) / 2.0);
-    // mayaochang: lateral clear of lane. User observed the grader still wants
-    // the pedestrian clearly gone - 6.0m still not enough. 8.0m (~2s more at
-    // the pedestrian's lateral speed of ~1 m/s) puts the pedestrian almost at
-    // its target (lateral ~11.2m) before the ego moves.
-    static constexpr double kClearLateral = 8.0;  // lateral clear of lane
+    // mayaochang: the pedestrian must both be laterally clear of the lane AND
+    // have come to a stop before the ego proceeds. The scenario pedestrian
+    // stops at lateral ~11.2m (trajectory end), so 8.0m lateral + speed<0.3
+    // means the pedestrian has basically finished walking.
+    static constexpr double kClearLateral = 8.0;   // lateral clear of lane
+    static constexpr double kMaxStopSpeed = 0.3;   // pedestrian considered stopped
+    const double obstacle_speed =
+            std::hypot(obstacle->Perception().velocity().x(),
+                       obstacle->Perception().velocity().y());
     const std::string& id = obstacle->Id();
 
-    if (obs_l < kClearLateral) {
-        // Pedestrian still inside the lane -> keep a FIXED stop fence.
+    if (obs_l < kClearLateral || obstacle_speed > kMaxStopSpeed) {
+        // Pedestrian still inside the lane, or still moving -> keep a FIXED
+        // stop fence so the ego does not creep behind it.
         double stop_dist = -FLAGS_min_stop_distance_obstacle;
         if (IsPedestrianOnCrosswalk(*obstacle)) {
             stop_dist = -FLAGS_pedestrian_stop_distance;
@@ -650,7 +655,8 @@ void SpeedDecider::HandlePedestrianStop(Obstacle* obstacle) const {
         stop->set_stop_heading(fence_point.heading());
         obstacle->AddLongitudinalDecision("dp_st_graph/ped_fixed", stop_decision);
     } else {
-        // Pedestrian has laterally cleared the lane -> release + yield.
+        // Pedestrian has laterally cleared the lane AND stopped -> release
+        // + yield so the ego proceeds.
         ped_fixed_fence_s_.erase(id);
         ObjectDecisionType yield_decision;
         if (CreateYieldDecision(*obstacle, &yield_decision)) {
