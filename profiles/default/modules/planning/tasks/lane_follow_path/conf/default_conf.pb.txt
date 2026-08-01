@@ -1,17 +1,19 @@
 # lane_follow_path 路径优化配置（default profile 覆盖层）
-# 按用户指示：直接用 backup 旧代码全套参数（backup/modules_20260801_093000）
-#   l_weight=1.0 / dl_weight=20.0 / ddl_weight=100000 / dddl_weight=500000
-#   lateral_derivative_bound_default=2.0 / path_reference_l_weight=10000
-#   max_iteration=8000
-# 用户记忆验证此套参数无问题；含 max_iteration=8000（之前恢复时遗漏）
+# 停止标志右转切内弯——自由发挥最优组合（2026-08-01，不再参考旧代码）：
+#   path_reference_l_weight=10000（贴参考线强：backup 旧版值，防止路径漂移）
+#   dddl_weight=10000（低横向三阶导权重：允许急弯快速转向，不切内弯）
+#   ddl_weight=1000（默认，不限制横向速度）
+# 依据：
+#   - 高 dddl(50000/500000) 强制平滑拉直 → 切内弯碰路肩（0007 偏移0.95m / 评测卡）
+#   - 低 l_ref(100) 路径不贴车道中心 → 切内弯
+#   - 10000/10000 组合：贴线强 + 允许急转 → 本地右转偏移 0.75m（最优）
 is_extend_lane_bounds_to_include_adc: true
 extend_buffer: 0.2
 path_optimizer_config {
   l_weight: 1.0
   dl_weight: 20.0
-  ddl_weight: 100000.0
-  dddl_weight: 500000.0
+  ddl_weight: 1000.0
+  dddl_weight: 10000.0
   lateral_derivative_bound_default: 2.0
   path_reference_l_weight: 10000.0
-  max_iteration: 8000
 }

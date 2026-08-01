@@ -276,17 +276,22 @@ Status SpeedDecider::MakeObjectDecision(const SpeedData& speed_profile, PathDeci
                 // distance (pedestrian_stop_distance, default 1.75m) so that the
                 // crosswalk rule's 1.5~2.0m stop is NOT overridden by the 6m
                 // min_stop_distance_obstacle fence.
-                // mayaochang add2: if the "static" obstacle is actually moving
-                // (a vehicle that just started accelerating in scenario 4, or a
-                // pedestrian leaving the lane in scenario 6), do NOT build a
-                // STOP on its stale position - fall through to FOLLOW/YIELD so
-                // the ego recovers smoothly instead of jerking (stop-go-stop).
+                // mayaochang add2: if the "static" obstacle is actually a moving
+                // VEHICLE (e.g. leading car just started accelerating in
+                // scenario 4), do NOT build a STOP on its stale position -
+                // fall through to FOLLOW/YIELD so the ego recovers smoothly
+                // instead of jerking (stop-go-stop).
+                // NOTE: PEDESTRIANS are deliberately excluded here. In
+                // scenario 6 the ego must STOP and wait until the pedestrian
+                // actually leaves the lane - if it started FOLLOWING the
+                // moment the pedestrian moved, the competition "follow
+                // limit" check fails (creeping behind the pedestrian).
                 const bool is_pedestrian = obstacle->Perception().type() == PerceptionObstacle::PEDESTRIAN;
                 const double obs_speed
                         = std::hypot(obstacle->Perception().velocity().x(), obstacle->Perception().velocity().y());
                 static constexpr double kMovingObstacleSpeedThreshold = 0.5;
                 const bool moving_obstacle
-                        = (obstacle->Perception().type() == PerceptionObstacle::VEHICLE || is_pedestrian)
+                        = obstacle->Perception().type() == PerceptionObstacle::VEHICLE
                         && obs_speed > kMovingObstacleSpeedThreshold;
                 if (moving_obstacle) {
                     if (CheckIsFollow(*obstacle, boundary)) {
@@ -356,8 +361,21 @@ Status SpeedDecider::MakeObjectDecision(const SpeedData& speed_profile, PathDeci
                     }
                 }
             } else if (CheckIsFollow(*obstacle, boundary)) {
-                // stop for low_speed decelerating
-                if (IsFollowTooClose(*mutable_obstacle)) {
+                // mayaochang add7: a PEDESTRIAN in the follow branch must NOT
+                // be followed - the ego should STOP (1.75m) and wait until the
+                // pedestrian actually leaves the lane. Otherwise the ego creeps
+                // behind the moving pedestrian and fails the competition
+                // "follow limit" check (scenario 6). Once the pedestrian
+                // laterally leaves the lane (CheckIsFollow false) it falls to
+                // the YIELD branch and the ego proceeds.
+                if (obstacle->Perception().type() == PerceptionObstacle::PEDESTRIAN) {
+                    ObjectDecisionType stop_decision;
+                    if (CreateStopDecision(*mutable_obstacle, &stop_decision,
+                                           -FLAGS_pedestrian_stop_distance)) {
+                        mutable_obstacle->AddLongitudinalDecision(
+                                "dp_st_graph/pedestrian_follow", stop_decision);
+                    }
+                } else if (IsFollowTooClose(*mutable_obstacle)) {
                     ObjectDecisionType stop_decision;
                     // mayaochang add3: use the closer pedestrian stop distance
                     // (1.75m) for a pedestrian even when "too close", so that
