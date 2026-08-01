@@ -160,9 +160,9 @@ def build_element_index(m):
         elem_types["StopSign"].append(ss.id.id)
     for jn in m.junction:
         elem_types["Junction"].append(jn.id.id)
-    # overlap -> lane 关联
+    # overlap -> lane 关联（注意信号灯 id 前缀是 Signal_）
     prefix_map = {
-        "SpeedBump": "SpeedBump", "TrafficLight": "SignalLight",
+        "SpeedBump": "SpeedBump", "TrafficLight": "Signal",
         "Crosswalk": "Crosswalk", "StopSign": "StopSign",
         "Junction": "Junction", "YieldSign": "YieldSign",
         "ParkingSpace": "ParkingSpace",
