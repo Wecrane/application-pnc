@@ -217,6 +217,30 @@ Status SpeedDecider::MakeObjectDecision(const SpeedData& speed_profile, PathDeci
 
         if (boundary.IsEmpty() || boundary.max_s() < 0.0 || boundary.max_t() < 0.0
             || boundary.min_t() >= speed_profile.back().t()) {
+            // mayaochang add9: a PEDESTRIAN loses its ST boundary as soon as its
+            // lateral offset exceeds the overlap check in st_boundary_mapper
+            // (l_buffer + half_width ~ 1.8m). If we plain-ignore it here the ego
+            // starts moving while the pedestrian is still crossing the lane
+            // (lateral ~3-5m, speed ~2m/s) -> fails the competition "follow
+            // limit" check (scenario 6). Instead keep the FIXED stop fence via
+            // HandlePedestrianStop, which only releases (YIELD) once the
+            // pedestrian has BOTH laterally cleared the lane (|l| >= 3m) AND
+            // come to a stop (speed <= 0.3). HandlePedestrianStop computes the
+            // fence from the perception SL boundary, so an empty ST boundary is
+            // fine here.
+            //
+            // Only pedestrians that have ALREADY been stop-fenced while near
+            // the lane (i.e. a real lane-crosser: its lateral was < ~1.8m at
+            // some point, so ped_fixed_fence_s_ has a record) must keep the
+            // fixed fence once the ST boundary disappears. A roadside walker
+            // that never entered the lane near-region has no fence record and
+            // stays ignored - otherwise the ego would brake for every
+            // pedestrian walking on the sidewalk at lateral 3~6m.
+            if (obstacle->Perception().type() == PerceptionObstacle::PEDESTRIAN
+                && ped_fixed_fence_s_.count(obstacle->Id()) > 0) {
+                HandlePedestrianStop(mutable_obstacle);
+                continue;
+            }
             AppendIgnoreDecision(mutable_obstacle);
             continue;
         }
@@ -617,11 +641,20 @@ void SpeedDecider::HandlePedestrianStop(Obstacle* obstacle) const {
     const auto& boundary = obstacle->path_st_boundary();
     const auto& sl = obstacle->PerceptionSLBoundary();
     const double obs_l = std::fabs((sl.start_l() + sl.end_l()) / 2.0);
+    // mayaochang add9: fence is computed from the perception SL boundary, NOT
+    // from path_st_boundary.min_s(), because once the pedestrian moves >~1.8m
+    // laterally the ST boundary becomes empty (overlap check fails) while the
+    // pedestrian is still crossing the lane - we still need a stable fence.
+    const double obs_s = (sl.start_s() + sl.end_s()) / 2.0;
     // mayaochang: the pedestrian must both be laterally clear of the lane AND
     // have come to a stop before the ego proceeds. The scenario pedestrian
-    // stops at lateral ~11.2m (trajectory end), so 8.0m lateral + speed<0.3
-    // means the pedestrian has basically finished walking.
-    static constexpr double kClearLateral = 8.0;   // lateral clear of lane
+    // keeps moving (2~3 m/s) while crossing from the lane center to lateral
+    // 11.2m, so with the speed<0.3 condition the 3.0m lateral threshold never
+    // releases early - the ego waits until the pedestrian is fully stopped
+    // (lateral 11.2m). A small threshold also avoids deadlocking other
+    // scenarios whose pedestrian stops at lateral 3~6m (e.g. junction/red
+    // light crossing) - they release as soon as the pedestrian stops.
+    static constexpr double kClearLateral = 3.0;   // lateral clear of lane
     static constexpr double kMaxStopSpeed = 0.3;   // pedestrian considered stopped
     const double obstacle_speed =
             std::hypot(obstacle->Perception().velocity().x(),
@@ -638,7 +671,9 @@ void SpeedDecider::HandlePedestrianStop(Obstacle* obstacle) const {
         double fence_s;
         auto it = ped_fixed_fence_s_.find(id);
         if (it == ped_fixed_fence_s_.end()) {
-            fence_s = adc_sl_boundary_.end_s() + boundary.min_s() + stop_dist;
+            // mayaochang add9: use the perception SL s (stable even when the
+            // ST boundary is empty) instead of boundary.min_s().
+            fence_s = obs_s + stop_dist;
             ped_fixed_fence_s_[id] = fence_s;
             ADEBUG << "ped_fixed: record fence_s=" << fence_s << " id=" << id;
         } else {
