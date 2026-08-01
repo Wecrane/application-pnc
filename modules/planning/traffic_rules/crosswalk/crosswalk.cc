@@ -299,17 +299,26 @@ bool Crosswalk::CheckStopForObstacle(
     return false;
   }
 
-  // mayaochang add5: a pedestrian still INSIDE the raw crosswalk polygon must
-  // ALWAYS stop the ego. The default logic releases based on lateral distance
-  // (l >= stop_loose_l_distance) / path-crossing, which lets the ego drive
-  // through while the pedestrian is still on the crosswalk -> competition
-  // "crosswalk yield" grading fails (scenario 2). Only once the pedestrian
-  // fully leaves the crosswalk polygon do we fall through to the default
-  // (expanded-area) checks.
-  const Polygon2d crosswalk_poly = crosswalk_ptr->polygon();
-  if (crosswalk_poly.IsPointIn(point)) {
+  // mayaochang add5: a pedestrian still inside the EXPANDED crosswalk polygon
+  // AND still MOVING (mid-crossing) must ALWAYS stop the ego. The default
+  // logic releases based on lateral distance (l >= stop_loose_l_distance) /
+  // path-crossing, which lets the ego drive through while the pedestrian is
+  // still crossing -> competition "crosswalk yield" grading fails.
+  //
+  // Note: we judge against the EXPANDED polygon and require the pedestrian to
+  // be moving, because the raw crosswalk polygon's far edge (y=4437636.57 for
+  // Crosswalk_62) is smaller than the scenario's crossing target
+  // (y=4437639.07): a raw-polygon check would release 2.5m too early. Once
+  // the pedestrian finishes and stops moving, we fall through to the default
+  // checks, which then release because the pedestrian has left the lane area
+  // (l > stop_loose_l_distance).
+  const double obstacle_speed = std::hypot(perception_obstacle.velocity().x(),
+                                           perception_obstacle.velocity().y());
+  constexpr double kMovingPedestrianSpeed = 0.3;  // same as kMaxStopSpeed above
+  if (in_expanded_crosswalk && obstacle_speed > kMovingPedestrianSpeed) {
     ADEBUG << "need_stop(add5): obstacle_id[" << obstacle_id << "] type["
-           << obstacle_type_name << "] still on crosswalk polygon, always stop";
+           << obstacle_type_name
+           << "] moving inside expanded crosswalk, always stop";
     return true;
   }
 
