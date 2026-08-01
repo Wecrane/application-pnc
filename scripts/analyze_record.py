@@ -23,13 +23,30 @@ except (AttributeError, ValueError):
     except (AttributeError, ValueError, io.UnsupportedOperation):
         pass
 
-# 尝试导入 cyber record
+# 容器内 protobuf python 产物路径
+for _p in ["/apollo_workspace/bazel-out/k8-opt/bin/external/apollo_src",
+           "/apollo_workspace/bazel-out/k8-opt/bin",
+           "/apollo/bazel-out/k8-opt/bin/external/apollo_src",
+           "/apollo/bazel-out/k8-opt/bin"]:
+    if os.path.isdir(_p) and _p not in sys.path:
+        sys.path.insert(0, _p)
+
+# 尝试导入 cyber record 与 proto
 try:
     from cyber.python.cyber_py3 import record
     HAS_CYBER = True
 except Exception as e:
     HAS_CYBER = False
     print(f"[warn] cyber_py3 import failed: {e}", file=sys.stderr)
+
+try:
+    from modules.common_msgs.localization_msgs import localization_pb2
+    from modules.common_msgs.perception_msgs import perception_obstacle_pb2
+    from modules.common_msgs.planning_msgs import planning_pb2
+    HAS_PROTO = True
+except Exception as e:
+    HAS_PROTO = False
+    print(f"[warn] proto import failed: {e}", file=sys.stderr)
 
 
 def list_records(path):
@@ -59,14 +76,13 @@ def analyze(path):
         try:
             for msg in read_messages(rf, "/apollo/localization/pose"):
                 try:
-                    d = json.loads(msg.message)
-                    pose = d.get("pose", {})
-                    x = pose.get("position", {}).get("x")
-                    y = pose.get("position", {}).get("y")
-                    # 速度（m/s）
-                    vx = pose.get("linear_velocity", {}).get("x", 0)
-                    vy = pose.get("linear_velocity", {}).get("y", 0)
-                    v = (vx * vx + vy * vy) ** 0.5
+                    loc = localization_pb2.LocalizationEstimate()
+                    loc.ParseFromString(msg.message)
+                    pose = loc.pose
+                    x = pose.position.x
+                    y = pose.position.y
+                    v = (pose.linear_velocity.x ** 2 +
+                         pose.linear_velocity.y ** 2) ** 0.5
                     positions.append({"x": x, "y": y, "v": v})
                 except Exception:
                     pass
@@ -91,12 +107,13 @@ def analyze(path):
         try:
             for msg in read_messages(rf, "/apollo/perception/obstacles"):
                 try:
-                    d = json.loads(msg.message)
-                    for ob in d.get("perception_obstacle", []):
-                        oid = ob.get("id")
-                        t = ob.get("type", 0)
-                        pos = ob.get("position", {})
-                        vel = ob.get("velocity", {})
+                    obs = perception_obstacle_pb2.PerceptionObstacles()
+                    obs.ParseFromString(msg.message)
+                    for ob in obs.perception_obstacle:
+                        oid = ob.id
+                        t = ob.type
+                        pos = {"x": ob.position.x, "y": ob.position.y}
+                        vel = {"x": ob.velocity.x, "y": ob.velocity.y}
                         obs_seen.setdefault(oid, {"type": t, "pos": pos, "vel": vel})
                 except Exception:
                     pass
@@ -107,8 +124,8 @@ def analyze(path):
                   3: "PEDESTRIAN", 4: "BICYCLE", 5: "VEHICLE"}
     for oid, info in list(obs_seen.items())[:10]:
         print(f"  obs{oid}: type={type_names.get(info['type'], info['type'])} "
-              f"pos=({info['pos'].get('x',0):.2f},{info['pos'].get('y',0):.2f}) "
-              f"vel=({info['vel'].get('x',0):.2f},{info['vel'].get('y',0):.2f})")
+              f"pos=({info['pos']['x']:.2f},{info['pos']['y']:.2f}) "
+              f"vel=({info['vel']['x']:.2f},{info['vel']['y']:.2f})")
 
     # 3. planning decisions (ADCTrajectory tail)
     print("\n=== Planning (ADCTrajectory, sample) ===")
@@ -118,13 +135,13 @@ def analyze(path):
             last = None
             for msg in read_messages(rf, "/apollo/planning"):
                 try:
-                    d = json.loads(msg.message)
-                    tp = d.get("trajectory_point", [])
-                    if tp:
-                        last_pt = tp[-1]
-                        last = {"x": last_pt.get("path_point", {}).get("x"),
-                                "y": last_pt.get("path_point", {}).get("y"),
-                                "v": last_pt.get("v")}
+                    traj = planning_pb2.ADCTrajectory()
+                    traj.ParseFromString(msg.message)
+                    if len(traj.trajectory_point) > 0:
+                        last_pt = traj.trajectory_point[-1]
+                        last = {"x": last_pt.path_point.x,
+                                "y": last_pt.path_point.y,
+                                "v": last_pt.v}
                         n += 1
                 except Exception:
                     pass
