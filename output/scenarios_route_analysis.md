@@ -37,8 +37,8 @@
 
 ### 3. 交通灯路口减速通行（Xh_2026_contest）
 - 路线：`Lane_1870 -> Lane_1691 -> Lane_710 -> Lane_736 -> Lane_731 -> Lane_1960`（6 条）
-- 路线元素：Crosswalk_11、Crosswalk_12、Junction_9（信号灯待二次确认）
-- 场景经过四向路口（Junction_9）
+- 路线元素：**Signal_5**（信号灯）、Crosswalk_11、Crosswalk_12、Junction_9
+- 场景经过四向路口（Junction_9）+ 信号灯 Signal_5
 
 ### 4. 障碍物停车避让（Xh_2026_contest）
 - 路线：`Lane_1725 -> Lane_1724`（2 条）
@@ -63,8 +63,8 @@
 
 ### 8. 红绿灯场景（Xh_2026_contest）
 - 路线：`Lane_1870 -> Lane_1691 -> Lane_710 -> Lane_736 -> Lane_731 -> Lane_1960`（6 条，同赛题3）
-- 路线元素：Crosswalk_11、Crosswalk_12、Junction_9（信号灯待二次确认）
-- 场景经过四向路口 + 红绿灯
+- 路线元素：**Signal_5**（信号灯）、Crosswalk_11、Crosswalk_12、Junction_9
+- 场景经过四向路口 + 红绿灯 Signal_5
 
 ---
 
@@ -83,6 +83,6 @@
 ---
 
 ## 四、后续待办
-- [ ] 重跑 `parse_scenarios.py` 确认 3/8 场景的信号灯 id
+- [x] 重跑 `parse_scenarios.py` 确认 3/8 场景的信号灯 id → **Signal_5** ✅
 - [ ] 用 `parse_speed_bump.py` 获取 SpeedBump_3/4 的精确 s 位置（车辆通过时的限速区间）
 - [ ] 按路线元素逐赛题调参（停车距离类改 default profile 的 stop_distance）

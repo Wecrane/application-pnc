@@ -29,7 +29,8 @@ Scenario: xh_2026_gsxx_交通灯路口减速通行  (id=69d420a3b58e96002b6da084
   start(423254.58,4438082.20) lane=Lane_1870 -> end(423258.22,4438364.43) lane=Lane_1960
   [dbg] start_id='Lane_1870' end_id='Lane_1960' n_parent=7 route_type=list route_head=['Lane_1870', 'Lane_1691', 'Lane_710', 'Lane_736', 'Lane_731']
   route lanes (6): Lane_1870 -> Lane_1691 -> Lane_710 -> Lane_736 -> Lane_731 -> Lane_1960
-  route Crosswalk: ['Crosswalk_11', 'Crosswalk_12']
+  route TrafficLight: ['Signal_5']
+  route Crosswalk: ['Crosswalk_12', 'Crosswalk_11']
   route Junction: ['Junction_9']
   map total: {'SpeedBump': 6, 'TrafficLight': 24, 'Crosswalk': 34, 'StopSign': 1, 'Junction': 9, 'YieldSign': 0, 'ParkingSpace': 0}
 ======================================================================
@@ -54,7 +55,7 @@ Scenario: xh_2026_gsxx_减速带通行  (id=6a6c3d8babf06e0e5f59083c)
   start(423754.57,4438475.91) lane=Lane_1962 -> end(423477.67,4438475.74) lane=Lane_1961
   [dbg] start_id='Lane_1962' end_id='Lane_1961' n_parent=1 route_type=list route_head=['Lane_1962', 'Lane_1961']
   route lanes (2): Lane_1962 -> Lane_1961
-  route SpeedBump: ['SpeedBump_4', 'SpeedBump_3']
+  route SpeedBump: ['SpeedBump_3', 'SpeedBump_4']
   map total: {'SpeedBump': 6, 'TrafficLight': 24, 'Crosswalk': 34, 'StopSign': 1, 'Junction': 9, 'YieldSign': 0, 'ParkingSpace': 0}
 ======================================================================
 Scenario: xh_2026_gsxx_人行道路口减速通行  (id=6a6c3ea5abf06e7b4a59083d)
@@ -71,7 +72,8 @@ Scenario: xh_2026_gsxx_红绿灯场景  (id=6a6c3f21abf06e3f1359083e)
   start(423254.58,4438082.20) lane=Lane_1870 -> end(423258.22,4438364.43) lane=Lane_1960
   [dbg] start_id='Lane_1870' end_id='Lane_1960' n_parent=7 route_type=list route_head=['Lane_1870', 'Lane_1691', 'Lane_710', 'Lane_736', 'Lane_731']
   route lanes (6): Lane_1870 -> Lane_1691 -> Lane_710 -> Lane_736 -> Lane_731 -> Lane_1960
-  route Crosswalk: ['Crosswalk_11', 'Crosswalk_12']
+  route TrafficLight: ['Signal_5']
+  route Crosswalk: ['Crosswalk_12', 'Crosswalk_11']
   route Junction: ['Junction_9']
   map total: {'SpeedBump': 6, 'TrafficLight': 24, 'Crosswalk': 34, 'StopSign': 1, 'Junction': 9, 'YieldSign': 0, 'ParkingSpace': 0}
 
