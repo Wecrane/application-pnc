@@ -225,6 +225,17 @@ Status SpeedDecider::MakeObjectDecision(const SpeedData& speed_profile, PathDeci
             continue;
         }
 
+        // mayaochang add4b: road furniture (UNKNOWN_UNMOVABLE guardrail / curb
+        // / building) must NEVER get a longitudinal STOP. Handle at the very
+        // top of the loop so NO later branch (blocking-obstacle STOP, etc.)
+        // can ever attach a STOP, and so st_boundary_mapper sees the IGNORE
+        // decision and skips generating a STOP boundary. This is the source of
+        // the stop-go jerking at the last guardrail section (scenarios 4 & 6).
+        if (obstacle->Perception().type() == PerceptionObstacle::UNKNOWN_UNMOVABLE) {
+            AppendIgnoreDecision(mutable_obstacle);
+            continue;
+        }
+
         // for Virtual obstacle, skip if center point NOT "on lane"
         if (obstacle->IsVirtual()) {
             const auto& obstacle_box = obstacle->PerceptionBoundingBox();
@@ -274,8 +285,8 @@ Status SpeedDecider::MakeObjectDecision(const SpeedData& speed_profile, PathDeci
                 const double obs_speed
                         = std::hypot(obstacle->Perception().velocity().x(), obstacle->Perception().velocity().y());
                 static constexpr double kMovingObstacleSpeedThreshold = 0.5;
-                const bool moving_obstacle =
-                        (obstacle->Perception().type() == PerceptionObstacle::VEHICLE || is_pedestrian)
+                const bool moving_obstacle
+                        = (obstacle->Perception().type() == PerceptionObstacle::VEHICLE || is_pedestrian)
                         && obs_speed > kMovingObstacleSpeedThreshold;
                 if (moving_obstacle) {
                     if (CheckIsFollow(*obstacle, boundary)) {
@@ -309,8 +320,8 @@ Status SpeedDecider::MakeObjectDecision(const SpeedData& speed_profile, PathDeci
                     //     filter below fails, and perception flickers -> STOP
                     //     appears/disappears -> vehicle jerks forward
                     //     stop-go-stop (scenarios 4 & 6 cloud behavior).
-                    const bool is_road_furniture =
-                            obstacle->Perception().type() == PerceptionObstacle::UNKNOWN_UNMOVABLE;
+                    const bool is_road_furniture
+                            = obstacle->Perception().type() == PerceptionObstacle::UNKNOWN_UNMOVABLE;
                     if (is_road_furniture) {
                         ObjectDecisionType ignore;
                         ignore.mutable_ignore();
@@ -322,14 +333,13 @@ Status SpeedDecider::MakeObjectDecision(const SpeedData& speed_profile, PathDeci
                         //     Use the CENTER lateral offset (not min of the two
                         //     edges) so a long obstacle straddling the lane is
                         //     not misjudged as "near".
-                        const double obs_center_l =
-                                (obstacle->PerceptionSLBoundary().start_l()
-                                 + obstacle->PerceptionSLBoundary().end_l()) / 2.0;
+                        const double obs_center_l = (obstacle->PerceptionSLBoundary().start_l()
+                                                     + obstacle->PerceptionSLBoundary().end_l())
+                                / 2.0;
                         const double vehicle_half_width
                                 = common::VehicleConfigHelper::Instance()->GetConfig().vehicle_param().width() / 2.0;
                         if (!is_pedestrian
-                            && std::fabs(obs_center_l)
-                                       > vehicle_half_width + FLAGS_static_obstacle_nudge_l_buffer) {
+                            && std::fabs(obs_center_l) > vehicle_half_width + FLAGS_static_obstacle_nudge_l_buffer) {
                             ObjectDecisionType ignore;
                             ignore.mutable_ignore();
                             mutable_obstacle->AddLongitudinalDecision("dp_st_graph", ignore);
