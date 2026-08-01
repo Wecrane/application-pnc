@@ -214,15 +214,21 @@ def analyze_scenario(path, map_by_id):
     lane_by_id = {l.id.id: l for l in m.lane}
     start_id, end_id = start_lane.id.id, end_lane.id.id
 
-    # BFS 找路径（先沿 successor）
+    # 正向 BFS：从 start 沿 successor 找 end
     parent = {}
     visited = {start_id}
-    q = deque([start_id])
-    found = False
-    while q:
-        cur = q.popleft()
+    queue = deque([start_id])
+    route = None
+    while queue:
+        cur = queue.popleft()
         if cur == end_id:
-            found = True
+            route = []
+            node = cur
+            while node != start_id:
+                route.append(node)
+                node = parent[node]
+            route.append(start_id)
+            route.reverse()
             break
         lane = lane_by_id.get(cur)
         if lane is None:
@@ -231,61 +237,67 @@ def analyze_scenario(path, map_by_id):
             if succ.id not in visited:
                 visited.add(succ.id)
                 parent[succ.id] = cur
-                q.append(succ.id)
-    if not found:
-        # 反向找（终点向起点）
-        parent2 = {}
-        visited2 = {end_id}
-        q = deque([end_id])
-        while q:
-            cur = q.popleft()
+                queue.append(succ.id)
+
+    # 正向失败则反向：从 end 沿 predecessor 找 start
+    if route is None:
+        parent = {}
+        visited = {end_id}
+        queue = deque([end_id])
+        while queue:
+            cur = queue.popleft()
             if cur == start_id:
-                found = True
+                route = []
+                node = cur
+                while node != end_id:
+                    route.append(node)
+                    node = parent[node]
+                route.append(end_id)
+                # 此时 route 已是 start->end 正向
                 break
             lane = lane_by_id.get(cur)
             if lane is None:
                 continue
             for pred in lane.predecessor_id:
-                if pred.id not in visited2:
-                    visited2.add(pred.id)
-                    parent2[pred.id] = cur
-                    q.append(pred.id)
-        if found:
-            path = [start_id]
-            while path[-1] in parent2 and path[-1] != end_id:
-                path.append(parent2[path[-1]])
-            # path 现在是 start->end（通过反向），需要检查方向
-        else:
-            result["error"] = "no path between start and end lanes"
-            return result
+                if pred.id not in visited:
+                    visited.add(pred.id)
+                    parent[pred.id] = cur
+                    queue.append(pred.id)
 
-    if found:
-        if "path" not in locals():
-            path = [end_id]
-            while path[-1] in parent and path[-1] != start_id:
-                path.append(parent[path[-1]])
-            path.reverse()
-        # 去重保持顺序
-        seen = set()
-        clean = []
-        for lid in path:
-            if lid not in seen:
-                seen.add(lid)
-                clean.append(lid)
-        result["route_lanes"] = clean
+    result["_debug"] = {
+        "start_id": start_id,
+        "end_id": end_id,
+        "n_parent": len(parent),
+        "route_type": str(type(route).__name__),
+        "route_len": len(route) if route else -1,
+        "route_head": [str(x) for x in route[:5]] if route else None,
+    }
 
-        # 收集路线元素
-        lane2elem, elem_types = build_element_index(m)
-        route_elems = {"SpeedBump": [], "TrafficLight": [], "Crosswalk": [],
-                       "StopSign": [], "Junction": [], "YieldSign": [],
-                       "ParkingSpace": []}
-        for lid in clean:
-            for pfx, eid in lane2elem.get(lid, set()):
-                if eid not in route_elems[pfx]:
-                    route_elems[pfx].append(eid)
-        result["route_elements"] = route_elems
-        # 全图元素数量
-        result["map_element_counts"] = {k: len(v) for k, v in elem_types.items()}
+    if route is None:
+        result["error"] = "no path between start and end lanes"
+        return result
+
+    # 去重保持顺序（应对环）
+    seen = set()
+    clean = []
+    for lid in route:
+        if lid not in seen:
+            seen.add(lid)
+            clean.append(lid)
+    result["route_lanes"] = clean
+
+    # 收集路线元素
+    lane2elem, elem_types = build_element_index(m)
+    route_elems = {"SpeedBump": [], "TrafficLight": [], "Crosswalk": [],
+                   "StopSign": [], "Junction": [], "YieldSign": [],
+                   "ParkingSpace": []}
+    for lid in clean:
+        for pfx, eid in lane2elem.get(lid, set()):
+            if eid not in route_elems[pfx]:
+                route_elems[pfx].append(eid)
+    result["route_elements"] = route_elems
+    # 全图元素数量
+    result["map_element_counts"] = {k: len(v) for k, v in elem_types.items()}
     return result
 
 
@@ -330,6 +342,11 @@ def main():
             continue
         log(f"  start({r['start'][0]:.2f},{r['start'][1]:.2f}) lane={r.get('start_lane')} "
             f"-> end({r['end'][0]:.2f},{r['end'][1]:.2f}) lane={r.get('end_lane')}")
+        dbg = r.get("_debug")
+        if dbg:
+            log(f"  [dbg] start_id={dbg['start_id']!r} end_id={dbg['end_id']!r} "
+                f"n_parent={dbg['n_parent']} route_type={dbg['route_type']} "
+                f"route_head={dbg['route_head']}")
         lanes = r.get("route_lanes", [])
         log(f"  route lanes ({len(lanes)}): {' -> '.join(lanes[:40])}"
             + (" ..." if len(lanes) > 40 else ""))
