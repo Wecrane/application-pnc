@@ -12,6 +12,9 @@ bazel-*
 # aem data
 .aem
 
+# aem 运行时 profile 软链接（指向 profiles/default，由 aem profile use 生成）
+/profiles/current
+
 # Generated files
 *.result
 py_proto
