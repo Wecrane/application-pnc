@@ -41,10 +41,10 @@ def list_records(path):
 
 
 def read_messages(record_file, channel):
-    """用 cyber record 读取指定通道消息。"""
+    """用 cyber record 读取指定通道消息（PyBagMessage: topic/message/data_type/timestamp）。"""
     reader = record.RecordReader(record_file)
     for msg in reader.read_messages():
-        if msg.channel_name == channel:
+        if msg.topic == channel:
             yield msg
 
 
@@ -59,7 +59,7 @@ def analyze(path):
         try:
             for msg in read_messages(rf, "/apollo/localization/pose"):
                 try:
-                    d = json.loads(msg.data)
+                    d = json.loads(msg.message)
                     pose = d.get("pose", {})
                     x = pose.get("position", {}).get("x")
                     y = pose.get("position", {}).get("y")
@@ -91,7 +91,7 @@ def analyze(path):
         try:
             for msg in read_messages(rf, "/apollo/perception/obstacles"):
                 try:
-                    d = json.loads(msg.data)
+                    d = json.loads(msg.message)
                     for ob in d.get("perception_obstacle", []):
                         oid = ob.get("id")
                         t = ob.get("type", 0)
@@ -118,7 +118,7 @@ def analyze(path):
             last = None
             for msg in read_messages(rf, "/apollo/planning"):
                 try:
-                    d = json.loads(msg.data)
+                    d = json.loads(msg.message)
                     tp = d.get("trajectory_point", [])
                     if tp:
                         last_pt = tp[-1]
