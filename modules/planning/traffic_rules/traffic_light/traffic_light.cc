@@ -143,6 +143,9 @@ void TrafficLight::MakeDecisions(Frame* const frame,
     // mayaochang add
     if (signal_color == perception::TrafficLight::GREEN ||
         signal_color == perception::TrafficLight::BLACK) {
+      // competition: 赛题八 绿灯通过信号灯区域限速（≤5m/s，留裕量取4.5）
+      reference_line_info->mutable_reference_line()->AddSpeedLimit(
+          traffic_light_overlap.start_s, traffic_light_overlap.end_s, 4.5);
       continue;
     }
 

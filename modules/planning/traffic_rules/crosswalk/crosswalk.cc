@@ -195,6 +195,10 @@ void Crosswalk::MakeDecisions(Frame* const frame,
     if (!pedestrians.empty()) {
       crosswalks_to_stop.emplace_back(crosswalk_overlap, pedestrians);
       ADEBUG << "crosswalk_id[" << crosswalk_id << "] STOP";
+    } else {
+      // competition: 赛题七 无人人行道限速通过（≤5m/s，留裕量取4.5）
+      reference_line_info->mutable_reference_line()->AddSpeedLimit(
+          crosswalk_overlap->start_s, crosswalk_overlap->end_s, 4.5);
     }
   }
 
