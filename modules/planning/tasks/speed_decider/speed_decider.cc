@@ -372,13 +372,27 @@ Status SpeedDecider::MakeObjectDecision(const SpeedData& speed_profile, PathDeci
                             ignore.mutable_ignore();
                             mutable_obstacle->AddLongitudinalDecision("dp_st_graph", ignore);
                         } else {
-                            double stop_dist = -FLAGS_min_stop_distance_obstacle;
+                            // mayaochang add9b: a static / slow-moving
+                            // PEDESTRIAN must also go through
+                            // HandlePedestrianStop so a FIXED fence is
+                            // recorded. Otherwise, while the pedestrian is
+                            // stationary it takes this IsStatic branch (plain
+                            // STOP, no fence record) and once it starts
+                            // walking the dynamic STOP fence follows it -> the
+                            // ego creeps behind the moving pedestrian (fails
+                            // the competition "follow limit" check). With a
+                            // recorded fence, add9 keeps the fixed STOP even
+                            // after the pedestrian's ST boundary disappears,
+                            // and the ego only moves once the pedestrian is
+                            // laterally clear (>=3m) AND stopped.
                             if (is_pedestrian) {
-                                stop_dist = -FLAGS_pedestrian_stop_distance;
-                            }
-                            ObjectDecisionType stop_decision;
-                            if (CreateStopDecision(*mutable_obstacle, &stop_decision, stop_dist)) {
-                                mutable_obstacle->AddLongitudinalDecision("dp_st_graph", stop_decision);
+                                HandlePedestrianStop(mutable_obstacle);
+                            } else {
+                                double stop_dist = -FLAGS_min_stop_distance_obstacle;
+                                ObjectDecisionType stop_decision;
+                                if (CreateStopDecision(*mutable_obstacle, &stop_decision, stop_dist)) {
+                                    mutable_obstacle->AddLongitudinalDecision("dp_st_graph", stop_decision);
+                                }
                             }
                         }
                     }
