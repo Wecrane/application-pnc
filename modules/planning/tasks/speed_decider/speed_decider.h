@@ -114,12 +114,26 @@ class SpeedDecider : public Task {
 
   double EstimateProperFollowGap(const double& adc_speed) const;
 
+  // mayaochang add8: handle a PEDESTRIAN that is ahead in the path. The ego
+  // must keep a FIXED stop fence (recorded on first stop) until the pedestrian
+  // laterally clears the lane - so the ego does NOT creep behind a moving
+  // pedestrian at <2m (competition "follow limit" check, scenario 6). The
+  // stop distance differs by context: 1.75m on a crosswalk (keeps the
+  // crosswalk rule's 1.5~2.0m stop intact), 6m otherwise (scenario 6 requires
+  // >=2m stopping distance).
+  void HandlePedestrianStop(Obstacle* obstacle) const;
+  bool IsPedestrianOnCrosswalk(const Obstacle& obstacle) const;
+
  private:
   SLBoundary adc_sl_boundary_;
   common::TrajectoryPoint init_point_;
   const ReferenceLine* reference_line_ = nullptr;
   SpeedDeciderConfig config_;
   std::vector<std::pair<double, double>> follow_distance_function_;
+  // mayaochang add8: obstacle_id -> fixed stop fence s (reference-line s).
+  // Populated when the ego first stops for the pedestrian; kept unchanged
+  // until the pedestrian laterally clears the lane.
+  mutable std::unordered_map<std::string, double> ped_fixed_fence_s_;
 };
 
 CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(apollo::planning::SpeedDecider, Task)
