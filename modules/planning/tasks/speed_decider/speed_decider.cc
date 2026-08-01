@@ -290,8 +290,7 @@ Status SpeedDecider::MakeObjectDecision(const SpeedData& speed_profile, PathDeci
                 const double obs_speed
                         = std::hypot(obstacle->Perception().velocity().x(), obstacle->Perception().velocity().y());
                 static constexpr double kMovingObstacleSpeedThreshold = 0.5;
-                const bool moving_obstacle
-                        = obstacle->Perception().type() == PerceptionObstacle::VEHICLE
+                const bool moving_obstacle = obstacle->Perception().type() == PerceptionObstacle::VEHICLE
                         && obs_speed > kMovingObstacleSpeedThreshold;
                 if (moving_obstacle) {
                     if (CheckIsFollow(*obstacle, boundary)) {
@@ -618,7 +617,12 @@ void SpeedDecider::HandlePedestrianStop(Obstacle* obstacle) const {
     const auto& boundary = obstacle->path_st_boundary();
     const auto& sl = obstacle->PerceptionSLBoundary();
     const double obs_l = std::fabs((sl.start_l() + sl.end_l()) / 2.0);
-    static constexpr double kClearLateral = 2.5;  // lateral clear of lane
+    // mayaochang: lateral clear of lane. 2.5 was too small - a pedestrian
+    // 2.5m off center is still inside/near the lane (lane half width ~2.3m +
+    // pedestrian half width), so releasing at 2.5m let the ego drive past
+    // while the pedestrian was still beside the lane -> competition "follow
+    // limit" still failed. 3.5m = lane half width + pedestrian + buffer.
+    static constexpr double kClearLateral = 3.5;  // lateral clear of lane
     const std::string& id = obstacle->Id();
 
     if (obs_l < kClearLateral) {
@@ -658,8 +662,7 @@ void SpeedDecider::HandlePedestrianStop(Obstacle* obstacle) const {
 
 bool SpeedDecider::IsPedestrianOnCrosswalk(const Obstacle& obstacle) const {
     const auto& sl = obstacle.PerceptionSLBoundary();
-    const auto& cw_overlaps =
-            reference_line_info_->reference_line().map_path().crosswalk_overlaps();
+    const auto& cw_overlaps = reference_line_info_->reference_line().map_path().crosswalk_overlaps();
     for (const auto& ov : cw_overlaps) {
         if (ov.start_s <= sl.end_s() && ov.end_s >= sl.start_s()) {
             return true;

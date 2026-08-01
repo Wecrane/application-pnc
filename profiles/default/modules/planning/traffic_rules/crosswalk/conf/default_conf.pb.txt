@@ -4,7 +4,12 @@
 stop_distance: 1.75
 max_stop_deceleration: 4.0
 min_pass_s_distance: 1.0
-expand_s_distance: 2.0
+# expand_s_distance 2.0→4.0：crosswalk 扩展区扩大，行人完全走完
+# （Crosswalk_62 北边缘 y=4437636.57，行人目标 4437639.07）才放行。
+# 原来 2.0 时扩展区北边缘 4437638.57，行人 y≈4437638.5（还差0.57m
+# 走完）就放行 → 车提前 1.4s 起步 → '停车礼让行人'扣20分。
+# 4.0 时扩展区北边缘 4437640.57 > 行人目标 4437639.07 → 车等行人走完。
+expand_s_distance: 4.0
 stop_strict_l_distance: 5.0
 stop_loose_l_distance: 5.0
 # stop_timeout 10→30s：行人横穿人行道需 ~26s（13m÷0.5m/s），
