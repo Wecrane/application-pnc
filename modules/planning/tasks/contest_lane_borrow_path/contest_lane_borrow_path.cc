@@ -67,11 +67,11 @@ constexpr double kBusBayExitMemoryMaxAbsL = 4.0;
 constexpr size_t kBusBayExitMemoryMaxCount = 12;
 constexpr double kBusBayExitClusterLonBackBuffer = 1.2;
 constexpr double kBusBayExitClusterLonFrontBuffer = 2.0;
-constexpr double kBusBayExitClusterRightLatBuffer = 0.25;
-constexpr double kBusBayExitClusterLeftLatBuffer = 0.35;
-constexpr double kBusBayExitClusterMinAdcLeftGap = 0.5;
+constexpr double kBusBayExitClusterRightLatBuffer = 0.4;
+constexpr double kBusBayExitClusterLeftLatBuffer = 0.5;
+constexpr double kBusBayExitClusterMinAdcLeftGap = 0.7;
 constexpr double kBusBayExitInitialProtectLength = 2.0;
-constexpr double kBusBayExitInitialLateralMargin = 0.2;
+constexpr double kBusBayExitInitialLateralMargin = 0.3;
 
 bool IsBusBayExitContext(
         const std::shared_ptr<DependencyInjector>& injector,
@@ -220,7 +220,7 @@ bool HasCloseConstructionConeAhead(const Frame& frame, const ReferenceLineInfo& 
 }
 
 double ClampLToPathBoundary(double target_l, const PathBoundPoint& point) {
-    constexpr double kBoundaryMargin = 0.35;
+    constexpr double kBoundaryMargin = 0.25;
     double lower = point.l_lower.l + kBoundaryMargin;
     double upper = point.l_upper.l - kBoundaryMargin;
     if (lower > upper) {
@@ -936,7 +936,7 @@ bool ContestLaneBorrowPath::DecidePathBounds(std::vector<PathBoundary>* boundary
         }
         double temp = FLAGS_obstacle_lat_buffer;
         if (obs_sl_polygons.size() >= 4)
-            FLAGS_obstacle_lat_buffer = 0.5;
+            FLAGS_obstacle_lat_buffer = 0.2;
         FLAGS_obstacle_lon_end_buffer_park = 5.0;
         if (!PathBoundsDeciderUtil::GetBoundaryFromStaticObstacles(
                     *reference_line_info_,
@@ -2677,7 +2677,7 @@ bool ContestLaneBorrowPath::DecideConstructZoneBoundary(std::vector<PathBoundary
     {
         double temp_lat = FLAGS_obstacle_lat_buffer;
         if (obs_sl_polygons.size() >= 4)
-            FLAGS_obstacle_lat_buffer = 0.7;
+            FLAGS_obstacle_lat_buffer = 1.0;
         FLAGS_obstacle_lon_end_buffer_park = 0.1;
         PathBoundsDeciderUtil::GetBoundaryFromStaticObstacles(
                 *reference_line_info_,

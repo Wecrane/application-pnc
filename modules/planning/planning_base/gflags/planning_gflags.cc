@@ -171,7 +171,8 @@ DEFINE_double(virtual_stop_wall_height, 2.0, "virtual stop wall height (meters)"
 
 // Path Deciders
 DEFINE_bool(enable_skip_path_tasks, false, "skip all path tasks and use trimmed previous path");
-DEFINE_double(obstacle_lat_buffer, 0.7, "obstacle lateral buffer (meters) for deciding path boundaries");
+DEFINE_double(obstacle_lat_buffer, 0.4,
+              "obstacle lateral buffer (meters) for deciding path boundaries");
 DEFINE_double(
         obstacle_lon_start_buffer,
         3.0,
