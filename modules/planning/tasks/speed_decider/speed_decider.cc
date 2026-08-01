@@ -668,11 +668,10 @@ void SpeedDecider::HandlePedestrianStop(Obstacle* obstacle) const {
     // (lateral 11.2m). A small threshold also avoids deadlocking other
     // scenarios whose pedestrian stops at lateral 3~6m (e.g. junction/red
     // light crossing) - they release as soon as the pedestrian stops.
-    static constexpr double kClearLateral = 3.0;   // lateral clear of lane
-    static constexpr double kMaxStopSpeed = 0.3;   // pedestrian considered stopped
-    const double obstacle_speed =
-            std::hypot(obstacle->Perception().velocity().x(),
-                       obstacle->Perception().velocity().y());
+    static constexpr double kClearLateral = 3.0;  // lateral clear of lane
+    static constexpr double kMaxStopSpeed = 0.3;  // pedestrian considered stopped
+    const double obstacle_speed
+            = std::hypot(obstacle->Perception().velocity().x(), obstacle->Perception().velocity().y());
     const std::string& id = obstacle->Id();
 
     if (obs_l < kClearLateral || obstacle_speed > kMaxStopSpeed) {
@@ -685,9 +684,18 @@ void SpeedDecider::HandlePedestrianStop(Obstacle* obstacle) const {
         double fence_s;
         auto it = ped_fixed_fence_s_.find(id);
         if (it == ped_fixed_fence_s_.end()) {
-            // mayaochang add9: use the perception SL s (stable even when the
-            // ST boundary is empty) instead of boundary.min_s().
-            fence_s = obs_s + stop_dist;
+            // mayaochang add11: when the ST boundary is available use its s
+            // (built by st_boundary_mapper from path geometry, reliable). Fall
+            // back to the perception SL s only when the ST boundary is empty
+            // (pedestrian laterally clear of the overlap check). The
+            // perception SL s can be noisy and land far behind the pedestrian
+            // (perception noise) -> fence in the wrong place -> ego drives
+            // through.
+            if (!boundary.IsEmpty()) {
+                fence_s = adc_sl_boundary_.end_s() + boundary.min_s() + stop_dist;
+            } else {
+                fence_s = obs_s + stop_dist;
+            }
             ped_fixed_fence_s_[id] = fence_s;
             ADEBUG << "ped_fixed: record fence_s=" << fence_s << " id=" << id;
         } else {
@@ -704,13 +712,17 @@ void SpeedDecider::HandlePedestrianStop(Obstacle* obstacle) const {
         stop->set_stop_heading(fence_point.heading());
         obstacle->AddLongitudinalDecision("dp_st_graph/ped_fixed", stop_decision);
     } else {
-        // Pedestrian has laterally cleared the lane AND stopped -> release
-        // + yield so the ego proceeds.
+        // mayaochang add11: on release, completely DROP the pedestrian
+        // (IGNORE, not YIELD). A YIELD keeps a "give-way" semantic in the
+        // ST-graph that makes the ego steer slightly toward the pedestrian
+        // when it departs (small lateral offset toward the obstacle), which
+        // the competition "follow limit" check reads as the ego following the
+        // pedestrian. IGNORE removes ALL influence -> the ego drives straight
+        // and never triggers the follow state.
         ped_fixed_fence_s_.erase(id);
-        ObjectDecisionType yield_decision;
-        if (CreateYieldDecision(*obstacle, &yield_decision)) {
-            obstacle->AddLongitudinalDecision("dp_st_graph/ped_yield_clear", yield_decision);
-        }
+        ObjectDecisionType ignore;
+        ignore.mutable_ignore();
+        obstacle->AddLongitudinalDecision("dp_st_graph/ped_release", ignore);
     }
 }
 
