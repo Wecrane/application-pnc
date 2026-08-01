@@ -640,7 +640,14 @@ void SpeedDecider::HandlePedestrianStop(Obstacle* obstacle) const {
     // while the pedestrian was still beside the lane -> competition "follow
     // limit" still failed. 3.5m = lane half width + pedestrian + buffer.
     static constexpr double kClearLateral = 3.5;  // lateral clear of lane
+    // mayaochang add20: use the BASE id (7673_0 -> 7673) as fence key. The
+    // perception id flips to 7673_0 once the pedestrian gets a predicted
+    // trajectory; with the full id the fence got RE-recorded at the new
+    // position -> it followed the moving pedestrian -> the ego crept behind
+    // it (competition "follow limit" fails). Sharing the base id keeps the
+    // fence fixed.
     const std::string& id = obstacle->Id();
+    const std::string base_id = id.substr(0, id.find('_'));
 
     if (obs_l < kClearLateral) {
         // Pedestrian still inside the lane -> keep a FIXED stop fence.
@@ -653,14 +660,14 @@ void SpeedDecider::HandlePedestrianStop(Obstacle* obstacle) const {
             stop_dist = -2.5;
         }
         double fence_s;
-        auto it = ped_fixed_fence_s_.find(id);
+        auto it = ped_fixed_fence_s_.find(base_id);
         if (it == ped_fixed_fence_s_.end()) {
             // mayaochang add19: compensate the -front_edge_to_center offset that
             // STBoundaryMapper baked into boundary.min_s(), so the stop fence is
             // really stop_dist meters before the pedestrian (scenario 5: 2.5m).
             fence_s = adc_sl_boundary_.end_s() + boundary.min_s() + stop_dist
                     + VehicleConfigHelper::GetConfig().vehicle_param().front_edge_to_center();
-            ped_fixed_fence_s_[id] = fence_s;
+            ped_fixed_fence_s_[base_id] = fence_s;
             ADEBUG << "ped_fixed: record fence_s=" << fence_s << " id=" << id;
         } else {
             fence_s = it->second;  // keep the originally recorded fence
@@ -677,7 +684,7 @@ void SpeedDecider::HandlePedestrianStop(Obstacle* obstacle) const {
         obstacle->AddLongitudinalDecision("dp_st_graph/ped_fixed", stop_decision);
     } else {
         // Pedestrian has laterally cleared the lane -> release + yield.
-        ped_fixed_fence_s_.erase(id);
+        ped_fixed_fence_s_.erase(base_id);
         ObjectDecisionType yield_decision;
         if (CreateYieldDecision(*obstacle, &yield_decision)) {
             obstacle->AddLongitudinalDecision("dp_st_graph/ped_yield_clear", yield_decision);
