@@ -279,9 +279,17 @@ Status SpeedDecider::MakeObjectDecision(
           }
         } else if (obstacle->IsStatic()) {
           // stop for static obstacle
+          // mayaochang add: for static pedestrian use a much closer stop
+          // distance (pedestrian_stop_distance, default 1.75m) so that the
+          // crosswalk rule's 1.5~2.0m stop is NOT overridden by the 6m
+          // min_stop_distance_obstacle fence.
+          double stop_dist = -FLAGS_min_stop_distance_obstacle;
+          if (obstacle->Perception().type() == PerceptionObstacle::PEDESTRIAN) {
+            stop_dist = -FLAGS_pedestrian_stop_distance;
+          }
           ObjectDecisionType stop_decision;
           if (CreateStopDecision(*mutable_obstacle, &stop_decision,
-                                 -FLAGS_min_stop_distance_obstacle)) {
+                                 stop_dist)) {
             mutable_obstacle->AddLongitudinalDecision("dp_st_graph",
                                                       stop_decision);
           }

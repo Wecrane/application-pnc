@@ -74,6 +74,7 @@ DECLARE_double(static_obstacle_nudge_l_buffer);
 DECLARE_double(nonstatic_obstacle_nudge_l_buffer);
 DECLARE_double(lateral_ignore_buffer);
 DECLARE_double(min_stop_distance_obstacle);
+DECLARE_double(pedestrian_stop_distance);
 DECLARE_double(max_stop_distance_obstacle);
 DECLARE_double(follow_min_distance);
 DECLARE_double(yield_distance);
