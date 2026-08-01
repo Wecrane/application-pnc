@@ -172,11 +172,11 @@ def build_element_index(m):
         lane_ids = [i for i in obj_ids if str(i).startswith("Lane_")]
         if not lane_ids:
             continue
-        for pfx in prefix_map.values():
+        for cat, pfx in prefix_map.items():
             hits = [i for i in obj_ids if str(i).startswith(pfx)]
             for h in hits:
                 for lid in lane_ids:
-                    lane2elem.setdefault(lid, set()).add((pfx, h))
+                    lane2elem.setdefault(lid, set()).add((cat, h))
     return lane2elem, elem_types
 
 
