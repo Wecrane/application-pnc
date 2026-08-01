@@ -466,6 +466,15 @@ bool SpeedDecider::CreateStopDecision(
     // Replace boundary.min_s() with computed reference line s
     // fence is set according to reference line s.
     double fence_s = adc_sl_boundary_.end_s() + boundary.min_s() + stop_distance;
+    // mayaochang add19: STBoundaryMapper's backward_distance (-front_edge_to_center)
+    // already shifted the obstacle boundary 3.89m towards the ADC, so this fence
+    // lands 3.89m too far (stop_distance never really took effect: -2.5m config
+    // actually stopped 6.4m before the pedestrian). Compensate for pedestrians so
+    // the stop distance really equals stop_distance (scenario 5: 2~3m).
+    if (obstacle.Perception().type() == PerceptionObstacle::PEDESTRIAN) {
+        fence_s +=
+                VehicleConfigHelper::GetConfig().vehicle_param().front_edge_to_center();
+    }
     if (boundary.boundary_type() == STBoundary::BoundaryType::KEEP_CLEAR) {
         fence_s = obstacle.PerceptionSLBoundary().start_s();
     }
@@ -646,7 +655,11 @@ void SpeedDecider::HandlePedestrianStop(Obstacle* obstacle) const {
         double fence_s;
         auto it = ped_fixed_fence_s_.find(id);
         if (it == ped_fixed_fence_s_.end()) {
-            fence_s = adc_sl_boundary_.end_s() + boundary.min_s() + stop_dist;
+            // mayaochang add19: compensate the -front_edge_to_center offset that
+            // STBoundaryMapper baked into boundary.min_s(), so the stop fence is
+            // really stop_dist meters before the pedestrian (scenario 5: 2.5m).
+            fence_s = adc_sl_boundary_.end_s() + boundary.min_s() + stop_dist
+                    + VehicleConfigHelper::GetConfig().vehicle_param().front_edge_to_center();
             ped_fixed_fence_s_[id] = fence_s;
             ADEBUG << "ped_fixed: record fence_s=" << fence_s << " id=" << id;
         } else {
