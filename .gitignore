@@ -56,6 +56,9 @@ submit/
 *.tar.gz
 .git_official_backup/
 .bash_history
+
+# Runtime data
+dumps/
 cyber/doxy-docs/xml
 
 # Esd can lib
