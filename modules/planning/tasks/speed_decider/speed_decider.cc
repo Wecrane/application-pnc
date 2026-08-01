@@ -217,41 +217,6 @@ Status SpeedDecider::MakeObjectDecision(const SpeedData& speed_profile, PathDeci
 
         if (boundary.IsEmpty() || boundary.max_s() < 0.0 || boundary.max_t() < 0.0
             || boundary.min_t() >= speed_profile.back().t()) {
-            // mayaochang add9: a PEDESTRIAN loses its ST boundary as soon as its
-            // lateral offset exceeds the overlap check in st_boundary_mapper
-            // (l_buffer + half_width ~ 1.8m). If we plain-ignore it here the ego
-            // starts moving while the pedestrian is still crossing the lane
-            // (lateral ~3-5m, speed ~2m/s) -> fails the competition "follow
-            // limit" check (scenario 6). Instead keep the FIXED stop fence via
-            // HandlePedestrianStop, which only releases (YIELD) once the
-            // pedestrian has BOTH laterally cleared the lane (|l| >= 3m) AND
-            // come to a stop (speed <= 0.3). HandlePedestrianStop computes the
-            // fence from the perception SL boundary, so an empty ST boundary is
-            // fine here.
-            //
-            // Only pedestrians that have ALREADY been stop-fenced while near
-            // the lane (i.e. a real lane-crosser: its lateral was < ~1.8m at
-            // some point, so ped_fixed_fence_s_ has a record) must keep the
-            // fixed fence once the ST boundary disappears. A roadside walker
-            // that never entered the lane near-region has no fence record and
-            // stays ignored - otherwise the ego would brake for every
-            // pedestrian walking on the sidewalk at lateral 3~6m.
-            if (obstacle->Perception().type() == PerceptionObstacle::PEDESTRIAN) {
-                // mayaochang add12: match the fence by BASE id (strip the
-                // dynamic-prediction suffix) so the STOP does not flicker when
-                // the obstacle id alternates between 7673 and 7673_0.
-                // mayaochang add13: fall back to a position match so a
-                // completely NEW id (perception re-assignment) still reuses
-                // the fence.
-                const std::string oid = obstacle->Id();
-                const std::string base_oid = oid.substr(0, oid.find('_'));
-                const auto& osl = mutable_obstacle->PerceptionSLBoundary();
-                const double o_s = (osl.start_s() + osl.end_s()) / 2.0;
-                if (HasPedFence(base_oid, o_s)) {
-                    HandlePedestrianStop(mutable_obstacle);
-                    continue;
-                }
-            }
             AppendIgnoreDecision(mutable_obstacle);
             continue;
         }
@@ -383,27 +348,13 @@ Status SpeedDecider::MakeObjectDecision(const SpeedData& speed_profile, PathDeci
                             ignore.mutable_ignore();
                             mutable_obstacle->AddLongitudinalDecision("dp_st_graph", ignore);
                         } else {
-                            // mayaochang add9b: a static / slow-moving
-                            // PEDESTRIAN must also go through
-                            // HandlePedestrianStop so a FIXED fence is
-                            // recorded. Otherwise, while the pedestrian is
-                            // stationary it takes this IsStatic branch (plain
-                            // STOP, no fence record) and once it starts
-                            // walking the dynamic STOP fence follows it -> the
-                            // ego creeps behind the moving pedestrian (fails
-                            // the competition "follow limit" check). With a
-                            // recorded fence, add9 keeps the fixed STOP even
-                            // after the pedestrian's ST boundary disappears,
-                            // and the ego only moves once the pedestrian is
-                            // laterally clear (>=3m) AND stopped.
+                            double stop_dist = -FLAGS_min_stop_distance_obstacle;
                             if (is_pedestrian) {
-                                HandlePedestrianStop(mutable_obstacle);
-                            } else {
-                                double stop_dist = -FLAGS_min_stop_distance_obstacle;
-                                ObjectDecisionType stop_decision;
-                                if (CreateStopDecision(*mutable_obstacle, &stop_decision, stop_dist)) {
-                                    mutable_obstacle->AddLongitudinalDecision("dp_st_graph", stop_decision);
-                                }
+                                stop_dist = -FLAGS_pedestrian_stop_distance;
+                            }
+                            ObjectDecisionType stop_decision;
+                            if (CreateStopDecision(*mutable_obstacle, &stop_decision, stop_dist)) {
+                                mutable_obstacle->AddLongitudinalDecision("dp_st_graph", stop_decision);
                             }
                         }
                     }
@@ -666,62 +617,28 @@ void SpeedDecider::HandlePedestrianStop(Obstacle* obstacle) const {
     const auto& boundary = obstacle->path_st_boundary();
     const auto& sl = obstacle->PerceptionSLBoundary();
     const double obs_l = std::fabs((sl.start_l() + sl.end_l()) / 2.0);
-    // mayaochang add9: fence is computed from the perception SL boundary, NOT
-    // from path_st_boundary.min_s(), because once the pedestrian moves >~1.8m
-    // laterally the ST boundary becomes empty (overlap check fails) while the
-    // pedestrian is still crossing the lane - we still need a stable fence.
-    const double obs_s = (sl.start_s() + sl.end_s()) / 2.0;
-    // mayaochang: the pedestrian must both be laterally clear of the lane AND
-    // have come to a stop before the ego proceeds. The scenario pedestrian
-    // keeps moving (2~3 m/s) while crossing from the lane center to lateral
-    // 11.2m, so with the speed<0.3 condition the 3.0m lateral threshold never
-    // releases early - the ego waits until the pedestrian is fully stopped
-    // (lateral 11.2m). A small threshold also avoids deadlocking other
-    // scenarios whose pedestrian stops at lateral 3~6m (e.g. junction/red
-    // light crossing) - they release as soon as the pedestrian stops.
-    static constexpr double kClearLateral = 3.0;  // lateral clear of lane
-    static constexpr double kMaxStopSpeed = 0.3;  // pedestrian considered stopped
-    const double obstacle_speed
-            = std::hypot(obstacle->Perception().velocity().x(), obstacle->Perception().velocity().y());
+    // mayaochang: lateral clear of lane. 2.5 was too small - a pedestrian
+    // 2.5m off center is still inside/near the lane (lane half width ~2.3m +
+    // pedestrian half width), so releasing at 2.5m let the ego drive past
+    // while the pedestrian was still beside the lane -> competition "follow
+    // limit" still failed. 3.5m = lane half width + pedestrian + buffer.
+    static constexpr double kClearLateral = 3.5;  // lateral clear of lane
     const std::string& id = obstacle->Id();
-    // mayaochang add12: strip the dynamic-prediction suffix (7673_0 -> 7673)
-    // so the static (7673) and dynamic (7673_0) obstacles of the SAME
-    // pedestrian share ONE fence. Otherwise the STOP decision flickers when
-    // the id switches (boundary empty for 7673_0 which has no fence record ->
-    // ignore), and the ego keeps a small speed while ~9.5m from the
-    // pedestrian - which trips the competition "follow limit" check.
-    const std::string base_id = id.substr(0, id.find('_'));
 
-    if (obs_l < kClearLateral || obstacle_speed > kMaxStopSpeed) {
-        // Pedestrian still inside the lane, or still moving -> keep a FIXED
-        // stop fence so the ego does not creep behind it.
+    if (obs_l < kClearLateral) {
+        // Pedestrian still inside the lane -> keep a FIXED stop fence.
         double stop_dist = -FLAGS_min_stop_distance_obstacle;
         if (IsPedestrianOnCrosswalk(*obstacle)) {
             stop_dist = -FLAGS_pedestrian_stop_distance;
         }
         double fence_s;
-        // mayaochang add13: base-id lookup first, then position fallback (a
-        // completely new obstacle id reuses the nearest recorded fence).
-        const double found_fence = GetPedFenceS(base_id, obs_s);
-        if (std::isnan(found_fence)) {
-            // mayaochang add11: when the ST boundary is available use its s
-            // (built by st_boundary_mapper from path geometry, reliable). Fall
-            // back to the perception SL s only when the ST boundary is empty
-            // (pedestrian laterally clear of the overlap check). The
-            // perception SL s can be noisy and land far behind the pedestrian
-            // (perception noise) -> fence in the wrong place -> ego drives
-            // through.
-            if (!boundary.IsEmpty()) {
-                fence_s = adc_sl_boundary_.end_s() + boundary.min_s() + stop_dist;
-            } else {
-                fence_s = obs_s + stop_dist;
-            }
-            ped_fixed_fence_s_[base_id] = fence_s;
-            ped_fixed_ped_s_[base_id] = obs_s;
-            ADEBUG << "ped_fixed: record fence_s=" << fence_s << " id=" << id
-                   << " base=" << base_id;
+        auto it = ped_fixed_fence_s_.find(id);
+        if (it == ped_fixed_fence_s_.end()) {
+            fence_s = adc_sl_boundary_.end_s() + boundary.min_s() + stop_dist;
+            ped_fixed_fence_s_[id] = fence_s;
+            ADEBUG << "ped_fixed: record fence_s=" << fence_s << " id=" << id;
         } else {
-            fence_s = found_fence;  // keep the originally recorded fence
+            fence_s = it->second;  // keep the originally recorded fence
         }
         const auto fence_point = reference_line_->GetReferencePoint(fence_s);
         ObjectDecisionType stop_decision;
@@ -734,50 +651,13 @@ void SpeedDecider::HandlePedestrianStop(Obstacle* obstacle) const {
         stop->set_stop_heading(fence_point.heading());
         obstacle->AddLongitudinalDecision("dp_st_graph/ped_fixed", stop_decision);
     } else {
-        // mayaochang add11: on release, completely DROP the pedestrian
-        // (IGNORE, not YIELD). A YIELD keeps a "give-way" semantic in the
-        // ST-graph that makes the ego steer slightly toward the pedestrian
-        // when it departs (small lateral offset toward the obstacle), which
-        // the competition "follow limit" check reads as the ego following the
-        // pedestrian. IGNORE removes ALL influence -> the ego drives straight
-        // and never triggers the follow state.
-        ped_fixed_fence_s_.erase(base_id);
-        ped_fixed_ped_s_.erase(base_id);
-        ObjectDecisionType ignore;
-        ignore.mutable_ignore();
-        obstacle->AddLongitudinalDecision("dp_st_graph/ped_release", ignore);
-    }
-}
-
-// mayaochang add13: look up the fixed fence by base id; if absent, match by
-// position (nearest recorded pedestrian SL s within kMatchMeters). Returns
-// NaN when nothing matches.
-double SpeedDecider::GetPedFenceS(const std::string& base_id, double ped_s) const {
-    auto it = ped_fixed_fence_s_.find(base_id);
-    if (it != ped_fixed_fence_s_.end()) {
-        return it->second;
-    }
-    static constexpr double kMatchMeters = 3.0;
-    double best = std::numeric_limits<double>::max();
-    double best_fence = std::numeric_limits<double>::quiet_NaN();
-    for (const auto& kv : ped_fixed_ped_s_) {
-        const double d = std::fabs(kv.second - ped_s);
-        if (d < best) {
-            best = d;
-            auto fit = ped_fixed_fence_s_.find(kv.first);
-            if (fit != ped_fixed_fence_s_.end()) {
-                best_fence = fit->second;
-            }
+        // Pedestrian has laterally cleared the lane -> release + yield.
+        ped_fixed_fence_s_.erase(id);
+        ObjectDecisionType yield_decision;
+        if (CreateYieldDecision(*obstacle, &yield_decision)) {
+            obstacle->AddLongitudinalDecision("dp_st_graph/ped_yield_clear", yield_decision);
         }
     }
-    if (best < kMatchMeters) {
-        return best_fence;
-    }
-    return std::numeric_limits<double>::quiet_NaN();
-}
-
-bool SpeedDecider::HasPedFence(const std::string& base_id, double ped_s) const {
-    return !std::isnan(GetPedFenceS(base_id, ped_s));
 }
 
 bool SpeedDecider::IsPedestrianOnCrosswalk(const Obstacle& obstacle) const {
