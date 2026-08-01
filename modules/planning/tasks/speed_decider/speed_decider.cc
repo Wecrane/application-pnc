@@ -240,9 +240,14 @@ Status SpeedDecider::MakeObjectDecision(const SpeedData& speed_profile, PathDeci
                 // mayaochang add12: match the fence by BASE id (strip the
                 // dynamic-prediction suffix) so the STOP does not flicker when
                 // the obstacle id alternates between 7673 and 7673_0.
+                // mayaochang add13: fall back to a position match so a
+                // completely NEW id (perception re-assignment) still reuses
+                // the fence.
                 const std::string oid = obstacle->Id();
                 const std::string base_oid = oid.substr(0, oid.find('_'));
-                if (ped_fixed_fence_s_.count(base_oid) > 0) {
+                const auto& osl = mutable_obstacle->PerceptionSLBoundary();
+                const double o_s = (osl.start_s() + osl.end_s()) / 2.0;
+                if (HasPedFence(base_oid, o_s)) {
                     HandlePedestrianStop(mutable_obstacle);
                     continue;
                 }
@@ -695,8 +700,10 @@ void SpeedDecider::HandlePedestrianStop(Obstacle* obstacle) const {
             stop_dist = -FLAGS_pedestrian_stop_distance;
         }
         double fence_s;
-        auto it = ped_fixed_fence_s_.find(base_id);
-        if (it == ped_fixed_fence_s_.end()) {
+        // mayaochang add13: base-id lookup first, then position fallback (a
+        // completely new obstacle id reuses the nearest recorded fence).
+        const double found_fence = GetPedFenceS(base_id, obs_s);
+        if (std::isnan(found_fence)) {
             // mayaochang add11: when the ST boundary is available use its s
             // (built by st_boundary_mapper from path geometry, reliable). Fall
             // back to the perception SL s only when the ST boundary is empty
@@ -710,10 +717,11 @@ void SpeedDecider::HandlePedestrianStop(Obstacle* obstacle) const {
                 fence_s = obs_s + stop_dist;
             }
             ped_fixed_fence_s_[base_id] = fence_s;
+            ped_fixed_ped_s_[base_id] = obs_s;
             ADEBUG << "ped_fixed: record fence_s=" << fence_s << " id=" << id
                    << " base=" << base_id;
         } else {
-            fence_s = it->second;  // keep the originally recorded fence
+            fence_s = found_fence;  // keep the originally recorded fence
         }
         const auto fence_point = reference_line_->GetReferencePoint(fence_s);
         ObjectDecisionType stop_decision;
@@ -734,10 +742,42 @@ void SpeedDecider::HandlePedestrianStop(Obstacle* obstacle) const {
         // pedestrian. IGNORE removes ALL influence -> the ego drives straight
         // and never triggers the follow state.
         ped_fixed_fence_s_.erase(base_id);
+        ped_fixed_ped_s_.erase(base_id);
         ObjectDecisionType ignore;
         ignore.mutable_ignore();
         obstacle->AddLongitudinalDecision("dp_st_graph/ped_release", ignore);
     }
+}
+
+// mayaochang add13: look up the fixed fence by base id; if absent, match by
+// position (nearest recorded pedestrian SL s within kMatchMeters). Returns
+// NaN when nothing matches.
+double SpeedDecider::GetPedFenceS(const std::string& base_id, double ped_s) const {
+    auto it = ped_fixed_fence_s_.find(base_id);
+    if (it != ped_fixed_fence_s_.end()) {
+        return it->second;
+    }
+    static constexpr double kMatchMeters = 3.0;
+    double best = std::numeric_limits<double>::max();
+    double best_fence = std::numeric_limits<double>::quiet_NaN();
+    for (const auto& kv : ped_fixed_ped_s_) {
+        const double d = std::fabs(kv.second - ped_s);
+        if (d < best) {
+            best = d;
+            auto fit = ped_fixed_fence_s_.find(kv.first);
+            if (fit != ped_fixed_fence_s_.end()) {
+                best_fence = fit->second;
+            }
+        }
+    }
+    if (best < kMatchMeters) {
+        return best_fence;
+    }
+    return std::numeric_limits<double>::quiet_NaN();
+}
+
+bool SpeedDecider::HasPedFence(const std::string& base_id, double ped_s) const {
+    return !std::isnan(GetPedFenceS(base_id, ped_s));
 }
 
 bool SpeedDecider::IsPedestrianOnCrosswalk(const Obstacle& obstacle) const {
