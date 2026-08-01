@@ -159,6 +159,13 @@ bool PathDecider::MakeStaticObstacleDecision(
             path_decision->AddLateralDecision("PathDecider/road_furniture", obstacle->Id(), object_decision);
             continue;
         }
+        // mayaochang add18: skip PEDESTRIAN here so PathDecider never builds
+        // a blocking STOP for it. The 6m blocking fence (min_stop_distance_
+        // obstacle) would otherwise override speed_decider's configured stop
+        // distance for the pedestrian (scenario 5 needs ~2.5m).
+        if (obstacle->Perception().type() == apollo::perception::PerceptionObstacle::PEDESTRIAN) {
+            continue;
+        }
         // - skip decision making for obstacles with IGNORE/STOP decisions already.
         if (obstacle->HasLongitudinalDecision() && obstacle->LongitudinalDecision().has_ignore()
             && obstacle->HasLateralDecision() && obstacle->LateralDecision().has_ignore()) {
