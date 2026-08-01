@@ -1,0 +1,904 @@
+syntax = "proto2";
+
+package apollo.simulation.osc;
+
+import "modules/dreamview_plus_plugins/simulator_tool/proto/sim_grading_metric.proto";
+
+import "modules/common_msgs/perception_msgs/traffic_light_detection.proto";
+import "modules/common_msgs/planning_msgs/pad_msg.proto";
+import "modules/common_msgs/routing_msgs/routing.proto";
+
+message FuzzingConfig {}
+
+// 智能障碍物配置
+message IntelligentObstacleConfig {
+  // 巡航速度范围 (m/s)
+  optional double cruise_speed_min = 1 [default = 10.0];
+  optional double cruise_speed_max = 2 [default = 15.0];
+  // 最大减速度 (m/s^2)，负值表示减速（紧急制动极限）
+  optional double max_deceleration = 3 [default = -3.0];
+  // 安全距离范围 (m)
+  optional double safe_distance_min = 4 [default = 7.0];
+  optional double safe_distance_max = 5 [default = 10.0];
+  // 检测距离 (m) - 检测前方障碍物和主车的最大距离
+  optional double detection_distance = 6 [default = 50.0];
+  // 是否启用智能障碍物行为
+  optional bool enabled = 7 [default = false];
+  // 最大加速度 (m/s^2)，IDM 模型参数 a
+  optional double max_acceleration = 8 [default = 2.0];
+  // 舒适减速度 (m/s^2)，正值，IDM 模型参数 b
+  optional double comfort_deceleration = 9 [default = 2.0];
+  // 最大 jerk (m/s^3)，加速度变化率上限，用于平滑过渡
+  optional double max_jerk = 10 [default = 5.0];
+  // 车道宽度 (m)，用于横向碰撞检测
+  optional double lane_width = 11 [default = 3.75];
+}
+
+// 真实感知模拟配置 - 模拟真实传感器的漏检、ID切换等特性
+message RealisticPerceptionConfig {
+  // 是否启用真实感知模拟
+  optional bool enabled = 1 [default = false];
+  
+  // 漏检模拟配置
+  message MissDetectionConfig {
+    optional bool enabled = 1 [default = false];
+    // 漏检概率 (0.0-1.0)
+    optional double rate = 2 [default = 0.05];
+    // 单次漏检持续时间范围 (s)
+    optional double duration_min = 3 [default = 0.1];
+    optional double duration_max = 4 [default = 0.5];
+  }
+  optional MissDetectionConfig miss_detection = 2;
+  
+  // ID切换模拟配置
+  message IdSwitchConfig {
+    optional bool enabled = 1 [default = false];
+    // ID切换概率 (0.0-1.0)
+    optional double rate = 2 [default = 0.02];
+    // 两次ID切换间隔范围 (s)
+    optional double interval_min = 3 [default = 2.0];
+    optional double interval_max = 4 [default = 8.0];
+  }
+  optional IdSwitchConfig id_switch = 3;
+  
+  // 检测距离限制配置
+  message DetectionRangeConfig {
+    optional bool enabled = 1 [default = false];
+    // 检测距离范围 (m)
+    optional double range_min = 2 [default = 0.0];
+    optional double range_max = 3 [default = 200.0];
+    // 水平视场角 (度)
+    optional double fov_angle = 4 [default = 120.0];
+  }
+  optional DetectionRangeConfig detection_range = 4;
+}
+
+// 动态车流生成点配置
+message TrafficFlowSpawnPoint {
+  // 生成点名称（唯一标识）
+  optional string name = 1;
+  // 车辆生成位置（世界坐标）
+  optional double spawn_x = 2;
+  optional double spawn_y = 3;
+  optional double spawn_heading = 4 [default = 0.0];
+  // 车辆模板（可选，默认为标准轿车）
+  optional Vehicle vehicle_template = 5;
+  // 密度控制模式
+  enum DensityMode {
+    TIME_INTERVAL = 0;     // 按时间间隔生成
+    DISTANCE_SPACING = 1;  // 按距离间隔生成
+  }
+  optional DensityMode density_mode = 6 [default = DISTANCE_SPACING];
+  // TIME_INTERVAL 模式：生成间隔（秒）
+  optional double spawn_interval_s = 7 [default = 5.0];
+  // DISTANCE_SPACING 模式：前车行驶多远后生成下一辆（米）
+  optional double spawn_distance_m = 8 [default = 30.0];
+  // 该生成点同时存在的最大车辆数
+  optional int32 max_vehicles = 9 [default = 10];
+  // 巡航速度范围覆盖（如果不设置则使用全局 IntelligentObstacleConfig）
+  optional double cruise_speed_min = 10;
+  optional double cruise_speed_max = 11;
+  // 生成的车道跟随轨迹长度（米）
+  optional double trajectory_length_m = 12 [default = 500.0];
+  // 车辆终点位置（世界坐标，可选）
+  // 如果设置终点，车辆到达终点附近即被回收
+  // 如果不设置，车辆按 trajectory_length_m 行驶后回收
+  optional double end_x = 13;
+  optional double end_y = 14;
+
+  // 中途路由点（世界坐标），车辆将按顺序经过这些点
+  // 用于指定动态车流的行驶路径，而非仅靠车道跟随自动生成
+  message RouteWaypoint {
+    optional double x = 1;
+    optional double y = 2;
+  }
+  repeated RouteWaypoint route_waypoints = 15;
+
+  // 横向碰撞检测阈值（米，可选）
+  // 控制本车流车辆将多远横向距离内的障碍物（含主车、其他车流）视为前方阻挡。
+  // 不设置时使用默认值（lane_width * 0.4 ≈ 1.5m）。
+  // 需要对主车更敏感的车流（如需要主车穿越时让路）可设为较大值（如 3.0）；
+  // 平行相邻车道不希望互相干扰的车流可设为较小值（如 1.0）。
+  optional double lateral_threshold = 16;
+}
+
+// 动态车流配置
+message DynamicTrafficFlowConfig {
+  // 总开关
+  optional bool enabled = 1 [default = false];
+  // 多个生成点
+  repeated TrafficFlowSpawnPoint spawn_points = 2;
+  // 动态生成车辆的 ID 起始值（避免与静态障碍物 ID 冲突）
+  optional int32 start_id = 3 [default = 30000];
+  // ID 范围大小
+  optional int32 id_range = 4 [default = 20000];
+}
+
+message DriveActionConfig {
+  optional apollo.planning.PadMessage.DrivingAction drive_action = 1 [default = NONE];
+  optional double trigger_time = 2 [default = 0.0];
+}
+
+message Scenario {
+  optional string name = 1; //转osc，来自文件名
+  optional string description = 2;  //转osc时：来自openscenario.fileheadr.description
+  optional FileHeader file_header = 3;  // 这个字段在osc中是required，但是
+  // ScenarioDefinition字段4-6
+  repeated ParameterDeclaration parameter_declarations = 4;  // 参数声明【可以用于场景泛化】我们暂时不支持
+  required RoadNetwork road_network = 5;  //地图信息
+  optional Entities entities = 6;  //障碍物属性配置，静态,对于worldsim是必须的 代替之前的agent-静态
+  optional Storyboard storyboard = 7;  // 障碍物行为配置，对于worldsim是必须的
+  // 代替之前的agent-动态+场景结束条件！【storyboard-stoptrigger】
+  // 上面来自osc的scenario defintion
+  optional AutoCarInfo auto_car_info = 8;  //主车配置放在一起，如果osc转化直接从主车拿，对于worldsim是必须的
+  optional LogsimInfo logsim_info = 9;  // logsim配置，对于logsim是必须的
+  optional GradingConfigInfo grading_config_info = 10;  //评分配置
+   // a sequence of driving actions
+  repeated DriveActionConfig drive_action_config = 11;
+  optional FuzzingConfig fuzzing_config = 12;
+
+  // Traffic light detection distance.
+  optional double detect_distance = 13 [default = 120.0];
+
+  // The scenario should be run in one of the modes.
+  enum Mode {
+    WORLDSIM = 0;
+    LOGSIM = 1;
+    LOGSIM_CONTROL = 2;
+    LOGSIM_PERCEPTION = 3;
+    LOG2WORLDSIM = 4;
+  }
+  optional Mode mode = 14 [default = WORLDSIM];
+
+  // Only use in worldsim for special scenario conf use multi agent server
+  optional bool traffic_flow = 15 [default = false];
+    // 智能障碍物配置
+  optional IntelligentObstacleConfig intelligent_obstacle_config = 16;
+  
+  // 真实感知模拟配置
+  optional RealisticPerceptionConfig realistic_perception_config = 17;
+
+  // 动态车流配置
+  optional DynamicTrafficFlowConfig dynamic_traffic_flow_config = 18;
+}
+
+enum Rule {
+  equalTo = 0;
+  greaterThan = 1;
+  lessThan = 2;
+  greaterOrEqual = 3;
+  lessOrEqual = 4;
+  notEqualTo = 5;
+}
+
+enum ParameterType {
+  int = 0;
+  double = 1;
+  string = 2;
+  unsignedInt = 3;//uint32
+  unsignedShort = 4;//uint32
+  boolean = 5;
+  dateTime = 6;
+}
+
+message ParameterDeclaration {
+  required string name = 1;
+  required string value = 2;
+  required ParameterType parameter_type = 3;
+  message ValueConstraintGroup {
+    message ValueConstraint {
+      required Rule rule = 1;
+      required string value = 2;
+    }
+    // required&repeated
+    repeated ValueConstraint constraints = 2;  //>=1，代码校验
+  }
+  repeated ValueConstraintGroup constraint_groups = 4;  //为参数值定义零个或多个约束组。 多个约束组通过 OR 组合。
+  // 这意味着至少一个约束组必须评估为 true 才能开始模拟。
+  // 如果没有任何约束组得到满足，则不应评估场景。
+}
+
+message File {
+  required string filepath = 1;
+}
+message TrajectoryRef {
+  message Shape {
+    message Polyline {
+      message Vertex {
+        optional double time = 1;
+        required Position position = 2;
+      }
+      // required&repeated(>=2)
+      repeated Vertex vertices = 1;
+    }
+    oneof one_of_shape {
+      Polyline polyline = 1;
+      // Clothoid clothoid = 2;
+      // Nurbs nurbs = 3;
+    }
+  }
+  message Trajectory {
+    optional string name = 1;
+    optional bool closed = 2 [default = false];
+    repeated ParameterDeclaration parameter_declarations = 3;
+    required Shape shape = 4;
+  }
+  oneof one_of_trajectory_ref {
+    Trajectory trajectory = 1;
+    // CatalogReference catalog_reference = 2;
+  }
+}
+
+message Position {
+  message WorldPosition {
+    required double x = 1;
+    required double y = 2;
+    optional double z = 3 [default = 0];
+    optional double h = 4 [default = 0];  // heading
+    optional double p = 5 [default = 0];  // pitch
+    optional double r = 6 [default = 0];  // roll
+    optional double v = 7 [default = 0];  // velocity
+  }
+  oneof one_of_position {
+    WorldPosition world_position = 1;  //初级仅支持世界坐标系
+    // RelativeWorldPosition relativeWorldPosition = 2;
+    // RelativeObjectPosition relativeObjectPosition = 3;
+    // RoadPosition roadPosition = 4;
+    // RelativeRoadPosition relativeRoadPosition = 5;
+    // LanePosition lanePosition = 6;
+    // RelativeLanePosition relativeLanePosition = 7;
+    // RoutePosition routePosition = 8;
+    // GeoPosition geoPosition = 9;
+    // TrajectoryPosition trajectoryPosition = 10;
+  }
+}
+
+message TL {
+  optional string id = 1;
+  message Location {
+    optional double x = 1;
+    optional double y = 2;
+    optional double z = 3;
+  }
+  optional Location location = 2;
+
+  enum TriggerType {
+    NA = 0;  // The traffic light will stay in initial_state.
+    DISTANCE = 1;
+    TIME = 2;
+  }
+  optional TriggerType trigger_type = 3 [default = NA];
+  // Trigger Distance or Trigger Time
+  optional double trigger_value = 4 [default = 30.0];
+
+  message State {
+    optional apollo.perception.TrafficLight.Color color = 1 [default = GREEN];
+    optional bool blink = 2 [default = false];
+    optional double keep_time = 3 [default = 10.0];
+  }
+  optional State initial_state = 5;
+  repeated State state_group = 6;
+}
+
+message DefaultTLConfig {
+  // 对应之前的default traffic config
+  enum DefaultLightBehavior {
+    ALWAYS_GREEN = 0;
+    CYCLICAL = 1;  // Traffic lights change by red -> green -> yellow cycles.
+  }
+  optional DefaultLightBehavior default_light_behavior = 20 [default = ALWAYS_GREEN];
+  optional double red_time = 21 [default = 15.0];
+  optional double green_time = 22 [default = 13.0];
+  optional double yellow_time = 23 [default = 3.0];
+}
+
+message FileHeader {
+  required string author = 1;  //业务信息
+  required string date = 2;  //业务信息 dateTime 旧类型
+  required string description = 3;
+  required uint32 rev_major = 4;// unsignedShort 旧类型
+  required uint32 rev_minor = 5;// unsignedShort 旧类型
+  message License {
+    required string name = 1;
+    optional string resource = 2;
+    optional string sqdxld = 3;
+    optional string text = 4;
+  }
+  optional License license = 6;
+  optional Properties properties = 7;
+}
+
+message AutoCarInfo {
+  message Point {
+    optional double x = 1;
+    optional double y = 2;
+    optional double heading = 3;
+    // TODO: add lane-id and ratio.
+  }
+  // Only use in WorldSim.
+  optional Point start = 1;
+  optional Point end = 2;
+  optional Point parking_point = 3;
+  // This is used if 1) the logsim bag does not contain one.
+  // 2) the worldsim has different start pose for routing and ego car.
+  optional apollo.routing.RoutingRequest routing_request = 4;
+  // Initial velocity and acceleration of the main vehicle
+  optional double start_velocity = 5 [default = 0.0];
+  optional double start_acceleration = 6 [default = 0.0];
+}
+
+message LogsimInfo {
+  // Only use in LogSim
+  repeated string origin_log_file_path = 1;
+  optional double log_file_start_time = 2;
+  optional double log_file_end_time = 3;
+  // The backtrack time to start running perfect_control once a disengage is
+  // detected.
+  optional double backtrack_time = 4 [default = 1.0];
+  // Only use in LogSim
+  optional string vehicle = 5;
+}
+
+message GradingConfigInfo {
+  // metric specific to the scenario.
+  optional apollo.dreamview.osc.GradingConfig grade_config = 1;
+  // file path to its base metric config
+  optional string base_grade_config_file = 2;
+  repeated string select_default_metric = 3;
+  repeated string deselect_default_metric = 4;
+}
+
+message RoadNetwork {
+  // 不支持odr所以和odr相关的traffic signal
+  // controller注释，也暂时不支持区域used_area注释
+  optional File logic_file = 1;  //和地图的map_dir对应 旧：scenario.map_dir
+  // optional File sceneGraphFile = 2; 不支持3d所以删掉
+  // repeated TrafficSignalController trafficSignals = 3;
+  // The overriden traffic lights behavior
+  // 1.定制信号灯的行为
+  repeated TL traffic_lights = 2;
+  // 2.定义默认灯的行为【找不到特殊的tf配置的时候】
+  optional DefaultTLConfig default_tl_config = 3;
+}
+
+enum Role {
+  none = 0;  // no specific role
+  ambulance = 1;
+  civil = 2;
+  fire = 3;
+  military = 4;  // e.g. camouflaged truck.
+  police = 5;
+  publicTransport = 6;  // eg:a school bus.
+  roadAssistance = 7;   // e.g. tow truck.
+}
+
+message BoundingBox {
+  optional Center center = 1;
+  required Dimensions dimensions = 2;
+  message Center {
+    required double x = 1;
+    required double y = 2;
+    required double z = 3;
+  }
+  message Dimensions {
+    required double length = 1;
+    required double width = 2;
+    required double height = 3;
+  }
+}
+
+message Performance {
+  required double max_acceleration = 1;
+  required double max_deceleration = 2;
+  required double max_speed = 3;
+  optional double max_acceleration_rate = 4 [default = inf];
+  optional double max_deceleration_rate = 5 [default = inf];
+}
+
+message Axles {
+  message Axle {
+    required double max_steering = 1;
+    required double position_x = 2;
+    required double position_z = 3;
+    required double track_width = 4;
+    required double wheel_diameter = 5;
+  }
+  required Axle front_axle = 1;
+  required Axle rear_axle = 2;
+  repeated Axle additional_axles = 3;
+}
+
+message Properties {
+  message Property {
+    required string name = 1;
+    required string value = 2;
+  }
+  repeated Property properties = 1;
+  repeated File files = 2;
+  repeated CustomContent custom_content = 3;  //这个不是很理解
+  message CustomContent {
+    required string content = 1;
+  }
+}
+message Vehicle {
+  optional double mass = 1;
+  optional string model3d = 2;
+  optional string name = 3;  // 之前是required
+  optional Role role = 4 [default = none];
+  required VehicleCategory vehicle_category = 5;  //具体分类
+  repeated ParameterDeclaration parameter_declarations = 6;
+  required BoundingBox bounding_box = 7;
+  optional Performance performance = 8;  // 之前是required
+  optional Axles axles = 9;              // 车轴// 之前是required
+  optional Properties properties = 10;   // 之前是required
+  enum VehicleCategory {
+    bicycle = 0;
+    bus = 1;
+    car = 2;
+    motorbike = 3;
+    semitrailer = 4;
+    trailer = 5;
+    train = 6;
+    tram = 7;
+    truck = 8;
+    van = 10;
+    unknow = 11;
+  }
+}
+
+message Pedestrian {
+  optional double mass = 1;
+  optional string model3d = 2;
+  optional string name = 3;
+  optional Role role = 4 [default = none];
+  required PedestrianCategory pedestrian_category = 5;  //具体分类
+  repeated ParameterDeclaration parameter_declarations = 6;
+  required BoundingBox bounding_box = 7;
+  optional Properties properties = 8;  // 之前是required
+  enum PedestrianCategory {
+    animal = 0;
+    pedestrian = 1;
+    wheelchair = 2;
+  }
+}
+
+message MiscObject {
+  optional double mass = 1;
+  optional string model3d = 2;
+  optional string name = 3;
+  required MiscObjectCategory misc_object_category = 4;  //具体分类
+  repeated ParameterDeclaration parameter_declarations = 5;
+  required BoundingBox bounding_box = 6;
+  optional Properties properties = 7;  // 之前是required
+  enum MiscObjectCategory {
+    barrier = 0;
+    building = 1;
+    crosswalk = 2;
+    gantry = 3;
+    none = 4;
+    obstacle = 5;  // Not further defined obstacle
+    parkingSpace = 6;
+    patch = 7;
+    pole = 8;
+    railing = 9;         // A railing or guard rail.
+    roadMark = 10;       // Not further defined road mark.
+    soundBarrier = 11;   // A sound barrier.
+    streetLamp = 12;     // A street lamp.
+    trafficIsland = 13;  // A traffic island.
+    tree = 14;
+    vegetation = 15;  // Not further defined vegetation.
+  }
+}
+
+// message UnknownMovableObject {
+//   //  我们自己创建，兼容之前 UNKNOWN_MOVABLE
+//   required BoundingBox bounding_box = 1;
+// }
+
+message UnknownUnMovableObject {
+  //  我们自己创建，兼容之前类型:UNKNOWN_UNMOVABLE
+  required BoundingBox bounding_box = 1;
+}
+
+message EntityObject {
+  oneof one_of_entity_object {
+    // CatalogReference catalogReference = 1;
+    Vehicle vehicle = 1;  // 所有初始位置初始速度这些动态的都不会体现在这里，都在init以及Act中【这是最大的差异】
+    Pedestrian pedestrian = 2;
+    MiscObject miscObject = 3;
+    // ExternalObjectReference externalObjectReference = 5;
+    // UnknownMovableObject unknown_movable_object = 4;
+    UnknownUnMovableObject unknown_unmovable_object = 4;
+  }
+}
+
+message EntityRef {
+  required string entity_ref =
+      1;  //引用具体的实体的,用来标识独一无二的entity
+          // 1.我们：有id无name，转化的时候name=id；2.osc有name，无id,我们生成一个独一无二的id
+  // 引用基于name来找【对于我们就是基于id来找】
+}
+
+message ScenarioObject {
+  required string name = 1;
+  required int32 id = 2;  // 我们新+的，和之前的agentConfig.id对应，这样可以保证发送perception
+          // obstacle的逻辑
+  required EntityObject entity_object = 3;
+  optional string describe = 4;
+  // repeated ObjectController objectController = 3; //当前不支持Object
+  // controller
+}
+
+message Entities {
+  repeated ScenarioObject scenario_objects = 1;
+  // repeated EntitySelection entitySelections =
+  // 2;//后续支持这个字段，当前暂不支持
+}
+
+message TransitionDynamics {
+  enum DynamicsDimension {
+    distance = 0;  // 经过多少距离
+    rate = 1;      // 预定义rate
+    time = 2;      //预定义时间
+  }
+  enum DynamicsShape {
+    linear = 0;  //线性
+    cubic = 1;
+    sinusoidal = 2;
+    step = 3;
+  }
+  required DynamicsDimension dynamics_dimension = 1;  // 动态维度
+  optional DynamicsShape dynamics_shape = 2 [default = linear];  // f(x)当前值和目标值之间转换函数的形状,我们默认支持线性
+  optional FollowingMode following_mode = 3 [default = position];
+  required double value = 4;  //动态维度的值，rate-delta/s time:s distance:m
+}
+
+message SpeedAction {
+  message SpeedActionTarget {
+    oneof one_of_speed_action_target {
+      RelativeTargetSpeed relative_target_speed = 1;
+      AbsoluteTargetSpeed absolute_target_speed = 2;
+    }
+    message AbsoluteTargetSpeed {
+      required double value = 1;  //绝对速度值
+    }
+    message RelativeTargetSpeed {
+      optional bool continuous = 1 [default = false];  //连续保持，深入理解
+      required EntityRef entity_ref = 2;               //相对实体
+      required SpeedTargetValueType speed_target_value_type = 3;
+      required double value = 4;  //相对速度值
+    }
+  }
+  required TransitionDynamics speed_action_dynamics = 1;
+  required SpeedActionTarget speed_action_target = 2;
+}
+
+enum SpeedTargetValueType {
+  delta = 0;   // m/s
+  factor = 1;  // 1.1 10%faster
+}
+
+message DynamicConstraints {
+  optional double max_acceleration = 1;
+  optional double max_acceleration_rate = 2;
+  optional double max_deceleration = 3;
+  optional double max_deceleration_rate = 4;
+  optional double max_speed = 5;
+}
+
+enum CoordinateSystem {
+  entity = 0;  //基于实体局部坐标系的原点，笛卡尔坐标系
+  lane = 1;  // 基于道路的 s,t 坐标系（s轴是实体所在车道的车道中心线）。
+  road = 2;  // 基于道路的 s,t 坐标系（s轴是实体所在道路的道路中心线）。
+  trajectory = 3;  // 基于轨迹的 s,t 坐标系（s 轴是实体所遵循的轨迹弧）
+}
+
+message LongitudinalAction {
+  oneof one_of_longitudinal_action {
+    SpeedAction speed_action = 1;
+    // LongitudinalDistanceAction longitudinalDistanceAction = 2;
+    // SpeedProfileAction speedProfileAction = 3;
+  }
+}
+
+message LaneChangeAction {
+  required TransitionDynamics lane_change_action_dynamics = 1;
+  required LaneChangeTarget lane_change_target = 2;
+  optional double target_lane_offset = 3 [default = 0];
+  message LaneChangeTarget {
+    oneof one_of_lane_change_target {
+      RelativeTargetLane relative_target_lane = 1;
+      // AbsoluteTargetLane absolute_target_lane = 2; 暂时不支持
+    }
+    message RelativeTargetLane {
+      required EntityRef entity_ref = 1;
+      required int32 value = 2;
+    }
+    // message AbsoluteTargetLane{
+    //     required string value = 1;//target Lane id
+    // }
+  }
+}
+
+message LateralAction {
+  oneof one_of_lateral_action {
+    LaneChangeAction lane_change_action = 1;
+    // LaneOffsetAction laneOffsetAction = 2;
+    // LateralDistanceAction lateralDistanceAction = 3;
+  }
+}
+
+message TeleportAction {
+  required Position position = 1;
+}
+
+enum FollowingMode {
+  position = 0;  //严格
+  follow = 1;    //尽可能跟随
+}
+
+message RoutingAction {
+  oneof one_of_routing_action {
+    // AssignRouteAction assignRouteAction = 1;
+    FollowTrajectoryAction follow_trajectory_action = 2;
+    // AcquirePositionAction acquirePositionAction = 3;
+  }
+  message FollowTrajectoryAction {
+    optional double initial_distance_offset = 1;
+    optional TimeReference time_reference = 2;
+    optional TrajectoryFollowingMode trajectory_following_mode =
+        3;  //之前required
+    optional TrajectoryRef trajectory_ref = 4;
+
+    message TrajectoryFollowingMode {
+      optional FollowingMode following_mode = 1 [default = position];
+    }
+    message TimeReference {
+      oneof one_of_time_reference {
+        None none = 1;
+        // Timing timing = 2;//未深入
+        // https://www.asam.net/static_downloads/ASAM_OpenSCENARIO_V1.2.0_Model_Documentation/modelDocumentation/content/Timing.html
+      }
+      message None {
+      };
+    }
+  }
+}
+
+message PrivateAction {
+  oneof one_of_private_action {
+    LongitudinalAction longitudinal_action = 1;  //控制实体的纵向行为。
+    LateralAction lateral_action = 2;
+    TeleportAction teleport_action = 3;
+    RoutingAction routing_action = 4;
+    // ControllerAction controllerAction = 5;
+    // VisibilityAction visibilityAction = 6;
+    // SynchronizeAction synchronizeAction = 7;
+    // AppearanceAction appearanceAction = 8;
+  }
+}
+
+message Private {
+  required EntityRef entity_ref = 1;
+  // required&repeated
+  repeated PrivateAction private_actions = 2;  //>=1
+}
+
+message InitActions {
+  // init目前只支持private中的2-4个
+  // repeated GlobalAction globalActions = 1;
+  // repeated UserDefinedAction userDefinedActions = 2;
+  repeated Private privates = 3;
+}
+
+message Init {
+  required InitActions actions = 1;
+}
+
+message Actors {
+  optional bool select_triggering_entities = 1 [default =false];  //指示触发中的实体是否被视为actors，这个字段我一直不是很理解
+  repeated EntityRef entity_refs = 2;
+}
+
+message Maneuver {
+  optional string name = 1;  // osc required
+  repeated ParameterDeclaration parameter_declarations = 2;
+  // required&repeated
+  repeated Event events = 3;  //真正要演的戏>=1
+}
+
+message Event {
+  optional uint32 maximum_execution_count = 1 [default = 1];  //>=1 unsignedInt
+  required string name = 2;
+  optional Priority priority = 3 [default = parallel];  //多个事件Pk优先级
+  // required&repeated
+  repeated Action actions =4;  //和trigger的关系一对多 多个Action同时执行，有冲突后者覆盖前者//至少一个
+  optional Trigger start_trigger = 5;
+
+  enum Priority {
+    override = 0;
+    parallel = 1;
+    skip = 2;
+  }
+}
+
+message Action {
+  required string name = 1;
+  optional PrivateAction private_action = 2;
+  // oneof{
+  // GlobalAction globalAction = 1;
+  // UserDefinedAction userDefinedAction = 2;
+  // Private privateAction = 3;
+  //}
+}
+
+message ManeuverGroup {
+  optional uint32 maximum_execution_count = 1 [default = 1];  //>=1 unsignedInt
+  optional string name = 2;    // osc required
+  required Actors actors = 3;  //演员
+  // repeated CatalogReference catalog_references = 4;//maneuver的引用
+  repeated Maneuver maneuvers = 4;  //里面代表着一堆事件，真正的动作 目前支持力度是1个
+}
+
+message Act {
+  optional string name = 1;
+  // required&repeated
+  repeated ManeuverGroup maneuver_groups = 2;  // >=1
+  optional Trigger start_trigger =
+      3;  // osc是required,没有就是仿真场景开始，有的话，但是目前暂时没有做act的开始逻辑
+  optional Trigger stop_trigger = 4;
+}
+
+message Story {
+  optional string name = 1;  //必须unique 对于Osc必须
+  repeated ParameterDeclaration parameter_declarations = 2;
+  // required&repeated
+  repeated Act acts = 3;  //>=1
+}
+
+message Storyboard {
+  required Init init = 1;
+  repeated Story stories = 2;
+  required Trigger stop_trigger = 3;
+}
+
+message Trigger {
+  repeated ConditionGroup condition_groups = 1;  // OR运算
+}
+
+message ConditionGroup {
+  // required&repeated
+  repeated Condition conditions = 1;  // AND运算 >=1
+}
+
+message Condition {
+  required ConditionEdge condition_edge = 1;
+  optional double delay = 2 [default = 0];
+  optional string name = 3;
+  oneof one_of_condition {
+    ByEntityCondition by_entity_condition = 4;
+    ByValueCondition by_value_condition = 5;
+  }
+
+  enum ConditionEdge {
+    falling = 0;
+    none = 1;
+    rising = 2;
+    risingOrFalling = 3;
+  }
+  message TriggeringEntities {
+    enum TriggeringEntitiesRule {
+      all = 0;
+      any = 1;
+    }
+    required TriggeringEntitiesRule triggering_entities_rule = 1;
+    // required&repeated
+    repeated EntityRef entity_refs = 2;  //指向真正的实体 >=1
+  }
+  enum RelativeDistanceType {
+    lateral = 0;
+    longitudinal = 1;
+    euclidianDistance = 2;
+  }
+  enum RoutingAlgorithm {
+    undefined = 0;
+    assignedRoute = 1;
+    fastest = 2;
+    leastIntersections = 3;
+    shortest = 4;
+  }
+  message SpeedCondition {
+    required Rule rule = 1;
+    required double value = 2;
+    enum DirectionalDimension {
+      longitudinal = 0;  // x
+      lateral = 1;       // y
+      vertical = 2;      // z
+    }
+    optional DirectionalDimension direction = 3;  //没给的话会考虑全部x-y-z
+  }
+  message DistanceCondition {
+    // 将实体与位置之间的当前距离与给定距离（小于、大于、等于）进行比较。
+    // 可以定义几个附加参数，例如可用空间等。
+    optional CoordinateSystem coordinate_system = 1;
+    required Position position = 2;  //用于计算位置的坐标
+    optional bool freespace = 3 [default = true];
+    optional RelativeDistanceType relative_distance_type = 4;
+    optional RoutingAlgorithm routing_algorithm = 5;
+    required Rule rule = 6;
+    required double value = 7;  //给定距离
+  }
+  message RelativeDistanceCondition {
+    optional CoordinateSystem coordinate_system = 1;
+    required EntityRef entity_ref = 2;
+    optional bool freespace = 3 [default = true];  // true是box，false是center
+    optional RelativeDistanceType relative_distance_type = 4;
+    optional RoutingAlgorithm routing_algorithm = 5;
+    required Rule rule = 6;
+    required double value = 7;
+  }
+  message EntityCondition {
+    oneof one_of_entity_condition {
+      // EndOfRoadCondition endOfRoadCondition = 1;
+      // CollisionCondition collisionCondition = 2;
+      // OffroadCondition offroadCondition = 3;
+      // TimeHeadwayCondition timeHeadwayCondition = 4;
+      // TimeToCollisionCondition timeToCollisionCondition = 5;
+      // AccelerationCondition accelerationCondition = 6;
+      // StandStillCondition standStillCondition = 7;
+      SpeedCondition speed_condition = 1;
+      // RelativeSpeedCondition relativeSpeedCondition = 9;
+      // TraveledDistanceCondition traveledDistanceCondition = 10;
+      DistanceCondition distance_condition = 2;
+      RelativeDistanceCondition relative_distance_condition = 3;
+      // RelativeClearanceCondition relativeClearanceCondition = 13;
+    }
+  }
+  message ByEntityCondition {
+    required TriggeringEntities triggering_entities = 1;  //触发他的实体
+    required EntityCondition entity_condition = 2;
+  }
+
+  message SimulationTimeCondition {
+    required Rule rule = 1;
+    required double value = 2;
+  }
+  message ByValueCondition {
+    oneof one_of_by_value_condition {
+      // ParameterCondition parameterCondition = 1;
+      // TimeOfDayCondition timeOfDayCondition = 2;
+      SimulationTimeCondition simulation_time_condition = 1;
+      // StoryboardElementStateCondition storyboardElementStateCondition = 4;
+      // UserDefinedValueCondition userDefinedValueCondition = 5;
+      // TrafficSignalCondition trafficSignalCondition = 6;
+      // TrafficSignalControllerCondition trafficSignalControllerCondition = 7;
+      // VariableCondition variableCondition = 8;
+    }
+  }
+}
+
+enum StoryboardElementState {
+  standbyState = 0;
+  runningState = 1;
+  completeState = 2;
+}
