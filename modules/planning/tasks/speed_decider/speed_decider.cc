@@ -236,10 +236,16 @@ Status SpeedDecider::MakeObjectDecision(const SpeedData& speed_profile, PathDeci
             // that never entered the lane near-region has no fence record and
             // stays ignored - otherwise the ego would brake for every
             // pedestrian walking on the sidewalk at lateral 3~6m.
-            if (obstacle->Perception().type() == PerceptionObstacle::PEDESTRIAN
-                && ped_fixed_fence_s_.count(obstacle->Id()) > 0) {
-                HandlePedestrianStop(mutable_obstacle);
-                continue;
+            if (obstacle->Perception().type() == PerceptionObstacle::PEDESTRIAN) {
+                // mayaochang add12: match the fence by BASE id (strip the
+                // dynamic-prediction suffix) so the STOP does not flicker when
+                // the obstacle id alternates between 7673 and 7673_0.
+                const std::string oid = obstacle->Id();
+                const std::string base_oid = oid.substr(0, oid.find('_'));
+                if (ped_fixed_fence_s_.count(base_oid) > 0) {
+                    HandlePedestrianStop(mutable_obstacle);
+                    continue;
+                }
             }
             AppendIgnoreDecision(mutable_obstacle);
             continue;
@@ -673,6 +679,13 @@ void SpeedDecider::HandlePedestrianStop(Obstacle* obstacle) const {
     const double obstacle_speed
             = std::hypot(obstacle->Perception().velocity().x(), obstacle->Perception().velocity().y());
     const std::string& id = obstacle->Id();
+    // mayaochang add12: strip the dynamic-prediction suffix (7673_0 -> 7673)
+    // so the static (7673) and dynamic (7673_0) obstacles of the SAME
+    // pedestrian share ONE fence. Otherwise the STOP decision flickers when
+    // the id switches (boundary empty for 7673_0 which has no fence record ->
+    // ignore), and the ego keeps a small speed while ~9.5m from the
+    // pedestrian - which trips the competition "follow limit" check.
+    const std::string base_id = id.substr(0, id.find('_'));
 
     if (obs_l < kClearLateral || obstacle_speed > kMaxStopSpeed) {
         // Pedestrian still inside the lane, or still moving -> keep a FIXED
@@ -682,7 +695,7 @@ void SpeedDecider::HandlePedestrianStop(Obstacle* obstacle) const {
             stop_dist = -FLAGS_pedestrian_stop_distance;
         }
         double fence_s;
-        auto it = ped_fixed_fence_s_.find(id);
+        auto it = ped_fixed_fence_s_.find(base_id);
         if (it == ped_fixed_fence_s_.end()) {
             // mayaochang add11: when the ST boundary is available use its s
             // (built by st_boundary_mapper from path geometry, reliable). Fall
@@ -696,8 +709,9 @@ void SpeedDecider::HandlePedestrianStop(Obstacle* obstacle) const {
             } else {
                 fence_s = obs_s + stop_dist;
             }
-            ped_fixed_fence_s_[id] = fence_s;
-            ADEBUG << "ped_fixed: record fence_s=" << fence_s << " id=" << id;
+            ped_fixed_fence_s_[base_id] = fence_s;
+            ADEBUG << "ped_fixed: record fence_s=" << fence_s << " id=" << id
+                   << " base=" << base_id;
         } else {
             fence_s = it->second;  // keep the originally recorded fence
         }
@@ -719,7 +733,7 @@ void SpeedDecider::HandlePedestrianStop(Obstacle* obstacle) const {
         // the competition "follow limit" check reads as the ego following the
         // pedestrian. IGNORE removes ALL influence -> the ego drives straight
         // and never triggers the follow state.
-        ped_fixed_fence_s_.erase(id);
+        ped_fixed_fence_s_.erase(base_id);
         ObjectDecisionType ignore;
         ignore.mutable_ignore();
         obstacle->AddLongitudinalDecision("dp_st_graph/ped_release", ignore);
