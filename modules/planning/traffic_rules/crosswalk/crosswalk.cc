@@ -299,6 +299,20 @@ bool Crosswalk::CheckStopForObstacle(
     return false;
   }
 
+  // mayaochang add5: a pedestrian still INSIDE the raw crosswalk polygon must
+  // ALWAYS stop the ego. The default logic releases based on lateral distance
+  // (l >= stop_loose_l_distance) / path-crossing, which lets the ego drive
+  // through while the pedestrian is still on the crosswalk -> competition
+  // "crosswalk yield" grading fails (scenario 2). Only once the pedestrian
+  // fully leaves the crosswalk polygon do we fall through to the default
+  // (expanded-area) checks.
+  const Polygon2d crosswalk_poly = crosswalk_ptr->polygon();
+  if (crosswalk_poly.IsPointIn(point)) {
+    ADEBUG << "need_stop(add5): obstacle_id[" << obstacle_id << "] type["
+           << obstacle_type_name << "] still on crosswalk polygon, always stop";
+    return true;
+  }
+
   const auto& reference_line = reference_line_info->reference_line();
 
   common::SLPoint obstacle_sl_point;
