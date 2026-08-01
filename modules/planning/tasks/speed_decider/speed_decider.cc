@@ -265,19 +265,19 @@ Status SpeedDecider::MakeObjectDecision(const SpeedData& speed_profile, PathDeci
                 // distance (pedestrian_stop_distance, default 1.75m) so that the
                 // crosswalk rule's 1.5~2.0m stop is NOT overridden by the 6m
                 // min_stop_distance_obstacle fence.
-                // mayaochang add2: if the "static" obstacle is actually a vehicle
-                // already moving (e.g. the leading car just started accelerating in
-                // scenario 4), do NOT build a STOP on its stale position - fall
-                // through to FOLLOW/YIELD so the ego recovers quickly within the
-                // tight 60s simulation budget.
+                // mayaochang add2: if the "static" obstacle is actually moving
+                // (a vehicle that just started accelerating in scenario 4, or a
+                // pedestrian leaving the lane in scenario 6), do NOT build a
+                // STOP on its stale position - fall through to FOLLOW/YIELD so
+                // the ego recovers smoothly instead of jerking (stop-go-stop).
                 const bool is_pedestrian = obstacle->Perception().type() == PerceptionObstacle::PEDESTRIAN;
                 const double obs_speed
                         = std::hypot(obstacle->Perception().velocity().x(), obstacle->Perception().velocity().y());
-                static constexpr double kMovingVehicleSpeedThreshold = 0.5;
-                const bool moving_vehicle = !is_pedestrian
-                        && obstacle->Perception().type() == PerceptionObstacle::VEHICLE
-                        && obs_speed > kMovingVehicleSpeedThreshold;
-                if (moving_vehicle) {
+                static constexpr double kMovingObstacleSpeedThreshold = 0.5;
+                const bool moving_obstacle =
+                        (obstacle->Perception().type() == PerceptionObstacle::VEHICLE || is_pedestrian)
+                        && obs_speed > kMovingObstacleSpeedThreshold;
+                if (moving_obstacle) {
                     if (CheckIsFollow(*obstacle, boundary)) {
                         if (IsFollowTooClose(*mutable_obstacle)) {
                             ObjectDecisionType stop_decision;
@@ -306,13 +306,9 @@ Status SpeedDecider::MakeObjectDecision(const SpeedData& speed_profile, PathDeci
                     const double obs_l = std::min(
                             std::fabs(obstacle->PerceptionSLBoundary().start_l()),
                             std::fabs(obstacle->PerceptionSLBoundary().end_l()));
-                    const double vehicle_half_width =
-                            common::VehicleConfigHelper::Instance()->GetConfig()
-                                    .vehicle_param().width()
-                            / 2.0;
-                    if (!is_pedestrian
-                            && obs_l
-                                    > vehicle_half_width + FLAGS_static_obstacle_nudge_l_buffer) {
+                    const double vehicle_half_width
+                            = common::VehicleConfigHelper::Instance()->GetConfig().vehicle_param().width() / 2.0;
+                    if (!is_pedestrian && obs_l > vehicle_half_width + FLAGS_static_obstacle_nudge_l_buffer) {
                         ObjectDecisionType ignore;
                         ignore.mutable_ignore();
                         mutable_obstacle->AddLongitudinalDecision("dp_st_graph", ignore);
