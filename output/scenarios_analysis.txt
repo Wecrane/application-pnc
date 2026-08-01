@@ -1,0 +1,79 @@
+Discovered maps: 2
+  67ee4d4c1abf4bf0a1d417ef -> data/map_data/xh_2025_contest/base_map.bin
+  69d51ffd0e41e1217f2fda19 -> data/map_data/Xh_2026_contest/base_map.bin
+
+Scenarios to analyze: 8
+
+======================================================================
+Scenario: xh_2026_gsxx_停车标志  (id=67d938f854cb7763ce6083c2)
+  map: xh_2025_contest  mapId: 67ee4d4c1abf4bf0a1d417ef
+  start(424425.75,4437773.89) lane=Lane_842 -> end(424292.15,4437632.01) lane=Lane_697
+  [dbg] start_id='Lane_842' end_id='Lane_697' n_parent=7 route_type=list route_head=['Lane_842', 'Lane_817', 'Lane_1353', 'Lane_697']
+  route lanes (4): Lane_842 -> Lane_817 -> Lane_1353 -> Lane_697
+  route Crosswalk: ['Crosswalk_30']
+  route StopSign: ['StopSign_1']
+  route Junction: ['Junction_12']
+  map total: {'SpeedBump': 4, 'TrafficLight': 25, 'Crosswalk': 38, 'StopSign': 1, 'Junction': 11, 'YieldSign': 0, 'ParkingSpace': 0}
+======================================================================
+Scenario: xh_2026_gsxx_人行道场景  (id=67e4bc95cf6d730104b25ec1)
+  map: xh_2025_contest  mapId: 67ee4d4c1abf4bf0a1d417ef
+  start(423781.44,4437629.95) lane=Lane_1674 -> end(423567.77,4437630.33) lane=Lane_1674
+  [dbg] start_id='Lane_1674' end_id='Lane_1674' n_parent=0 route_type=list route_head=['Lane_1674']
+  route lanes (1): Lane_1674
+  route Crosswalk: ['Crosswalk_62']
+  route Junction: ['Junction_14']
+  map total: {'SpeedBump': 4, 'TrafficLight': 25, 'Crosswalk': 38, 'StopSign': 1, 'Junction': 11, 'YieldSign': 0, 'ParkingSpace': 0}
+======================================================================
+Scenario: xh_2026_gsxx_交通灯路口减速通行  (id=69d420a3b58e96002b6da084)
+  map: Xh_2026_contest  mapId: 69d51ffd0e41e1217f2fda19
+  start(423254.58,4438082.20) lane=Lane_1870 -> end(423258.22,4438364.43) lane=Lane_1960
+  [dbg] start_id='Lane_1870' end_id='Lane_1960' n_parent=7 route_type=list route_head=['Lane_1870', 'Lane_1691', 'Lane_710', 'Lane_736', 'Lane_731']
+  route lanes (6): Lane_1870 -> Lane_1691 -> Lane_710 -> Lane_736 -> Lane_731 -> Lane_1960
+  route Crosswalk: ['Crosswalk_11', 'Crosswalk_12']
+  route Junction: ['Junction_9']
+  map total: {'SpeedBump': 6, 'TrafficLight': 24, 'Crosswalk': 34, 'StopSign': 1, 'Junction': 9, 'YieldSign': 0, 'ParkingSpace': 0}
+======================================================================
+Scenario: xh_2026_gsxx_障碍物停车避让场景  (id=6a699aefabf06e2936590839)
+  map: Xh_2026_contest  mapId: 69d51ffd0e41e1217f2fda19
+  start(423278.19,4437610.95) lane=Lane_1725 -> end(423491.11,4437610.34) lane=Lane_1724
+  [dbg] start_id='Lane_1725' end_id='Lane_1724' n_parent=1 route_type=list route_head=['Lane_1725', 'Lane_1724']
+  route lanes (2): Lane_1725 -> Lane_1724
+  route elements: (none)
+  map total: {'SpeedBump': 6, 'TrafficLight': 24, 'Crosswalk': 34, 'StopSign': 1, 'Junction': 9, 'YieldSign': 0, 'ParkingSpace': 0}
+======================================================================
+Scenario: xh_2026_gsxx_障碍物车辆跟随场景  (id=6a699d15395ab133a4433b3a)
+  map: Xh_2026_contest  mapId: 69d51ffd0e41e1217f2fda19
+  start(423278.19,4437610.95) lane=Lane_1725 -> end(423491.11,4437610.34) lane=Lane_1724
+  [dbg] start_id='Lane_1725' end_id='Lane_1724' n_parent=1 route_type=list route_head=['Lane_1725', 'Lane_1724']
+  route lanes (2): Lane_1725 -> Lane_1724
+  route elements: (none)
+  map total: {'SpeedBump': 6, 'TrafficLight': 24, 'Crosswalk': 34, 'StopSign': 1, 'Junction': 9, 'YieldSign': 0, 'ParkingSpace': 0}
+======================================================================
+Scenario: xh_2026_gsxx_减速带通行  (id=6a6c3d8babf06e0e5f59083c)
+  map: Xh_2026_contest  mapId: 69d51ffd0e41e1217f2fda19
+  start(423754.57,4438475.91) lane=Lane_1962 -> end(423477.67,4438475.74) lane=Lane_1961
+  [dbg] start_id='Lane_1962' end_id='Lane_1961' n_parent=1 route_type=list route_head=['Lane_1962', 'Lane_1961']
+  route lanes (2): Lane_1962 -> Lane_1961
+  route SpeedBump: ['SpeedBump_4', 'SpeedBump_3']
+  map total: {'SpeedBump': 6, 'TrafficLight': 24, 'Crosswalk': 34, 'StopSign': 1, 'Junction': 9, 'YieldSign': 0, 'ParkingSpace': 0}
+======================================================================
+Scenario: xh_2026_gsxx_人行道路口减速通行  (id=6a6c3ea5abf06e7b4a59083d)
+  map: Xh_2026_contest  mapId: 69d51ffd0e41e1217f2fda19
+  start(423781.44,4437629.95) lane=Lane_1674 -> end(423567.77,4437630.33) lane=Lane_1674
+  [dbg] start_id='Lane_1674' end_id='Lane_1674' n_parent=0 route_type=list route_head=['Lane_1674']
+  route lanes (1): Lane_1674
+  route Crosswalk: ['Crosswalk_62']
+  route Junction: ['Junction_14']
+  map total: {'SpeedBump': 6, 'TrafficLight': 24, 'Crosswalk': 34, 'StopSign': 1, 'Junction': 9, 'YieldSign': 0, 'ParkingSpace': 0}
+======================================================================
+Scenario: xh_2026_gsxx_红绿灯场景  (id=6a6c3f21abf06e3f1359083e)
+  map: Xh_2026_contest  mapId: 69d51ffd0e41e1217f2fda19
+  start(423254.58,4438082.20) lane=Lane_1870 -> end(423258.22,4438364.43) lane=Lane_1960
+  [dbg] start_id='Lane_1870' end_id='Lane_1960' n_parent=7 route_type=list route_head=['Lane_1870', 'Lane_1691', 'Lane_710', 'Lane_736', 'Lane_731']
+  route lanes (6): Lane_1870 -> Lane_1691 -> Lane_710 -> Lane_736 -> Lane_731 -> Lane_1960
+  route Crosswalk: ['Crosswalk_11', 'Crosswalk_12']
+  route Junction: ['Junction_9']
+  map total: {'SpeedBump': 6, 'TrafficLight': 24, 'Crosswalk': 34, 'StopSign': 1, 'Junction': 9, 'YieldSign': 0, 'ParkingSpace': 0}
+
+>>> 完整输出已写入: output/scenarios_analysis.txt
+>>> JSON 已写入: output/scenarios_analysis.json
