@@ -348,18 +348,8 @@ Status SpeedDecider::MakeObjectDecision(const SpeedData& speed_profile, PathDeci
                             ignore.mutable_ignore();
                             mutable_obstacle->AddLongitudinalDecision("dp_st_graph", ignore);
                         } else {
-                            // mayaochang add15: a pedestrian may only use the
-                            // closer 1.75m stop ON a crosswalk (scenario 2
-                            // needs 1.5~2.0m). A non-crosswalk pedestrian
-                            // (scenario 5 stationary obstacle 7673) must keep
-                            // the 6m min_stop_distance_obstacle fence so the
-                            // stop distance stays >= 2m - the competition
-                            // "follow limit" check (stopped <2m from the
-                            // obstacle loses 20 points) is violated if this
-                            // 1.75m fence ever becomes the operative STOP in
-                            // the cloud evaluation.
                             double stop_dist = -FLAGS_min_stop_distance_obstacle;
-                            if (is_pedestrian && IsPedestrianOnCrosswalk(*obstacle)) {
+                            if (is_pedestrian) {
                                 stop_dist = -FLAGS_pedestrian_stop_distance;
                             }
                             ObjectDecisionType stop_decision;
@@ -385,13 +375,7 @@ Status SpeedDecider::MakeObjectDecision(const SpeedData& speed_profile, PathDeci
                     // the crosswalk rule's 1.5~2.0m stop is NOT overridden by
                     // the 6m min_stop_distance_obstacle too_close fence.
                     double stop_dist = -FLAGS_min_stop_distance_obstacle;
-                    // mayaochang add15: same as the IsStatic branch - the
-                    // closer 1.75m pedestrian stop is ONLY for pedestrians on
-                    // a crosswalk (scenario 2). A non-crosswalk pedestrian
-                    // (scenario 5) must stop >= 2m away, so keep the 6m
-                    // fence here as well.
-                    if (obstacle->Perception().type() == PerceptionObstacle::PEDESTRIAN
-                        && IsPedestrianOnCrosswalk(*obstacle)) {
+                    if (obstacle->Perception().type() == PerceptionObstacle::PEDESTRIAN) {
                         stop_dist = -FLAGS_pedestrian_stop_distance;
                     }
                     if (CreateStopDecision(*mutable_obstacle, &stop_decision, stop_dist)) {
