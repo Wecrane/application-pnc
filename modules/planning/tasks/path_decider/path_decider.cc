@@ -159,7 +159,8 @@ bool PathDecider::MakeStaticObstacleDecision(
     // -> the guardrail STOP flickers and the ego jerks stop-go-stop at the
     // last guardrail section (scenarios 4 & 6). Ignore it here so no STOP is
     // ever created.
-    if (obstacle->Perception().type() == PerceptionObstacle::UNKNOWN_UNMOVABLE) {
+    if (obstacle->Perception().type() ==
+        apollo::perception::PerceptionObstacle::UNKNOWN_UNMOVABLE) {
       ObjectDecisionType object_decision;
       object_decision.mutable_ignore();
       path_decision->AddLongitudinalDecision("PathDecider/road_furniture",
