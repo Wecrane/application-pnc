@@ -374,22 +374,25 @@ Status SpeedDecider::MakeObjectDecision(const SpeedData& speed_profile, PathDeci
                             ignore.mutable_ignore();
                             mutable_obstacle->AddLongitudinalDecision("dp_st_graph", ignore);
                         } else {
-                            // mayaochang add16: a non-crosswalk pedestrian
-                            // (scenario 5) is parked ~2.5m before the obstacle
-                            // (pedestrian_stop_distance_near) - the evaluation
-                            // expects 2~3m, and the cloud car that stopped
-                            // 11.5m away still failed the "follow limit"
-                            // check. Crosswalk pedestrians keep 1.75m
-                            // (scenario 2 needs 1.5~2.0m).
-                            double stop_dist = -FLAGS_min_stop_distance_obstacle;
-                            if (is_pedestrian && IsPedestrianOnCrosswalk(*obstacle)) {
-                                stop_dist = -FLAGS_pedestrian_stop_distance;
-                            } else if (is_pedestrian) {
-                                stop_dist = -FLAGS_pedestrian_stop_distance_near;
-                            }
-                            ObjectDecisionType stop_decision;
-                            if (CreateStopDecision(*mutable_obstacle, &stop_decision, stop_dist)) {
-                                mutable_obstacle->AddLongitudinalDecision("dp_st_graph", stop_decision);
+                            if (is_pedestrian) {
+                                // mayaochang add17: route static pedestrians
+                                // through HandlePedestrianStop too, so a
+                                // reliable fence (ST boundary s) is recorded
+                                // during the static phase and survives the
+                                // static->dynamic switch (7673 -> 7673_0).
+                                // Otherwise the first dynamic frame (ST
+                                // boundary empty due to prediction delay)
+                                // would build the fence from the noisy
+                                // perception SL s (fence 54m behind the
+                                // pedestrian -> the ego drives through and
+                                // collides).
+                                HandlePedestrianStop(mutable_obstacle);
+                            } else {
+                                double stop_dist = -FLAGS_min_stop_distance_obstacle;
+                                ObjectDecisionType stop_decision;
+                                if (CreateStopDecision(*mutable_obstacle, &stop_decision, stop_dist)) {
+                                    mutable_obstacle->AddLongitudinalDecision("dp_st_graph", stop_decision);
+                                }
                             }
                         }
                     }
@@ -642,17 +645,17 @@ bool SpeedDecider::CheckIsFollow(const Obstacle& obstacle, const STBoundary& bou
     return true;
 }
 
-// mayaochang add8: a pedestrian ahead of the ego gets a FIXED stop fence that
-// does NOT follow the pedestrian while it is still inside the lane. Only once
-// the pedestrian laterally clears the lane (|center_l| >= 2.5m) do we release
-// it (YIELD) and let the ego proceed. This prevents the ego from creeping
-// behind a moving pedestrian at <2m, which fails the competition "follow
-// limit" check (scenario 6).
+// mayaochang add8/add14: a pedestrian ahead of the ego gets a FIXED stop fence
+// that does NOT follow the pedestrian while it is still inside the lane or
+// still moving. Only once the pedestrian laterally clears the lane
+// (|center_l| >= 3.0m) AND stops (speed <= 0.3) do we release it (IGNORE) and
+// let the ego proceed. This prevents the ego from creeping behind / starting
+// past a moving pedestrian, which fails the competition "follow limit" check
+// (scenario 6).
 void SpeedDecider::HandlePedestrianStop(Obstacle* obstacle) const {
     const auto& boundary = obstacle->path_st_boundary();
     const auto& sl = obstacle->PerceptionSLBoundary();
     const double obs_l = std::fabs((sl.start_l() + sl.end_l()) / 2.0);
-    const double obs_s = (sl.start_s() + sl.end_s()) / 2.0;
     const double obstacle_speed
             = std::hypot(obstacle->Perception().velocity().x(), obstacle->Perception().velocity().y());
     // mayaochang add14: the ego may only proceed once the pedestrian has BOTH
@@ -689,19 +692,22 @@ void SpeedDecider::HandlePedestrianStop(Obstacle* obstacle) const {
         double fence_s;
         auto it = ped_fixed_fence_s_.find(base_id);
         if (it == ped_fixed_fence_s_.end()) {
-            // mayaochang add14: prefer the ST boundary s when available
-            // (reliable path geometry). Fall back to the perception SL s only
-            // when the ST boundary is empty - a noisy perception SL s would
-            // put the fence in the wrong place and the ego could drive
-            // through the pedestrian.
+            // mayaochang add14/add17: only build the fence from the ST
+            // boundary s (reliable path geometry). NEVER fall back to the
+            // perception SL s - it can be noisy (replay: fence placed ~54m
+            // BEHIND the pedestrian -> the ego drives through and collides).
+            // The static phase now records the fence first (IsStatic branch
+            // routes pedestrians through HandlePedestrianStop), so a missing
+            // fence only happens for roadside walkers that never entered the
+            // lane near-region, which we should not stop for anyway.
             if (!boundary.IsEmpty()) {
                 fence_s = adc_sl_boundary_.end_s() + boundary.min_s() + stop_dist;
+                ped_fixed_fence_s_[base_id] = fence_s;
+                ADEBUG << "ped_fixed: record fence_s=" << fence_s << " id=" << id
+                       << " base=" << base_id;
             } else {
-                fence_s = obs_s + stop_dist;
+                return;
             }
-            ped_fixed_fence_s_[base_id] = fence_s;
-            ADEBUG << "ped_fixed: record fence_s=" << fence_s << " id=" << id
-                   << " base=" << base_id;
         } else {
             fence_s = it->second;  // keep the originally recorded fence
         }
