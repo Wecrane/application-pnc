@@ -362,19 +362,13 @@ Status SpeedDecider::MakeObjectDecision(const SpeedData& speed_profile, PathDeci
                 }
             } else if (CheckIsFollow(*obstacle, boundary)) {
                 // mayaochang add7: a PEDESTRIAN in the follow branch must NOT
-                // be followed - the ego should YIELD (let the pedestrian pass)
-                // and only proceed once the pedestrian actually leaves the
-                // lane. Following (or creeping behind) the moving pedestrian
-                // fails the competition "follow limit" check (scenario 6):
-                // with a moving STOP fence (1.75m) the ego creeps behind the
-                // pedestrian at <2m. YIELD keeps the ego waiting until the
-                // pedestrian passes, then proceeds.
+                // be followed - HandlePedestrianStop keeps a FIXED stop fence
+                // (no creeping behind the moving pedestrian, which fails the
+                // competition "follow limit" check, scenario 6). The fence is
+                // released (YIELD) only once the pedestrian laterally clears
+                // the lane.
                 if (obstacle->Perception().type() == PerceptionObstacle::PEDESTRIAN) {
-                    ObjectDecisionType yield_decision;
-                    if (CreateYieldDecision(*mutable_obstacle, &yield_decision)) {
-                        mutable_obstacle->AddLongitudinalDecision(
-                                "dp_st_graph/pedestrian_yield", yield_decision);
-                    }
+                    HandlePedestrianStop(mutable_obstacle);
                 } else if (IsFollowTooClose(*mutable_obstacle)) {
                     ObjectDecisionType stop_decision;
                     // mayaochang add3: use the closer pedestrian stop distance
@@ -396,10 +390,17 @@ Status SpeedDecider::MakeObjectDecision(const SpeedData& speed_profile, PathDeci
                     }
                 }
             } else {
-                // YIELD decision
-                ObjectDecisionType yield_decision;
-                if (CreateYieldDecision(*mutable_obstacle, &yield_decision)) {
-                    mutable_obstacle->AddLongitudinalDecision("dp_st_graph", yield_decision);
+                // YIELD decision - a pedestrian must still use the fixed-fence
+                // logic (wait until it clears the lane), not a plain YIELD
+                // which lets the ego creep forward while the pedestrian is
+                // still inside the lane.
+                if (obstacle->Perception().type() == PerceptionObstacle::PEDESTRIAN) {
+                    HandlePedestrianStop(mutable_obstacle);
+                } else {
+                    ObjectDecisionType yield_decision;
+                    if (CreateYieldDecision(*mutable_obstacle, &yield_decision)) {
+                        mutable_obstacle->AddLongitudinalDecision("dp_st_graph", yield_decision);
+                    }
                 }
             }
             break;
@@ -605,6 +606,66 @@ bool SpeedDecider::CheckIsFollow(const Obstacle& obstacle, const STBoundary& bou
     }
 
     return true;
+}
+
+// mayaochang add8: a pedestrian ahead of the ego gets a FIXED stop fence that
+// does NOT follow the pedestrian while it is still inside the lane. Only once
+// the pedestrian laterally clears the lane (|center_l| >= 2.5m) do we release
+// it (YIELD) and let the ego proceed. This prevents the ego from creeping
+// behind a moving pedestrian at <2m, which fails the competition "follow
+// limit" check (scenario 6).
+void SpeedDecider::HandlePedestrianStop(Obstacle* obstacle) const {
+    const auto& boundary = obstacle->path_st_boundary();
+    const auto& sl = obstacle->PerceptionSLBoundary();
+    const double obs_l = std::fabs((sl.start_l() + sl.end_l()) / 2.0);
+    static constexpr double kClearLateral = 2.5;  // lateral clear of lane
+    const std::string& id = obstacle->Id();
+
+    if (obs_l < kClearLateral) {
+        // Pedestrian still inside the lane -> keep a FIXED stop fence.
+        double stop_dist = -FLAGS_min_stop_distance_obstacle;
+        if (IsPedestrianOnCrosswalk(*obstacle)) {
+            stop_dist = -FLAGS_pedestrian_stop_distance;
+        }
+        double fence_s;
+        auto it = ped_fixed_fence_s_.find(id);
+        if (it == ped_fixed_fence_s_.end()) {
+            fence_s = adc_sl_boundary_.end_s() + boundary.min_s() + stop_dist;
+            ped_fixed_fence_s_[id] = fence_s;
+            ADEBUG << "ped_fixed: record fence_s=" << fence_s << " id=" << id;
+        } else {
+            fence_s = it->second;  // keep the originally recorded fence
+        }
+        const auto fence_point = reference_line_->GetReferencePoint(fence_s);
+        ObjectDecisionType stop_decision;
+        auto* stop = stop_decision.mutable_stop();
+        stop->set_distance_s(stop_dist);
+        auto* sp = stop->mutable_stop_point();
+        sp->set_x(fence_point.x());
+        sp->set_y(fence_point.y());
+        sp->set_z(0.0);
+        stop->set_stop_heading(fence_point.heading());
+        obstacle->AddLongitudinalDecision("dp_st_graph/ped_fixed", stop_decision);
+    } else {
+        // Pedestrian has laterally cleared the lane -> release + yield.
+        ped_fixed_fence_s_.erase(id);
+        ObjectDecisionType yield_decision;
+        if (CreateYieldDecision(*obstacle, &yield_decision)) {
+            obstacle->AddLongitudinalDecision("dp_st_graph/ped_yield_clear", yield_decision);
+        }
+    }
+}
+
+bool SpeedDecider::IsPedestrianOnCrosswalk(const Obstacle& obstacle) const {
+    const auto& sl = obstacle.PerceptionSLBoundary();
+    const auto& cw_overlaps =
+            reference_line_info_->reference_line().map_path().crosswalk_overlaps();
+    for (const auto& ov : cw_overlaps) {
+        if (ov.start_s <= sl.end_s() && ov.end_s >= sl.start_s()) {
+            return true;
+        }
+    }
+    return false;
 }
 
 bool SpeedDecider::CheckStopForPedestrian(const Obstacle& obstacle) const {
