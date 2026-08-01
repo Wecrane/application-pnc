@@ -20,10 +20,6 @@
 
 #include "modules/planning/tasks/open_space_fallback_decider/open_space_fallback_decider.h"
 
-#include <cmath>
-
-#include "modules/planning/planning_base/common/contest_scenario_status.h"
-
 namespace apollo {
 namespace planning {
 using apollo::common::Status;
@@ -31,31 +27,6 @@ using apollo::common::TrajectoryPoint;
 using apollo::common::math::Box2d;
 using apollo::common::math::Polygon2d;
 using apollo::common::math::Vec2d;
-
-namespace {
-
-bool IsBusBayTransferOpenSpace(const std::shared_ptr<DependencyInjector>& injector,
-                               const Frame& frame) {
-  if (injector == nullptr) {
-    return false;
-  }
-  const std::string scenario = contest::CurrentScenarioName(injector);
-  if (scenario != "BUS_BAY_TRANSFER" && scenario != "BusBayTransferScenario") {
-    return false;
-  }
-  return frame.open_space_info().is_on_open_space_trajectory() &&
-         !frame.open_space_info().target_parking_spot_id().empty();
-}
-
-bool IsSmallStaticObstacle(const Obstacle& obstacle) {
-  if (obstacle.IsVirtual() || !obstacle.IsStatic()) {
-    return false;
-  }
-  const auto& perception = obstacle.Perception();
-  return perception.length() <= 0.6 && perception.width() <= 0.6;
-}
-
-}  // namespace
 
 bool OpenSpaceFallbackDecider::Init(
     const std::string& config_dir, const std::string& name,
@@ -373,28 +344,17 @@ bool OpenSpaceFallbackDecider::IsCollisionFreeEgoBox() {
       common::VehicleConfigHelper::Instance()->GetConfig();
   double ego_length = vehicle_config.vehicle_param().length();
   double ego_width = vehicle_config.vehicle_param().width();
-  const bool bus_bay_open_space = IsBusBayTransferOpenSpace(injector_, *frame_);
   Box2d ego_box({x, y}, heading, ego_length, ego_width);
   Polygon2d ego_polygon = Polygon2d(ego_box);
 
   for (const Obstacle* obstacle : frame_->obstacles()) {
-    if (obstacle->IsVirtual() || !obstacle->IsStatic()) {
-      continue;
-    }
-    if (bus_bay_open_space) {
-      if (!IsSmallStaticObstacle(*obstacle)) {
-        continue;
-      }
-    } else if (obstacle->Perception().width() < 0.2 ||
-               obstacle->Perception().length() < 0.2) {
+    if (obstacle->IsVirtual() || !obstacle->IsStatic() ||
+        obstacle->Perception().width() < 0.2 ||
+        obstacle->Perception().length() < 0.2) {
       continue;
     }
     Polygon2d obstacle_polygon = obstacle->PerceptionPolygon();
     if (ego_polygon.HasOverlap(obstacle_polygon)) {
-      if (bus_bay_open_space) {
-        AINFO << "Bus-bay open-space fallback: ego safety box overlaps small "
-              << "static obstacle " << obstacle->Id();
-      }
       return false;
     }
   }

@@ -21,7 +21,6 @@
 #include "modules/planning/tasks/speed_bounds_decider/speed_limit_decider.h"
 
 #include <algorithm>
-#include <cmath>
 #include <limits>
 #include "modules/common_msgs/basic_msgs/pnc_point.pb.h"
 #include "modules/common_msgs/planning_msgs/decision.pb.h"
@@ -34,22 +33,13 @@ namespace planning {
 
 using apollo::common::Status;
 
-namespace {
-constexpr double kContestRoundaboutExitLowSpeedLimitMin = 9.0 / 3.6;
-constexpr double kContestRoundaboutExitLowSpeedLimitMax = 10.5 / 3.6;
-constexpr double kContestRoundaboutExitRelaxedSpeedLimit = 30.0 / 3.6;
-}  // namespace
-
-SpeedLimitDecider::SpeedLimitDecider(
-    const SpeedBoundsDeciderConfig& config,
-    const ReferenceLine& reference_line, const PathData& path_data,
-    bool relax_contest_roundabout_exit_speed_limit)
+SpeedLimitDecider::SpeedLimitDecider(const SpeedBoundsDeciderConfig& config,
+                                     const ReferenceLine& reference_line,
+                                     const PathData& path_data)
     : speed_bounds_config_(config),
       reference_line_(reference_line),
       path_data_(path_data),
-      vehicle_param_(common::VehicleConfigHelper::GetConfig().vehicle_param()),
-      relax_contest_roundabout_exit_speed_limit_(
-          relax_contest_roundabout_exit_speed_limit) {
+      vehicle_param_(common::VehicleConfigHelper::GetConfig().vehicle_param()) {
 }
 
 Status SpeedLimitDecider::GetSpeedLimits(
@@ -73,15 +63,6 @@ Status SpeedLimitDecider::GetSpeedLimits(
     // (1) speed limit from map
     double speed_limit_from_reference_line =
         reference_line_.GetSpeedLimitFromS(reference_line_s);
-    if (relax_contest_roundabout_exit_speed_limit_ &&
-        speed_limit_from_reference_line >=
-            kContestRoundaboutExitLowSpeedLimitMin &&
-        speed_limit_from_reference_line <=
-            kContestRoundaboutExitLowSpeedLimitMax) {
-      speed_limit_from_reference_line =
-          std::max(speed_limit_from_reference_line,
-                   kContestRoundaboutExitRelaxedSpeedLimit);
-    }
     print_curve.AddPoint("speed_limit_from_ref", path_s,
                          speed_limit_from_reference_line);
     // (2) speed limit from path curvature

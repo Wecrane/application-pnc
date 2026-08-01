@@ -63,12 +63,10 @@ apollo_cc_library(
     ],
     copts = ["-DMODULE_NAME=\\\"planning\\\""],
     deps = [
-        "//cyber",
         "//modules/common/configs:vehicle_config_helper",
         "//modules/common/status",
         "//modules/common_msgs/basic_msgs:pnc_point_cc_proto",
         "//modules/common_msgs/config_msgs:vehicle_config_cc_proto",
-        "//modules/common_msgs/perception_msgs:perception_obstacle_cc_proto",
         "//modules/common_msgs/planning_msgs:planning_cc_proto",
         "//modules/map:apollo_map",
         "//modules/planning/planning_interface_base:apollo_planning_planning_interface_base",

@@ -106,8 +106,6 @@ apollo_cc_library(
     ],
     hdrs = [
         "common/util/config_util.h",
-        "common/contest_scenario_features.h",
-        "common/contest_scenario_status.h",
         "common/dependency_injector.h",
         "common/ego_info.h",
         "common/feature_output.h",

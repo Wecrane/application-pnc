@@ -20,15 +20,12 @@
 
 #include "modules/planning/tasks/open_space_pre_stop_decider/open_space_pre_stop_decider.h"
 
-#include <algorithm>
-#include <cmath>
 #include <memory>
 #include <string>
 #include <vector>
 
 #include "modules/common/vehicle_state/vehicle_state_provider.h"
 #include "modules/map/pnc_map/path.h"
-#include "modules/planning/planning_base/common/contest_scenario_status.h"
 #include "modules/planning/planning_base/common/planning_context.h"
 #include "modules/planning/planning_base/common/util/common.h"
 
@@ -40,70 +37,6 @@ using apollo::common::Status;
 using apollo::common::VehicleState;
 using apollo::common::math::Vec2d;
 using apollo::hdmap::ParkingSpaceInfoConstPtr;
-
-namespace {
-constexpr double kParkingPreStopFenceBuildRange = 60.0;
-
-bool IsCylinderLikeSmallStaticObstacle(const Obstacle& obstacle) {
-  if (obstacle.IsVirtual() || !obstacle.IsStatic()) {
-    return false;
-  }
-  const auto& perception = obstacle.Perception();
-  const double length = perception.length();
-  const double width = perception.width();
-  if (length <= 1.0e-3 || width <= 1.0e-3) {
-    return false;
-  }
-  const double long_side = std::max(length, width);
-  const double short_side = std::min(length, width);
-  return long_side <= 0.8 && short_side >= 0.15 &&
-         long_side / short_side <= 1.6;
-}
-
-bool HasCylinderLikeObstacleNearParkingSpot(
-    const Frame& frame, const ReferenceLineInfo& reference_line_info,
-    const double target_s) {
-  constexpr double kBehindTargetS = 8.0;
-  constexpr double kAheadTargetS = 14.0;
-  constexpr double kMaxAbsL = 8.0;
-  const auto& reference_line = reference_line_info.reference_line();
-  for (const auto* obstacle : frame.obstacles()) {
-    if (obstacle == nullptr ||
-        !IsCylinderLikeSmallStaticObstacle(*obstacle)) {
-      continue;
-    }
-    common::SLPoint obstacle_sl;
-    if (!reference_line.XYToSL(obstacle->Perception().position(),
-                               &obstacle_sl)) {
-      continue;
-    }
-    const double delta_s = obstacle_sl.s() - target_s;
-    if (delta_s < -kBehindTargetS || delta_s > kAheadTargetS ||
-        std::fabs(obstacle_sl.l()) > kMaxAbsL) {
-      continue;
-    }
-    AINFO << "Use bus-bay cylinder pre-stop distance for obstacle id="
-          << obstacle->Id() << ", perception_id=" << obstacle->PerceptionId()
-          << ", length=" << obstacle->Perception().length()
-          << ", width=" << obstacle->Perception().width()
-          << ", obstacle_s=" << obstacle_sl.s() << ", obstacle_l="
-          << obstacle_sl.l() << ", target_s=" << target_s
-          << ", delta_s=" << delta_s;
-    return true;
-  }
-  return false;
-}
-
-bool IsBusBayTransferScenario(
-    const std::shared_ptr<DependencyInjector>& injector) {
-  if (injector == nullptr) {
-    return false;
-  }
-  const std::string scenario = contest::CurrentScenarioName(injector);
-  return scenario == "BUS_BAY_TRANSFER" ||
-         scenario == "BusBayTransferScenario";
-}
-}  // namespace
 
 bool OpenSpacePreStopDecider::Init(
     const std::string& config_dir, const std::string& name,
@@ -123,41 +56,29 @@ Status OpenSpacePreStopDecider::Process(
   CHECK_NOTNULL(reference_line_info);
   double target_s = 0.0;
   const auto& stop_type = config_.stop_type();
-  if (stop_type == OpenSpacePreStopDeciderConfig::PARKING) {
-    if (!CheckParkingSpotPreStop(frame, reference_line_info, &target_s)) {
-      const std::string msg = "Checking parking spot pre stop fails";
+  switch (stop_type) {
+    case OpenSpacePreStopDeciderConfig::PARKING:
+      if (!CheckParkingSpotPreStop(frame, reference_line_info, &target_s)) {
+        const std::string msg = "Checking parking spot pre stop fails";
+        AERROR << msg;
+        return Status(ErrorCode::PLANNING_ERROR, msg);
+      }
+      SetParkingSpotStopFence(target_s, frame, reference_line_info);
+      break;
+    case OpenSpacePreStopDeciderConfig::PULL_OVER:
+      if (!CheckPullOverPreStop(frame, reference_line_info, &target_s)) {
+        const std::string msg = "Checking pull over pre stop fails";
+        AERROR << msg;
+        return Status(ErrorCode::PLANNING_ERROR, msg);
+      }
+      SetPullOverStopFence(target_s, frame, reference_line_info);
+      break;
+    default:
+      const std::string msg = "This stop type not implemented";
       AERROR << msg;
       return Status(ErrorCode::PLANNING_ERROR, msg);
-    }
-    // Build the pre-stop fence early enough for high-speed bus-bay approach,
-    // while still avoiding very distant parking spots.  Use distance from the
-    // ADC instead of absolute reference-line s so straight-reference rebuilds
-    // do not change when the wall appears.
-    const double adc_front_s = reference_line_info->AdcSlBoundary().end_s();
-    const double distance_to_target = target_s - adc_front_s;
-    if (distance_to_target > kParkingPreStopFenceBuildRange) {
-      AINFO << "Parking spot too far (target_s=" << target_s
-            << ", adc_front_s=" << adc_front_s
-            << ", distance_to_target=" << distance_to_target
-            << "), skip stop fence, build_range="
-            << kParkingPreStopFenceBuildRange;
-      return Status::OK();
-    }
-    SetParkingSpotStopFence(target_s, frame, reference_line_info);
-    return Status::OK();
   }
-  if (stop_type == OpenSpacePreStopDeciderConfig::PULL_OVER) {
-    if (!CheckPullOverPreStop(frame, reference_line_info, &target_s)) {
-      const std::string msg = "Checking pull over pre stop fails";
-      AERROR << msg;
-      return Status(ErrorCode::PLANNING_ERROR, msg);
-    }
-    SetPullOverStopFence(target_s, frame, reference_line_info);
-    return Status::OK();
-  }
-  const std::string msg = "This stop type not implemented";
-  AERROR << msg;
-  return Status(ErrorCode::PLANNING_ERROR, msg);
+  return Status::OK();
 }
 
 bool OpenSpacePreStopDecider::CheckPullOverPreStop(
@@ -217,42 +138,6 @@ bool OpenSpacePreStopDecider::CheckParkingSpotPreStop(
   }
 
   if (!target_area_found) {
-    // 直参考线没有 parking_space_overlaps，直接从 hdmap 获取停车位坐标
-    hdmap::Id id;
-    id.set_id(target_parking_spot_id);
-    auto spot_ptr = hdmap->GetParkingSpaceById(id);
-    if (spot_ptr) {
-      const auto& pts = spot_ptr->polygon().points();
-      Vec2d center_point = (pts[0] + pts[1] + pts[2] + pts[3]) / 4.0;
-      // 直参考线从车辆位置开始，GetNearestPoint 会返回 s=0
-      // 改用投影计算：车辆在参考线上的 s + 车辆到停车位的纵向距离
-      double vehicle_s = 0.0;
-      double vehicle_l = 0.0;
-      Vec2d vehicle_pos(frame->vehicle_state().x(), frame->vehicle_state().y());
-      nearby_path.GetNearestPoint(vehicle_pos, &vehicle_s, &vehicle_l);
-      double center_l;
-      double center_s;
-      nearby_path.GetNearestPoint(center_point, &center_s, &center_l);
-      // 用停车位在参考线上的投影 s 作为 target_s
-      // 如果停车位在车辆侧面（l 很大），center_s 可能不准
-      // 此时用车辆 s + 纵向偏移
-      if (std::fabs(center_l) > 3.0) {
-        // 停车位在车辆侧面，计算纵向距离
-        double dx = center_point.x() - vehicle_pos.x();
-        double dy = center_point.y() - vehicle_pos.y();
-        double heading = frame->vehicle_state().heading();
-        double longitudinal_dist = dx * std::cos(heading) + dy * std::sin(heading);
-        target_area_center_s = vehicle_s + longitudinal_dist;
-      } else {
-        target_area_center_s = center_s;
-      }
-      target_area_found = true;
-      AINFO << "Found parking spot from hdmap, s=" << target_area_center_s << " l=" << center_l
-            << " vehicle_s=" << vehicle_s;
-    }
-  }
-
-  if (!target_area_found) {
     AERROR << "no target parking spot found on reference line";
     return false;
   }
@@ -263,30 +148,21 @@ bool OpenSpacePreStopDecider::CheckParkingSpotPreStop(
 void OpenSpacePreStopDecider::SetParkingSpotStopFence(
     const double target_s, Frame* const frame,
     ReferenceLineInfo* const reference_line_info) {
+  const auto& nearby_path = reference_line_info->reference_line().map_path();
   const double adc_front_edge_s = reference_line_info->AdcSlBoundary().end_s();
   const double front_edge_to_center = common::VehicleConfigHelper::Instance()
                                           ->GetConfig()
                                           .vehicle_param()
                                           .front_edge_to_center();
+  double ego_s = adc_front_edge_s - front_edge_to_center;
+  const VehicleState& vehicle_state = frame->vehicle_state();
   double stop_line_s = 0.0;
   double stop_distance_to_target = config_.stop_distance_to_target();
+  double static_linear_velocity_epsilon = 1.0e-2;
+  static constexpr double kStopBuffer = 0.2;
   CHECK_GE(stop_distance_to_target, 1.0e-8);
-  double parking_spot_pre_stop_distance =
-      config_.parking_spot_pre_stop_distance();
-  CHECK_GE(parking_spot_pre_stop_distance, 0.0);
-  if (IsBusBayTransferScenario(injector_) &&
-      HasCylinderLikeObstacleNearParkingSpot(*frame, *reference_line_info,
-                                             target_s)) {
-    parking_spot_pre_stop_distance = 8.0;
-  }
-  // 在停车位中心前方一定距离处停车，给车辆留出倒车空间。
   stop_line_s =
-      target_s + front_edge_to_center + parking_spot_pre_stop_distance;
-  AINFO << "Set parking spot pre-stop fence, target_s=" << target_s
-        << ", front_edge_to_center=" << front_edge_to_center
-        << ", parking_spot_pre_stop_distance="
-        << parking_spot_pre_stop_distance << ", stop_line_s=" << stop_line_s
-        << ", adc_front_edge_s=" << adc_front_edge_s;
+      target_s + front_edge_to_center + config_.stop_buffer_to_target();
   const std::string stop_wall_id = OPEN_SPACE_STOP_ID;
   std::vector<std::string> wait_for_obstacles;
   frame->mutable_open_space_info()->set_open_space_pre_stop_fence_s(

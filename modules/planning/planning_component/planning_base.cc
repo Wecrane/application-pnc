@@ -16,8 +16,6 @@
 
 #include "modules/planning/planning_component/planning_base.h"
 
-#include <cmath>
-
 #include "modules/common_msgs/planning_msgs/planning_internal.pb.h"
 
 #include "cyber/plugin_manager/plugin_manager.h"
@@ -93,27 +91,6 @@ bool PlanningBase::IsPlanningFinished(
                                          .destination()
                                          .has_passed_destination();
     AINFO << "Current passed destination:" << is_has_passed_destination;
-    if (is_has_passed_destination) {
-      const double distance_to_destination =
-          reference_line_info.SDistanceToDestination();
-      if (std::isfinite(distance_to_destination) &&
-          distance_to_destination > FLAGS_destination_check_distance) {
-        AINFO << "Destination passed flag is set but destination is still "
-              << distance_to_destination << "m ahead; keep planning.";
-        return false;
-      }
-      // Bus-bay exit 等场景会提前设置 has_passed_destination 标志，
-      // 但车辆可能还未在最终终点停下来。这里增加速度检查：
-      // 只有当车辆实际停止（速度 < 0.1 m/s）时才认为到达终点。
-      const double adc_speed = std::fabs(frame->vehicle_state().linear_velocity());
-      static constexpr double kStopSpeedThreshold = 0.1;
-      if (adc_speed > kStopSpeedThreshold) {
-        AINFO << "Destination passed flag is set but ADC still moving, speed="
-              << adc_speed << ", dist_to_dest=" << distance_to_destination
-              << "; keep planning until vehicle stops.";
-        return false;
-      }
-    }
     return is_has_passed_destination;
   }
 }

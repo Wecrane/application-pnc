@@ -79,16 +79,6 @@ public:
     const std::string& GetIndex() const {
         return index_;
     }
-    uint64_t GetIntIndex() const {
-        return int_index_;
-    }
-    static uint64_t ComputeIntIndex(int x_grid, int y_grid, int phi_grid) {
-        // Pack: x in bits 48-63, y in bits 32-47, phi in bits 16-31
-        // Use uint16_t cast to avoid sign extension and bit overlap
-        return (static_cast<uint64_t>(static_cast<uint16_t>(x_grid)) << 48) |
-               (static_cast<uint64_t>(static_cast<uint16_t>(y_grid)) << 32) |
-               (static_cast<uint64_t>(static_cast<uint16_t>(phi_grid)) << 16);
-    }
     size_t GetStepSize() const {
         return step_size_;
     }
@@ -147,7 +137,6 @@ private:
     int y_grid_ = 0;
     int phi_grid_ = 0;
     std::string index_;
-    uint64_t int_index_ = 0;
     double traj_cost_ = 0.0;
     double heuristic_cost_ = 0.0;
     double cost_ = 0.0;

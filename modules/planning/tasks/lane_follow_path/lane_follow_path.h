@@ -20,12 +20,12 @@
 
 #pragma once
 
+#include <memory>
 #include <string>
 #include <vector>
-
+#include "modules/planning/tasks/lane_follow_path/proto/lane_follow_path.pb.h"
 #include "cyber/plugin_manager/plugin_manager.h"
 #include "modules/planning/planning_interface_base/task_base/common/path_generation.h"
-#include "modules/planning/tasks/lane_follow_path/proto/lane_follow_path.pb.h"
 
 namespace apollo {
 namespace planning {
@@ -57,6 +57,7 @@ class LaneFollowPath : public PathGeneration {
    */
   bool AssessPath(std::vector<PathData>* candidate_path_data,
                   PathData* final_path);
+
   LaneFollowPathConfig config_;
 };
 

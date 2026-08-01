@@ -31,28 +31,17 @@
   <depend repo_name="planning-scenario-traffic-light-unprotected-left-turn" type="binary">planning-scenario-traffic-light-unprotected-left-turn</depend>
   <depend repo_name="planning-scenario-traffic-light-unprotected-right-turn" type="binary">planning-scenario-traffic-light-unprotected-right-turn</depend>
   <depend repo_name="planning-scenario-valet-parking" type="binary">planning-scenario-valet-parking</depend>
-  <depend repo_name="planning-scenario-valet-parking-park" type="binary">planning-scenario-valet-parking-park</depend>
   <depend repo_name="planning-scenario-yield-sign" type="binary">planning-scenario-yield-sign</depend>
-  <depend repo_name="planning-scenario-contest" type="binary">planning-scenario-contest</depend>
 
   <depend repo_name="planning-task-fallback-path" type="binary">planning-task-fallback-path</depend>
   <depend repo_name="planning-task-fast-stop-trajectory-fallback" type="binary">planning-task-fast-stop-trajectory-fallback</depend>
-  <depend repo_name="planning-task-contest-lane-change-path" type="binary">planning-task-contest-lane-change-path</depend>
-  <depend repo_name="planning-task-contest-lane-follow-path" type="binary">planning-task-contest-lane-follow-path</depend>
-  <depend repo_name="planning-task-contest-lane-borrow-path" type="binary">planning-task-contest-lane-borrow-path</depend>
   <depend repo_name="planning-task-lane-borrow-path" type="binary">planning-task-lane-borrow-path</depend>
   <depend repo_name="planning-task-lane-change-path" type="binary">planning-task-lane-change-path</depend>
   <depend repo_name="planning-task-lane-follow-path" type="binary">planning-task-lane-follow-path</depend>
   <depend repo_name="planning-task-open-space-fallback-decider" type="binary">planning-task-open-space-fallback-decider</depend>
-  <depend repo_name="planning-task-open-space-fallback-decider-park" type="binary">planning-task-open-space-fallback-decider-park</depend>
-  <depend repo_name="planning-task-open-space-path-planning" type="binary">planning-task-open-space-path-planning</depend>
   <depend repo_name="planning-task-open-space-pre-stop-decider" type="binary">planning-task-open-space-pre-stop-decider</depend>
-  <depend repo_name="planning-task-open-space-replan-decider" type="binary">planning-task-open-space-replan-decider</depend>
   <depend repo_name="planning-task-open-space-roi-decider" type="binary">planning-task-open-space-roi-decider</depend>
-  <depend repo_name="planning-task-open-space-roi-decider-park" type="binary">planning-task-open-space-roi-decider-park</depend>
   <depend repo_name="planning-task-open-space-trajectory-partition" type="binary">planning-task-open-space-trajectory-partition</depend>
-  <depend repo_name="planning-task-open-space-trajectory-optimizer-park" type="binary">planning-task-open-space-trajectory-optimizer-park</depend>
-  <depend repo_name="planning-task-open-space-trajectory-post-process" type="binary">planning-task-open-space-trajectory-post-process</depend>
   <depend repo_name="planning-task-open-space-trajectory-provider" type="binary">planning-task-open-space-trajectory-provider</depend>
   <depend repo_name="planning-task-path-decider" type="binary">planning-task-path-decider</depend>
   <depend repo_name="planning-task-path-reference-decider" type="binary">planning-task-path-reference-decider</depend>

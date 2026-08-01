@@ -1,111 +1,103 @@
-# =============================================================================
-# Apollo EDU PnC 赛事工程 .gitignore
-# =============================================================================
-.oldcode
-# --- Bazel 构建产物（软链至 .cache）---
+# Bazel
 bazel-*
 
-# --- Bazel 缓存（体积大，2.5GB+）---
-.cache/
-
-# --- 自动生成的 bazel 配置（含缓存路径）---
-.apollo.bazelrc
-
-# --- 运行时数据（日志、bag、record、地图）---
-/data
-
-# --- 根目录日志 ---
-/log/
-
-# --- 调试转储（bvar 监控数据）---
-/dumps/
-
-# --- 构建输出 ---
-/output/
-
-# --- dev 目录（buildtool 生成的软链和构建产物）---
-/dev/
-
-# --- 系统级软链目录 ---
-/tools
-/third_party/
-
-# --- 生成的 core 目录（buildtool 产物）---
-/core/
-
-# --- aem 环境管理数据 ---
-.aem
-
-# --- 环境相关软链（指向 arch 特定版本）---
-.buildtool.conf
-.env
-.workspace.json
-
-# --- 发布/提交压缩包 ---
-*.tar.gz
-
-# --- 临时文件 ---
+# Temporary files
 *.pyc
 *.swp
 *.swo
-*~
 
-# --- 生成文件 ---
+# Linked files
+/tools
+
+# aem data
+.aem
+
+# Generated files
 *.result
 py_proto
-*_pb2.py
 
-# --- IDE ---
+# Eclipse IDE files
 .project
 .cproject
 .settings
 .classpath
-.idea/
-.DS_Store
 
-# --- 编辑器 ---
-.ycm_extra_conf.py
+# IntelliJ files
+.idea
+
+# VS Code files
+# .vscode
+
+# Atom IDE files
 *.gch
 
-# --- 错误日志 ---
-.errors.log
+# Logs
 nohup.out
 *.bak
 *.stderr
 *.stdout
 
-# --- Bash 历史 ---
-.dev_bash_hist
+# Editor configs
+.ycm_extra_conf.py
 
-# --- 地图/标定数据 ---
-modules/map/data
-modules/calibration/data
+# Data
+/data
 
-# --- 测试数据 ---
+# Localization
 modules/localization/msf/local_map/test_data/ndt_map/map_data
 
-# --- Demo 数据 ---
-docs/demo_guide/*.bag
-docs/demo_guide/*.record
-
-# --- Doxygen ---
+# Doxygen
 cyber/doxy-docs/build
+
+# User preserved content (2026-08-01)
+.oldcode/
+backup/
+submit/
+*.tar.gz
+.git_official_backup/
+.bash_history
 cyber/doxy-docs/xml
 
-# --- 第三方 CAN 库 ---
+# Esd can lib
 third_party/can_card_library/esd_can/include
 third_party/can_card_library/esd_can/lib
 
-# --- 生成的 BUILD / proto / common_msgs ---
-modules/BUILD
-modules/common_msgs
+# Map data files
+modules/map/data
 
-# --- FlameGraph 工具 ---
-tools/FlameGraph
+# python proto
+*_pb2.py
 
-# --- 根目录构建输出 ---
+# calibration files
+modules/calibration/data
+
+# Data bag
+docs/demo_guide/*.bag
+docs/demo_guide/*.record
+
+# Bash Environment
+.dev_bash_hist
+
+# buildtool cache and others
+dev/
+
+# bazel cache and others
+.cache/
+.apollo.bazelrc
+.bazelrc
+.errors.log
+
+# Directory for binary distribution
 output
 
-.venv
+# Flamegraph files
+tools/FlameGraph
 
-.Apollo-wzr
+# jetbrain profiler
+.DS_Store
+
+#WORKSPACE
+third_party/
+CPPLINT.cfg
+modules/common_msgs
+modules/BUILD

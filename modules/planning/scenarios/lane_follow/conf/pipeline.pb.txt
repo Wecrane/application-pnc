@@ -23,10 +23,6 @@ stage: {
     type: "PathDecider"
   }
   task {
-    name: "OBSTACLE_NUDGE_DECIDER"
-    type: "ObstacleNudgeDecider"
-  }
-  task {
     name: "RULE_BASED_STOP_DECIDER"
     type: "RuleBasedStopDecider"
   }

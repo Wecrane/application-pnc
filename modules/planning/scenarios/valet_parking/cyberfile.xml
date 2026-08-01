@@ -1,8 +1,8 @@
 <package>
-    <name>planning-scenario-bus-bay-transfer</name>
+    <name>planning-scenario-valet-parking</name>
     <version>local</version>
     <description>
-     bus bay transfer scenario (station shuttle)
+     valet parking scenario
     </description>
     <maintainer email="apollo-support">apollo-support@baidu.com</maintainer>
     <type>module</type>

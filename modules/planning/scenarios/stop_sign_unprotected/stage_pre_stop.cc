@@ -108,10 +108,6 @@ StageResult StopSignUnprotectedStagePreStop::Process(
 
   // pass vehicles being watched to DECIDER_RULE_BASED_STOP task
   // for visualization
-  injector_->planning_context()
-      ->mutable_planning_status()
-      ->mutable_stop_sign()
-      ->clear_wait_for_obstacle_id();
   for (const auto& perception_obstacle_id : watch_vehicle_ids) {
     injector_->planning_context()
         ->mutable_planning_status()

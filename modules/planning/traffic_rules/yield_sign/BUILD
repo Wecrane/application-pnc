@@ -19,7 +19,6 @@ apollo_plugin(
     description = ":plugins.xml",
     copts = PLANNING_COPTS,
     deps = [
-        "//cyber",
         "//modules/common/util:util_tool",
         "//modules/common_msgs/perception_msgs:perception_obstacle_cc_proto",
         "//modules/common_msgs/planning_msgs:planning_cc_proto",

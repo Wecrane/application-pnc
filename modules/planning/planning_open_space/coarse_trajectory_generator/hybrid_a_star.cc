@@ -43,16 +43,7 @@ HybridAStar::HybridAStar(const PlannerOpenSpaceConfig& open_space_conf) {
     max_steer_angle_ = vehicle_param_.max_steer_angle() / vehicle_param_.steer_ratio()
             * planner_open_space_config_.warm_start_config().traj_kappa_contraint_ratio();
     step_size_ = planner_open_space_config_.warm_start_config().step_size();
-    if (step_size_ <= 0.0) {
-        AERROR << "step_size_ must be > 0, got " << step_size_ << ", using default 0.5";
-        step_size_ = 0.5;
-    }
     xy_grid_resolution_ = planner_open_space_config_.warm_start_config().xy_grid_resolution();
-    // Safety: ensure next_node_num_ > 2 to avoid division by zero
-    if (next_node_num_ <= 2) {
-        AERROR << "next_node_num_ must be > 2, got " << next_node_num_ << ", using default 10";
-        next_node_num_ = 10;
-    }
     arc_length_ = planner_open_space_config_.warm_start_config().phi_grid_resolution() * vehicle_param_.wheel_base()
             / std::tan(max_steer_angle_ * 2 / (next_node_num_ / 2 - 1));
     if (arc_length_ < std::sqrt(2) * xy_grid_resolution_) {
@@ -76,32 +67,6 @@ HybridAStar::HybridAStar(const PlannerOpenSpaceConfig& open_space_conf) {
     max_forward_acc_ = planner_open_space_config_.iterative_anchoring_smoother_config().max_forward_acc();
     max_reverse_acc_ = planner_open_space_config_.iterative_anchoring_smoother_config().max_reverse_acc();
     max_acc_jerk_ = planner_open_space_config_.iterative_anchoring_smoother_config().max_acc_jerk();
-    // Initialize variables that the WarmStartConfig ctor also sets
-    soft_boundary_penalty_ = planner_open_space_config_.warm_start_config().soft_boundary_penalty();
-    traj_expected_shortest_length_ = planner_open_space_config_.warm_start_config().traj_expected_shortest_length();
-    traj_short_length_penalty_ = planner_open_space_config_.warm_start_config().traj_short_length_penalty();
-    // P2-1: Precompute trigonometric lookup tables (same as WarmStartConfig ctor)
-    max_kappa_ = std::tan(max_steer_angle_) / vehicle_param_.wheel_base();
-    tan_steer_.resize(next_node_num_);
-    cos_dphi_.resize(next_node_num_);
-    sin_dphi_.resize(next_node_num_);
-    for (size_t i = 0; i < next_node_num_; ++i) {
-        double steering = 0.0;
-        if (i < next_node_num_ / 2) {
-            steering = -max_steer_angle_
-                    + (2 * max_steer_angle_ / (static_cast<double>(next_node_num_) / 2 - 1))
-                            * static_cast<double>(i);
-        } else {
-            size_t index = i - next_node_num_ / 2;
-            steering = -max_steer_angle_
-                    + (2 * max_steer_angle_ / (static_cast<double>(next_node_num_) / 2 - 1))
-                            * static_cast<double>(index);
-        }
-        tan_steer_[i] = std::tan(steering);
-        double dphi = step_size_ / vehicle_param_.wheel_base() * tan_steer_[i];
-        cos_dphi_[i] = std::cos(dphi);
-        sin_dphi_[i] = std::sin(dphi);
-    }
 }
 
 HybridAStar::HybridAStar(const WarmStartConfig& warm_start_conf) {
@@ -113,43 +78,13 @@ HybridAStar::HybridAStar(const WarmStartConfig& warm_start_conf) {
             * planner_warm_start_config_.traj_kappa_contraint_ratio();
     max_kappa_ = std::tan(max_steer_angle_) / vehicle_param_.wheel_base();
     step_size_ = planner_warm_start_config_.step_size();
-    if (step_size_ <= 0.0) {
-        AERROR << "step_size_ must be > 0, got " << step_size_ << ", using default 0.5";
-        step_size_ = 0.5;
-    }
     xy_grid_resolution_ = planner_warm_start_config_.xy_grid_resolution();
-    // Safety: ensure next_node_num_ > 2 to avoid division by zero
-    if (next_node_num_ <= 2) {
-        AERROR << "next_node_num_ must be > 2, got " << next_node_num_ << ", using default 10";
-        next_node_num_ = 10;
-    }
     arc_length_ = planner_warm_start_config_.phi_grid_resolution() * vehicle_param_.wheel_base()
             / std::tan(max_steer_angle_ * 2 / (next_node_num_ / 2 - 1));
     if (arc_length_ < std::sqrt(2) * xy_grid_resolution_) {
         arc_length_ = std::sqrt(2) * xy_grid_resolution_;
     }
     AINFO << "arc_length" << arc_length_;
-    // P2-1: Precompute trigonometric lookup tables for Next_node_generator
-    tan_steer_.resize(next_node_num_);
-    cos_dphi_.resize(next_node_num_);
-    sin_dphi_.resize(next_node_num_);
-    for (size_t i = 0; i < next_node_num_; ++i) {
-        double steering = 0.0;
-        if (i < next_node_num_ / 2) {
-            steering = -max_steer_angle_
-                    + (2 * max_steer_angle_ / (static_cast<double>(next_node_num_) / 2 - 1))
-                            * static_cast<double>(i);
-        } else {
-            size_t index = i - next_node_num_ / 2;
-            steering = -max_steer_angle_
-                    + (2 * max_steer_angle_ / (static_cast<double>(next_node_num_) / 2 - 1))
-                            * static_cast<double>(index);
-        }
-        tan_steer_[i] = std::tan(steering);
-        double dphi = step_size_ / vehicle_param_.wheel_base() * tan_steer_[i];
-        cos_dphi_[i] = std::cos(dphi);
-        sin_dphi_[i] = std::sin(dphi);
-    }
     delta_t_ = FLAGS_open_space_delta_t;
     traj_forward_penalty_ = planner_warm_start_config_.traj_forward_penalty();
     traj_back_penalty_ = planner_warm_start_config_.traj_back_penalty();
@@ -187,14 +122,12 @@ bool HybridAStar::AnalyticExpansion(
 }
 
 bool HybridAStar::RSPCheck(const std::shared_ptr<ReedSheppPath> reeds_shepp_to_end) {
-    // Use planner_open_space_config_ (always initialized) instead of
-    // planner_warm_start_config_ (only set in WarmStartConfig ctor)
     std::shared_ptr<Node3d> node = std::shared_ptr<Node3d>(new Node3d(
             reeds_shepp_to_end->x,
             reeds_shepp_to_end->y,
             reeds_shepp_to_end->phi,
             XYbounds_,
-            planner_open_space_config_));
+            planner_warm_start_config_));
     return ValidityCheck(node) && RSPLengthCheck(reeds_shepp_to_end);
 }
 
@@ -241,15 +174,6 @@ bool HybridAStar::ValidityCheck(std::shared_ptr<Node3d> node) {
         if (traversed_x[i] > XYbounds_[1] || traversed_x[i] < XYbounds_[0] || traversed_y[i] > XYbounds_[3]
             || traversed_y[i] < XYbounds_[2]) {
             return false;
-        }
-        // P0-1: Fast occupancy grid pre-filter (skip expensive collision check if cell is free)
-        if (!occupancy_grid_.empty()) {
-            int gx = static_cast<int>((traversed_x[i] - XYbounds_[0]) / occ_grid_res_);
-            int gy = static_cast<int>((traversed_y[i] - XYbounds_[2]) / occ_grid_res_);
-            if (gx >= 0 && gx < occ_grid_w_ && gy >= 0 && gy < occ_grid_h_ &&
-                occupancy_grid_[gy * occ_grid_w_ + gx] == 0) {
-                continue;  // cell is free, skip precise collision check
-            }
         }
         Box2d bounding_box = Node3d::GetBoundingBox(vehicle_param_, traversed_x[i], traversed_y[i], traversed_phi[i]);
         for (const auto& obstacle_linesegments : obstacles_linesegments_vec_) {
@@ -301,22 +225,16 @@ std::shared_ptr<Node3d> HybridAStar::Next_node_generator(std::shared_ptr<Node3d>
     double steering = 0.0;
     double traveled_distance = 0.0;
     if (next_node_index < static_cast<double>(next_node_num_) / 2) {
+        steering = -max_steer_angle_
+                + (2 * max_steer_angle_ / (static_cast<double>(next_node_num_) / 2 - 1))
+                        * static_cast<double>(next_node_index);
         traveled_distance = step_size_;
     } else {
+        size_t index = next_node_index - next_node_num_ / 2;
+        steering = -max_steer_angle_
+                + (2 * max_steer_angle_ / (static_cast<double>(next_node_num_) / 2 - 1)) * static_cast<double>(index);
         traveled_distance = -step_size_;
     }
-    // P2-1: Use precomputed trigonometric lookup tables
-    const double tan_steer = tan_steer_[next_node_index];
-    const double cos_dphi = cos_dphi_[next_node_index];
-    // Fix: backward direction needs negated sin_dphi (sin(-x) = -sin(x))
-    const double sin_dphi_signed = (next_node_index < next_node_num_ / 2)
-            ? sin_dphi_[next_node_index]
-            : -sin_dphi_[next_node_index];
-    steering = -max_steer_angle_
-            + (2 * max_steer_angle_ / (static_cast<double>(next_node_num_) / 2 - 1))
-                    * (next_node_index < next_node_num_ / 2
-                               ? static_cast<double>(next_node_index)
-                               : static_cast<double>(next_node_index - next_node_num_ / 2));
     // take above motion primitive to generate a curve driving the car to a
     // different grid
     std::vector<double> intermediate_x;
@@ -328,30 +246,16 @@ std::shared_ptr<Node3d> HybridAStar::Next_node_generator(std::shared_ptr<Node3d>
     intermediate_x.push_back(last_x);
     intermediate_y.push_back(last_y);
     intermediate_phi.push_back(last_phi);
-    // P2-1: Precomputed trig values for inner loop
-    const double dphi = traveled_distance / vehicle_param_.wheel_base() * tan_steer;
-    const double half_dphi = dphi * 0.5;
-    const double cos_half_dphi = std::cos(half_dphi);
-    const double sin_half_dphi = std::sin(half_dphi);
-    double cos_phi = std::cos(last_phi);
-    double sin_phi = std::sin(last_phi);
     for (size_t i = 0; i < arc_length_ / step_size_; ++i) {
-        // mid_phi = last_phi + dphi/2
-        const double cos_mid = cos_phi * cos_half_dphi - sin_phi * sin_half_dphi;
-        const double sin_mid = sin_phi * cos_half_dphi + cos_phi * sin_half_dphi;
-        const double next_phi_val = last_phi + dphi;
-        const double next_x = last_x + traveled_distance * cos_mid;
-        const double next_y = last_y + traveled_distance * sin_mid;
+        const double next_phi = last_phi + traveled_distance / vehicle_param_.wheel_base() * std::tan(steering);
+        const double next_x = last_x + traveled_distance * std::cos((last_phi + next_phi) / 2.0);
+        const double next_y = last_y + traveled_distance * std::sin((last_phi + next_phi) / 2.0);
         intermediate_x.push_back(next_x);
         intermediate_y.push_back(next_y);
-        intermediate_phi.push_back(common::math::NormalizeAngle(next_phi_val));
-        // Update cos_phi/sin_phi for next iteration using rotation formulas
-        const double new_cos_phi = cos_phi * cos_dphi_[next_node_index] - sin_phi * sin_dphi_signed;
-        sin_phi = sin_phi * cos_dphi_[next_node_index] + cos_phi * sin_dphi_signed;
-        cos_phi = new_cos_phi;
+        intermediate_phi.push_back(common::math::NormalizeAngle(next_phi));
         last_x = next_x;
         last_y = next_y;
-        last_phi = next_phi_val;
+        last_phi = next_phi;
     }
     // check if the vehicle runs outside of XY boundary
     if (intermediate_x.back() > XYbounds_[1] || intermediate_x.back() < XYbounds_[0]
@@ -790,62 +694,6 @@ bool HybridAStar::GetTemporalProfile(HybridAStartResult* result) {
     return true;
 }
 
-void HybridAStar::BuildOccupancyGrid(
-        const std::vector<std::vector<common::math::Vec2d>>& obstacles_vertices_vec) {
-    occ_grid_res_ = xy_grid_resolution_;  // 0.2m, same as Hybrid A* resolution
-    occ_grid_w_ = static_cast<int>((XYbounds_[1] - XYbounds_[0]) / occ_grid_res_) + 1;
-    occ_grid_h_ = static_cast<int>((XYbounds_[3] - XYbounds_[2]) / occ_grid_res_) + 1;
-    occupancy_grid_.assign(occ_grid_w_ * occ_grid_h_, 0);
-
-    for (const auto& obstacle_vertices : obstacles_vertices_vec) {
-        size_t vertices_num = obstacle_vertices.size();
-        if (vertices_num < 2) continue;
-        for (size_t i = 0; i < vertices_num; ++i) {
-            const auto& p0 = obstacle_vertices[i];
-            const auto& p1 = obstacle_vertices[(i + 1) % vertices_num];
-            // Bresenham line rasterization
-            int gx0 = static_cast<int>((p0.x() - XYbounds_[0]) / occ_grid_res_);
-            int gy0 = static_cast<int>((p0.y() - XYbounds_[2]) / occ_grid_res_);
-            int gx1 = static_cast<int>((p1.x() - XYbounds_[0]) / occ_grid_res_);
-            int gy1 = static_cast<int>((p1.y() - XYbounds_[2]) / occ_grid_res_);
-
-            int dx = std::abs(gx1 - gx0), dy = -std::abs(gy1 - gy0);
-            int sx = gx0 < gx1 ? 1 : -1, sy = gy0 < gy1 ? 1 : -1;
-            int err = dx + dy;
-
-            while (true) {
-                if (gx0 >= 0 && gx0 < occ_grid_w_ && gy0 >= 0 && gy0 < occ_grid_h_) {
-                    occupancy_grid_[gy0 * occ_grid_w_ + gx0] = 1;
-                }
-                if (gx0 == gx1 && gy0 == gy1) break;
-                int e2 = 2 * err;
-                if (e2 >= dy) { err += dy; gx0 += sx; }
-                if (e2 <= dx) { err += dx; gy0 += sy; }
-            }
-        }
-    }
-
-    // Dilate by vehicle half-width (1.1m / 0.2m ≈ 6 cells) + node_radius buffer
-    constexpr int kDilationRadius = 8;
-    std::vector<uint8_t> dilated = occupancy_grid_;
-    for (int y = 0; y < occ_grid_h_; ++y) {
-        for (int x = 0; x < occ_grid_w_; ++x) {
-            if (occupancy_grid_[y * occ_grid_w_ + x] == 1) {
-                int ymin = std::max(0, y - kDilationRadius);
-                int ymax = std::min(occ_grid_h_ - 1, y + kDilationRadius);
-                int xmin = std::max(0, x - kDilationRadius);
-                int xmax = std::min(occ_grid_w_ - 1, x + kDilationRadius);
-                for (int dy = ymin; dy <= ymax; ++dy) {
-                    for (int dx = xmin; dx <= xmax; ++dx) {
-                        dilated[dy * occ_grid_w_ + dx] = 1;
-                    }
-                }
-            }
-        }
-    }
-    occupancy_grid_ = std::move(dilated);
-}
-
 bool HybridAStar::Plan(
         double sx,
         double sy,
@@ -895,13 +743,6 @@ bool HybridAStar::Plan(
         soft_boundary_linesegments_vec.emplace_back(soft_boundary_linesegments);
     }
     soft_boundary_linesegments_vec_ = std::move(soft_boundary_linesegments_vec);
-    // CRITICAL: XYbounds_ must be set before BuildOccupancyGrid uses it
-    XYbounds_ = XYbounds;
-    // P0-1: Build occupancy grid for O(1) collision pre-check
-    BuildOccupancyGrid(obstacles_vertices_vec);
-    // Pass occupancy grid to GridSearch for accelerated CheckConstraints
-    grid_a_star_heuristic_generator_->SetOccupancyGrid(
-        occupancy_grid_, occ_grid_w_, occ_grid_h_, occ_grid_res_);
     for (size_t i = 0; i < obstacles_linesegments_vec_.size(); i++) {
         for (auto linesg : obstacles_linesegments_vec_[i]) {
             std::string name = std::to_string(i) + "roi_boundary";
@@ -924,6 +765,7 @@ bool HybridAStar::Plan(
     Vec2d ecenter(eposition + evec_to_center.rotate(ephi));
     Box2d ebox(ecenter, ephi, vehicle_param_.length(), vehicle_param_.width());
     print_curves.AddPoint("vehicle_end_box", ebox.GetAllCorners());
+    XYbounds_ = XYbounds;
     // load nodes and obstacles
     start_node_.reset(new Node3d({sx}, {sy}, {sphi}, XYbounds_, planner_warm_start_config_));
     end_node_.reset(new Node3d({ex}, {ey}, {ephi}, XYbounds_, planner_warm_start_config_));
@@ -945,9 +787,8 @@ bool HybridAStar::Plan(
             ex, ey, XYbounds_, obstacles_linesegments_vec_, soft_boundary_linesegments_vec_);
     ADEBUG << "map time " << Clock::NowInSeconds() - map_time;
     // load open set, pq
-    open_set_.insert(start_node_->GetIntIndex());
-    open_pq_.emplace(start_node_->GetIntIndex(), start_node_->GetCost());
-    node_map_[start_node_->GetIntIndex()] = start_node_;
+    open_set_.insert(start_node_->GetIndex());
+    open_pq_.emplace(start_node_, start_node_->GetCost());
     // Hybrid A* begins
     size_t explored_node_num = 0;
     size_t available_result_num = 0;
@@ -965,31 +806,11 @@ bool HybridAStar::Plan(
     std::vector<std::shared_ptr<Node3d>> candidate_final_nodes;
     while (!open_pq_.empty() && open_pq_.size() < kMaxNodeNum && available_result_num < desired_explored_num
            && explored_node_num < max_explored_num) {
-        auto it = node_map_.find(open_pq_.top().first);
-        if (it == node_map_.end()) {
-            AERROR << "FATAL: open_pq_ key not found in node_map_, skipping";
-            open_pq_.pop();
-            continue;
-        }
-        std::shared_ptr<Node3d> current_node = it->second;
+        std::shared_ptr<Node3d> current_node = open_pq_.top().first;
         open_pq_.pop();
-        // P1-1: Distance-gated + interval-based AnalyticExpansion
-        // Only try Reed-Shepp when node is within 15m of goal and every 5th node
-        static constexpr double kRSMaxDist = 15.0;
-        static constexpr int kRSInterval = 5;
-        bool should_try_rs = false;
-        if (explored_node_num % kRSInterval == 0) {
-            double dist_to_goal = std::hypot(current_node->GetX() - ex, current_node->GetY() - ey);
-            if (dist_to_goal < kRSMaxDist) {
-                if (final_node_ == nullptr ||
-                    current_node->GetHeuCost() < final_node_->GetTrajCost() * 1.5) {
-                    should_try_rs = true;
-                }
-            }
-        }
         const double rs_start_time = Clock::NowInSeconds();
         std::shared_ptr<Node3d> final_node = nullptr;
-        if (should_try_rs && AnalyticExpansion(current_node, &final_node)) {
+        if (AnalyticExpansion(current_node, &final_node)) {
             if (final_node_ == nullptr || final_node_->GetTrajCost() > final_node->GetTrajCost()) {
                 final_node_ = final_node;
                 best_explored_num = explored_node_num + 1;
@@ -1000,7 +821,7 @@ bool HybridAStar::Plan(
         explored_node_num++;
         const double rs_end_time = Clock::NowInSeconds();
         rs_time += rs_end_time - rs_start_time;
-        close_set_.insert(current_node->GetIntIndex());
+        close_set_.insert(current_node->GetIndex());
 
         if (Clock::NowInSeconds() - astar_start_time > planner_warm_start_config_.astar_max_search_time()
             && available_result_num > 0) {
@@ -1009,7 +830,7 @@ bool HybridAStar::Plan(
 
         size_t begin_index = 0;
         size_t end_index = next_node_num_;
-        std::unordered_set<uint64_t> temp_set;
+        std::unordered_set<std::string> temp_set;
         for (size_t i = begin_index; i < end_index; ++i) {
             const double gen_node_time = Clock::NowInSeconds();
             std::shared_ptr<Node3d> next_node = Next_node_generator(current_node, i);
@@ -1020,7 +841,7 @@ bool HybridAStar::Plan(
                 continue;
             }
             // check if the node is already in the close set
-            if (close_set_.count(next_node->GetIntIndex()) > 0) {
+            if (close_set_.count(next_node->GetIndex()) > 0) {
                 continue;
             }
             // collision check
@@ -1029,14 +850,13 @@ bool HybridAStar::Plan(
                 continue;
             }
             validity_check_time += Clock::NowInSeconds() - validity_check_start_time;
-            if (open_set_.count(next_node->GetIntIndex()) == 0) {
+            if (open_set_.count(next_node->GetIndex()) == 0) {
                 const double start_time = Clock::NowInSeconds();
                 CalculateNodeCost(current_node, next_node);
                 const double end_time = Clock::NowInSeconds();
                 heuristic_time += end_time - start_time;
-                temp_set.insert(next_node->GetIntIndex());
-                open_pq_.emplace(next_node->GetIntIndex(), next_node->GetCost());
-                node_map_[next_node->GetIntIndex()] = next_node;
+                temp_set.insert(next_node->GetIndex());
+                open_pq_.emplace(next_node, next_node->GetCost());
             }
         }
         open_set_.insert(temp_set.begin(), temp_set.end());
@@ -1044,13 +864,6 @@ bool HybridAStar::Plan(
 
     if (final_node_ == nullptr) {
         AERROR << "Hybird A* cannot find a valid path";
-        AERROR << "Hybrid A* failed stats, open_pq_empty: "
-               << (open_pq_.empty() ? "true" : "false")
-               << ", open_pq_size: " << open_pq_.size()
-               << ", explored_node_num: " << explored_node_num
-               << ", max_explored_num: " << max_explored_num
-               << ", available_result_num: " << available_result_num
-               << ", desired_explored_num: " << desired_explored_num;
         print_curves.PrintToLog();
         return false;
     }

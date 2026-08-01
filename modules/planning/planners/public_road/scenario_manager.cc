@@ -30,21 +30,6 @@ namespace planning {
 
 using apollo::cyber::plugin_manager::PluginManager;
 
-namespace {
-
-void UpdateScenarioStatus(const std::shared_ptr<DependencyInjector>& injector,
-                          const std::shared_ptr<Scenario>& scenario) {
-  if (injector == nullptr || scenario == nullptr) {
-    return;
-  }
-  injector->planning_context()
-      ->mutable_planning_status()
-      ->mutable_scenario()
-      ->set_scenario_type(scenario->Name());
-}
-
-}  // namespace
-
 bool ScenarioManager::Init(const std::shared_ptr<DependencyInjector>& injector,
                            const PlannerPublicRoadConfig& planner_config) {
   if (init_) {
@@ -64,7 +49,6 @@ bool ScenarioManager::Init(const std::shared_ptr<DependencyInjector>& injector,
   }
   AINFO << "Load scenario list:" << planner_config.DebugString();
   current_scenario_ = default_scenario_type_;
-  UpdateScenarioStatus(injector_, current_scenario_);
   init_ = true;
   return true;
 }
@@ -77,7 +61,6 @@ void ScenarioManager::Update(const common::TrajectoryPoint& ego_point,
         current_scenario_->GetStatus() ==
             ScenarioStatusType::STATUS_PROCESSING) {
       // The previous scenario has higher priority
-      UpdateScenarioStatus(injector_, current_scenario_);
       return;
     }
     if (scenario->IsTransferable(current_scenario_.get(), *frame)) {
@@ -87,11 +70,9 @@ void ScenarioManager::Update(const common::TrajectoryPoint& ego_point,
       current_scenario_ = scenario;
       current_scenario_->Reset();
       current_scenario_->Enter(frame);
-      UpdateScenarioStatus(injector_, current_scenario_);
       return;
     }
   }
-  UpdateScenarioStatus(injector_, current_scenario_);
 }
 
 void ScenarioManager::Reset(Frame* frame) {
@@ -101,7 +82,6 @@ void ScenarioManager::Reset(Frame* frame) {
   AINFO << "Reset to default scenario:" << default_scenario_type_->Name();
   default_scenario_type_->Reset();
   current_scenario_ = default_scenario_type_;
-  UpdateScenarioStatus(injector_, current_scenario_);
 }
 }  // namespace planning
 }  // namespace apollo

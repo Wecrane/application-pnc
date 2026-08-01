@@ -19,19 +19,6 @@ message SpeedDeciderConfig {
   optional double yield_distance_buffer = 7 [default = 5.0];
   optional double stop_follow_distance = 8 [default = 2.0];
   optional FollowDistanceSchedulerInfo follow_distance_scheduler = 9;
-  optional bool ignore_dynamic_obstacles_in_change_lane = 10 [default = false];
-  optional double change_lane_ignore_dynamic_obstacle_min_t = 11
-      [default = 2.0];
-  optional double change_lane_ignore_dynamic_obstacle_min_s = 12
-      [default = 10.0];
-  optional double change_lane_keep_dynamic_obstacle_min_t = 13 [default = 1.0];
-  optional double change_lane_keep_dynamic_obstacle_min_s = 14 [default = 5.0];
-  optional bool ignore_front_dynamic_obstacles_in_change_lane = 15
-      [default = false];
-  optional double change_lane_keep_rear_dynamic_obstacle_gap = 16
-      [default = 3.0];
-  optional bool ignore_static_obstacle_stop_without_decision = 17
-      [default = false];
 }
 
 message FollowDistanceSchedulerInfo {

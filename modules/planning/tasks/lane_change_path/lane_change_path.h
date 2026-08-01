@@ -25,14 +25,14 @@
 #include <tuple>
 #include <utility>
 #include <vector>
-
+#include "modules/planning/tasks/lane_change_path/proto/lane_change_path.pb.h"
 #include "cyber/plugin_manager/plugin_manager.h"
 #include "modules/planning/planning_interface_base/task_base/common/path_generation.h"
-#include "modules/planning/tasks/lane_change_path/proto/lane_change_path.pb.h"
 
 namespace apollo {
 namespace planning {
 
+enum SidePassDirection { LEFT_BORROW = 1, RIGHT_BORROW = 2 };
 class LaneChangePath : public PathGeneration {
  public:
   bool Init(const std::string& config_dir, const std::string& name,
@@ -79,6 +79,10 @@ class LaneChangePath : public PathGeneration {
                                double adc_frenet_s,
                                common::math::Vec2d* start_xy);
   /**
+   * @brief Determine if the space before and after changing lanes is safe
+   */
+  bool IsClearToChangeLane(ReferenceLineInfo* reference_line_info);
+  /**
    * @brief Update Planning context lane change status
    */
   void UpdateStatus(double timestamp, ChangeLaneStatus::Status status_code,
@@ -90,7 +94,6 @@ class LaneChangePath : public PathGeneration {
                         const double safe_distance,
                         const double distance_buffer,
                         const bool is_obstacle_blocking);
-  bool IsClearToChangeLane(ReferenceLineInfo* reference_line_info);
   void SetPathInfo(PathData* const path_data);
 
   bool CheckLastFrameSucceed(const apollo::planning::Frame* const last_frame);

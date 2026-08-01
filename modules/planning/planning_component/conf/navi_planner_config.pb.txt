@@ -31,7 +31,7 @@ safe_distance_ratio: 1.0
 following_accel_ratio: 0.5
 soft_centric_accel_limit: 1.0
 hard_centric_accel_limit: 1.5
-hard_speed_limit: 16.667
+hard_speed_limit: 40.0
 hard_accel_limit: 8.0
 enable_safe_path: false
 enable_planning_start_point: true

@@ -1,4 +1,4 @@
-parking_spot_range_to_start: 80.0
+parking_spot_range_to_start: 20.0
 max_valid_stop_distance: 1.0
 max_heading_error: 0.08
 max_lat_error: 0.3

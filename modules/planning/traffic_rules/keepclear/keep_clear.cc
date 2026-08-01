@@ -20,14 +20,10 @@
 
 #include "modules/planning/traffic_rules/keepclear/keep_clear.h"
 
-#include <algorithm>
-#include <cmath>
 #include <memory>
 #include <vector>
 
-#include "modules/common/math/math_utils.h"
 #include "modules/common_msgs/basic_msgs/pnc_point.pb.h"
-#include "modules/common_msgs/map_msgs/map_lane.pb.h"
 #include "modules/planning/planning_base/proto/planning_config.pb.h"
 #include "modules/planning/planning_base/proto/planning_status.pb.h"
 #include "modules/map/hdmap/hdmap_common.h"
@@ -37,56 +33,6 @@ namespace apollo {
 namespace planning {
 
 using apollo::common::Status;
-
-namespace {
-bool IsRoundaboutEntryLike(const ReferenceLineInfo* reference_line_info) {
-  if (reference_line_info == nullptr) {
-    return false;
-  }
-  constexpr double kEntryLookForward = 35.0;
-  constexpr double kInsideJunctionBuffer = 8.0;
-  constexpr double kCurveLookForward = 55.0;
-  constexpr double kMinMaxKappa = 0.025;
-  constexpr double kMinHeadingChange = 0.65;
-  constexpr double kUTurnHeadingChange = 1.8;
-  const double adc_end_s = reference_line_info->AdcSlBoundary().end_s();
-  bool near_pnc_junction = false;
-  for (const auto& overlap :
-       reference_line_info->reference_line().map_path().pnc_junction_overlaps()) {
-    if (overlap.end_s < adc_end_s - kInsideJunctionBuffer) {
-      continue;
-    }
-    if (overlap.start_s > adc_end_s + kEntryLookForward) {
-      continue;
-    }
-    near_pnc_junction = true;
-    break;
-  }
-  if (!near_pnc_junction) {
-    return false;
-  }
-  const auto& reference_line = reference_line_info->reference_line();
-  const double ref_length = reference_line.Length();
-  const double start_s = std::max(0.0, adc_end_s);
-  const double end_s = std::min(ref_length - 1.0, adc_end_s + kCurveLookForward);
-  if (end_s - start_s < 8.0) {
-    return false;
-  }
-  double max_abs_kappa = 0.0;
-  for (double s = start_s; s <= end_s; s += 2.0) {
-    if (reference_line_info->GetPathTurnType(s) == hdmap::Lane::U_TURN) {
-      return false;
-    }
-    max_abs_kappa =
-        std::max(max_abs_kappa, std::fabs(reference_line.GetReferencePoint(s).kappa()));
-  }
-  const double heading_change = std::fabs(common::math::NormalizeAngle(
-      reference_line.GetReferencePoint(end_s).heading() -
-      reference_line.GetReferencePoint(start_s).heading()));
-  return max_abs_kappa > kMinMaxKappa && heading_change > kMinHeadingChange &&
-         heading_change < kUTurnHeadingChange;
-}
-}  // namespace
 using apollo::hdmap::PathOverlap;
 
 bool KeepClear::Init(const std::string& name,
@@ -194,17 +140,6 @@ Status KeepClear::ApplyRule(Frame* const frame,
                  << "] to cross_walk_start_s" << crosswalk_overlap->start_s
                  << "]";
           pnc_junction_start_s = crosswalk_overlap->start_s;
-        }
-
-        if (IsRoundaboutEntryLike(reference_line_info)) {
-          constexpr double kRoundaboutKeepClearStartShift = 8.0;
-          const double shifted_start_s =
-              std::min(pnc_junction_overlap->end_s - 2.0,
-                       pnc_junction_start_s + kRoundaboutKeepClearStartShift);
-          AINFO << "[ROUNDABOUT][KeepClear] shift junction keep-clear start from "
-                << pnc_junction_start_s << " to " << shifted_start_s
-                << ", junction_end=" << pnc_junction_overlap->end_s;
-          pnc_junction_start_s = shifted_start_s;
         }
 
         const auto obstacle_id =

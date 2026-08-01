@@ -44,7 +44,6 @@ class STBoundaryMapper {
                    const ReferenceLine& reference_line,
                    const PathData& path_data, const double planning_distance,
                    const double planning_time,
-                   const SLBoundary& adc_sl_boundary,
                    const std::shared_ptr<DependencyInjector>& injector);
 
   virtual ~STBoundaryMapper() = default;
@@ -104,9 +103,6 @@ class STBoundaryMapper {
   void ComputeSTBoundaryWithDecision(Obstacle* obstacle,
                                      const ObjectDecisionType& decision) const;
 
-  bool ShouldIgnoreDynamicObstacleInChangeLane(
-      const Obstacle& obstacle, const STBoundary& boundary) const;
-
   bool CheckOverlapWithTrajectoryPoint(
       const DiscretizedPath& discretized_path,
       const common::math::Polygon2d& obstacle_shape,
@@ -119,7 +115,6 @@ class STBoundaryMapper {
   const SpeedBoundsDeciderConfig& speed_bounds_config_;
   const ReferenceLine& reference_line_;
   const PathData& path_data_;
-  const SLBoundary& adc_sl_boundary_;
   const common::VehicleParam& vehicle_param_;
   const double planning_max_distance_;
   const double planning_max_time_;

@@ -181,8 +181,7 @@ class PathBoundsDeciderUtil {
       const double y, const PathBound& path_bound);
   static void GetSLPolygons(const ReferenceLineInfo& reference_line_info,
                             std::vector<SLPolygon>* polygons,
-                            const SLState& init_sl_state,
-                            bool include_non_blocking_static_obstacles = false);
+                            const SLState& init_sl_state);
   static bool UpdatePathBoundaryBySLPolygon(
       const ReferenceLineInfo& reference_line_info,
       std::vector<SLPolygon>* const sl_polygon, const SLState& init_sl_state,

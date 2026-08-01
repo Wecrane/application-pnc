@@ -113,10 +113,6 @@ class Obstacle {
   static std::list<std::unique_ptr<Obstacle>> CreateObstacles(
       const prediction::PredictionObstacles& predictions);
 
-  // Test helper for the static-obstacle retention cache used by
-  // CreateObstacles().
-  static void ResetStaticObstacleCacheForTest();
-
   static std::unique_ptr<Obstacle> CreateStaticVirtualObstacles(
       const std::string& id, const common::math::Box2d& obstacle_box);
 

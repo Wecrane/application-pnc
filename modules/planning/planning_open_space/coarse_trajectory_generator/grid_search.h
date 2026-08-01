@@ -46,13 +46,11 @@ public:
         grid_x_ = static_cast<int>((x - XYbounds[0]) / xy_resolution);
         grid_y_ = static_cast<int>((y - XYbounds[2]) / xy_resolution);
         index_ = ComputeStringIndex(grid_x_, grid_y_);
-        int_index_ = ComputeIntIndex(grid_x_, grid_y_);
     }
     Node2d(const int grid_x, const int grid_y, const std::vector<double>& XYbounds) {
         grid_x_ = grid_x;
         grid_y_ = grid_y;
         index_ = ComputeStringIndex(grid_x_, grid_y_);
-        int_index_ = ComputeIntIndex(grid_x_, grid_y_);
     }
     void SetPathCost(const double path_cost) {
         path_cost_ = path_cost;
@@ -92,13 +90,6 @@ public:
     const std::string& GetIndex() const {
         return index_;
     }
-    uint64_t GetIntIndex() const {
-        return int_index_;
-    }
-    static uint64_t ComputeIntIndex(int x_grid, int y_grid) {
-        return (static_cast<uint64_t>(static_cast<uint32_t>(x_grid)) << 32) |
-               static_cast<uint64_t>(static_cast<uint32_t>(y_grid));
-    }
     std::shared_ptr<Node2d> GetPreNode() const {
         return pre_node_;
     }
@@ -129,7 +120,6 @@ private:
     double cost_ = 0.0;
     double distance_to_obstacle_ = std::numeric_limits<double>::max();
     std::string index_;
-    uint64_t int_index_ = 0;
     std::shared_ptr<Node2d> pre_node_ = nullptr;
 };
 
@@ -158,14 +148,6 @@ public:
             const std::vector<std::vector<common::math::LineSegment2d>>& obstacles_linesegments_vec,
             const std::vector<std::vector<common::math::LineSegment2d>>& soft_boundary_linesegments_vec = {{}});
     double CheckDpMap(const double sx, const double sy);
-    // P0-1: Set pre-built occupancy grid for O(1) collision lookup
-    void SetOccupancyGrid(
-            const std::vector<uint8_t>& grid, int w, int h, double res) {
-        occupancy_grid_cache_ = grid;
-        occ_grid_w_ = w;
-        occ_grid_h_ = h;
-        occ_grid_res_ = res;
-    }
 
 private:
     double EuclidDistance(const double x1, const double y1, const double x2, const double y2);
@@ -183,18 +165,13 @@ private:
     std::shared_ptr<Node2d> end_node_;
     std::shared_ptr<Node2d> final_node_;
     std::vector<std::vector<common::math::LineSegment2d>> obstacles_linesegments_vec_;
-    // P0-1: Occupancy grid cache (owned copy for safety)
-    std::vector<uint8_t> occupancy_grid_cache_;
-    int occ_grid_w_ = 0;
-    int occ_grid_h_ = 0;
-    double occ_grid_res_ = 0.2;
 
     struct cmp {
-        bool operator()(const std::pair<uint64_t, double>& left, const std::pair<uint64_t, double>& right) const {
+        bool operator()(const std::pair<std::string, double>& left, const std::pair<std::string, double>& right) const {
             return left.second >= right.second;
         }
     };
-    std::unordered_map<uint64_t, std::shared_ptr<Node2d>> dp_map_;
+    std::unordered_map<std::string, std::shared_ptr<Node2d>> dp_map_;
 
     // park generic
 public:
@@ -207,7 +184,7 @@ private:
             const int& x,
             const int& y,
             common::math::Vec2d origin_index,
-            std::unordered_set<uint64_t>& close_set);
+            std::unordered_set<std::string>& close_set);
     std::vector<std::vector<common::math::LineSegment2d>> soft_boundary_linesegments_vec_;
     double esdf_range_ = 0.0;
     bool use_esdf_ = false;
