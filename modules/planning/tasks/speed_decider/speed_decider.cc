@@ -244,6 +244,23 @@ Status SpeedDecider::MakeObjectDecision(const SpeedData& speed_profile, PathDeci
             AppendIgnoreDecision(mutable_obstacle);
             continue;
         }
+        // mayaochang add9c: a PEDESTRIAN with a NON-empty ST boundary (i.e. it
+        // is near the lane, lateral < ~1.8m) is handled uniformly by
+        // HandlePedestrianStop right here. This MUST happen BEFORE the
+        // HasLongitudinalDecision check below: otherwise, while the pedestrian
+        // is stationary, path_decider attaches its own "blocking obstacle"
+        // STOP, speed_decider bails out at HasLongitudinalDecision and never
+        // calls HandlePedestrianStop -> no fence is recorded. When that
+        // path_decider STOP later flickers away/reappears, the fixed fence is
+        // recorded for the first time at a different s -> the STOP point jumps
+        // from far behind the pedestrian to right in front of the ego -> the
+        // ego brakes from e.g. 0.96 m/s to 0 instantly (unphysical hard stop,
+        // 202608012012 replay t=23.6). Recording the fence from the first
+        // frame keeps the STOP point stable so the ego decelerates smoothly.
+        if (obstacle->Perception().type() == PerceptionObstacle::PEDESTRIAN) {
+            HandlePedestrianStop(mutable_obstacle);
+            continue;
+        }
         if (obstacle->HasLongitudinalDecision()) {
             AppendIgnoreDecision(mutable_obstacle);
             continue;
