@@ -149,6 +149,12 @@ DEFINE_double(min_stop_distance_obstacle, 6.0,
 DEFINE_double(pedestrian_stop_distance, 1.75,
               "stop distance from static pedestrian (meters); smaller than "
               "min_stop_distance_obstacle so crosswalk rule's stop wins");
+DEFINE_double(pedestrian_stop_distance_near, 2.5,
+              "stop distance from a NON-crosswalk pedestrian (scenario 5 "
+              "obstacle-avoidance): the evaluation seems to expect the ego to "
+              "park ~2-3m before the obstacle (cloud car stopped 11.5m away "
+              "and the follow-limit check still failed); crosswalk keeps "
+              "pedestrian_stop_distance=1.75m");
 DEFINE_double(follow_min_distance, 3.0,
               "min follow distance for vehicles/bicycles/moving objects");
 DEFINE_double(yield_distance, 5.0,

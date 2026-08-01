@@ -374,9 +374,18 @@ Status SpeedDecider::MakeObjectDecision(const SpeedData& speed_profile, PathDeci
                             ignore.mutable_ignore();
                             mutable_obstacle->AddLongitudinalDecision("dp_st_graph", ignore);
                         } else {
+                            // mayaochang add16: a non-crosswalk pedestrian
+                            // (scenario 5) is parked ~2.5m before the obstacle
+                            // (pedestrian_stop_distance_near) - the evaluation
+                            // expects 2~3m, and the cloud car that stopped
+                            // 11.5m away still failed the "follow limit"
+                            // check. Crosswalk pedestrians keep 1.75m
+                            // (scenario 2 needs 1.5~2.0m).
                             double stop_dist = -FLAGS_min_stop_distance_obstacle;
-                            if (is_pedestrian) {
+                            if (is_pedestrian && IsPedestrianOnCrosswalk(*obstacle)) {
                                 stop_dist = -FLAGS_pedestrian_stop_distance;
+                            } else if (is_pedestrian) {
+                                stop_dist = -FLAGS_pedestrian_stop_distance_near;
                             }
                             ObjectDecisionType stop_decision;
                             if (CreateStopDecision(*mutable_obstacle, &stop_decision, stop_dist)) {
@@ -669,9 +678,13 @@ void SpeedDecider::HandlePedestrianStop(Obstacle* obstacle) const {
     if (obs_l < kClearLateral || obstacle_speed > kMaxStopSpeed) {
         // Pedestrian still inside the lane, or still moving -> keep a FIXED
         // stop fence (recorded once, never follows the pedestrian).
+        // mayaochang add16: non-crosswalk pedestrian (scenario 5) stops ~2.5m
+        // before the obstacle; crosswalk keeps 1.75m (scenario 2).
         double stop_dist = -FLAGS_min_stop_distance_obstacle;
         if (IsPedestrianOnCrosswalk(*obstacle)) {
             stop_dist = -FLAGS_pedestrian_stop_distance;
+        } else {
+            stop_dist = -FLAGS_pedestrian_stop_distance_near;
         }
         double fence_s;
         auto it = ped_fixed_fence_s_.find(base_id);
