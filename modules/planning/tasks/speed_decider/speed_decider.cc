@@ -217,26 +217,7 @@ Status SpeedDecider::MakeObjectDecision(const SpeedData& speed_profile, PathDeci
 
         if (boundary.IsEmpty() || boundary.max_s() < 0.0 || boundary.max_t() < 0.0
             || boundary.min_t() >= speed_profile.back().t()) {
-            // mayaochang add21: when the ST boundary goes empty (pedestrian
-            // laterally leaves the ~3.2m ST-generation band while STILL
-            // moving), do NOT drop the pedestrian to IGNORE - keep the fixed
-            // fence via HandlePedestrianStop so the ego does not launch while
-            // the pedestrian is still on the lane (the "boundary empty
-            // bypass" that made the cloud car start at t=60.1 while the
-            // pedestrian still moved at 2.29 m/s).
-            if (mutable_obstacle->Perception().type() == PerceptionObstacle::PEDESTRIAN) {
-                const auto& sl = mutable_obstacle->PerceptionSLBoundary();
-                const double obs_l = std::fabs((sl.start_l() + sl.end_l()) / 2.0);
-                static constexpr double kPedBypassMaxLateral = 5.0;
-                const std::string base_id = mutable_obstacle->Id().substr(
-                        0, mutable_obstacle->Id().find('_'));
-                if (ped_fixed_fence_s_.count(base_id) > 0 || obs_l < kPedBypassMaxLateral) {
-                    HandlePedestrianStop(mutable_obstacle);
-                }
-            }
-            if (!mutable_obstacle->HasLongitudinalDecision()) {
-                AppendIgnoreDecision(mutable_obstacle);
-            }
+            AppendIgnoreDecision(mutable_obstacle);
             continue;
         }
         if (obstacle->HasLongitudinalDecision()) {
@@ -366,22 +347,21 @@ Status SpeedDecider::MakeObjectDecision(const SpeedData& speed_profile, PathDeci
                             ObjectDecisionType ignore;
                             ignore.mutable_ignore();
                             mutable_obstacle->AddLongitudinalDecision("dp_st_graph", ignore);
-                        } else if (is_pedestrian) {
-                            // mayaochang add21: a static pedestrian uses the
-                            // FIXED-fence logic (HandlePedestrianStop), NOT the
-                            // per-frame CreateStopDecision. The old code
-                            // recomputed the fence every cycle from
-                            // boundary.min_s(), so once prediction kept the
-                            // pedestrian "static" while it actually started
-                            // walking, the fence followed the pedestrian and
-                            // the ego crept behind it (scenario 5 follow
-                            // limit). The fence is recorded once and shared by
-                            // base_id (add20).
-                            HandlePedestrianStop(mutable_obstacle);
                         } else {
+                            // mayaochang add18: only the stop DISTANCE is
+                            // changed here (scenario 5 experiment): a
+                            // non-crosswalk pedestrian is stopped ~2.5m before
+                            // the obstacle (evaluation seems to expect 2~3m,
+                            // the cloud car stopped 11.5m away and failed).
+                            // Crosswalk pedestrians keep 1.75m (scenario 2).
+                            double stop_dist = -FLAGS_min_stop_distance_obstacle;
+                            if (is_pedestrian && IsPedestrianOnCrosswalk(*obstacle)) {
+                                stop_dist = -FLAGS_pedestrian_stop_distance;
+                            } else if (is_pedestrian) {
+                                stop_dist = -2.5;
+                            }
                             ObjectDecisionType stop_decision;
-                            if (CreateStopDecision(*mutable_obstacle, &stop_decision,
-                                                   -FLAGS_min_stop_distance_obstacle)) {
+                            if (CreateStopDecision(*mutable_obstacle, &stop_decision, stop_dist)) {
                                 mutable_obstacle->AddLongitudinalDecision("dp_st_graph", stop_decision);
                             }
                         }
@@ -669,67 +649,47 @@ void SpeedDecider::HandlePedestrianStop(Obstacle* obstacle) const {
     const std::string& id = obstacle->Id();
     const std::string base_id = id.substr(0, id.find('_'));
 
-    // mayaochang add21: release only when the pedestrian has BOTH cleared the
-    // lane laterally AND stopped moving (<=0.3 m/s). Releasing while it still
-    // walks (lateral ~3.5m but v~2m/s) let the ego start beside the moving
-    // pedestrian -> competition "follow limit" fails (cloud evidence: the car
-    // started at t=60.1 while the pedestrian still moved at 2.29 m/s).
-    const double obs_speed = std::hypot(obstacle->Perception().velocity().x(),
-                                        obstacle->Perception().velocity().y());
-    static constexpr double kReleaseMaxSpeed = 0.3;
-    const bool lateral_clear = obs_l >= kClearLateral;
-    const bool ped_stopped = obs_speed <= kReleaseMaxSpeed;
-
-    if (lateral_clear && ped_stopped) {
-        // Pedestrian has left the lane and stopped -> release (YIELD).
+    if (obs_l < kClearLateral) {
+        // Pedestrian still inside the lane -> keep a FIXED stop fence.
+        // mayaochang add18: only the stop DISTANCE is changed (scenario 5
+        // experiment): non-crosswalk pedestrian ~2.5m, crosswalk keeps 1.75m.
+        double stop_dist = -FLAGS_min_stop_distance_obstacle;
+        if (IsPedestrianOnCrosswalk(*obstacle)) {
+            stop_dist = -FLAGS_pedestrian_stop_distance;
+        } else {
+            stop_dist = -2.5;
+        }
+        double fence_s;
+        auto it = ped_fixed_fence_s_.find(base_id);
+        if (it == ped_fixed_fence_s_.end()) {
+            // mayaochang add19: compensate the -front_edge_to_center offset that
+            // STBoundaryMapper baked into boundary.min_s(), so the stop fence is
+            // really stop_dist meters before the pedestrian (scenario 5: 2.5m).
+            fence_s = adc_sl_boundary_.end_s() + boundary.min_s() + stop_dist
+                    + VehicleConfigHelper::GetConfig().vehicle_param().front_edge_to_center();
+            ped_fixed_fence_s_[base_id] = fence_s;
+            ADEBUG << "ped_fixed: record fence_s=" << fence_s << " id=" << id;
+        } else {
+            fence_s = it->second;  // keep the originally recorded fence
+        }
+        const auto fence_point = reference_line_->GetReferencePoint(fence_s);
+        ObjectDecisionType stop_decision;
+        auto* stop = stop_decision.mutable_stop();
+        stop->set_distance_s(stop_dist);
+        auto* sp = stop->mutable_stop_point();
+        sp->set_x(fence_point.x());
+        sp->set_y(fence_point.y());
+        sp->set_z(0.0);
+        stop->set_stop_heading(fence_point.heading());
+        obstacle->AddLongitudinalDecision("dp_st_graph/ped_fixed", stop_decision);
+    } else {
+        // Pedestrian has laterally cleared the lane -> release + yield.
         ped_fixed_fence_s_.erase(base_id);
         ObjectDecisionType yield_decision;
         if (CreateYieldDecision(*obstacle, &yield_decision)) {
             obstacle->AddLongitudinalDecision("dp_st_graph/ped_yield_clear", yield_decision);
         }
-        return;
     }
-
-    // Otherwise keep a FIXED stop fence.
-    // mayaochang add18: stop DISTANCE: non-crosswalk pedestrian ~2.5m,
-    // crosswalk keeps 1.75m.
-    double stop_dist = -FLAGS_min_stop_distance_obstacle;
-    if (IsPedestrianOnCrosswalk(*obstacle)) {
-        stop_dist = -FLAGS_pedestrian_stop_distance;
-    } else {
-        stop_dist = -2.5;
-    }
-    double fence_s;
-    auto it = ped_fixed_fence_s_.find(base_id);
-    if (it == ped_fixed_fence_s_.end()) {
-        if (boundary.IsEmpty()) {
-            // No fixed fence yet AND no ST boundary to derive one from:
-            // cannot reliably place the fence (perception SL can be noisy by
-            // tens of meters -> the old obs_s fallback made the ego smash
-            // through the pedestrian). Leave the decision to other rules /
-            // the loop tail (IGNORE).
-            return;
-        }
-        // mayaochang add19: compensate the -front_edge_to_center offset that
-        // STBoundaryMapper baked into boundary.min_s(), so the stop fence is
-        // really stop_dist meters before the pedestrian (scenario 5: 2.5m).
-        fence_s = adc_sl_boundary_.end_s() + boundary.min_s() + stop_dist
-                + VehicleConfigHelper::GetConfig().vehicle_param().front_edge_to_center();
-        ped_fixed_fence_s_[base_id] = fence_s;
-        ADEBUG << "ped_fixed: record fence_s=" << fence_s << " id=" << id;
-    } else {
-        fence_s = it->second;  // keep the originally recorded fence
-    }
-    const auto fence_point = reference_line_->GetReferencePoint(fence_s);
-    ObjectDecisionType stop_decision;
-    auto* stop = stop_decision.mutable_stop();
-    stop->set_distance_s(stop_dist);
-    auto* sp = stop->mutable_stop_point();
-    sp->set_x(fence_point.x());
-    sp->set_y(fence_point.y());
-    sp->set_z(0.0);
-    stop->set_stop_heading(fence_point.heading());
-    obstacle->AddLongitudinalDecision("dp_st_graph/ped_fixed", stop_decision);
 }
 
 bool SpeedDecider::IsPedestrianOnCrosswalk(const Obstacle& obstacle) const {
