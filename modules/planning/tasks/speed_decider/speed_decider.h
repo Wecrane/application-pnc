@@ -117,6 +117,12 @@ private:
     // >=2m stopping distance).
     void HandlePedestrianStop(Obstacle* obstacle) const;
     bool IsPedestrianOnCrosswalk(const Obstacle& obstacle) const;
+    // mayaochang add13: look up a fixed stop fence by base id, falling back to
+    // a position match (nearest recorded pedestrian within kMatchMeters) so a
+    // completely new obstacle id (perception re-assignment after a dropout)
+    // still reuses the fence instead of letting the ego drive through.
+    double GetPedFenceS(const std::string& base_id, double ped_s) const;
+    bool HasPedFence(const std::string& base_id, double ped_s) const;
 
 private:
     SLBoundary adc_sl_boundary_;
@@ -126,8 +132,12 @@ private:
     std::vector<std::pair<double, double>> follow_distance_function_;
     // mayaochang add8: obstacle_id -> fixed stop fence s (reference-line s).
     // Populated when the ego first stops for the pedestrian; kept unchanged
-    // until the pedestrian laterally clears the lane.
+    // until the pedestrian laterally clears the lane. Keyed by BASE id (add12)
+    // so static (7673) and dynamic (7673_0) obstacles share the fence.
     mutable std::unordered_map<std::string, double> ped_fixed_fence_s_;
+    // mayaochang add13: base_id -> pedestrian SL s AT RECORD TIME, used for
+    // position fallback when the obstacle id changes completely.
+    mutable std::unordered_map<std::string, double> ped_fixed_ped_s_;
 };
 
 CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(apollo::planning::SpeedDecider, Task)
