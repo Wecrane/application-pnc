@@ -1,16 +1,18 @@
 # lane_follow_path 路径优化配置（default profile 覆盖层）
-# 恢复旧版官方参数（用户记忆验证'没问题'，git 73ff1bc/5722120 旧版）：
-#   ddl_weight=100000 / dddl_weight=500000 / path_reference_l_weight=10000
-# 新版基线(c9b8b58)把 path_reference_l_weight 从 10000 降到 100（差100倍），
-# 贴参考线权重太低 → 路径不贴车道中心 → 右转急弯切内弯碰路肩卡住。
-# 单纯调 dddl_weight(50000→10000) 只缓解不根治；恢复旧版全套参数。
+# 二次评测修正（2026-08-01）：
+# - path_reference_l_weight=10000（backup 旧版，贴参考线强）✅ 保留
+#   backup(10000) vs 新版基线(100)：贴线权重差100倍，100太低路径不贴车道中心
+# - dddl_weight 用 10000（验证过），不用 backup 的 500000：
+#   评测证明 dddl=500000 在停止标志急弯切内弯更严重（'卡的更严重'）
+#   高 dddl(横向三阶导权重) → 路径强制平滑拉直 → 切内弯
+# - ddl_weight=1000（默认）避免横向速度受限
 is_extend_lane_bounds_to_include_adc: true
 extend_buffer: 0.2
 path_optimizer_config {
   l_weight: 1.0
   dl_weight: 20.0
-  ddl_weight: 100000.0
-  dddl_weight: 500000.0
+  ddl_weight: 1000.0
+  dddl_weight: 10000.0
   lateral_derivative_bound_default: 2.0
   path_reference_l_weight: 10000.0
 }
