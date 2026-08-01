@@ -101,8 +101,15 @@ def point_to_lane_dist(px, py, lane):
     coords = []
     for seg in lane.central_curve.segment:
         if seg.HasField("line_segment"):
-            coords.append((seg.line_segment.start.x, seg.line_segment.start.y))
-            coords.append((seg.line_segment.end.x, seg.line_segment.end.y))
+            # LineSegment 是 repeated PointENU point
+            for p in seg.line_segment.point:
+                coords.append((p.x, p.y))
+        elif seg.HasField("arc"):
+            # 弧线段：用起终点近似
+            if seg.arc.HasField("start"):
+                coords.append((seg.arc.start.x, seg.arc.start.y))
+            if seg.arc.HasField("end"):
+                coords.append((seg.arc.end.x, seg.arc.end.y))
     if not coords:
         return float("inf"), 0.0
     acc = 0.0
