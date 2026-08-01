@@ -55,9 +55,6 @@ bool SemanticLstmVehicleGpuTorch::Init() {
 
 bool SemanticLstmVehicleGpuTorch::LoadModel() {
   auto device = torch::Device(torch::kCPU);
-  if (torch::cuda::is_available()) {
-    device = torch::Device(torch::kCUDA);
-  }
 
   model_instance_ = torch::jit::load(model_path_, device);
 
@@ -90,9 +87,6 @@ bool SemanticLstmVehicleGpuTorch::Inference(
   }
 
   auto device = torch::Device(torch::kCPU);
-  if (torch::cuda::is_available()) {
-    device = torch::Device(torch::kCUDA);
-  }
   torch::Tensor img_tensor =
       torch::from_blob(input_buffer[0], {1, 3, 224, 224});
   torch::Tensor obstacle_pos = torch::from_blob(input_buffer[1], {1, 20, 2});

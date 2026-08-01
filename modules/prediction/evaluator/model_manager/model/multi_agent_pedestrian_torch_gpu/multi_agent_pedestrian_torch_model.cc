@@ -56,9 +56,6 @@ bool MultiAgentPedestrianGpuTorch::Init() {
 
 bool MultiAgentPedestrianGpuTorch::LoadModel() {
   auto device = torch::Device(torch::kCPU);
-  if (torch::cuda::is_available()) {
-    device = torch::Device(torch::kCUDA);
-  }
 
   model_instance_ = torch::jit::load(model_path_, device);
 
@@ -104,9 +101,6 @@ bool MultiAgentPedestrianGpuTorch::Inference(
   }
 
   auto device = torch::Device(torch::kCPU);
-  if (torch::cuda::is_available()) {
-    device = torch::Device(torch::kCUDA);
-  }
   torch::Tensor target_obstacle_pos =
       torch::from_blob(input_buffer[0], {1, max_agent_num, 20, 2});
   torch::Tensor target_obstacle_pos_step =
