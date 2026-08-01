@@ -151,6 +151,23 @@ bool PathDecider::MakeStaticObstacleDecision(
     if (!obstacle->IsStatic() || obstacle->IsVirtual()) {
       continue;
     }
+    // mayaochang add6: road furniture (UNKNOWN_UNMOVABLE guardrail / curb /
+    // building) must NEVER get a blocking STOP from PathDecider. PathDecider
+    // runs BEFORE speed_decider and attaches "PathDecider/blocking_obstacle"
+    // STOP to a static obstacle ahead; since STOP(500) outranks IGNORE(0) in
+    // MergeLongitudinalDecision, speed_decider's IGNORE can never override it
+    // -> the guardrail STOP flickers and the ego jerks stop-go-stop at the
+    // last guardrail section (scenarios 4 & 6). Ignore it here so no STOP is
+    // ever created.
+    if (obstacle->Perception().type() == PerceptionObstacle::UNKNOWN_UNMOVABLE) {
+      ObjectDecisionType object_decision;
+      object_decision.mutable_ignore();
+      path_decision->AddLongitudinalDecision("PathDecider/road_furniture",
+                                             obstacle->Id(), object_decision);
+      path_decision->AddLateralDecision("PathDecider/road_furniture",
+                                        obstacle->Id(), object_decision);
+      continue;
+    }
     // - skip decision making for obstacles with IGNORE/STOP decisions already.
     if (obstacle->HasLongitudinalDecision() &&
         obstacle->LongitudinalDecision().has_ignore() &&
