@@ -298,28 +298,50 @@ Status SpeedDecider::MakeObjectDecision(const SpeedData& speed_profile, PathDeci
                         }
                     }
                 } else {
-                    // mayaochang add4: roadside static obstacles (e.g. curb
-                    // barriers) laterally clear of the ego body
-                    // (|l| > vehicle_half_width + nudge_buffer) must NOT get a
-                    // longitudinal STOP - they only cause an unnecessary speed
-                    // dip (scenario 4: ~1.7m/s dip at the curb section).
-                    const double obs_l = std::min(
-                            std::fabs(obstacle->PerceptionSLBoundary().start_l()),
-                            std::fabs(obstacle->PerceptionSLBoundary().end_l()));
-                    const double vehicle_half_width
-                            = common::VehicleConfigHelper::Instance()->GetConfig().vehicle_param().width() / 2.0;
-                    if (!is_pedestrian && obs_l > vehicle_half_width + FLAGS_static_obstacle_nudge_l_buffer) {
+                    // mayaochang add4: roadside static obstacles (curb barriers
+                    // / guardrails) must NOT get a longitudinal STOP - they only
+                    // cause an unnecessary speed dip / stop-go jerking.
+                    //
+                    // (a) UNKNOWN_UNMOVABLE (type=2) = road furniture
+                    //     (guardrail / curb / building): NEVER stop for them,
+                    //     regardless of lateral position. At the last bend the
+                    //     guardrail sits right ahead (|l| ~ 0) where the lateral
+                    //     filter below fails, and perception flickers -> STOP
+                    //     appears/disappears -> vehicle jerks forward
+                    //     stop-go-stop (scenarios 4 & 6 cloud behavior).
+                    const bool is_road_furniture =
+                            obstacle->Perception().type() == PerceptionObstacle::UNKNOWN_UNMOVABLE;
+                    if (is_road_furniture) {
                         ObjectDecisionType ignore;
                         ignore.mutable_ignore();
                         mutable_obstacle->AddLongitudinalDecision("dp_st_graph", ignore);
                     } else {
-                        double stop_dist = -FLAGS_min_stop_distance_obstacle;
-                        if (is_pedestrian) {
-                            stop_dist = -FLAGS_pedestrian_stop_distance;
-                        }
-                        ObjectDecisionType stop_decision;
-                        if (CreateStopDecision(*mutable_obstacle, &stop_decision, stop_dist)) {
-                            mutable_obstacle->AddLongitudinalDecision("dp_st_graph", stop_decision);
+                        // (b) other static non-pedestrian obstacles laterally
+                        //     clear of the ego body
+                        //     (|center_l| > half_width + nudge_buffer): ignore.
+                        //     Use the CENTER lateral offset (not min of the two
+                        //     edges) so a long obstacle straddling the lane is
+                        //     not misjudged as "near".
+                        const double obs_center_l =
+                                (obstacle->PerceptionSLBoundary().start_l()
+                                 + obstacle->PerceptionSLBoundary().end_l()) / 2.0;
+                        const double vehicle_half_width
+                                = common::VehicleConfigHelper::Instance()->GetConfig().vehicle_param().width() / 2.0;
+                        if (!is_pedestrian
+                            && std::fabs(obs_center_l)
+                                       > vehicle_half_width + FLAGS_static_obstacle_nudge_l_buffer) {
+                            ObjectDecisionType ignore;
+                            ignore.mutable_ignore();
+                            mutable_obstacle->AddLongitudinalDecision("dp_st_graph", ignore);
+                        } else {
+                            double stop_dist = -FLAGS_min_stop_distance_obstacle;
+                            if (is_pedestrian) {
+                                stop_dist = -FLAGS_pedestrian_stop_distance;
+                            }
+                            ObjectDecisionType stop_decision;
+                            if (CreateStopDecision(*mutable_obstacle, &stop_decision, stop_dist)) {
+                                mutable_obstacle->AddLongitudinalDecision("dp_st_graph", stop_decision);
+                            }
                         }
                     }
                 }
