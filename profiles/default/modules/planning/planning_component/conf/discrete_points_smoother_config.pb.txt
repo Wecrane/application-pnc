@@ -1,0 +1,29 @@
+# 参考线平滑器配置（default profile 覆盖层）
+# 赛题五(停止标志)右转弯切内弯修复：
+#   原配置 weight_fem_pos_deviation=1e10 + weight_ref_deviation=1.0
+#   → FEM 平滑在急弯(半径8.3m)处强烈切内弯，参考线偏内~0.93m → 云端碰路肩
+# 调整：减弱几何平滑、增强参考跟随、去掉路缘内移，让参考线贴合车道中心
+max_constraint_interval : 0.25
+longitudinal_boundary_bound : 2.0
+max_lateral_boundary_bound : 0.5
+min_lateral_boundary_bound : 0.1
+# curb_shift 0.2→0：取消参考线路缘内移（减少弯道内侧偏移）
+curb_shift : 0.0
+lateral_buffer : 0.2
+
+discrete_points {
+  smoothing_method: FEM_POS_DEVIATION_SMOOTHING
+  fem_pos_deviation_smoothing {
+    # weight_fem_pos_deviation 1e10→1e8：减弱几何平滑过冲
+    weight_fem_pos_deviation: 1e8
+    # weight_ref_deviation 1.0→5.0：增强对原始车道中心的贴合
+    weight_ref_deviation: 5.0
+    weight_path_length: 1.0
+    apply_curvature_constraint: false
+    max_iter: 500
+    time_limit: 0.0
+    verbose: false
+    scaled_termination: true
+    warm_start: true
+  }
+}
