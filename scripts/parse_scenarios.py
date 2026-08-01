@@ -79,7 +79,7 @@ def discover_maps():
             meta = os.path.join(MAP_DATA_DIR, d, "metaInfo.json")
             if os.path.exists(meta):
                 try:
-                    with open(meta) as f:
+                    with open(meta, encoding="utf-8") as f:
                         info = json.load(f)
                     for mid, _ in info.items():
                         mapping[mid] = os.path.join(MAP_DATA_DIR, d, "base_map.bin")
@@ -174,7 +174,7 @@ def build_element_index(m):
 
 
 def analyze_scenario(path, map_by_id):
-    with open(path) as f:
+    with open(path, encoding="utf-8") as f:
         sc = json.load(f)
     desc = sc.get("descriptionEnTokens", ["unknown"])
     name = desc[0] if desc else sc.get("id")
@@ -286,52 +286,64 @@ def main():
     want_json = "--json" in sys.argv
     args = [a for a in sys.argv[1:] if not a.startswith("--")]
 
+    # 输出同时打印到终端并写入文件（UTF-8），方便复制
+    os.makedirs("output", exist_ok=True)
+    log_file = open("output/scenarios_analysis.txt", "w", encoding="utf-8")
+
+    def log(msg=""):
+        print(msg)
+        log_file.write(msg + "\n")
+
     map_by_id = discover_maps()
     if not map_by_id:
-        print("WARN: no map data found under data/map_data/", file=sys.stderr)
-    print(f"Discovered maps: {len(map_by_id)}")
+        log("WARN: no map data found under data/map_data/")
+    log(f"Discovered maps: {len(map_by_id)}")
     for mid, path in map_by_id.items():
-        print(f"  {mid} -> {path}")
+        log(f"  {mid} -> {path}")
 
     if args:
         files = args
     else:
         files = discover_scenarios()
     if not files:
-        print("ERROR: no scenario json found", file=sys.stderr)
+        log("ERROR: no scenario json found")
+        log_file.close()
         sys.exit(1)
 
-    print(f"\nScenarios to analyze: {len(files)}\n")
+    log(f"\nScenarios to analyze: {len(files)}\n")
     all_results = []
     for f in files:
-        print("=" * 70)
+        log("=" * 70)
         r = analyze_scenario(f, map_by_id)
         all_results.append(r)
-        print(f"Scenario: {r.get('name')}  (id={r.get('id')})")
-        print(f"  map: {r.get('map')}  mapId: {r.get('mapId')}")
+        log(f"Scenario: {r.get('name')}  (id={r.get('id')})")
+        log(f"  map: {r.get('map')}  mapId: {r.get('mapId')}")
         if r.get("error"):
-            print(f"  ERROR: {r['error']}")
+            log(f"  ERROR: {r['error']}")
             continue
-        print(f"  start({r['start'][0]:.2f},{r['start'][1]:.2f}) lane={r.get('start_lane')} "
-              f"-> end({r['end'][0]:.2f},{r['end'][1]:.2f}) lane={r.get('end_lane')}")
+        log(f"  start({r['start'][0]:.2f},{r['start'][1]:.2f}) lane={r.get('start_lane')} "
+            f"-> end({r['end'][0]:.2f},{r['end'][1]:.2f}) lane={r.get('end_lane')}")
         lanes = r.get("route_lanes", [])
-        print(f"  route lanes ({len(lanes)}): {' -> '.join(lanes[:40])}"
-              + (" ..." if len(lanes) > 40 else ""))
+        log(f"  route lanes ({len(lanes)}): {' -> '.join(lanes[:40])}"
+            + (" ..." if len(lanes) > 40 else ""))
         elems = r.get("route_elements", {})
         nonempty = {k: v for k, v in elems.items() if v}
         if nonempty:
             for k, v in nonempty.items():
-                print(f"  route {k}: {v}")
+                log(f"  route {k}: {v}")
         else:
-            print("  route elements: (none)")
-        print(f"  map total: {r.get('map_element_counts')}")
+            log("  route elements: (none)")
+        log(f"  map total: {r.get('map_element_counts')}")
+
+    log(f"\n>>> 完整输出已写入: output/scenarios_analysis.txt")
 
     if want_json:
         out = "output/scenarios_analysis.json"
-        os.makedirs(os.path.dirname(out), exist_ok=True)
-        with open(out, "w") as f:
+        with open(out, "w", encoding="utf-8") as f:
             json.dump(all_results, f, ensure_ascii=False, indent=1)
-        print(f"\nJSON written to: {out}")
+        log(f">>> JSON 已写入: {out}")
+
+    log_file.close()
 
 
 if __name__ == "__main__":
