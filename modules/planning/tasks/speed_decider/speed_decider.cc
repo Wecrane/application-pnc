@@ -362,18 +362,18 @@ Status SpeedDecider::MakeObjectDecision(const SpeedData& speed_profile, PathDeci
                 }
             } else if (CheckIsFollow(*obstacle, boundary)) {
                 // mayaochang add7: a PEDESTRIAN in the follow branch must NOT
-                // be followed - the ego should STOP (1.75m) and wait until the
-                // pedestrian actually leaves the lane. Otherwise the ego creeps
-                // behind the moving pedestrian and fails the competition
-                // "follow limit" check (scenario 6). Once the pedestrian
-                // laterally leaves the lane (CheckIsFollow false) it falls to
-                // the YIELD branch and the ego proceeds.
+                // be followed - the ego should YIELD (let the pedestrian pass)
+                // and only proceed once the pedestrian actually leaves the
+                // lane. Following (or creeping behind) the moving pedestrian
+                // fails the competition "follow limit" check (scenario 6):
+                // with a moving STOP fence (1.75m) the ego creeps behind the
+                // pedestrian at <2m. YIELD keeps the ego waiting until the
+                // pedestrian passes, then proceeds.
                 if (obstacle->Perception().type() == PerceptionObstacle::PEDESTRIAN) {
-                    ObjectDecisionType stop_decision;
-                    if (CreateStopDecision(*mutable_obstacle, &stop_decision,
-                                           -FLAGS_pedestrian_stop_distance)) {
+                    ObjectDecisionType yield_decision;
+                    if (CreateYieldDecision(*mutable_obstacle, &yield_decision)) {
                         mutable_obstacle->AddLongitudinalDecision(
-                                "dp_st_graph/pedestrian_follow", stop_decision);
+                                "dp_st_graph/pedestrian_yield", yield_decision);
                     }
                 } else if (IsFollowTooClose(*mutable_obstacle)) {
                     ObjectDecisionType stop_decision;
