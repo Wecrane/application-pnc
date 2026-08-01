@@ -148,10 +148,12 @@
   ],
   "route_elements": {
    "SpeedBump": [],
-   "TrafficLight": [],
+   "TrafficLight": [
+    "Signal_5"
+   ],
    "Crosswalk": [
-    "Crosswalk_11",
-    "Crosswalk_12"
+    "Crosswalk_12",
+    "Crosswalk_11"
    ],
    "StopSign": [],
    "Junction": [
@@ -300,8 +302,8 @@
   ],
   "route_elements": {
    "SpeedBump": [
-    "SpeedBump_4",
-    "SpeedBump_3"
+    "SpeedBump_3",
+    "SpeedBump_4"
    ],
    "TrafficLight": [],
    "Crosswalk": [],
@@ -410,10 +412,12 @@
   ],
   "route_elements": {
    "SpeedBump": [],
-   "TrafficLight": [],
+   "TrafficLight": [
+    "Signal_5"
+   ],
    "Crosswalk": [
-    "Crosswalk_11",
-    "Crosswalk_12"
+    "Crosswalk_12",
+    "Crosswalk_11"
    ],
    "StopSign": [],
    "Junction": [
