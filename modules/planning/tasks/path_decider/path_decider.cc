@@ -159,6 +159,19 @@ bool PathDecider::MakeStaticObstacleDecision(
             path_decision->AddLateralDecision("PathDecider/road_furniture", obstacle->Id(), object_decision);
             continue;
         }
+        // mayaochang add11: PEDESTRIAN is handled entirely by speed_decider's
+        // HandlePedestrianStop. Do NOT create ANY decision here. PathDecider's
+        // blocking/nearest STOP is computed from
+        // PerceptionSLBoundary().start_s() which can be noisy (STOP point far
+        // behind the pedestrian -> ego drives through), and any STOP here
+        // re-creates a fence/purple line right when the pedestrian departs,
+        // making the ego steer slightly toward the pedestrian -> the
+        // competition "follow limit" check reads it as following the
+        // pedestrian. st_boundary_mapper still builds the ST boundary via
+        // overlap detection, so speed_decider can act.
+        if (obstacle->Perception().type() == apollo::perception::PerceptionObstacle::PEDESTRIAN) {
+            continue;
+        }
         // - skip decision making for obstacles with IGNORE/STOP decisions already.
         if (obstacle->HasLongitudinalDecision() && obstacle->LongitudinalDecision().has_ignore()
             && obstacle->HasLateralDecision() && obstacle->LateralDecision().has_ignore()) {
