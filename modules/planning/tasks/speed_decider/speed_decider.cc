@@ -298,13 +298,33 @@ Status SpeedDecider::MakeObjectDecision(const SpeedData& speed_profile, PathDeci
                         }
                     }
                 } else {
-                    double stop_dist = -FLAGS_min_stop_distance_obstacle;
-                    if (is_pedestrian) {
-                        stop_dist = -FLAGS_pedestrian_stop_distance;
-                    }
-                    ObjectDecisionType stop_decision;
-                    if (CreateStopDecision(*mutable_obstacle, &stop_decision, stop_dist)) {
-                        mutable_obstacle->AddLongitudinalDecision("dp_st_graph", stop_decision);
+                    // mayaochang add4: roadside static obstacles (e.g. curb
+                    // barriers) laterally clear of the ego body
+                    // (|l| > vehicle_half_width + nudge_buffer) must NOT get a
+                    // longitudinal STOP - they only cause an unnecessary speed
+                    // dip (scenario 4: ~1.7m/s dip at the curb section).
+                    const double obs_l = std::min(
+                            std::fabs(obstacle->PerceptionSLBoundary().start_l()),
+                            std::fabs(obstacle->PerceptionSLBoundary().end_l()));
+                    const double vehicle_half_width =
+                            common::VehicleConfigHelper::Instance()->GetConfig()
+                                    .vehicle_param().width()
+                            / 2.0;
+                    if (!is_pedestrian
+                            && obs_l
+                                    > vehicle_half_width + FLAGS_static_obstacle_nudge_l_buffer) {
+                        ObjectDecisionType ignore;
+                        ignore.mutable_ignore();
+                        mutable_obstacle->AddLongitudinalDecision("dp_st_graph", ignore);
+                    } else {
+                        double stop_dist = -FLAGS_min_stop_distance_obstacle;
+                        if (is_pedestrian) {
+                            stop_dist = -FLAGS_pedestrian_stop_distance;
+                        }
+                        ObjectDecisionType stop_decision;
+                        if (CreateStopDecision(*mutable_obstacle, &stop_decision, stop_dist)) {
+                            mutable_obstacle->AddLongitudinalDecision("dp_st_graph", stop_decision);
+                        }
                     }
                 }
             } else if (CheckIsFollow(*obstacle, boundary)) {
@@ -316,14 +336,11 @@ Status SpeedDecider::MakeObjectDecision(const SpeedData& speed_profile, PathDeci
                     // the crosswalk rule's 1.5~2.0m stop is NOT overridden by
                     // the 6m min_stop_distance_obstacle too_close fence.
                     double stop_dist = -FLAGS_min_stop_distance_obstacle;
-                    if (obstacle->Perception().type()
-                        == PerceptionObstacle::PEDESTRIAN) {
+                    if (obstacle->Perception().type() == PerceptionObstacle::PEDESTRIAN) {
                         stop_dist = -FLAGS_pedestrian_stop_distance;
                     }
-                    if (CreateStopDecision(*mutable_obstacle, &stop_decision,
-                                           stop_dist)) {
-                        mutable_obstacle->AddLongitudinalDecision(
-                            "dp_st_graph/too_close", stop_decision);
+                    if (CreateStopDecision(*mutable_obstacle, &stop_decision, stop_dist)) {
+                        mutable_obstacle->AddLongitudinalDecision("dp_st_graph/too_close", stop_decision);
                     }
                 } else {  // high speed or low speed accelerating
                     // FOLLOW decision
