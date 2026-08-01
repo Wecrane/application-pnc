@@ -311,8 +311,19 @@ Status SpeedDecider::MakeObjectDecision(const SpeedData& speed_profile, PathDeci
                 // stop for low_speed decelerating
                 if (IsFollowTooClose(*mutable_obstacle)) {
                     ObjectDecisionType stop_decision;
-                    if (CreateStopDecision(*mutable_obstacle, &stop_decision, -FLAGS_min_stop_distance_obstacle)) {
-                        mutable_obstacle->AddLongitudinalDecision("dp_st_graph/too_close", stop_decision);
+                    // mayaochang add3: use the closer pedestrian stop distance
+                    // (1.75m) for a pedestrian even when "too close", so that
+                    // the crosswalk rule's 1.5~2.0m stop is NOT overridden by
+                    // the 6m min_stop_distance_obstacle too_close fence.
+                    double stop_dist = -FLAGS_min_stop_distance_obstacle;
+                    if (obstacle->Perception().type()
+                        == PerceptionObstacle::PEDESTRIAN) {
+                        stop_dist = -FLAGS_pedestrian_stop_distance;
+                    }
+                    if (CreateStopDecision(*mutable_obstacle, &stop_decision,
+                                           stop_dist)) {
+                        mutable_obstacle->AddLongitudinalDecision(
+                            "dp_st_graph/too_close", stop_decision);
                     }
                 } else {  // high speed or low speed accelerating
                     // FOLLOW decision
