@@ -33,102 +33,112 @@ namespace planning {
 using apollo::common::Status;
 using apollo::common::VehicleConfigHelper;
 
-bool Destination::Init(const std::string& name,
-                       const std::shared_ptr<DependencyInjector>& injector) {
-  if (!TrafficRule::Init(name, injector)) {
-    return false;
-  }
-  // Load the config this task.
-  return TrafficRule::LoadConfig<DestinationConfig>(&config_);
+bool Destination::Init(const std::string& name, const std::shared_ptr<DependencyInjector>& injector) {
+    if (!TrafficRule::Init(name, injector)) {
+        return false;
+    }
+    // Load the config this task.
+    return TrafficRule::LoadConfig<DestinationConfig>(&config_);
 }
 
-Status Destination::ApplyRule(Frame* frame,
-                              ReferenceLineInfo* const reference_line_info) {
-  CHECK_NOTNULL(frame);
-  CHECK_NOTNULL(reference_line_info);
+Status Destination::ApplyRule(Frame* frame, ReferenceLineInfo* const reference_line_info) {
+    CHECK_NOTNULL(frame);
+    CHECK_NOTNULL(reference_line_info);
 
-  MakeDecisions(frame, reference_line_info);
+    MakeDecisions(frame, reference_line_info);
 
-  return Status::OK();
+    return Status::OK();
 }
 
 /**
  * @brief: build stop decision
  */
-int Destination::MakeDecisions(Frame* frame,
-                               ReferenceLineInfo* const reference_line_info) {
-  CHECK_NOTNULL(frame);
-  CHECK_NOTNULL(reference_line_info);
+int Destination::MakeDecisions(Frame* frame, ReferenceLineInfo* const reference_line_info) {
+    CHECK_NOTNULL(frame);
+    CHECK_NOTNULL(reference_line_info);
 
-  if (!frame->is_near_destination()) {
+    if (!frame->is_near_destination()) {
+        return 0;
+    }
+
+    const auto routing_end = frame->local_view().end_lane_way_point;
+    if (nullptr == routing_end) {
+        AERROR << "routing_request has no end";
+        return -1;
+    }
+    common::SLPoint dest_sl;
+    const auto& reference_line = reference_line_info->reference_line();
+    reference_line.XYToSL(routing_end->pose(), &dest_sl);
+    const auto& adc_sl = reference_line_info->AdcSlBoundary();
+
+    const auto& vehicle_config = common::VehicleConfigHelper::Instance()->GetConfig();
+    const double ego_front_to_center = vehicle_config.vehicle_param().front_edge_to_center();
+    if (dest_sl.s() + ego_front_to_center > reference_line.Length()) {
+        AWARN << "dest_sl.s() + ego_front_to_center > reference_line->length()"
+              << "may cause ego is stoped by PATH_END fence not by destination";
+    }
+    const auto& dest = injector_->planning_context()->mutable_planning_status()->destination();
+    if (adc_sl.start_s() > dest_sl.s() && !dest.has_passed_destination()) {
+        ADEBUG << "Destination at back, but we have not reached destination yet";
+        return 0;
+    }
+
+    // 距离判断(赛题五实验): 车距终点 > destination_check_distance 时不创建 stop
+    // 原因: is_near_destination 由 StopForDestination 决定(routing终点在参考线段=全程true),
+    // 导致 destination 40m 外就建 DEST fence -> speed规划长距离缓减速磨蹭15s。
+    // 这里手动按距离限制, 车接近终点才创建 stop, 让车7673走完后能加速、终点前干脆急刹。
+    const double distance_to_dest = dest_sl.s() - adc_sl.end_s();
+    if (distance_to_dest > FLAGS_destination_check_distance) {
+        ADEBUG << "Destination too far (" << distance_to_dest << "m > "
+               << FLAGS_destination_check_distance << "), skip stop";
+        return 0;
+    }
+
+    const std::string stop_wall_id = FLAGS_destination_obstacle_id;
+    const std::vector<std::string> wait_for_obstacle_ids;
+
+    const auto& pull_over_status = injector_->planning_context()->planning_status().pull_over();
+    if (pull_over_status.has_position() && pull_over_status.position().has_x() && pull_over_status.position().has_y()) {
+        // build stop decision based on pull-over position
+        ADEBUG << "BuildStopDecision: pull-over position";
+        common::SLPoint pull_over_sl;
+        reference_line.XYToSL(pull_over_status.position(), &pull_over_sl);
+
+        const double stop_line_s = pull_over_sl.s()
+                + VehicleConfigHelper::GetConfig().vehicle_param().front_edge_to_center() + config_.stop_distance();
+        util::BuildStopDecision(
+                stop_wall_id,
+                stop_line_s,
+                config_.stop_distance(),
+                StopReasonCode::STOP_REASON_PULL_OVER,
+                wait_for_obstacle_ids,
+                Getname(),
+                frame,
+                reference_line_info);
+        return 0;
+    }
+
+    // build stop decision
+    if (FLAGS_destination_pass_through) {
+        // 实验(赛题五): 到终点后不停稳——放行通过终点, 躲评测"车停止采样"
+        ADEBUG << "BuildStopDecision: destination PASS-THROUGH (no stop)";
+        return 0;
+    }
+    ADEBUG << "BuildStopDecision: destination";
+    const double dest_lane_s
+            = std::fmax(0.0, routing_end->s() - FLAGS_virtual_stop_wall_length - config_.stop_distance());
+    util::BuildStopDecision(
+            stop_wall_id,
+            routing_end->id(),
+            dest_lane_s,
+            config_.stop_distance(),
+            StopReasonCode::STOP_REASON_DESTINATION,
+            wait_for_obstacle_ids,
+            Getname(),
+            frame,
+            reference_line_info);
+
     return 0;
-  }
-
-  const auto routing_end = frame->local_view().end_lane_way_point;
-  if (nullptr == routing_end) {
-    AERROR << "routing_request has no end";
-    return -1;
-  }
-  common::SLPoint dest_sl;
-  const auto& reference_line = reference_line_info->reference_line();
-  reference_line.XYToSL(routing_end->pose(), &dest_sl);
-  const auto& adc_sl = reference_line_info->AdcSlBoundary();
-
-  const auto& vehicle_config =
-      common::VehicleConfigHelper::Instance()->GetConfig();
-  const double ego_front_to_center =
-      vehicle_config.vehicle_param().front_edge_to_center();
-  if (dest_sl.s() + ego_front_to_center > reference_line.Length()) {
-    AWARN << "dest_sl.s() + ego_front_to_center > reference_line->length()"
-            <<"may cause ego is stoped by PATH_END fence not by destination";
-  }
-  const auto& dest =
-      injector_->planning_context()->mutable_planning_status()->destination();
-  if (adc_sl.start_s() > dest_sl.s() && !dest.has_passed_destination()) {
-    ADEBUG << "Destination at back, but we have not reached destination yet";
-    return 0;
-  }
-
-  const std::string stop_wall_id = FLAGS_destination_obstacle_id;
-  const std::vector<std::string> wait_for_obstacle_ids;
-
-  const auto& pull_over_status =
-      injector_->planning_context()->planning_status().pull_over();
-  if (pull_over_status.has_position() && pull_over_status.position().has_x() &&
-      pull_over_status.position().has_y()) {
-    // build stop decision based on pull-over position
-    ADEBUG << "BuildStopDecision: pull-over position";
-    common::SLPoint pull_over_sl;
-    reference_line.XYToSL(pull_over_status.position(), &pull_over_sl);
-
-    const double stop_line_s = pull_over_sl.s() +
-                               VehicleConfigHelper::GetConfig()
-                                   .vehicle_param()
-                                   .front_edge_to_center() +
-                               config_.stop_distance();
-    util::BuildStopDecision(stop_wall_id, stop_line_s, config_.stop_distance(),
-                            StopReasonCode::STOP_REASON_PULL_OVER,
-                            wait_for_obstacle_ids, Getname(), frame,
-                            reference_line_info);
-    return 0;
-  }
-
-  // build stop decision
-  if (FLAGS_destination_pass_through) {
-    // 实验(赛题五): 到终点后不停稳——放行通过终点, 躲评测"车停止采样"
-    ADEBUG << "BuildStopDecision: destination PASS-THROUGH (no stop)";
-    return 0;
-  }
-  ADEBUG << "BuildStopDecision: destination";
-  const double dest_lane_s =
-      std::fmax(0.0, routing_end->s() - FLAGS_virtual_stop_wall_length -
-                         config_.stop_distance());
-  util::BuildStopDecision(
-      stop_wall_id, routing_end->id(), dest_lane_s, config_.stop_distance(),
-      StopReasonCode::STOP_REASON_DESTINATION, wait_for_obstacle_ids, Getname(),
-      frame, reference_line_info);
-
-  return 0;
 }
 
 }  // namespace planning
