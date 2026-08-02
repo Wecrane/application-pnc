@@ -351,8 +351,7 @@ Status SpeedDecider::MakeObjectDecision(const SpeedData& speed_profile, PathDeci
                             ObjectDecisionType ignore;
                             ignore.mutable_ignore();
                             mutable_obstacle->AddLongitudinalDecision("dp_st_graph", ignore);
-                        } else if (is_pedestrian
-                                   && std::fabs(obs_center_l) > kMaxPedestrianClearLateral) {
+                        } else if (is_pedestrian && std::fabs(obs_center_l) > kMaxPedestrianClearLateral) {
                             ObjectDecisionType ignore;
                             ignore.mutable_ignore();
                             mutable_obstacle->AddLongitudinalDecision("dp_st_graph", ignore);
@@ -726,9 +725,7 @@ bool SpeedDecider::CheckStopForPedestrian(const Obstacle& obstacle) const {
     // 否则7673走完后ST boundary一直阻塞, 车在终点前40m就缓减速磨蹭15s。
     // 横穿中(横向<1.98)仍STOP(add19正常)。
     static constexpr double kMaxPedestrianStopLateral = 3.5;
-    const double obs_center_l = (obstacle_sl_boundary.start_l()
-                                 + obstacle_sl_boundary.end_l())
-            / 2.0;
+    const double obs_center_l = (obstacle_sl_boundary.start_l() + obstacle_sl_boundary.end_l()) / 2.0;
     if (std::fabs(obs_center_l) > kMaxPedestrianStopLateral) {
         return false;
     }

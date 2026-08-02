@@ -60,7 +60,10 @@ DEFINE_string(
 
 DEFINE_bool(publish_estop, false, "publish estop decision in planning");
 DEFINE_bool(destination_pass_through, false, "pass through destination without stopping (competition test)");
-DEFINE_bool(disable_reference_line_end_stop, false, "disable reference line end stop fence (avoid early decel near dest)");
+DEFINE_bool(
+        disable_reference_line_end_stop,
+        false,
+        "disable reference line end stop fence (avoid early decel near dest)");
 DEFINE_bool(enable_trajectory_stitcher, true, "enable stitching trajectory");
 
 DEFINE_bool(

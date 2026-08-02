@@ -89,8 +89,8 @@ int Destination::MakeDecisions(Frame* frame, ReferenceLineInfo* const reference_
     // 这里手动按距离限制, 车接近终点才创建 stop, 让车7673走完后能加速、终点前干脆急刹。
     const double distance_to_dest = dest_sl.s() - adc_sl.end_s();
     if (distance_to_dest > FLAGS_destination_check_distance) {
-        ADEBUG << "Destination too far (" << distance_to_dest << "m > "
-               << FLAGS_destination_check_distance << "), skip stop";
+        ADEBUG << "Destination too far (" << distance_to_dest << "m > " << FLAGS_destination_check_distance
+               << "), skip stop";
         return 0;
     }
 
