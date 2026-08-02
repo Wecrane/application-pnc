@@ -230,6 +230,16 @@ Status PiecewiseJerkSpeedOptimizer::Process(const PathData& path_data,
   piecewise_jerk_problem.set_dddx_bound(FLAGS_longitudinal_jerk_lower_bound,
                                         FLAGS_longitudinal_jerk_upper_bound);
   piecewise_jerk_problem.set_x_bounds(std::move(s_bounds));
+  // 诊断日志(2026-08-03): 定位起步段缓降根源——015349实测车从s=35(停止线133)
+  // 提前98m缓降(vmax仅12.9, dx_ref应=16/v_upper=16/ref_s=0都不该缓降)。
+  // 打印 dx_ref(速度参考)/x_ref(DP位置参考)/stop_s/v_upper/cruise 实际值。
+  AINFO << "[pjs-debug] init_v=" << init_s[1] << " stop_s=" << stop_s
+        << " cruise=" << reference_line_info_->GetCruiseSpeed()
+        << " ref_len=" << total_length << " total_t=" << total_time
+        << " dx_ref[0/10/30]=" << dx_ref[0] << "/" << dx_ref[10] << "/"
+        << dx_ref[30] << " v_upper[0]=" << s_dot_bounds[0].second
+        << " x_ref[0/10/30]=" << x_ref[0] << "/" << x_ref[10] << "/"
+        << x_ref[30];
   piecewise_jerk_problem.set_dx_ref(dx_ref_weight, dx_ref);
   piecewise_jerk_problem.set_x_ref(config_.ref_s_weight(), std::move(x_ref));
   piecewise_jerk_problem.set_penalty_dx(penalty_dx);
