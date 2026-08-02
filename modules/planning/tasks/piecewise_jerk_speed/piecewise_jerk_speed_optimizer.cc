@@ -147,6 +147,11 @@ Status PiecewiseJerkSpeedOptimizer::Process(const PathData& path_data,
   std::vector<double> penalty_dx;
   std::vector<std::pair<double, double>> s_dot_bounds;
   const SpeedLimit& speed_limit = st_graph_data.speed_limit();
+  // P1-E v3(2026-08-03): 物理可达位置累积初始化——替代DP超前参考x_ref。
+  // s_est/v_est: 车从本帧实际速度v0按+3加速的可达位置/速度(物理上限,不超前)。
+  const double v0 = std::max(0.0, init_s[1]);
+  double s_est = init_s[0];
+  double v_est = v0;
   for (int i = 0; i < num_of_knots; ++i) {
     double curr_t = i * delta_t;
     // get path_s
@@ -190,22 +195,24 @@ Status PiecewiseJerkSpeedOptimizer::Process(const PathData& path_data,
     // dx_ref。dx_ref 保持巡航速度(GetCruiseSpeed)，限速区减速完全由硬约束驱动
     // ——消除机制专项Q1确认的"提前减速"软目标牵引(dx_ref被限速回推拉低→QP无
     // 动力回冲→提前减速)。安全性不变: s_dot_bounds 硬约束(v_upper)仍在。
-    // P1-E(2026-08-03): 连续刹车包络替代阶跃'一脚刹死'。
-    // dx_ref=min(巡航, √(2·max_dec·max(0, stop_s-x_ref[i]))) —— s远离停止线
-    // 时=巡航, 进入包络(距离<巡航²/(2·6)=21.3m@16m/s)后连续下降 → QP 自然
-    // "巡航到包络交点→以max_dec急刹到停止线"。无阶跃、对init_v不敏感、帧间
-    // 稳定, 消除: 提前减速(原用DP参考时间轴触发窗口错位) + 龟速蠕动(原brake_dist
-    // 随init_v逐帧缩水正反馈) + 终点速度跳变(dx_ref阶跃置0)。
-    // ⚠️P1-E v2(2026-08-03 14:48实测)已回退: v0线性外推包络 sqrt(2*6*(stop_s-v0*t))
-    // 末端陡降(dx_ref 16→0 在1-2节点) → QP primal infeasible 282次 → fallback
-    // 丢限速 → 车冲过停止标志(vmax=21超速16) + 终点被PATH_END停。v1(x_ref)安全。
+    // P1-E v3(2026-08-03): 连续刹车包络, 基于'物理可达位置's_est累积。
+    // dx_ref=min(巡航, √(2·max_dec·max(0, stop_s-s_est))) —— s_est从本帧车
+    // 实际速度v0按+3加速累积(物理可达,不超前), 包络在车真正接近stop_s-21.3m
+    // 才压 → QP 巡航到最晚刹车点再-6急刹。
+    // 根因(023701 pjs2): v1用DP参考x_ref——DP先于speed_decider运行不知道STOP,
+    // 参考x_ref超前接近stop_s(x_ref[40]=25.1 vs stop_s=33.4) → 包络提前压
+    // dx_ref[40]=10 → QP跟随提前急刹(距停止线~50m就刹到1) → 刹-油-刹。
+    // ⚠️v2(v0*t直线)末端陡降→infeasible 282次已回退; v3用v_est累积平滑, 无陡降。
     if (stop_s < total_length) {
-      const double dist_to_stop = std::max(0.0, stop_s - x_ref[i]);
+      const double dist_to_stop = std::max(0.0, stop_s - s_est);
       const double brake_envelope =
           std::sqrt(2.0 * std::abs(veh_param.max_deceleration()) *
                     dist_to_stop);
       dx_ref[i] = std::fmin(dx_ref[i], brake_envelope);
     }
+    // 车可达速度/位置累积(物理上限: 从v0以+3加速逼近dx_ref, 平滑无陡降)
+    v_est = std::min(dx_ref[i], v_est + 3.0 * delta_t);
+    s_est += v_est * delta_t;
     s_dot_bounds.emplace_back(v_lower_bound, std::fmax(v_upper_bound, 0.0));
     print_debug.AddPoint("st_reference_line", curr_t, x_ref[i]);
     print_debug.AddPoint("st_penalty_dx", curr_t, penalty_dx.back());
