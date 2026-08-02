@@ -91,6 +91,8 @@ Status PiecewiseJerkSpeedOptimizer::Process(const PathData& path_data,
   // Update STBoundary
   const double kEpsilon = 0.01;
   std::vector<std::pair<double, double>> s_bounds;
+  // 停止线位置(STOP/YIELD边界, s_bounds上界), 用于dx_ref'一脚刹死'处理
+  double stop_s = std::numeric_limits<double>::max();
   for (int i = 0; i < num_of_knots; ++i) {
     double curr_t = i * delta_t;
     double s_lower_bound = 0.0;
@@ -105,6 +107,7 @@ Status PiecewiseJerkSpeedOptimizer::Process(const PathData& path_data,
         case STBoundary::BoundaryType::STOP:
         case STBoundary::BoundaryType::YIELD:
           s_upper_bound = std::fmin(s_upper_bound, s_upper);
+          stop_s = std::min(stop_s, s_upper);  // 记录停止线位置
           break;
         case STBoundary::BoundaryType::FOLLOW:
           // TODO(Hongyi): unify follow buffer on decision side
@@ -140,6 +143,13 @@ Status PiecewiseJerkSpeedOptimizer::Process(const PathData& path_data,
   std::vector<double> penalty_dx;
   std::vector<std::pair<double, double>> s_dot_bounds;
   const SpeedLimit& speed_limit = st_graph_data.speed_limit();
+  // '一脚刹死': 停止线前brake_dist(当前速度急刹到0的距离)处dx_ref降0,
+  // 强制QP选择急刹而不是全程缓减速+蠕动(2026-08-02实测多次参数调优无效)
+  const double brake_dist =
+      stop_s < total_length
+          ? init_s[1] * init_s[1] /
+                (2.0 * std::abs(veh_param.max_deceleration()))
+          : 0.0;
   for (int i = 0; i < num_of_knots; ++i) {
     double curr_t = i * delta_t;
     // get path_s
@@ -157,6 +167,11 @@ Status PiecewiseJerkSpeedOptimizer::Process(const PathData& path_data,
     v_upper_bound =
         std::fmin(speed_limit.GetSpeedLimitByS(path_s), v_upper_bound);
     dx_ref[i] = std::fmin(v_upper_bound, dx_ref[i]);
+    // '一脚刹死': 接近停止线(剩余距离<brake_dist)时目标速度降0,
+    // 避免QP选择全程缓减速, 强制以max_dec(-6)急刹到停止点
+    if (stop_s < total_length && x_ref[i] > stop_s - brake_dist) {
+      dx_ref[i] = 0.0;
+    }
     s_dot_bounds.emplace_back(v_lower_bound, std::fmax(v_upper_bound, 0.0));
     print_debug.AddPoint("st_reference_line", curr_t, x_ref[i]);
     print_debug.AddPoint("st_penalty_dx", curr_t, penalty_dx.back());
