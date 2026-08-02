@@ -199,6 +199,25 @@ void Crosswalk::MakeDecisions(Frame* const frame, ReferenceLineInfo* const refer
                     break;
                 }
             }
+            // 修复(2026-08-03): 斑马线【后方30m内】有停止标志(StopSign) → 车本来
+            // 就要在停止线前停车, 斑马线限速冗余且有害——停车标志场景(Xh2025 scn6)
+            // 被 crosswalk 全局扫描的 4 个斑马线(Crosswalk_30/59/61/31)限速4.5覆盖
+            // s=131~197 共66m, 车从距停止标志~75m 就降到 4.5 龟速爬行 11s(用户反馈
+            // "速度提不上去/好远就减速到很低")。评测只查 RunStopSign, 斑马线不限速。
+            // 赛题7(scn8) Crosswalk_62 后方无停止标志 → 限速仍生效(评测5m/s达标)。
+            if (should_limit) {
+                for (const auto& ss :
+                     reference_line_info->reference_line().map_path().stop_sign_overlaps()) {
+                    if (ss.start_s > crosswalk_overlap->end_s &&
+                        ss.start_s - crosswalk_overlap->end_s < 30.0) {
+                        should_limit = false;
+                        AINFO << "[crosswalk-limit] " << crosswalk_id
+                              << " SKIP speed limit (stop sign after at s="
+                              << ss.start_s << ")";
+                        break;
+                    }
+                }
+            }
             if (should_limit) {
                 AINFO << "[crosswalk-limit] " << crosswalk_id << " AddSpeedLimit("
                       << crosswalk_overlap->start_s - 50.0 << "," << crosswalk_overlap->end_s
@@ -207,7 +226,7 @@ void Crosswalk::MakeDecisions(Frame* const frame, ReferenceLineInfo* const refer
                         crosswalk_overlap->start_s - 50.0, crosswalk_overlap->end_s, 4.5);
             } else {
                 AINFO << "[crosswalk-limit] " << crosswalk_id
-                      << " SKIP speed limit (seen red nearby)";
+                      << " SKIP speed limit (seen red / stop sign after)";
             }
         }
     }
