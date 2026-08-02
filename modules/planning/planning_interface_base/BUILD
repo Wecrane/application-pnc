@@ -48,6 +48,7 @@ apollo_cc_library(
         "task_base/utils/st_gap_estimator.h",
         "traffic_rules_base/traffic_decider.h",
         "traffic_rules_base/traffic_rule.h",
+        "traffic_rules_base/traffic_rule_common.h",
         "planner_base/planner.h",
     ],
     copts = [

@@ -33,6 +33,7 @@
 #include "modules/planning/planning_base/common/planning_context.h"
 #include "modules/planning/planning_base/common/util/common.h"
 #include "modules/planning/planning_base/common/util/util.h"
+#include "modules/planning/planning_interface_base/traffic_rules_base/traffic_rule_common.h"
 
 namespace apollo {
 namespace planning {
@@ -40,13 +41,11 @@ namespace planning {
 using apollo::common::Status;
 using apollo::hdmap::PathOverlap;
 
-namespace {
 // 区分赛题3(红绿灯场景)与赛题8(交通灯路口减速通行)——两者同地图同路线同信号灯Signal_5:
 // - 赛题3: 有红灯(停车1.5-2.0m) → 绿灯通过路口【不限速】(评测无路口限速要求)
 // - 赛题8: 无红灯(一直绿) → 绿灯通过信号灯区域【限速≤5m/s】
-// 记录各信号灯是否出现过红灯。评测每场景独立进程, 状态每场景重置。
-std::unordered_map<std::string, bool> g_seen_red_light;
-}  // namespace
+// 记录各信号灯是否出现过红灯(共享给 crosswalk 规则判断路口斑马线限速)。
+// 评测每场景独立进程, 状态每场景重置。
 
 bool TrafficLight::Init(const std::string& name,
                         const std::shared_ptr<DependencyInjector>& injector) {
@@ -153,7 +152,7 @@ void TrafficLight::MakeDecisions(Frame* const frame,
     if (signal_color != perception::TrafficLight::GREEN &&
         signal_color != perception::TrafficLight::BLACK) {
       // RED/YELLOW/UNKNOWN 都视为"曾要求停车", 记录该信号灯见过红
-      g_seen_red_light[traffic_light_overlap.object_id] = true;
+      GlobalSeenRedLight()[traffic_light_overlap.object_id] = true;
     }
     if (signal_color == perception::TrafficLight::GREEN ||
         signal_color == perception::TrafficLight::BLACK) {
@@ -163,7 +162,7 @@ void TrafficLight::MakeDecisions(Frame* const frame,
       // 修复(2026-08-02): 原区间[start_s,end_s]只有0m(信号灯是点)→限速无效
       // → 车16.5m/s全速通过Signal_5路口(本地222245)+云端scn8斑马线超速16.2。
       // 提前50m限速: 16.5m/s减到4.5需21m, 50m足够, 车提前减速通过路口。
-      if (!g_seen_red_light[traffic_light_overlap.object_id]) {
+      if (!GlobalSeenRedLight()[traffic_light_overlap.object_id]) {
         reference_line_info->mutable_reference_line()->AddSpeedLimit(
             traffic_light_overlap.start_s - 50.0, traffic_light_overlap.end_s,
             4.5);
