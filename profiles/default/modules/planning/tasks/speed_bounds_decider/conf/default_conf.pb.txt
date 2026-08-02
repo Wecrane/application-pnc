@@ -1,9 +1,12 @@
 # speed_bounds_decider 配置（default profile 覆盖层）
-# 提速(2026-08-02): total_time 7.0->4.0 —— 解决停车蠕动(根因)
-# 根因: ST图/piecewise_jerk规划窗口7s, 停止线在窗口内时缓减速cost永远最优
-#       (急刹与缓减速平均速度相同→ref_v cost相当, 缓减速acc²/jerk²更小)
-#       → 车提前88m/7s缓减速+蠕动。窗口4s时"保持高速+最后-6急刹"变优。
-# 安全性: 16.667急刹需2.8s/23m(-6), 4s窗口内足够; s_bounds/s_dot_bounds硬约束
-# ⚠️风险: 跟车(普通路2)反应窗口4s(原7s), 靠FOLLOW边界+s_dot_bounds保护
-total_time: 4.0
+# 恢复 total_time 7.0（2026-08-02 云端评测 8 场景中 6 个 SpeedLimit 超速的根因）
+# 【回退原因】total_time=4.0 时 QP 偏好"保持高速+最后急刹"，但减速带限速(2.5)
+#   进入 4s 水平线时车仍 16m/s，jerk 约束下最小刹车时间 3.6s > 可用 3.4s
+#   → piecewise_jerk primal infeasible → fallback 丢弃全部速度限制 → 冲过减速带
+#   （云端 sim_engine 显示 6/8 场景 SpeedLimit 失败，减速带区 3m/s 实测 15.8-16 m/s）
+# 【为何 7.0 不会复发停车蠕动】"一脚刹死"(dx_ref=0, piecewise_jerk_speed_optimizer.cc)
+#   在 8bf00bf 之后加入，强制停止线前 brake_dist 内 dx_ref=0 → 停止标志/红绿灯
+#   仍"保持高速+最后急刹"，与 total_time 无关；而减速带非 STOP，7s 窗口下
+#   QP 自然选择"缓减速"提前 112m 开始刹车 → 全程可行、不超速（425s 评测验证）
+total_time: 7.0
 boundary_buffer: 0.25
