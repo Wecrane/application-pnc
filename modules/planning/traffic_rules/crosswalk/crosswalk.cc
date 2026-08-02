@@ -26,6 +26,7 @@
 #include <unordered_map>
 #include <utility>
 
+#include "modules/common_msgs/basic_msgs/geometry.pb.h"
 #include "modules/common_msgs/basic_msgs/pnc_point.pb.h"
 #include "modules/common_msgs/perception_msgs/perception_obstacle.pb.h"
 #include "modules/planning/planning_base/proto/planning_status.pb.h"
@@ -240,11 +241,69 @@ bool Crosswalk::FindCrosswalks(ReferenceLineInfo* const reference_line_info) {
     CHECK_NOTNULL(reference_line_info);
 
     crosswalk_overlaps_.clear();
+    extra_crosswalk_overlaps_.clear();
+
+    // 1. 从 map_path 获取（原逻辑）
     const std::vector<hdmap::PathOverlap>& crosswalk_overlaps
             = reference_line_info->reference_line().map_path().crosswalk_overlaps();
     for (const hdmap::PathOverlap& crosswalk_overlap : crosswalk_overlaps) {
         crosswalk_overlaps_.push_back(&crosswalk_overlap);
     }
+
+    // 2. 全局规划补充: 沿参考线全程扫描前方人行道(绕开 map_path overlap 晚出现
+    //    问题)。实测 map_path().crosswalk_overlaps() 在车距人行道仅 ~6m 才出现,
+    //    导致 crosswalk 规则此前完全不知道人行道 → 车全速冲到人行道才减速/停不住。
+    //    这里用 HDMap GetCrosswalks 直接查询参考线全程(0~Length)的人行道,
+    //    让人行道从起步就进入 crosswalk 规则 → 提前纳入速度规划(全局规划)。
+    const auto& reference_line = reference_line_info->reference_line();
+    const double kScanStep = 10.0;      // 扫描步长(m)
+    const double kSearchRadius = 30.0;  // 查询半径(m)
+    for (double s = 0.0; s < reference_line.Length(); s += kScanStep) {
+        const auto& ref_point = reference_line.GetReferencePoint(s);
+        common::PointENU hdmap_point;
+        hdmap_point.set_x(ref_point.x());
+        hdmap_point.set_y(ref_point.y());
+        std::vector<CrosswalkInfoConstPtr> crosswalks;
+        if (HDMapUtil::BaseMap().GetCrosswalks(
+                    hdmap_point, kSearchRadius, &crosswalks) != 0) {
+            continue;
+        }
+        for (const auto& cw : crosswalks) {
+            // 去重: map_path 已有或已补充
+            bool exists = false;
+            for (const auto* ov : crosswalk_overlaps_) {
+                if (ov->object_id == cw->id().id()) {
+                    exists = true;
+                    break;
+                }
+            }
+            if (exists) {
+                continue;
+            }
+            // 投影人行道多边形到参考线, 求 s 范围
+            double min_s = std::numeric_limits<double>::max();
+            double max_s = -std::numeric_limits<double>::max();
+            for (const auto& point : cw->polygon().points()) {
+                common::SLPoint sl_point;
+                if (reference_line.XYToSL(point, &sl_point)) {
+                    min_s = std::min(min_s, sl_point.s());
+                    max_s = std::max(max_s, sl_point.s());
+                }
+            }
+            if (max_s < 0.0 || min_s > reference_line.Length()) {
+                continue;  // 人行道不在参考线范围
+            }
+            min_s = std::max(0.0, min_s);
+            max_s = std::min(reference_line.Length(), max_s);
+            hdmap::PathOverlap overlap;
+            overlap.object_id = cw->id().id();
+            overlap.start_s = min_s;
+            overlap.end_s = max_s;
+            extra_crosswalk_overlaps_.push_back(overlap);
+            crosswalk_overlaps_.push_back(&extra_crosswalk_overlaps_.back());
+        }
+    }
+
     return crosswalk_overlaps_.size() > 0;
 }
 
