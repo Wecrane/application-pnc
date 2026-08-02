@@ -1,0 +1,31 @@
+# 提速2026-08-02: 关闭8赛题无用的traffic rule包
+# 移除: YIELD_SIGN(地图无让行标志)/BACKSIDE_VEHICLE(无后方车场景)
+# 保留: CROSSWALK/DESTINATION/KEEP_CLEAR/REFERENCE_LINE_END/REROUTING/STOP_SIGN/TRAFFIC_LIGHT
+rule {
+  name: "CROSSWALK"
+  type: "Crosswalk"
+}
+rule {
+  name: "DESTINATION"
+  type: "Destination"
+}
+rule {
+  name: "KEEP_CLEAR"
+  type: "KeepClear"
+}
+rule {
+  name: "REFERENCE_LINE_END"
+  type: "ReferenceLineEnd"
+}
+rule {
+  name: "REROUTING"
+  type: "Rerouting"
+}
+rule {
+  name: "STOP_SIGN"
+  type: "StopSign"
+}
+rule {
+  name: "TRAFFIC_LIGHT"
+  type: "TrafficLight"
+}
