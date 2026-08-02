@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <deque>
 #include <memory>
 #include <string>
 #include <vector>
@@ -40,7 +41,10 @@ class Crosswalk : public TrafficRule {
 
   common::Status ApplyRule(Frame* const frame,
                            ReferenceLineInfo* const reference_line_info);
-  void Reset() override { crosswalk_overlaps_.clear(); }
+  void Reset() override {
+    crosswalk_overlaps_.clear();
+    extra_crosswalk_overlaps_.clear();
+  }
 
  private:
   void MakeDecisions(Frame* const frame,
@@ -55,6 +59,10 @@ class Crosswalk : public TrafficRule {
   CrosswalkConfig config_;
   static constexpr char const* CROSSWALK_VO_ID_PREFIX = "CW_";
   std::vector<const hdmap::PathOverlap*> crosswalk_overlaps_;
+  // 全局规划补充: HDMap 直接查询参考线全程的人行道(map_path overlap 晚出现),
+  // 这里持久存储补充的 PathOverlap, crosswalk_overlaps_ 存其指针。
+  // 用 deque: push_back 不使已有元素指针失效(vector 会 realloc 导致指针失效)。
+  std::deque<hdmap::PathOverlap> extra_crosswalk_overlaps_;
 };
 
 CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(apollo::planning::Crosswalk, TrafficRule)
