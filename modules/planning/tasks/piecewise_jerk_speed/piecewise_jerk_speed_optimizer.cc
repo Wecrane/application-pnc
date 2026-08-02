@@ -170,6 +170,28 @@ Status PiecewiseJerkSpeedOptimizer::Process(const PathData& path_data,
     double v_upper_bound = FLAGS_planning_upper_speed_limit;
     v_upper_bound =
         std::fmin(speed_limit.GetSpeedLimitByS(path_s), v_upper_bound);
+    // 限速预减速(2026-08-02修复): 限速段边界 v_upper 硬突变(16.667→4.5) →
+    // QP 需1个节点(0.1s)内降速(a≈-104超acc限制) → primal infeasible(实测75次)
+    // → fallback 用 max(16.667,init_v) 抹掉限速 → 车14.9m/s全速通过Signal_5
+    // 路口(评测限速5, 超速扣分)。这里对前方每个限速点(lv@ls)用减速度 dec 回推
+    // 本点允许速度: v_allow = sqrt(lv² + 2*dec*(ls-path_s)), v_upper 取最小值。
+    // 车在限速区前提前减速, 进入限速区时已达标 → QP 全程可行(不fallback)。
+    // 回推减速度必须<fallback减速度(4<6): v_allow<init_v 在限速区前28.6m触发
+    // (16m/s@4m/s²), 此时才进fallback, fallback用6m/s²更快减速 → 到限速区4.5。
+    // 若回推=fallback(5/5): fallback在22m才触发, 5m/s²减速22m只能到6.0→超速。
+    static constexpr double kLimitLookAhead = 100.0;
+    static constexpr double kLimitDecel = 4.0;
+    for (const auto& lp : speed_limit.speed_limit_points()) {
+      if (lp.first <= path_s) {
+        continue;
+      }
+      if (lp.first - path_s > kLimitLookAhead) {
+        break;  // 限速点按 s 有序
+      }
+      const double v_allow = std::sqrt(
+          lp.second * lp.second + 2.0 * kLimitDecel * (lp.first - path_s));
+      v_upper_bound = std::fmin(v_upper_bound, v_allow);
+    }
     dx_ref[i] = std::fmin(v_upper_bound, dx_ref[i]);
     // '一脚刹死': 接近停止线(剩余距离<brake_dist)时目标速度降0,
     // 避免QP选择全程缓减速, 强制以max_dec(-6)急刹到停止点
@@ -203,15 +225,28 @@ Status PiecewiseJerkSpeedOptimizer::Process(const PathData& path_data,
   piecewise_jerk_problem.set_dx_ref(dx_ref_weight, dx_ref);
   piecewise_jerk_problem.set_x_ref(config_.ref_s_weight(), std::move(x_ref));
   piecewise_jerk_problem.set_penalty_dx(penalty_dx);
+  // 保存限速约束副本(fallback 保留限速用, set_dx_bounds 会 move 走原数据)
+  const std::vector<std::pair<double, double>> s_dot_bounds_copy = s_dot_bounds;
   piecewise_jerk_problem.set_dx_bounds(std::move(s_dot_bounds));
 
   // Solve the problem
   if (!piecewise_jerk_problem.Optimize()) {
     const std::string msg = "Piecewise jerk speed optimizer failed!";
     AERROR << msg << ".try to fallback.";
-    piecewise_jerk_problem.set_dx_bounds(
-        0.0, std::fmax(FLAGS_planning_upper_speed_limit,
-                       st_graph_data.init_point().v()));
+    // 修复(2026-08-02): 原 fallback 用 max(16.667, init_v) 抹掉全部限速 →
+    // 车全速通过限速区。改为可达性放宽: 保留原限速, 但每点 v_upper 不低于
+    // "从 init_v 以 6.0m/s² 可达的速度" → QP 可行同时限速仍生效。
+    // 用 6.0(>回推的4.0): 车在限速区前28.6m触发fallback后以6m/s²更快减速,
+    // 到限速区时已≤4.5(16m/s@6m/s²需19.5m, 28.6m足够)。
+    std::vector<std::pair<double, double>> relaxed_dx_bounds;
+    relaxed_dx_bounds.reserve(num_of_knots);
+    for (int i = 0; i < num_of_knots; ++i) {
+      const double v_feasible =
+          std::max(0.0, init_s[1] - 6.0 * (i * delta_t));
+      relaxed_dx_bounds.emplace_back(
+          0.0, std::fmax(s_dot_bounds_copy[i].second, v_feasible));
+    }
+    piecewise_jerk_problem.set_dx_bounds(std::move(relaxed_dx_bounds));
     if (!FLAGS_speed_optimize_fail_relax_velocity_constraint ||
         !piecewise_jerk_problem.Optimize()) {
       speed_data->clear();

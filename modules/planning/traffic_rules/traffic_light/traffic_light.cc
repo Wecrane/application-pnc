@@ -163,6 +163,15 @@ void TrafficLight::MakeDecisions(Frame* const frame,
           << " start_s=" << traffic_light_overlap.start_s
           << " color=" << signal_color
           << " seen_red=" << GlobalSeenRedLight()[traffic_light_overlap.object_id];
+    // 修复(2026-08-02): UNKNOWN(信号灯未触发/状态未知)不建STOP。
+    // 原逻辑UNKNOWN走红灯分支可能BuildStopDecision → 赛题8 Signal_5未触发
+    // (UNKNOWN)时车在路口前停车(评测要求减速通过不停)。UNKNOWN≠红灯。
+    // 不限速不停车, 由 crosswalk 斑马线限速(4.5)兜底(GlobalSeenRedLight已排除UNKNOWN)。
+    if (signal_color == perception::TrafficLight::UNKNOWN) {
+      AINFO << "[traffic-light] " << traffic_light_overlap.object_id
+            << " UNKNOWN skip (no stop, no limit)";
+      continue;
+    }
     if (signal_color == perception::TrafficLight::GREEN ||
         signal_color == perception::TrafficLight::BLACK) {
       // competition: 赛题八(交通灯路口减速) 绿灯通过信号灯区域限速(≤5m/s,留4.5)
