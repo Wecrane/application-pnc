@@ -233,8 +233,6 @@ Status PiecewiseJerkSpeedOptimizer::Process(const PathData& path_data,
         << " ref_len=" << total_length << " total_t=" << total_time
         << " dx_ref[0/10/30]=" << dx_ref[0] << "/" << dx_ref[10] << "/"
         << dx_ref[30] << " v_upper[0]=" << s_dot_bounds[0].second
-        << " s_up[0/40/80]=" << s_bounds[0].second << "/"
-        << s_bounds[40].second << "/" << s_bounds[80].second
         << " x_ref[0/10/30]=" << x_ref[0] << "/" << x_ref[10] << "/"
         << x_ref[30];
   piecewise_jerk_problem.set_dx_ref(dx_ref_weight, dx_ref);
