@@ -1,20 +1,22 @@
-# 提速激进版(2026-08-02): 速度规划激进化——加速用满2.7, 减速用满-6, 不缓慢加减速
-# 根因: QP min Σ[acc²×wa + jerk²×wj + (s-x_ref)²×ws + (v-dx_ref)²×wv]
-#       原参数(wv=10, wj=3)让QP偏好"全程平缓减速"(acc/jerk小), 实测普通路1
-#       提前100m/7s减速(理论只需8.7m), 所有场景vmax仅6.5~11.6(未达16.667)
-# 激进化:
-#   ref_v_weight 10->100: v强烈跟随dx_ref(限速前=16.667), 以最大加速度2.7冲到
-#                         目标速度并保持, 限速区前才以最大减速度-6急减速
-#   ref_s_weight 1->3:    s跟随DP快速前进位置
-#   acc_weight 1->0.3:    加速/减速本身几乎不惩罚 -> 不再选平缓减速
-#   jerk_weight 3->0.3:   允许急加减速过渡
-# 安全性: s_dot_bounds(ddx_bounds)是硬约束, 车仍会在限速区/停车点前按
-#         max_dec=-6物理减速(16.667->4.5需21m, ->0需23m), 不会过冲
-# 配套: DP max_deceleration已改-6.0(源码), vehicle_param max_deceleration=-6.0
-# ⚠️风险: 速度曲线激进, 需本地验证: STOP/人行道/信号灯前停车、起步加速是否正常
-acc_weight: 0.3
-jerk_weight: 0.3
+# 提速激进版V2(2026-08-02): 停车/限速前"一脚刹死"——不缓滑不蠕动
+# V1问题(本地红绿灯实测): 车在停止点前88m(=7s窗口路程)就开始缓减速,
+#   最后15s以<0.3m/s蠕动。根因: piecewise_jerk的x_ref来自DP位置,
+#   DP提前减速→ref_s=3强制跟随→全程缓减速(QP cost偏好acc²/jerk²小)
+# V2激进化:
+#   ref_s_weight 3->0.5: 不强制跟随DP慢位置, s由ref_v(高速)驱动,
+#                        高速接近停止点, 到s_bounds(停止线)前按-6物理急刹
+#   ref_v_weight 100->70: 仍强烈激励高速(16.667), 但不过度放大dx_ref波动
+#                        (减少绿灯起步后一脚油门一脚刹车振荡)
+#   acc_weight 0.3->0.1:  急加减速几乎不惩罚
+#   jerk_weight 0.3->0.1: 允许急刹过渡
+# 安全性: s_bounds(STOP/FOLLOW边界)硬约束 s(t)≤停止线/前车,
+#         s_dot_bounds硬约束 v≤限速, ddx_bounds(max_dec-6)物理刹停距离16m
+# ⚠️风险: 停车/限速前急刹(舒适性差但评测不看), 需本地验证:
+#   - 红绿灯/停止标志前不越线
+#   - 跟车(普通路2)不追尾(靠FOLLOW ST边界约束)
+acc_weight: 0.1
+jerk_weight: 0.1
 kappa_penalty_weight: 200.0
-ref_s_weight: 3.0
-ref_v_weight: 100.0
+ref_s_weight: 0.5
+ref_v_weight: 70.0
 follow_distance_buffer: 0.1
