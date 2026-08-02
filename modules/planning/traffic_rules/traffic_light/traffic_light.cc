@@ -160,9 +160,13 @@ void TrafficLight::MakeDecisions(Frame* const frame,
       // competition: 赛题八(交通灯路口减速) 绿灯通过信号灯区域限速(≤5m/s,留4.5)
       // 仅当该信号灯【从未出现过红灯】时生效——赛题3(红绿灯场景)红灯停车后
       // 绿灯通过路口不限速(评测无路口限速要求, 且避免限速导致的顿挫+耗时)
+      // 修复(2026-08-02): 原区间[start_s,end_s]只有0m(信号灯是点)→限速无效
+      // → 车16.5m/s全速通过Signal_5路口(本地222245)+云端scn8斑马线超速16.2。
+      // 提前50m限速: 16.5m/s减到4.5需21m, 50m足够, 车提前减速通过路口。
       if (!g_seen_red_light[traffic_light_overlap.object_id]) {
         reference_line_info->mutable_reference_line()->AddSpeedLimit(
-            traffic_light_overlap.start_s, traffic_light_overlap.end_s, 4.5);
+            traffic_light_overlap.start_s - 50.0, traffic_light_overlap.end_s,
+            4.5);
       }
       continue;
     }

@@ -174,15 +174,23 @@ void Crosswalk::MakeDecisions(Frame* const frame, ReferenceLineInfo* const refer
             ADEBUG << "crosswalk_id[" << crosswalk_id << "] STOP";
         } else {
             // competition: 赛题七 无人人行道限速通过（≤5m/s，留裕量取4.5）
-            // 仅当参考线【无信号灯】时生效——避免误伤红绿灯/交通灯场景(赛题3/8)
-            // 的路口人行道(Crosswalk_11/12, 与Signal_5同处路口, 无需限速)
-            if (reference_line_info->reference_line()
-                    .map_path()
-                    .signal_overlaps()
-                    .empty()) {
+            // 赛题八(交通灯路口减速通行): 斑马线也要限速5——仅当斑马线【附近30m内
+            // 无信号灯】时生效——避免误伤红绿灯/交通灯场景(赛题3/8)的路口人行道
+            // (Crosswalk_11/12, 与Signal_5同处路口, 无需限速)。
+            // 限速区间提前(start_s-50)延长: 车提前减速(16.5m/s减到4.5需21m)。
+            // 修复(2026-08-02): 原条件signal_overlaps().empty()在参考线有远处
+            // Signal_5(400m外)时也跳过斑马线限速→scn8斑马线超速16.2(评测限速5)。
+            bool has_signal_nearby = false;
+            for (const auto& signal_overlap :
+                 reference_line_info->reference_line().map_path().signal_overlaps()) {
+                if (std::fabs(signal_overlap.start_s - crosswalk_overlap->start_s) < 30.0) {
+                    has_signal_nearby = true;
+                    break;
+                }
+            }
+            if (!has_signal_nearby) {
                 reference_line_info->mutable_reference_line()->AddSpeedLimit(
-                        crosswalk_overlap->start_s, crosswalk_overlap->end_s,
-                        4.5);
+                        crosswalk_overlap->start_s - 50.0, crosswalk_overlap->end_s, 4.5);
             }
         }
     }
@@ -264,8 +272,7 @@ bool Crosswalk::FindCrosswalks(ReferenceLineInfo* const reference_line_info) {
         hdmap_point.set_x(ref_point.x());
         hdmap_point.set_y(ref_point.y());
         std::vector<CrosswalkInfoConstPtr> crosswalks;
-        if (HDMapUtil::BaseMap().GetCrosswalks(
-                    hdmap_point, kSearchRadius, &crosswalks) != 0) {
+        if (HDMapUtil::BaseMap().GetCrosswalks(hdmap_point, kSearchRadius, &crosswalks) != 0) {
             continue;
         }
         for (const auto& cw : crosswalks) {
@@ -301,14 +308,12 @@ bool Crosswalk::FindCrosswalks(ReferenceLineInfo* const reference_line_info) {
             overlap.end_s = max_s;
             extra_crosswalk_overlaps_.push_back(overlap);
             crosswalk_overlaps_.push_back(&extra_crosswalk_overlaps_.back());
-            AINFO << "[crosswalk-global] found " << cw->id().id()
-                  << " start_s=" << min_s << " end_s=" << max_s
+            AINFO << "[crosswalk-global] found " << cw->id().id() << " start_s=" << min_s << " end_s=" << max_s
                   << " ref_len=" << reference_line.Length();
         }
     }
 
-    AINFO << "[crosswalk-global] total=" << crosswalk_overlaps_.size()
-          << " map_path=" << crosswalk_overlaps.size()
+    AINFO << "[crosswalk-global] total=" << crosswalk_overlaps_.size() << " map_path=" << crosswalk_overlaps.size()
           << " extra=" << extra_crosswalk_overlaps_.size();
     return crosswalk_overlaps_.size() > 0;
 }
