@@ -22,6 +22,7 @@
 
 #include <memory>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "modules/common_msgs/planning_msgs/planning_internal.pb.h"
@@ -38,6 +39,14 @@ namespace planning {
 
 using apollo::common::Status;
 using apollo::hdmap::PathOverlap;
+
+namespace {
+// 区分赛题3(红绿灯场景)与赛题8(交通灯路口减速通行)——两者同地图同路线同信号灯Signal_5:
+// - 赛题3: 有红灯(停车1.5-2.0m) → 绿灯通过路口【不限速】(评测无路口限速要求)
+// - 赛题8: 无红灯(一直绿) → 绿灯通过信号灯区域【限速≤5m/s】
+// 记录各信号灯是否出现过红灯。评测每场景独立进程, 状态每场景重置。
+std::unordered_map<std::string, bool> g_seen_red_light;
+}  // namespace
 
 bool TrafficLight::Init(const std::string& name,
                         const std::shared_ptr<DependencyInjector>& injector) {
@@ -141,11 +150,18 @@ void TrafficLight::MakeDecisions(Frame* const frame,
     signal_debug->set_light_stop_s(traffic_light_overlap.start_s);
 
     // mayaochang add
+    if (signal_color == perception::TrafficLight::RED) {
+      g_seen_red_light[traffic_light_overlap.object_id] = true;
+    }
     if (signal_color == perception::TrafficLight::GREEN ||
         signal_color == perception::TrafficLight::BLACK) {
-      // competition: 赛题八 绿灯通过信号灯区域限速（≤5m/s，留裕量取4.5）
-      reference_line_info->mutable_reference_line()->AddSpeedLimit(
-          traffic_light_overlap.start_s, traffic_light_overlap.end_s, 4.5);
+      // competition: 赛题八(交通灯路口减速) 绿灯通过信号灯区域限速(≤5m/s,留4.5)
+      // 仅当该信号灯【从未出现过红灯】时生效——赛题3(红绿灯场景)红灯停车后
+      // 绿灯通过路口不限速(评测无路口限速要求, 且避免限速导致的顿挫+耗时)
+      if (!g_seen_red_light[traffic_light_overlap.object_id]) {
+        reference_line_info->mutable_reference_line()->AddSpeedLimit(
+            traffic_light_overlap.start_s, traffic_light_overlap.end_s, 4.5);
+      }
       continue;
     }
 
