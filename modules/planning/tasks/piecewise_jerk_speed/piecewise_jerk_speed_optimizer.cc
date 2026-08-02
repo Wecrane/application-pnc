@@ -229,6 +229,21 @@ Status PiecewiseJerkSpeedOptimizer::Process(const PathData& path_data,
                                         FLAGS_planning_max_acceleration);
   piecewise_jerk_problem.set_dddx_bound(FLAGS_longitudinal_jerk_lower_bound,
                                         FLAGS_longitudinal_jerk_upper_bound);
+  // 诊断日志(2026-08-03): 定位人行道刹-油-刹/提前刹车——s_bounds在t轴是否提前收窄。
+  // 带边界保护(避免上次s_up越界): 索引 clamp 到 [0, size-1]。
+  {
+    const int n_sb = static_cast<int>(s_bounds.size());
+    const int i40 = std::min(40, n_sb - 1);
+    const int i80 = std::min(80, n_sb - 1);
+    const int n_dx = static_cast<int>(dx_ref.size());
+    const int j40 = std::min(40, n_dx - 1);
+    AINFO << "[pjs2] init_v=" << init_s[1] << " stop_s=" << stop_s
+          << " s_up[0/40/80]=" << s_bounds[0].second << "/"
+          << s_bounds[i40].second << "/" << s_bounds[i80].second
+          << " dx_ref[0/40]=" << dx_ref[0] << "/" << dx_ref[j40]
+          << " v_up[0]=" << s_dot_bounds[0].second
+          << " ref_len=" << total_length;
+  }
   piecewise_jerk_problem.set_x_bounds(std::move(s_bounds));
   piecewise_jerk_problem.set_dx_ref(dx_ref_weight, dx_ref);
   piecewise_jerk_problem.set_x_ref(config_.ref_s_weight(), std::move(x_ref));
