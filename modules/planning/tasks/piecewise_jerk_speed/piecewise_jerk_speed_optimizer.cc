@@ -175,8 +175,9 @@ Status PiecewiseJerkSpeedOptimizer::Process(const PathData& path_data,
   piecewise_jerk_problem.set_weight_dddx(config_.jerk_weight());
   piecewise_jerk_problem.set_scale_factor({1.0, 10.0, 100.0});
   piecewise_jerk_problem.set_x_bounds(0.0, total_length);
+  // 提速(2026-08-02): 加速上限用 gflag(默认2.7=0.9*评测3.0), 减速保持 vehicle_param(-6)
   piecewise_jerk_problem.set_ddx_bounds(veh_param.max_deceleration(),
-                                        veh_param.max_acceleration());
+                                        FLAGS_planning_max_acceleration);
   piecewise_jerk_problem.set_dddx_bound(FLAGS_longitudinal_jerk_lower_bound,
                                         FLAGS_longitudinal_jerk_upper_bound);
   piecewise_jerk_problem.set_x_bounds(std::move(s_bounds));

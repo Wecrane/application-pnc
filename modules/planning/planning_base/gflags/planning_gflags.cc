@@ -104,6 +104,7 @@ DEFINE_double(
 DEFINE_double(reference_line_endpoint_extend_length, 10.0, "Extended length of reference line endpoint");
 
 DEFINE_double(planning_upper_speed_limit, 31.3, "Maximum speed (m/s) in planning.");
+DEFINE_double(planning_max_acceleration, 2.7, "Max acceleration (m/s^2) in planning speed optimization (0.9 * evaluator acceleration limit 3.0)");
 
 DEFINE_double(trajectory_time_length, 8.0, "Trajectory time length");
 

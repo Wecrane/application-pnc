@@ -51,6 +51,7 @@ DECLARE_double(reference_line_endpoint_extend_length);
 DECLARE_bool(enable_trajectory_stitcher);
 DECLARE_double(change_lane_min_length);
 DECLARE_double(planning_upper_speed_limit);
+DECLARE_double(planning_max_acceleration);
 DECLARE_double(trajectory_time_length);
 DECLARE_double(trajectory_time_min_interval);
 DECLARE_double(trajectory_time_max_interval);
