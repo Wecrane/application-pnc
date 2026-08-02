@@ -10,7 +10,9 @@ min_pass_s_distance: 1.0
 # 6.0 (2026-08-02 全局规划): 行人横向 l≈6.6m(赛题7站人行道边缘)也被识别为
 # '有行人' → STOP 提前建立(配合 FindCrosswalks 全程扫描) → 车从起步就提前减速。
 # 6.0 时扩展区北边缘 4437642.57，行人目标 4437639.07 走完仍在区内 → 更安全。
-expand_s_distance: 6.0
+# 8.0 (2026-08-02 赛题2): 行人3060 横向 l≈6.6m 在 6m 扩展区外临界(边缘判定不稳),
+# 时有时无 → STOP 闪烁 → 车冲过斑马线。扩到 8.0 行人稳定在扩展区内 → STOP 稳定。
+expand_s_distance: 8.0
 stop_strict_l_distance: 5.0
 stop_loose_l_distance: 5.0
 # stop_timeout 10→30s：行人横穿人行道需 ~26s（13m÷0.5m/s），

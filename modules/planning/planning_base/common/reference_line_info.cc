@@ -124,8 +124,11 @@ bool ReferenceLineInfo::Init(const std::vector<const Obstacle*>& obstacles,
     // -1 and + 1.0 are added to make sure it can be sampled.
     // 超速修复(2026-08-02): 尾部加长到 end_s+4.0, 防止车在评测限速区(3.0m/s)
     // 内提前恢复加速导致超速(实测 2.5 目标 + 控制超调后, 提前加速到 3.097 超速扣分)
-    reference_line_.AddSpeedLimit(speed_bump.start_s - 1.0,
-                                  speed_bump.end_s + 4.0,
+    // 头部提前 35m(2026-08-02): 赛题1 车16m/s 冲过减速带——原 [start_s-1, end_s+4]
+    // 仅~5m 宽, 车 16m/s 在 0.3s 内降到 2.5 物理不可行 → QP 无解 → fallback 丢限速。
+    // 提前 35m(>16m/s@5m/s²减速到2.5需~25m)让 QP 有足够缓冲, 车提前减速通过减速带。
+    reference_line_.AddSpeedLimit(speed_bump.start_s - 35.0,
+                                  speed_bump.end_s + 8.0,
                                   FLAGS_speed_bump_speed_limit);
   }
 
