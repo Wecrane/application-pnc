@@ -182,11 +182,16 @@ void Crosswalk::MakeDecisions(Frame* const frame, ReferenceLineInfo* const refer
             }
         }
 
+        // 斑马线限速(2026-08-03修复刹-油-刹): 原限速只在无行人(else)分支执行——
+        // 有行人走STOP分支 → 无限速 → QP只有行人STOP(~40m), 车低速(2.9)时QP窗口
+        // (10s)内到不了STOP → QP加速 → 超速(实测032120车9.6m/s过斑马线限速区,
+        // 评测≤5违规) → 接近STOP才急刹(刹-油-刹)。有行人时必须限速(4.5): 车以
+        // ≤4.5接近STOP → QP窗口内看到STOP → 平滑停车不加速。无行人分支行为不变。
         if (!pedestrians.empty()) {
             crosswalks_to_stop.emplace_back(crosswalk_overlap, pedestrians);
             ADEBUG << "crosswalk_id[" << crosswalk_id << "] STOP";
-        } else {
-            // competition: 赛题七 无人人行道限速通过（≤5m/s，留裕量取4.5）
+        }
+        // competition: 赛题七 无人人行道限速通过（≤5m/s，留裕量取4.5）
             // 赛题八(交通灯路口减速通行): 路口斑马线也要限速5——限速条件:
             //   附近30m无信号灯(普通斑马线) 或 附近信号灯从未见红(赛题8一直绿)
             // 不限速条件: 附近信号灯见过红(赛题3红绿灯, 绿灯通过路口不限速)。
@@ -236,7 +241,6 @@ void Crosswalk::MakeDecisions(Frame* const frame, ReferenceLineInfo* const refer
             } else {
                 AINFO << "[crosswalk-limit] " << crosswalk_id << " SKIP speed limit (seen red / stop sign present)";
             }
-        }
     }
 
     double min_s = std::numeric_limits<double>::max();
