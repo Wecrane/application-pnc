@@ -176,11 +176,12 @@ Status PiecewiseJerkSpeedOptimizer::Process(const PathData& path_data,
     // 路口(评测限速5, 超速扣分)。这里对前方每个限速点(lv@ls)用减速度 dec 回推
     // 本点允许速度: v_allow = sqrt(lv² + 2*dec*(ls-path_s)), v_upper 取最小值。
     // 车在限速区前提前减速, 进入限速区时已达标 → QP 全程可行(不fallback)。
-    // 回推减速度必须<fallback减速度(4<6): v_allow<init_v 在限速区前28.6m触发
-    // (16m/s@4m/s²), 此时才进fallback, fallback用6m/s²更快减速 → 到限速区4.5。
-    // 若回推=fallback(5/5): fallback在22m才触发, 5m/s²减速22m只能到6.0→超速。
+    // 回推减速度必须<fallback减速度(5<6): v_allow<init_v 在限速区前23.6m触发
+    // (16m/s@5m/s²), fallback用6m/s²更快减速 → 到限速区≤4.5。
+    // P0-B(2026-08-03): kLimitDecel 4.0→5.0——回推起点从32m(4m/s²)前移到23.6m,
+    // 减轻"提前减速"(机制专项Q1根因: 限速区前30m+就被硬性要求4m/s²减速)。
     static constexpr double kLimitLookAhead = 100.0;
-    static constexpr double kLimitDecel = 4.0;
+    static constexpr double kLimitDecel = 5.0;
     for (const auto& lp : speed_limit.speed_limit_points()) {
       if (lp.first <= path_s) {
         continue;
@@ -192,7 +193,10 @@ Status PiecewiseJerkSpeedOptimizer::Process(const PathData& path_data,
           lp.second * lp.second + 2.0 * kLimitDecel * (lp.first - path_s));
       v_upper_bound = std::fmin(v_upper_bound, v_allow);
     }
-    dx_ref[i] = std::fmin(v_upper_bound, dx_ref[i]);
+    // P0-A(2026-08-03): 限速回推只压【硬边界 s_dot_bounds/v_upper】，不再压软
+    // dx_ref。dx_ref 保持巡航速度(GetCruiseSpeed)，限速区减速完全由硬约束驱动
+    // ——消除机制专项Q1确认的"提前减速"软目标牵引(dx_ref被限速回推拉低→QP无
+    // 动力回冲→提前减速)。安全性不变: s_dot_bounds 硬约束(v_upper)仍在。
     // '一脚刹死': 接近停止线(剩余距离<brake_dist)时目标速度降0,
     // 避免QP选择全程缓减速, 强制以max_dec(-6)急刹到停止点
     if (stop_s < total_length && x_ref[i] > stop_s - brake_dist) {
