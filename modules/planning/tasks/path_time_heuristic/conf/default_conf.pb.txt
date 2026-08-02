@@ -25,7 +25,7 @@ default_speed_config {
     negative_jerk_coeff: 1.0
 
     max_acceleration: 2.7  # 提速2026-08-02: 2.0->2.7(0.9*评测3.0)
-    max_deceleration: -4.0
+    max_deceleration: -6.0  # 提速2026-08-02: -4.0->-6.0(匹配vehicle_param, 允许DP更陡减速)
     spatial_potential_penalty: 1.0e2
     enable_multi_thread_in_dp_st_graph: false
     enable_dp_reference_speed: true
@@ -57,7 +57,7 @@ lane_change_speed_config {
     negative_jerk_coeff: 1.0
 
     max_acceleration: 2.7  # 提速2026-08-02: 2.0->2.7(0.9*评测3.0)
-    max_deceleration: -2.5
+    max_deceleration: -6.0  # 提速2026-08-02: -2.5->-6.0(匹配vehicle_param)
     spatial_potential_penalty: 1.0e5
     is_lane_changing: true
     enable_multi_thread_in_dp_st_graph: false
