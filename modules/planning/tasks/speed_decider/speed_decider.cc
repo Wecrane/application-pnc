@@ -342,8 +342,17 @@ Status SpeedDecider::MakeObjectDecision(const SpeedData& speed_profile, PathDeci
                                 / 2.0;
                         const double vehicle_half_width
                                 = common::VehicleConfigHelper::Instance()->GetConfig().vehicle_param().width() / 2.0;
+                        // mayaochang add(赛题五): 行人走完停在车道外(横向>3.5m)
+                        // 也IGNORE——7673走完后车不减速直接通过(之前is_pedestrian
+                        // 永远STOP, 导致终点前40m就缓减速磨蹭)。横穿中(横向<3.5)仍STOP。
+                        static constexpr double kMaxPedestrianClearLateral = 3.5;
                         if (!is_pedestrian
                             && std::fabs(obs_center_l) > vehicle_half_width + FLAGS_static_obstacle_nudge_l_buffer) {
+                            ObjectDecisionType ignore;
+                            ignore.mutable_ignore();
+                            mutable_obstacle->AddLongitudinalDecision("dp_st_graph", ignore);
+                        } else if (is_pedestrian
+                                   && std::fabs(obs_center_l) > kMaxPedestrianClearLateral) {
                             ObjectDecisionType ignore;
                             ignore.mutable_ignore();
                             mutable_obstacle->AddLongitudinalDecision("dp_st_graph", ignore);
@@ -472,8 +481,7 @@ bool SpeedDecider::CreateStopDecision(
     // actually stopped 6.4m before the pedestrian). Compensate for pedestrians so
     // the stop distance really equals stop_distance (scenario 5: 2~3m).
     if (obstacle.Perception().type() == PerceptionObstacle::PEDESTRIAN) {
-        fence_s +=
-                VehicleConfigHelper::GetConfig().vehicle_param().front_edge_to_center();
+        fence_s += VehicleConfigHelper::GetConfig().vehicle_param().front_edge_to_center();
     }
     if (boundary.boundary_type() == STBoundary::BoundaryType::KEEP_CLEAR) {
         fence_s = obstacle.PerceptionSLBoundary().start_s();
@@ -711,6 +719,17 @@ bool SpeedDecider::CheckStopForPedestrian(const Obstacle& obstacle) const {
 
     const auto& obstacle_sl_boundary = obstacle.PerceptionSLBoundary();
     if (obstacle_sl_boundary.end_s() < adc_sl_boundary_.start_s()) {
+        return false;
+    }
+
+    // mayaochang add(赛题五): 行人已走完停在车道外(横向>3.5m)时不再STOP——
+    // 否则7673走完后ST boundary一直阻塞, 车在终点前40m就缓减速磨蹭15s。
+    // 横穿中(横向<1.98)仍STOP(add19正常)。
+    static constexpr double kMaxPedestrianStopLateral = 3.5;
+    const double obs_center_l = (obstacle_sl_boundary.start_l()
+                                 + obstacle_sl_boundary.end_l())
+            / 2.0;
+    if (std::fabs(obs_center_l) > kMaxPedestrianStopLateral) {
         return false;
     }
 
