@@ -306,6 +306,18 @@ Status PiecewiseJerkSpeedOptimizer::Process(
     const std::vector<double>& s = piecewise_jerk_problem.opt_x();
     const std::vector<double>& ds = piecewise_jerk_problem.opt_dx();
     const std::vector<double>& dds = piecewise_jerk_problem.opt_ddx();
+    // 诊断日志(2026-08-03): QP求解后速度——025653实测输入全对(dx_ref=16/v_up=16/
+    // stop_s无穷)但车缓降 → 确认是QP输出缓降 还是 control层未跟上。
+    // 带边界保护(防越界, 之前pjs-out无保护导致planning只跑1帧)。
+    {
+        const int n_ds = static_cast<int>(ds.size());
+        const int k1 = std::min(1, n_ds - 1);
+        const int k10 = std::min(10, n_ds - 1);
+        const int k30 = std::min(30, n_ds - 1);
+        AINFO << "[pjs-out] v[0/1/10/30]=" << ds[0] << "/" << ds[k1] << "/"
+              << ds[k10] << "/" << ds[k30] << " a[0]=" << dds[0]
+              << " s[0]=" << s[0];
+    }
     for (int i = 0; i < num_of_knots; ++i) {
         ADEBUG << "For t[" << i * delta_t << "], s = " << s[i] << ", v = " << ds[i] << ", a = " << dds[i];
         print_debug.AddPoint("optimize_st_curve", i * delta_t, s[i]);
