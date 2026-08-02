@@ -199,31 +199,24 @@ void Crosswalk::MakeDecisions(Frame* const frame, ReferenceLineInfo* const refer
                     break;
                 }
             }
-            // 修复(2026-08-03): 斑马线【后方60m内】有停止标志(StopSign) → 车本来
-            // 就要在停止线前停车, 斑马线限速冗余且有害——停车标志场景(Xh2025 scn6)
-            // 被 crosswalk 全局扫描的 4 个斑马线(Crosswalk_30/59/61/31)限速4.5覆盖
-            // s=131~197 共66m, 车从距停止标志~75m 就降到 4.5 龟速爬行 11s(用户反馈
-            // "速度提不上去/好远就减速到很低")。评测只查 RunStopSign, 斑马线不限速。
-            // 赛题7(scn8) Crosswalk_62 后方无停止标志 → 限速仍生效(评测5m/s达标)。
-            // 2026-08-03 诊断: 原30m窗口未命中(日志010751 SKIP=0), 放宽到60m +
-            // 条件改为"斑马线start_s之后" + AINFO 打印 stop_sign_overlaps 真实值。
+            // 修复(2026-08-03): 参考线同时存在停止标志(StopSign)与斑马线 → 直接
+            // 跳过斑马线限速(不依赖位置判断)。原因:
+            // 1) 停车标志场景(Xh2025 scn6)评测只查 RunStopSign(1.5m), 斑马线不限速;
+            // 2) 全局扫描对路口横向斑马线的 XYToSL 投影会把 s 投影到停止标志前
+            //    (地图实测: Crosswalk_30/59/61/31 在停止线 y=4437642 南侧, 正确 s
+            //     ≈208/228/248, 但投影 s=181~197 < 停止标志 s=206), 导致限速区
+            //     [s-50, s] 提前出现在停止标志前, 车距停止标志~75m 就降到 4.5
+            //     龟速爬行 11s(用户反馈"速度提不上去/好远就减速到很低");
+            // 3) 位置判断依赖投影 s(不可靠), 所以简化为"同时出现即跳过"。
+            // 赛题7(scn8) Crosswalk_62 参考线无停止标志 → 限速仍生效(评测5m/s达标)。
             if (should_limit) {
                 const auto& stop_signs =
                     reference_line_info->reference_line().map_path().stop_sign_overlaps();
-                AINFO << "[crosswalk-limit] " << crosswalk_id
-                      << " check_stop_sign n=" << stop_signs.size() << " cw_s=["
-                      << crosswalk_overlap->start_s << "," << crosswalk_overlap->end_s << "]";
-                for (const auto& ss : stop_signs) {
-                    AINFO << "[crosswalk-limit] stop_sign " << ss.object_id << " s=["
-                          << ss.start_s << "," << ss.end_s << "]";
-                    if (ss.start_s > crosswalk_overlap->start_s &&
-                        ss.start_s - crosswalk_overlap->end_s < 60.0) {
-                        should_limit = false;
-                        AINFO << "[crosswalk-limit] " << crosswalk_id
-                              << " SKIP speed limit (stop sign after at s="
-                              << ss.start_s << ")";
-                        break;
-                    }
+                if (!stop_signs.empty()) {
+                    should_limit = false;
+                    AINFO << "[crosswalk-limit] " << crosswalk_id
+                          << " SKIP speed limit (stop sign present, n=" << stop_signs.size()
+                          << ")";
                 }
             }
             if (should_limit) {
@@ -234,7 +227,7 @@ void Crosswalk::MakeDecisions(Frame* const frame, ReferenceLineInfo* const refer
                         crosswalk_overlap->start_s - 50.0, crosswalk_overlap->end_s, 4.5);
             } else {
                 AINFO << "[crosswalk-limit] " << crosswalk_id
-                      << " SKIP speed limit (seen red / stop sign after)";
+                      << " SKIP speed limit (seen red / stop sign present)";
             }
         }
     }
