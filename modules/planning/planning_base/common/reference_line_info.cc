@@ -122,8 +122,10 @@ bool ReferenceLineInfo::Init(const std::vector<const Obstacle*>& obstacles,
   const auto& map_path = reference_line_.map_path();
   for (const auto& speed_bump : map_path.speed_bump_overlaps()) {
     // -1 and + 1.0 are added to make sure it can be sampled.
+    // 超速修复(2026-08-02): 尾部加长到 end_s+4.0, 防止车在评测限速区(3.0m/s)
+    // 内提前恢复加速导致超速(实测 2.5 目标 + 控制超调后, 提前加速到 3.097 超速扣分)
     reference_line_.AddSpeedLimit(speed_bump.start_s - 1.0,
-                                  speed_bump.end_s + 1.0,
+                                  speed_bump.end_s + 4.0,
                                   FLAGS_speed_bump_speed_limit);
   }
 
