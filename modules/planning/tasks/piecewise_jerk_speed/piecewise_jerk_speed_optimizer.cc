@@ -147,13 +147,6 @@ Status PiecewiseJerkSpeedOptimizer::Process(const PathData& path_data,
   std::vector<double> penalty_dx;
   std::vector<std::pair<double, double>> s_dot_bounds;
   const SpeedLimit& speed_limit = st_graph_data.speed_limit();
-  // '一脚刹死': 停止线前brake_dist(当前速度急刹到0的距离)处dx_ref降0,
-  // 强制QP选择急刹而不是全程缓减速+蠕动(2026-08-02实测多次参数调优无效)
-  const double brake_dist =
-      stop_s < total_length
-          ? init_s[1] * init_s[1] /
-                (2.0 * std::abs(veh_param.max_deceleration()))
-          : 0.0;
   for (int i = 0; i < num_of_knots; ++i) {
     double curr_t = i * delta_t;
     // get path_s
@@ -197,10 +190,18 @@ Status PiecewiseJerkSpeedOptimizer::Process(const PathData& path_data,
     // dx_ref。dx_ref 保持巡航速度(GetCruiseSpeed)，限速区减速完全由硬约束驱动
     // ——消除机制专项Q1确认的"提前减速"软目标牵引(dx_ref被限速回推拉低→QP无
     // 动力回冲→提前减速)。安全性不变: s_dot_bounds 硬约束(v_upper)仍在。
-    // '一脚刹死': 接近停止线(剩余距离<brake_dist)时目标速度降0,
-    // 避免QP选择全程缓减速, 强制以max_dec(-6)急刹到停止点
-    if (stop_s < total_length && x_ref[i] > stop_s - brake_dist) {
-      dx_ref[i] = 0.0;
+    // P1-E(2026-08-03): 连续刹车包络替代阶跃'一脚刹死'。
+    // dx_ref=min(巡航, √(2·max_dec·max(0, stop_s-x_ref[i]))) —— s远离停止线
+    // 时=巡航, 进入包络(距离<巡航²/(2·6)=21.3m@16m/s)后连续下降 → QP 自然
+    // "巡航到包络交点→以max_dec急刹到停止线"。无阶跃、对init_v不敏感、帧间
+    // 稳定, 消除: 提前减速(原用DP参考时间轴触发窗口错位) + 龟速蠕动(原brake_dist
+    // 随init_v逐帧缩水正反馈) + 终点速度跳变(dx_ref阶跃置0)。
+    if (stop_s < total_length) {
+      const double dist_to_stop = std::max(0.0, stop_s - x_ref[i]);
+      const double brake_envelope =
+          std::sqrt(2.0 * std::abs(veh_param.max_deceleration()) *
+                    dist_to_stop);
+      dx_ref[i] = std::fmin(dx_ref[i], brake_envelope);
     }
     s_dot_bounds.emplace_back(v_lower_bound, std::fmax(v_upper_bound, 0.0));
     print_debug.AddPoint("st_reference_line", curr_t, x_ref[i]);
