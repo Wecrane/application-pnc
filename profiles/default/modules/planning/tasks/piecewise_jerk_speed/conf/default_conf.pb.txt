@@ -1,0 +1,14 @@
+# 提速(2026-08-02): 修复 piecewise_jerk 提前平缓减速问题
+# 根因: 7s规划窗口内看到限速区(s_dot_bounds在窗口末端降), QP为最小化acc²+jerk²
+#       选择从t=0全程平缓减速(实测普通路1提前100m/7s减速, 理论只需8.7m)
+# 修复: ref_v_weight 10->40 (强烈激励跟随dx_ref, 限速前保持高速),
+#       jerk_weight 3->1 (允许更陡减速, 减少平缓减速偏好)
+# 安全性: s_dot_bounds是硬约束, 车仍会在限速区/停车点前按max_dec=-6物理减速
+#        (16.667->4.5需21m, ->0需23m), 不会过冲
+# ⚠️风险: 速度曲线更激进, 需本地验证接近STOP/人行道/信号灯时停车正常
+acc_weight: 1.0
+jerk_weight: 1.0
+kappa_penalty_weight: 200.0
+ref_s_weight: 1.0
+ref_v_weight: 40.0
+follow_distance_buffer: 0.1
