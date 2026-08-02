@@ -42,237 +42,252 @@ using apollo::common::Status;
 using apollo::common::TrajectoryPoint;
 
 bool PiecewiseJerkSpeedOptimizer::Init(
-    const std::string& config_dir, const std::string& name,
-    const std::shared_ptr<DependencyInjector>& injector) {
-  if (!SpeedOptimizer::Init(config_dir, name, injector)) {
-    return false;
-  }
-  // Load the config_ this task.
-  return SpeedOptimizer::LoadConfig<PiecewiseJerkSpeedOptimizerConfig>(
-      &config_);
+        const std::string& config_dir,
+        const std::string& name,
+        const std::shared_ptr<DependencyInjector>& injector) {
+    if (!SpeedOptimizer::Init(config_dir, name, injector)) {
+        return false;
+    }
+    // Load the config_ this task.
+    return SpeedOptimizer::LoadConfig<PiecewiseJerkSpeedOptimizerConfig>(&config_);
 }
 
-Status PiecewiseJerkSpeedOptimizer::Process(const PathData& path_data,
-                                            const TrajectoryPoint& init_point,
-                                            SpeedData* const speed_data) {
-  if (reference_line_info_->ReachedDestination()) {
+Status PiecewiseJerkSpeedOptimizer::Process(
+        const PathData& path_data,
+        const TrajectoryPoint& init_point,
+        SpeedData* const speed_data) {
+    if (reference_line_info_->ReachedDestination()) {
+        return Status::OK();
+    }
+
+    ACHECK(speed_data != nullptr);
+    SpeedData reference_speed_data = *speed_data;
+
+    if (path_data.discretized_path().empty()) {
+        const std::string msg = "Empty path data";
+        AERROR << msg;
+        return Status(ErrorCode::PLANNING_ERROR, msg);
+    }
+    StGraphData& st_graph_data = *reference_line_info_->mutable_st_graph_data();
+    PrintCurves print_debug;
+    const auto& veh_param = common::VehicleConfigHelper::GetConfig().vehicle_param();
+
+    std::array<double, 3> init_s = {0.0, st_graph_data.init_point().v(), st_graph_data.init_point().a()};
+    const auto& vehicle_state = frame_->vehicle_state();
+    if (vehicle_state.gear() == canbus::Chassis::GEAR_REVERSE) {
+        init_s[1] = std::max(-init_s[1], 0.0);
+        init_s[2] = -init_s[2];
+        AINFO << "transfer reverse speed" << init_s[0] << "," << init_s[1] << "," << init_s[2];
+    }
+    double delta_t = 0.1;
+    double total_length = st_graph_data.path_length();
+    double total_time = st_graph_data.total_time_by_conf();
+    int num_of_knots = static_cast<int>(total_time / delta_t) + 1;
+    print_debug.AddPoint("optimize_st_curve", 0, init_s[0]);
+    print_debug.AddPoint("optimize_vt_curve", 0, init_s[1]);
+    print_debug.AddPoint("optimize_at_curve", 0, init_s[2]);
+    // Update STBoundary
+    const double kEpsilon = 0.01;
+    std::vector<std::pair<double, double>> s_bounds;
+    // 停止线位置(STOP/YIELD边界, s_bounds上界), 用于dx_ref'一脚刹死'处理
+    double stop_s = std::numeric_limits<double>::max();
+    for (int i = 0; i < num_of_knots; ++i) {
+        double curr_t = i * delta_t;
+        double s_lower_bound = 0.0;
+        double s_upper_bound = total_length;
+        for (const STBoundary* boundary : st_graph_data.st_boundaries()) {
+            double s_lower = 0.0;
+            double s_upper = 0.0;
+            if (!boundary->GetUnblockSRange(curr_t, &s_upper, &s_lower)) {
+                continue;
+            }
+            switch (boundary->boundary_type()) {
+            case STBoundary::BoundaryType::STOP:
+            case STBoundary::BoundaryType::YIELD:
+                s_upper_bound = std::fmin(s_upper_bound, s_upper);
+                stop_s = std::min(stop_s, s_upper);  // 记录停止线位置
+                break;
+            case STBoundary::BoundaryType::FOLLOW:
+                // TODO(Hongyi): unify follow buffer on decision side
+                s_upper_bound = std::fmin(s_upper_bound, s_upper);
+                break;
+            case STBoundary::BoundaryType::OVERTAKE:
+                s_lower_bound = std::fmax(s_lower_bound, s_lower);
+                break;
+            default:
+                break;
+            }
+        }
+        s_upper_bound = std::fmax(s_upper_bound, s_lower_bound + kEpsilon);
+        print_debug.AddPoint("st_bounds_lower", curr_t, s_lower_bound);
+        print_debug.AddPoint("st_bounds_upper", curr_t, s_upper_bound);
+        if (s_lower_bound > s_upper_bound) {
+            const std::string msg = "s_lower_bound larger than s_upper_bound on STGraph";
+            AERROR << msg;
+            speed_data->clear();
+            print_debug.PrintToLog();
+            return Status(ErrorCode::PLANNING_ERROR, msg);
+        }
+
+        s_bounds.emplace_back(s_lower_bound, s_upper_bound);
+    }
+
+    // Update SpeedBoundary and ref_s
+    std::vector<double> x_ref(num_of_knots, total_length);
+    std::vector<double> dx_ref(num_of_knots, reference_line_info_->GetCruiseSpeed());
+    std::vector<double> dx_ref_weight(num_of_knots, config_.ref_v_weight());
+    std::vector<double> penalty_dx;
+    std::vector<std::pair<double, double>> s_dot_bounds;
+    const SpeedLimit& speed_limit = st_graph_data.speed_limit();
+    // '一脚刹死': 停止线前brake_dist(当前速度急刹到0的距离)处dx_ref降0,
+    // 强制QP选择急刹而不是全程缓减速+蠕动(2026-08-02实测多次参数调优无效)
+    const double brake_dist
+            = stop_s < total_length ? init_s[1] * init_s[1] / (2.0 * std::abs(veh_param.max_deceleration())) : 0.0;
+    // '提前减速(限速区)': 前方存在更低限速(减速带/路口限速)时, 提前用可达速度
+    // 曲线约束v_max并引导dx_ref, 使QP提前平滑减速。否则限速窗(v_max硬约束在
+    // 限速区处突变, 宽仅0.3~2s)内车刹不住(如5.25→2.5需1.09s>窗0.8s) → QP
+    // primal infeasible → fallback丢弃全部限速 → 车高速冲过限速区
+    // (2026-08-02云端002评测: 6/8场景SpeedLimit失败, 减速带3m/s区实测4.4~8m/s)
+    // 参数: a_eff=1.5(保守等效减速, 曲线下降率<车减速能力, 恒可行),
+    // lookahead>=92m 保证车以16.667进入范围时 v_approach(92)=16.8>init_v
+    // (init knot 不会因 v_max<init_v 而不可行)
+    const double kLimitApproachDecel = 1.5;  // 等效减速度(m/s^2)
+    const double kLimitLookahead = 92.0;     // 限速区前瞻距离(m)
+    for (int i = 0; i < num_of_knots; ++i) {
+        double curr_t = i * delta_t;
+        // get path_s
+        SpeedPoint sp;
+        reference_speed_data.EvaluateByTime(curr_t, &sp);
+        const double path_s = sp.s();
+        x_ref[i] = path_s;
+        // get curvature
+        PathPoint path_point = path_data.GetPathPointWithPathS(path_s);
+        penalty_dx.push_back(std::fabs(path_point.kappa()) * config_.kappa_penalty_weight());
+        // get v_upper_bound
+        const double v_lower_bound = 0.0;
+        double v_upper_bound = FLAGS_planning_upper_speed_limit;
+        v_upper_bound = std::fmin(speed_limit.GetSpeedLimitByS(path_s), v_upper_bound);
+        // '提前减速(限速区)': 前瞻[path_s, path_s+kLimitLookahead]内的最低限速
+        // v_lookahead_min(位置s_lookahead_min), 用可达速度曲线提前约束:
+        //   v_approach = sqrt(v_low^2 + 2*a_eff*(s_low-path_s))
+        // 车从远处起v_max/dx_ref就沿此曲线平滑下降, 到限速区时已≤限速值,
+        // 不再出现"限速窗突变处刹不住→QP infeasible→fallback→冲过"的问题
+        double v_lookahead_min = FLAGS_planning_upper_speed_limit;
+        double s_lookahead_min = -1.0;
+        for (double s_look = path_s; s_look <= path_s + kLimitLookahead;
+             s_look += 0.5) {
+            const double v_s = speed_limit.GetSpeedLimitByS(s_look);
+            if (v_s < v_lookahead_min) {
+                v_lookahead_min = v_s;
+                s_lookahead_min = s_look;
+            }
+        }
+        if (s_lookahead_min > path_s && v_lookahead_min < v_upper_bound) {
+            const double v_approach = std::sqrt(
+                    v_lookahead_min * v_lookahead_min
+                    + 2.0 * kLimitApproachDecel * (s_lookahead_min - path_s));
+            v_upper_bound = std::fmin(v_upper_bound, v_approach);
+            dx_ref[i] = std::fmin(dx_ref[i], v_approach);
+        }
+        dx_ref[i] = std::fmin(v_upper_bound, dx_ref[i]);
+        // '一脚刹死': 接近停止线(剩余距离<brake_dist)时目标速度降0,
+        // 避免QP选择全程缓减速, 强制以max_dec(-6)急刹到停止点
+        if (stop_s < total_length && x_ref[i] > stop_s - brake_dist) {
+            dx_ref[i] = 0.0;
+        }
+        s_dot_bounds.emplace_back(v_lower_bound, std::fmax(v_upper_bound, 0.0));
+        print_debug.AddPoint("st_reference_line", curr_t, x_ref[i]);
+        print_debug.AddPoint("st_penalty_dx", curr_t, penalty_dx.back());
+        print_debug.AddPoint("vt_reference_line", curr_t, dx_ref[i]);
+        print_debug.AddPoint("vt_weighting", curr_t, dx_ref_weight[i]);
+        print_debug.AddPoint("vt_boundary_lower", curr_t, v_lower_bound);
+        print_debug.AddPoint("sv_boundary_lower", path_s, v_lower_bound);
+        print_debug.AddPoint("sk_curve", path_s, path_point.kappa());
+        print_debug.AddPoint("vt_boundary_upper", curr_t, v_upper_bound);
+        print_debug.AddPoint("sv_boundary_upper", path_s, v_upper_bound);
+    }
+    AdjustInitStatus(s_dot_bounds, delta_t, init_s);
+    PiecewiseJerkSpeedProblem piecewise_jerk_problem(num_of_knots, delta_t, init_s);
+    piecewise_jerk_problem.set_weight_ddx(config_.acc_weight());
+    piecewise_jerk_problem.set_weight_dddx(config_.jerk_weight());
+    piecewise_jerk_problem.set_scale_factor({1.0, 10.0, 100.0});
+    piecewise_jerk_problem.set_x_bounds(0.0, total_length);
+    // 提速(2026-08-02): 加速上限用 gflag(默认2.7=0.9*评测3.0), 减速保持 vehicle_param(-6)
+    piecewise_jerk_problem.set_ddx_bounds(veh_param.max_deceleration(), FLAGS_planning_max_acceleration);
+    piecewise_jerk_problem.set_dddx_bound(FLAGS_longitudinal_jerk_lower_bound, FLAGS_longitudinal_jerk_upper_bound);
+    piecewise_jerk_problem.set_x_bounds(std::move(s_bounds));
+    piecewise_jerk_problem.set_dx_ref(dx_ref_weight, dx_ref);
+    piecewise_jerk_problem.set_x_ref(config_.ref_s_weight(), std::move(x_ref));
+    piecewise_jerk_problem.set_penalty_dx(penalty_dx);
+    piecewise_jerk_problem.set_dx_bounds(std::move(s_dot_bounds));
+
+    // Solve the problem
+    if (!piecewise_jerk_problem.Optimize()) {
+        const std::string msg = "Piecewise jerk speed optimizer failed!";
+        AERROR << msg << ".try to fallback.";
+        piecewise_jerk_problem.set_dx_bounds(
+                0.0, std::fmax(FLAGS_planning_upper_speed_limit, st_graph_data.init_point().v()));
+        if (!FLAGS_speed_optimize_fail_relax_velocity_constraint || !piecewise_jerk_problem.Optimize()) {
+            speed_data->clear();
+            print_debug.AddPoint("optimize_st_curve", 0, init_s[0]);
+            print_debug.AddPoint("optimize_vt_curve", 0, init_s[1]);
+            print_debug.AddPoint("optimize_at_curve", 0, init_s[2]);
+            AINFO << "jerk_bound: " << FLAGS_longitudinal_jerk_lower_bound << ","
+                  << FLAGS_longitudinal_jerk_upper_bound;
+            AINFO << "acc bound: " << veh_param.max_deceleration() << "," << veh_param.max_acceleration();
+            print_debug.PrintToLog();
+            return Status(ErrorCode::PLANNING_ERROR, msg);
+        }
+    }
+
+    // Extract output
+    const std::vector<double>& s = piecewise_jerk_problem.opt_x();
+    const std::vector<double>& ds = piecewise_jerk_problem.opt_dx();
+    const std::vector<double>& dds = piecewise_jerk_problem.opt_ddx();
+    for (int i = 0; i < num_of_knots; ++i) {
+        ADEBUG << "For t[" << i * delta_t << "], s = " << s[i] << ", v = " << ds[i] << ", a = " << dds[i];
+        print_debug.AddPoint("optimize_st_curve", i * delta_t, s[i]);
+        print_debug.AddPoint("optimize_vt_curve", i * delta_t, ds[i]);
+        print_debug.AddPoint("optimize_at_curve", i * delta_t, dds[i]);
+    }
+    speed_data->clear();
+    speed_data->AppendSpeedPoint(s[0], 0.0, ds[0], dds[0], 0.0);
+    for (int i = 1; i < num_of_knots; ++i) {
+        // Avoid the very last points when already stopped
+        if (ds[i] <= 0.0) {
+            break;
+        }
+        speed_data->AppendSpeedPoint(s[i], delta_t * i, ds[i], dds[i], (dds[i] - dds[i - 1]) / delta_t);
+    }
+    SpeedProfileGenerator::FillEnoughSpeedPoints(speed_data);
+    RecordDebugInfo(*speed_data, st_graph_data.mutable_st_graph_debug());
+    print_debug.PrintToLog();
     return Status::OK();
-  }
-
-  ACHECK(speed_data != nullptr);
-  SpeedData reference_speed_data = *speed_data;
-
-  if (path_data.discretized_path().empty()) {
-    const std::string msg = "Empty path data";
-    AERROR << msg;
-    return Status(ErrorCode::PLANNING_ERROR, msg);
-  }
-  StGraphData& st_graph_data = *reference_line_info_->mutable_st_graph_data();
-  PrintCurves print_debug;
-  const auto& veh_param =
-      common::VehicleConfigHelper::GetConfig().vehicle_param();
-
-  std::array<double, 3> init_s = {0.0, st_graph_data.init_point().v(),
-                                  st_graph_data.init_point().a()};
-  const auto& vehicle_state = frame_->vehicle_state();
-  if (vehicle_state.gear() == canbus::Chassis::GEAR_REVERSE) {
-    init_s[1] = std::max(-init_s[1], 0.0);
-    init_s[2] = -init_s[2];
-    AINFO << "transfer reverse speed" << init_s[0] << "," << init_s[1] << ","
-          << init_s[2];
-  }
-  double delta_t = 0.1;
-  double total_length = st_graph_data.path_length();
-  double total_time = st_graph_data.total_time_by_conf();
-  int num_of_knots = static_cast<int>(total_time / delta_t) + 1;
-  print_debug.AddPoint("optimize_st_curve", 0, init_s[0]);
-  print_debug.AddPoint("optimize_vt_curve", 0, init_s[1]);
-  print_debug.AddPoint("optimize_at_curve", 0, init_s[2]);
-  // Update STBoundary
-  const double kEpsilon = 0.01;
-  std::vector<std::pair<double, double>> s_bounds;
-  // 停止线位置(STOP/YIELD边界, s_bounds上界), 用于dx_ref'一脚刹死'处理
-  double stop_s = std::numeric_limits<double>::max();
-  for (int i = 0; i < num_of_knots; ++i) {
-    double curr_t = i * delta_t;
-    double s_lower_bound = 0.0;
-    double s_upper_bound = total_length;
-    for (const STBoundary* boundary : st_graph_data.st_boundaries()) {
-      double s_lower = 0.0;
-      double s_upper = 0.0;
-      if (!boundary->GetUnblockSRange(curr_t, &s_upper, &s_lower)) {
-        continue;
-      }
-      switch (boundary->boundary_type()) {
-        case STBoundary::BoundaryType::STOP:
-        case STBoundary::BoundaryType::YIELD:
-          s_upper_bound = std::fmin(s_upper_bound, s_upper);
-          stop_s = std::min(stop_s, s_upper);  // 记录停止线位置
-          break;
-        case STBoundary::BoundaryType::FOLLOW:
-          // TODO(Hongyi): unify follow buffer on decision side
-          s_upper_bound = std::fmin(s_upper_bound, s_upper);
-          break;
-        case STBoundary::BoundaryType::OVERTAKE:
-          s_lower_bound = std::fmax(s_lower_bound, s_lower);
-          break;
-        default:
-          break;
-      }
-    }
-    s_upper_bound = std::fmax(s_upper_bound, s_lower_bound + kEpsilon);
-    print_debug.AddPoint("st_bounds_lower", curr_t, s_lower_bound);
-    print_debug.AddPoint("st_bounds_upper", curr_t, s_upper_bound);
-    if (s_lower_bound > s_upper_bound) {
-      const std::string msg =
-          "s_lower_bound larger than s_upper_bound on STGraph";
-      AERROR << msg;
-      speed_data->clear();
-      print_debug.PrintToLog();
-      return Status(ErrorCode::PLANNING_ERROR, msg);
-    }
-
-    s_bounds.emplace_back(s_lower_bound, s_upper_bound);
-  }
-
-  // Update SpeedBoundary and ref_s
-  std::vector<double> x_ref(num_of_knots, total_length);
-  std::vector<double> dx_ref(num_of_knots,
-                             reference_line_info_->GetCruiseSpeed());
-  std::vector<double> dx_ref_weight(num_of_knots, config_.ref_v_weight());
-  std::vector<double> penalty_dx;
-  std::vector<std::pair<double, double>> s_dot_bounds;
-  const SpeedLimit& speed_limit = st_graph_data.speed_limit();
-  // '一脚刹死': 停止线前brake_dist(当前速度急刹到0的距离)处dx_ref降0,
-  // 强制QP选择急刹而不是全程缓减速+蠕动(2026-08-02实测多次参数调优无效)
-  const double brake_dist =
-      stop_s < total_length
-          ? init_s[1] * init_s[1] /
-                (2.0 * std::abs(veh_param.max_deceleration()))
-          : 0.0;
-  for (int i = 0; i < num_of_knots; ++i) {
-    double curr_t = i * delta_t;
-    // get path_s
-    SpeedPoint sp;
-    reference_speed_data.EvaluateByTime(curr_t, &sp);
-    const double path_s = sp.s();
-    x_ref[i] = path_s;
-    // get curvature
-    PathPoint path_point = path_data.GetPathPointWithPathS(path_s);
-    penalty_dx.push_back(std::fabs(path_point.kappa()) *
-                         config_.kappa_penalty_weight());
-    // get v_upper_bound
-    const double v_lower_bound = 0.0;
-    double v_upper_bound = FLAGS_planning_upper_speed_limit;
-    v_upper_bound =
-        std::fmin(speed_limit.GetSpeedLimitByS(path_s), v_upper_bound);
-    dx_ref[i] = std::fmin(v_upper_bound, dx_ref[i]);
-    // '一脚刹死': 接近停止线(剩余距离<brake_dist)时目标速度降0,
-    // 避免QP选择全程缓减速, 强制以max_dec(-6)急刹到停止点
-    if (stop_s < total_length && x_ref[i] > stop_s - brake_dist) {
-      dx_ref[i] = 0.0;
-    }
-    s_dot_bounds.emplace_back(v_lower_bound, std::fmax(v_upper_bound, 0.0));
-    print_debug.AddPoint("st_reference_line", curr_t, x_ref[i]);
-    print_debug.AddPoint("st_penalty_dx", curr_t, penalty_dx.back());
-    print_debug.AddPoint("vt_reference_line", curr_t, dx_ref[i]);
-    print_debug.AddPoint("vt_weighting", curr_t, dx_ref_weight[i]);
-    print_debug.AddPoint("vt_boundary_lower", curr_t, v_lower_bound);
-    print_debug.AddPoint("sv_boundary_lower", path_s, v_lower_bound);
-    print_debug.AddPoint("sk_curve", path_s, path_point.kappa());
-    print_debug.AddPoint("vt_boundary_upper", curr_t, v_upper_bound);
-    print_debug.AddPoint("sv_boundary_upper", path_s, v_upper_bound);
-  }
-  AdjustInitStatus(s_dot_bounds, delta_t, init_s);
-  PiecewiseJerkSpeedProblem piecewise_jerk_problem(num_of_knots, delta_t,
-                                                   init_s);
-  piecewise_jerk_problem.set_weight_ddx(config_.acc_weight());
-  piecewise_jerk_problem.set_weight_dddx(config_.jerk_weight());
-  piecewise_jerk_problem.set_scale_factor({1.0, 10.0, 100.0});
-  piecewise_jerk_problem.set_x_bounds(0.0, total_length);
-  // 提速(2026-08-02): 加速上限用 gflag(默认2.7=0.9*评测3.0), 减速保持 vehicle_param(-6)
-  piecewise_jerk_problem.set_ddx_bounds(veh_param.max_deceleration(),
-                                        FLAGS_planning_max_acceleration);
-  piecewise_jerk_problem.set_dddx_bound(FLAGS_longitudinal_jerk_lower_bound,
-                                        FLAGS_longitudinal_jerk_upper_bound);
-  piecewise_jerk_problem.set_x_bounds(std::move(s_bounds));
-  piecewise_jerk_problem.set_dx_ref(dx_ref_weight, dx_ref);
-  piecewise_jerk_problem.set_x_ref(config_.ref_s_weight(), std::move(x_ref));
-  piecewise_jerk_problem.set_penalty_dx(penalty_dx);
-  piecewise_jerk_problem.set_dx_bounds(std::move(s_dot_bounds));
-
-  // Solve the problem
-  if (!piecewise_jerk_problem.Optimize()) {
-    const std::string msg = "Piecewise jerk speed optimizer failed!";
-    AERROR << msg << ".try to fallback.";
-    piecewise_jerk_problem.set_dx_bounds(
-        0.0, std::fmax(FLAGS_planning_upper_speed_limit,
-                       st_graph_data.init_point().v()));
-    if (!FLAGS_speed_optimize_fail_relax_velocity_constraint ||
-        !piecewise_jerk_problem.Optimize()) {
-      speed_data->clear();
-      print_debug.AddPoint("optimize_st_curve", 0, init_s[0]);
-      print_debug.AddPoint("optimize_vt_curve", 0, init_s[1]);
-      print_debug.AddPoint("optimize_at_curve", 0, init_s[2]);
-      AINFO << "jerk_bound: " << FLAGS_longitudinal_jerk_lower_bound << ","
-            << FLAGS_longitudinal_jerk_upper_bound;
-      AINFO << "acc bound: " << veh_param.max_deceleration() << ","
-            << veh_param.max_acceleration();
-      print_debug.PrintToLog();
-      return Status(ErrorCode::PLANNING_ERROR, msg);
-    }
-  }
-
-  // Extract output
-  const std::vector<double>& s = piecewise_jerk_problem.opt_x();
-  const std::vector<double>& ds = piecewise_jerk_problem.opt_dx();
-  const std::vector<double>& dds = piecewise_jerk_problem.opt_ddx();
-  for (int i = 0; i < num_of_knots; ++i) {
-    ADEBUG << "For t[" << i * delta_t << "], s = " << s[i] << ", v = " << ds[i]
-           << ", a = " << dds[i];
-    print_debug.AddPoint("optimize_st_curve", i * delta_t, s[i]);
-    print_debug.AddPoint("optimize_vt_curve", i * delta_t, ds[i]);
-    print_debug.AddPoint("optimize_at_curve", i * delta_t, dds[i]);
-  }
-  speed_data->clear();
-  speed_data->AppendSpeedPoint(s[0], 0.0, ds[0], dds[0], 0.0);
-  for (int i = 1; i < num_of_knots; ++i) {
-    // Avoid the very last points when already stopped
-    if (ds[i] <= 0.0) {
-      break;
-    }
-    speed_data->AppendSpeedPoint(s[i], delta_t * i, ds[i], dds[i],
-                                 (dds[i] - dds[i - 1]) / delta_t);
-  }
-  SpeedProfileGenerator::FillEnoughSpeedPoints(speed_data);
-  RecordDebugInfo(*speed_data, st_graph_data.mutable_st_graph_debug());
-  print_debug.PrintToLog();
-  return Status::OK();
 }
 void PiecewiseJerkSpeedOptimizer::AdjustInitStatus(
-    const std::vector<std::pair<double, double>> s_dot_bound, double delta_t,
-    std::array<double, 3>& init_s) {
-  double v_min = init_s[1];
-  double v_max = init_s[1];
-  double a_min = init_s[2];
-  double a_max = init_s[2];
-  double last_a_min = 0;
-  double last_a_max = 0;
-  for (size_t i = 1; i < s_dot_bound.size(); i++) {
-    last_a_min = a_min;
-    last_a_max = a_max;
-    a_min = a_min + delta_t * FLAGS_longitudinal_jerk_upper_bound;
-    a_max = a_max + delta_t * FLAGS_longitudinal_jerk_lower_bound;
-    v_min = v_min + 0.5 * delta_t * (a_min + last_a_min);
-    v_max = v_max + 0.5 * delta_t * (a_max + last_a_max);
-    if (v_min < s_dot_bound[i].first || v_max > s_dot_bound[i].second) {
-      AWARN << "init state not appropriate in" << i << "," << v_min << ","
-            << v_max << "adjust acc to 0 in init state " << init_s[0] << ","
-            << init_s[1] << "," << init_s[2];
-      init_s[2] = 0;
-      return;
+        const std::vector<std::pair<double, double>> s_dot_bound,
+        double delta_t,
+        std::array<double, 3>& init_s) {
+    double v_min = init_s[1];
+    double v_max = init_s[1];
+    double a_min = init_s[2];
+    double a_max = init_s[2];
+    double last_a_min = 0;
+    double last_a_max = 0;
+    for (size_t i = 1; i < s_dot_bound.size(); i++) {
+        last_a_min = a_min;
+        last_a_max = a_max;
+        a_min = a_min + delta_t * FLAGS_longitudinal_jerk_upper_bound;
+        a_max = a_max + delta_t * FLAGS_longitudinal_jerk_lower_bound;
+        v_min = v_min + 0.5 * delta_t * (a_min + last_a_min);
+        v_max = v_max + 0.5 * delta_t * (a_max + last_a_max);
+        if (v_min < s_dot_bound[i].first || v_max > s_dot_bound[i].second) {
+            AWARN << "init state not appropriate in" << i << "," << v_min << "," << v_max
+                  << "adjust acc to 0 in init state " << init_s[0] << "," << init_s[1] << "," << init_s[2];
+            init_s[2] = 0;
+            return;
+        }
     }
-  }
 }
 }  // namespace planning
 }  // namespace apollo
