@@ -94,7 +94,35 @@ Status PiecewiseJerkSpeedOptimizer::Process(
     for (int i = 0; i < num_of_knots; ++i) {
         double curr_t = i * delta_t;
         double s_lower_bound = 0.0;
+        // 参考线末端最晚刹车(2026-08-03修复刹-油-刹根因):
+        // 原 s_upper_bound=total_length 硬约束 → QP 全局优化知道 10s 窗口内 s≤127,
+        // 车距末端73m/距斑马线80m 时 v[0] 就提前缓降(030359实测 t=10.4s v 11.9→2.9)。
+        // 末端不是停车点(参考线每帧从车位置重建, 车恒在 s=0 距末端 total_length),
+        // 应巡航到接近末端再减速。用最晚刹车曲线替代硬约束:
+        //   t<t_brake_end: 自由巡航(不压, v[0]=巡航速度, 消除提前缓降)
+        //   t_brake_end≤t≤T_end: s_upper=total_length-0.5|dec|(T_end-t)² 平滑降
+        //   t>T_end: s_upper=total_length
+        // 正常场景(参考线长>窗口巡航距离+刹车距离) t_brake_end>窗口 → 行为不变。
         double s_upper_bound = total_length;
+        {
+            const double v_ref = FLAGS_planning_upper_speed_limit;
+            const double dec_abs = std::abs(veh_param.max_deceleration());
+            const double t_brake_end =
+                    (total_length - init_s[0] - v_ref * v_ref / (2.0 * dec_abs)) / v_ref;
+            if (t_brake_end > 0.0) {
+                const double T_end = t_brake_end + v_ref / dec_abs;
+                if (curr_t > t_brake_end && curr_t <= T_end) {
+                    const double s_late =
+                            total_length - 0.5 * dec_abs * (T_end - curr_t) * (T_end - curr_t);
+                    s_upper_bound = std::fmin(s_upper_bound, std::max(s_late, 0.0));
+                } else if (curr_t > T_end) {
+                    s_upper_bound = std::fmin(s_upper_bound, total_length);
+                }
+            } else {
+                // 车已在末端刹车距离内: 末端硬约束(立即减速)
+                s_upper_bound = std::fmin(s_upper_bound, total_length);
+            }
+        }
         for (const STBoundary* boundary : st_graph_data.st_boundaries()) {
             double s_lower = 0.0;
             double s_upper = 0.0;
@@ -114,8 +142,7 @@ Status PiecewiseJerkSpeedOptimizer::Process(
                 {
                     const double v_ref = FLAGS_planning_upper_speed_limit;
                     const double dec_abs = std::abs(veh_param.max_deceleration());
-                    const double t_brake =
-                            (s_upper - init_s[0] - v_ref * v_ref / (2.0 * dec_abs)) / v_ref;
+                    const double t_brake = (s_upper - init_s[0] - v_ref * v_ref / (2.0 * dec_abs)) / v_ref;
                     if (t_brake <= 0.0) {
                         // 车已在刹车距离内(stop_s<v_ref²/2|dec|): 恒定stop_s约束
                         s_upper_bound = std::fmin(s_upper_bound, s_upper);
@@ -125,10 +152,8 @@ Status PiecewiseJerkSpeedOptimizer::Process(
                             // 自由巡航(保持 total_length, 车受dx_bounds速度约束)
                         } else if (curr_t <= T_) {
                             // 最晚刹车曲线(平滑): s_upper = stop_s - 0.5|dec|(T-t)²
-                            const double s_late =
-                                    s_upper - 0.5 * dec_abs * (T_ - curr_t) * (T_ - curr_t);
-                            s_upper_bound =
-                                    std::fmin(s_upper_bound, std::max(s_late, 0.0));
+                            const double s_late = s_upper - 0.5 * dec_abs * (T_ - curr_t) * (T_ - curr_t);
+                            s_upper_bound = std::fmin(s_upper_bound, std::max(s_late, 0.0));
                         } else {
                             s_upper_bound = std::fmin(s_upper_bound, s_upper);
                         }
@@ -261,9 +286,30 @@ Status PiecewiseJerkSpeedOptimizer::Process(
         const int i80 = std::min(80, n_sb - 1);
         const int n_dx = static_cast<int>(dx_ref.size());
         const int j40 = std::min(40, n_dx - 1);
+        // 限速诊断(2026-08-03): 030359实测车在斑马线限速区(4.5)内 v_up=16(限速
+        // 失效, 车8m/s过斑马线)。打印 QP 收到的 speed_limit 在车位置(s≈0)/前
+        // 方60m 的限速值和限速点数量, 确认是'限速没进QP'还是'查询错位'。
+        // 带保护(限速点<2时 GetSpeedLimitByS 会 CHECK 崩, 手动 lower_bound)。
+        const auto& sl_pts = speed_limit.speed_limit_points();
+        double sl0 = FLAGS_planning_upper_speed_limit;
+        double sl60 = FLAGS_planning_upper_speed_limit;
+        if (sl_pts.size() >= 2U) {
+            auto get_sl = [&sl_pts](double s) {
+                auto it = std::lower_bound(
+                        sl_pts.begin(), sl_pts.end(), s,
+                        [](const std::pair<double, double>& p, double v) { return p.first < v; });
+                if (it == sl_pts.end()) {
+                    return (it - 1)->second;
+                }
+                return it->second;
+            };
+            sl0 = get_sl(0.0);
+            sl60 = get_sl(60.0);
+        }
         AINFO << "[pjs2] init_v=" << init_s[1] << " stop_s=" << stop_s << " s_up[0/40/80]=" << s_bounds[0].second << "/"
               << s_bounds[i40].second << "/" << s_bounds[i80].second << " dx_ref[0/40]=" << dx_ref[0] << "/"
-              << dx_ref[j40] << " v_up[0]=" << s_dot_bounds[0].second << " ref_len=" << total_length;
+              << dx_ref[j40] << " v_up[0]=" << s_dot_bounds[0].second << " ref_len=" << total_length
+              << " sl[0/60]=" << sl0 << "/" << sl60 << " npts=" << sl_pts.size();
     }
     piecewise_jerk_problem.set_x_bounds(std::move(s_bounds));
     piecewise_jerk_problem.set_dx_ref(dx_ref_weight, dx_ref);
@@ -314,9 +360,8 @@ Status PiecewiseJerkSpeedOptimizer::Process(
         const int k1 = std::min(1, n_ds - 1);
         const int k10 = std::min(10, n_ds - 1);
         const int k30 = std::min(30, n_ds - 1);
-        AINFO << "[pjs-out] v[0/1/10/30]=" << ds[0] << "/" << ds[k1] << "/"
-              << ds[k10] << "/" << ds[k30] << " a[0]=" << dds[0]
-              << " s[0]=" << s[0];
+        AINFO << "[pjs-out] v[0/1/10/30]=" << ds[0] << "/" << ds[k1] << "/" << ds[k10] << "/" << ds[k30]
+              << " a[0]=" << dds[0] << " s[0]=" << s[0];
     }
     for (int i = 0; i < num_of_knots; ++i) {
         ADEBUG << "For t[" << i * delta_t << "], s = " << s[i] << ", v = " << ds[i] << ", a = " << dds[i];
