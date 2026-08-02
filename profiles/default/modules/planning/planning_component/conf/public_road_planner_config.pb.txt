@@ -1,13 +1,10 @@
 # 提速2026-08-02: 关闭8赛题无用的scenario包(地图无元素/赛题用不到)
-# 移除: EMERGENCY_PULL_OVER/EMERGENCY_STOP/VALET_PARKING/BARE_INTERSECTION_UNPROTECTED/YIELD_SIGN
-# 保留: STOP_SIGN/TRAFFIC_LIGHT(3种)/PULL_OVER/PARK_AND_GO/LANE_FOLLOW兜底
+# 移除: EMERGENCY_PULL_OVER/EMERGENCY_STOP/VALET_PARKING/BARE_INTERSECTION_UNPROTECTED/
+#       YIELD_SIGN/TRAFFIC_LIGHT_UNPROTECTED_LEFT_TURN/PULL_OVER
+# 保留: STOP_SIGN/TRAFFIC_LIGHT(直行+右转)/PARK_AND_GO/LANE_FOLLOW兜底
 scenario {
     name: "STOP_SIGN_UNPROTECTED"
     type: "StopSignUnprotectedScenario"
-}
-scenario {
-    name: "TRAFFIC_LIGHT_UNPROTECTED_LEFT_TURN"
-    type: "TrafficLightUnprotectedLeftTurnScenario"
 }
 scenario {
     name: "TRAFFIC_LIGHT_UNPROTECTED_RIGHT_TURN"
@@ -16,10 +13,6 @@ scenario {
 scenario {
     name: "TRAFFIC_LIGHT_PROTECTED"
     type: "TrafficLightProtectedScenario"
-}
-scenario {
-    name: "PULL_OVER"
-    type: "PullOverScenario"
 }
 scenario {
     name: "PARK_AND_GO"
