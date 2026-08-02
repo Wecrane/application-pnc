@@ -1,22 +1,16 @@
-# 提速激进版V2(2026-08-02): 停车/限速前"一脚刹死"——不缓滑不蠕动
-# V1问题(本地红绿灯实测): 车在停止点前88m(=7s窗口路程)就开始缓减速,
-#   最后15s以<0.3m/s蠕动。根因: piecewise_jerk的x_ref来自DP位置,
-#   DP提前减速→ref_s=3强制跟随→全程缓减速(QP cost偏好acc²/jerk²小)
-# V2激进化:
-#   ref_s_weight 3->0.5: 不强制跟随DP慢位置, s由ref_v(高速)驱动,
-#                        高速接近停止点, 到s_bounds(停止线)前按-6物理急刹
-#   ref_v_weight 100->70: 仍强烈激励高速(16.667), 但不过度放大dx_ref波动
-#                        (减少绿灯起步后一脚油门一脚刹车振荡)
-#   acc_weight 0.3->0.1:  急加减速几乎不惩罚
-#   jerk_weight 0.3->0.1: 允许急刹过渡
-# 安全性: s_bounds(STOP/FOLLOW边界)硬约束 s(t)≤停止线/前车,
-#         s_dot_bounds硬约束 v≤限速, ddx_bounds(max_dec-6)物理刹停距离16m
-# ⚠️风险: 停车/限速前急刹(舒适性差但评测不看), 需本地验证:
-#   - 红绿灯/停止标志前不越线
-#   - 跟车(普通路2)不追尾(靠FOLLOW ST边界约束)
+# 提速激进版V3(2026-08-02): 停车'一脚刹死'V3——ref_s 0.5->0.1
+# V2问题(本地红绿灯153315实测, total_time=4s已生效但蠕动仍在):
+#   车仍缓减速27s, 最后16s<0.4m/s蠕动。
+# 根因: DP的x_ref(参考位置)提前缓减速(DP也偏好缓减速cost), piecewise_jerk
+#       ref_s=0.5跟随x_ref → s被拉慢 → 全程缓减速。
+# V3: ref_s_weight 0.5->0.1 (s几乎不跟随DP慢位置, 由ref_v高速驱动,
+#     s_bounds停止线硬约束前按-6急刹)
+# 配套: DP accel/decel_penalty 1->0.1(源码, DP输出急刹参考x_ref)
+# 安全性: s_bounds(停止线/FOLLOW)硬约束; s_dot_bounds限速硬约束; ddx_bounds(-6)
+# ⚠️风险: s自由度大, 需本地验证巡航稳定/跟车不追尾/无振荡
 acc_weight: 0.1
 jerk_weight: 0.1
 kappa_penalty_weight: 200.0
-ref_s_weight: 0.5
+ref_s_weight: 0.1
 ref_v_weight: 70.0
 follow_distance_buffer: 0.1
