@@ -37,7 +37,24 @@ StageResult StopSignUnprotectedStageIntersectionCruise::Process(
     AERROR << "StopSignUnprotectedStageIntersectionCruise plan error";
   }
 
-  bool stage_done = CheckDone(*frame, injector_->planning_context(), false);
+  // 跳过蠕行修复(2026-08-02): 车必须已过停止标志才判定IntersectionCruise完成。
+  // 否则车还在停止标志前就FinishScenario, ScenarioManager重新触发停止标志场景
+  // → 场景反复切换(STOP→CRUISE→STOP...)。跳过蠕行后车未进路口, 需先过停止标志。
+  bool passed_stop_sign = true;
+  const auto& stop_sign_status =
+      injector_->planning_context()->planning_status().stop_sign();
+  const std::string stop_sign_id =
+      stop_sign_status.current_stop_sign_overlap_id();
+  hdmap::PathOverlap* ss_overlap =
+      frame->reference_line_info().front().GetOverlapOnReferenceLine(
+          stop_sign_id, ReferenceLineInfo::STOP_SIGN);
+  if (ss_overlap != nullptr) {
+    const double adc_back_s =
+        frame->reference_line_info().front().AdcSlBoundary().start_s();
+    passed_stop_sign = adc_back_s >= ss_overlap->end_s;
+  }
+  bool stage_done = passed_stop_sign &&
+                    CheckDone(*frame, injector_->planning_context(), false);
   if (stage_done) {
     return FinishStage();
   }
