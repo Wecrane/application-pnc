@@ -83,16 +83,9 @@ int Destination::MakeDecisions(Frame* frame, ReferenceLineInfo* const reference_
         return 0;
     }
 
-    // 距离判断(赛题五实验): 车距终点 > destination_check_distance 时不创建 stop
-    // 原因: is_near_destination 由 StopForDestination 决定(routing终点在参考线段=全程true),
-    // 导致 destination 40m 外就建 DEST fence -> speed规划长距离缓减速磨蹭15s。
-    // 这里手动按距离限制, 车接近终点才创建 stop, 让车7673走完后能加速、终点前干脆急刹。
-    const double distance_to_dest = dest_sl.s() - adc_sl.end_s();
-    if (distance_to_dest > FLAGS_destination_check_distance) {
-        ADEBUG << "Destination too far (" << distance_to_dest << "m > " << FLAGS_destination_check_distance
-               << "), skip stop";
-        return 0;
-    }
+    // 恢复'无限制'(2026-08-02): 移除6667008'距终点>destination_check_distance
+    // 不创建DEST fence'的距离限制——终点停止墙全程可见(任何距离都显示停止信号)。
+    // 原限制让DEST fence在>25m时消失, 车全程无墙约束, 遇行人/障碍物更晚制动。
 
     const std::string stop_wall_id = FLAGS_destination_obstacle_id;
     const std::vector<std::string> wait_for_obstacle_ids;
