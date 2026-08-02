@@ -26,6 +26,7 @@ DECLARE_bool(enable_force_pull_over_open_space_parking_test);
 
 DECLARE_bool(publish_estop);
 DECLARE_bool(destination_pass_through);
+DECLARE_bool(disable_reference_line_end_stop);
 
 DECLARE_string(traffic_rule_config_filename);
 DECLARE_int32(planning_loop_rate);
