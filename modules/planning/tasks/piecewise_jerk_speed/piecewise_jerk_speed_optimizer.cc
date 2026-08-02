@@ -107,7 +107,11 @@ Status PiecewiseJerkSpeedOptimizer::Process(const PathData& path_data,
         case STBoundary::BoundaryType::STOP:
         case STBoundary::BoundaryType::YIELD:
           s_upper_bound = std::fmin(s_upper_bound, s_upper);
-          stop_s = std::min(stop_s, s_upper);  // 记录停止线位置
+          // 排除蠕行STOP(CREEP_前缀): 蠕行需低速通过路口, 若设dx_ref=0会
+          // 急刹停在蠕行目标前+等动态障碍物(本地实测停车8.4s vs 云端1.8s)
+          if (boundary->id().find("CREEP_") == std::string::npos) {
+            stop_s = std::min(stop_s, s_upper);  // 记录停止线位置
+          }
           break;
         case STBoundary::BoundaryType::FOLLOW:
           // TODO(Hongyi): unify follow buffer on decision side
