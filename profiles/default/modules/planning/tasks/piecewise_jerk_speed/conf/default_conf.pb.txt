@@ -11,6 +11,9 @@
 acc_weight: 0.1
 jerk_weight: 0.1
 kappa_penalty_weight: 200.0
-ref_s_weight: 0.1
+# 提速2026-08-03: ref_s_weight 0.1->0.0 —— 彻底不跟随DP缓位置(x_ref), 由
+# ref_v(dx_ref=巡航→P1-E包络)驱动: 车巡航到最晚刹车点(stop_s-21m)才按-6急刹。
+# s_bounds(停止线/FOLLOW)硬约束兜底; ⚠️风险: 其他赛题(跟车/变道)需验证稳定
+ref_s_weight: 0.0
 ref_v_weight: 70.0
 follow_distance_buffer: 0.1
