@@ -185,13 +185,12 @@ void Crosswalk::MakeDecisions(Frame* const frame, ReferenceLineInfo* const refer
             // 同处)被跳过→本地222245车16.6全速通过Signal_5路口。用
             // GlobalSeenRedLight(共享traffic_light状态)区分赛题3(见红)与赛题8(未红)。
             bool should_limit = true;
-            for (const auto& signal_overlap :
-                 reference_line_info->reference_line().map_path().signal_overlaps()) {
+            for (const auto& signal_overlap : reference_line_info->reference_line().map_path().signal_overlaps()) {
                 if (std::fabs(signal_overlap.start_s - crosswalk_overlap->start_s) < 30.0) {
                     // 附近有信号灯且见过红(赛题3红绿灯) → 绿灯通过路口不限速
                     AINFO << "[crosswalk-limit] near_signal id=" << signal_overlap.object_id
-                          << " sig_start_s=" << signal_overlap.start_s
-                          << " cw=" << crosswalk_id << " cw_start_s=" << crosswalk_overlap->start_s
+                          << " sig_start_s=" << signal_overlap.start_s << " cw=" << crosswalk_id
+                          << " cw_start_s=" << crosswalk_overlap->start_s
                           << " seen_red=" << GlobalSeenRedLight()[signal_overlap.object_id];
                     if (GlobalSeenRedLight()[signal_overlap.object_id]) {
                         should_limit = false;
@@ -210,24 +209,20 @@ void Crosswalk::MakeDecisions(Frame* const frame, ReferenceLineInfo* const refer
             // 3) 位置判断依赖投影 s(不可靠), 所以简化为"同时出现即跳过"。
             // 赛题7(scn8) Crosswalk_62 参考线无停止标志 → 限速仍生效(评测5m/s达标)。
             if (should_limit) {
-                const auto& stop_signs =
-                    reference_line_info->reference_line().map_path().stop_sign_overlaps();
+                const auto& stop_signs = reference_line_info->reference_line().map_path().stop_sign_overlaps();
                 if (!stop_signs.empty()) {
                     should_limit = false;
                     AINFO << "[crosswalk-limit] " << crosswalk_id
-                          << " SKIP speed limit (stop sign present, n=" << stop_signs.size()
-                          << ")";
+                          << " SKIP speed limit (stop sign present, n=" << stop_signs.size() << ")";
                 }
             }
             if (should_limit) {
-                AINFO << "[crosswalk-limit] " << crosswalk_id << " AddSpeedLimit("
-                      << crosswalk_overlap->start_s - 50.0 << "," << crosswalk_overlap->end_s
-                      << ",4.5)";
+                AINFO << "[crosswalk-limit] " << crosswalk_id << " AddSpeedLimit(" << crosswalk_overlap->start_s - 50.0
+                      << "," << crosswalk_overlap->end_s << ",4.5)";
                 reference_line_info->mutable_reference_line()->AddSpeedLimit(
                         crosswalk_overlap->start_s - 50.0, crosswalk_overlap->end_s, 4.5);
             } else {
-                AINFO << "[crosswalk-limit] " << crosswalk_id
-                      << " SKIP speed limit (seen red / stop sign present)";
+                AINFO << "[crosswalk-limit] " << crosswalk_id << " SKIP speed limit (seen red / stop sign present)";
             }
         }
     }
