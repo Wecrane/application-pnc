@@ -18,8 +18,8 @@ default_speed_config {
     low_speed_penalty: 10.0
     reference_speed_penalty: 10.0
     keep_clear_low_speed_penalty: 10.0
-    accel_penalty: 1.0
-    decel_penalty: 1.0
+    accel_penalty: 0.1  # 提速2026-08-02: 1.0->0.1(DP允许急加减速, x_ref不缓减速)
+    decel_penalty: 0.1  # 提速2026-08-02: 1.0->0.1
 
     positive_jerk_coeff: 1.0
     negative_jerk_coeff: 1.0
@@ -50,8 +50,8 @@ lane_change_speed_config {
     low_speed_penalty: 10.0
     reference_speed_penalty: 10.0
     keep_clear_low_speed_penalty: 10.0
-    accel_penalty: 1.0
-    decel_penalty: 1.0
+    accel_penalty: 0.1  # 提速2026-08-02: 1.0->0.1
+    decel_penalty: 0.1  # 提速2026-08-02: 1.0->0.1
 
     positive_jerk_coeff: 1.0
     negative_jerk_coeff: 1.0
