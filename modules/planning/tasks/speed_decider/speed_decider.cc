@@ -342,16 +342,18 @@ Status SpeedDecider::MakeObjectDecision(const SpeedData& speed_profile, PathDeci
                                 / 2.0;
                         const double vehicle_half_width
                                 = common::VehicleConfigHelper::Instance()->GetConfig().vehicle_param().width() / 2.0;
-                        // mayaochang add(赛题五): 行人走完停在车道外(横向>3.5m)
-                        // 也IGNORE——7673走完后车不减速直接通过(之前is_pedestrian
-                        // 永远STOP, 导致终点前40m就缓减速磨蹭)。横穿中(横向<3.5)仍STOP。
+                        // 撞飞行人修复(2026-08-02): 行人横向>3.5m IGNORE仅限
+                        // '停车避让(无crosswalk)'场景——人行道行人无论横向多远都
+                        // 必须STOP(3060横向6.5m横穿被误判走完, 车全速撞飞)。
                         static constexpr double kMaxPedestrianClearLateral = 3.5;
                         if (!is_pedestrian
                             && std::fabs(obs_center_l) > vehicle_half_width + FLAGS_static_obstacle_nudge_l_buffer) {
                             ObjectDecisionType ignore;
                             ignore.mutable_ignore();
                             mutable_obstacle->AddLongitudinalDecision("dp_st_graph", ignore);
-                        } else if (is_pedestrian && std::fabs(obs_center_l) > kMaxPedestrianClearLateral) {
+                        } else if (is_pedestrian
+                                   && std::fabs(obs_center_l) > kMaxPedestrianClearLateral
+                                   && !IsPedestrianOnCrosswalk(*obstacle)) {
                             ObjectDecisionType ignore;
                             ignore.mutable_ignore();
                             mutable_obstacle->AddLongitudinalDecision("dp_st_graph", ignore);
@@ -721,12 +723,14 @@ bool SpeedDecider::CheckStopForPedestrian(const Obstacle& obstacle) const {
         return false;
     }
 
-    // mayaochang add(赛题五): 行人已走完停在车道外(横向>3.5m)时不再STOP——
-    // 否则7673走完后ST boundary一直阻塞, 车在终点前40m就缓减速磨蹭15s。
-    // 横穿中(横向<1.98)仍STOP(add19正常)。
+    // 撞飞行人修复(2026-08-02): 行人横向>3.5m不再STOP仅限'停车避让(无crosswalk)'
+    // 场景。人行道(crosswalk)行人无论横向多远都必须STOP——3060横向6.5m横穿
+    // 被原逻辑误判为'已走完'IGNORE, 车16.5全速撞飞。IsPedestrianOnCrosswalk
+    // 为true(场景内有人行道且行人在其上)时, 不因横向远而放行。
     static constexpr double kMaxPedestrianStopLateral = 3.5;
     const double obs_center_l = (obstacle_sl_boundary.start_l() + obstacle_sl_boundary.end_l()) / 2.0;
-    if (std::fabs(obs_center_l) > kMaxPedestrianStopLateral) {
+    if (std::fabs(obs_center_l) > kMaxPedestrianStopLateral &&
+        !IsPedestrianOnCrosswalk(obstacle)) {
         return false;
     }
 
