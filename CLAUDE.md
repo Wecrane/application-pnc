@@ -4,14 +4,17 @@
 
 ## 技能 (Skills)
 
-Claude Code 专属技能位于 `.claude/skills/`，提供 Planning 模块的深度代码导航和赛题分析：
+Claude Code 专属技能位于 `.claude/skills/`，提供 Planning 模块的深度代码导航、赛题分析和日志回放排障：
 
 | Skill | 路径 | 用途 |
 |-------|------|------|
-| Planning 模块导航 | `.claude/skills/planning-module-navigator/SKILL.md` | Planning 架构、17 个 Scenario、10 个 TrafficRule、30+ Task 的代码导航 |
-| 参考文档 | `.claude/skills/planning-module-navigator/references/` | 7 份技术参考：架构总览、场景详解、交通规则、任务插件、算法原理、环境配置、赛题说明 |
+| Apollo 仿真开发指南 | `.claude/skills/apollo-simulation-guide/SKILL.md` | Planning 架构（17 Scenario + 10 TrafficRule + 35 Task）、插件开发、配置链路、参数调优、地图/路由/障碍物解析 |
+| 参考文档 | `.claude/skills/apollo-simulation-guide/references/` | 14 份技术参考：架构、场景、交通规则、任务、算法、工具链、CyberRT、PnC Map、日志、地图路由等 |
+| **日志与回放分析** | `.claude/skills/log-replay-analysis/SKILL.md` | **本地日志/本地回放/云端回放/云端日志的架构与结构、sim_engine 评分解析（唯一计分帧）、评测时间轴映射、关键日志模式、排障工作流**（800 分实战沉淀） |
+| 分析实操手册 | `.claude/skills/log-replay-analysis/references/01-analysis-playbook.md` | sim_engine 解析代码、时间轴 T0 校准、planning 日志提取、云端回放解密实操 |
 
-当用户提出 Planning 代码导航、插件开发、赛题分析等问题时，优先检索 `.claude/skills/planning-module-navigator/references/`。
+当用户提出 Planning 代码导航、插件开发、赛题分析等问题时，优先检索 `.claude/skills/apollo-simulation-guide/references/`。
+当用户提出日志分析、回放分析、云端评测、评分解析、sim_engine、计分帧、时间轴等问题时，使用 `.claude/skills/log-replay-analysis/`。
 
 ## 知识库
 
