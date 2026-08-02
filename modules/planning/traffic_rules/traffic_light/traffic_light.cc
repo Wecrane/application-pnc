@@ -89,6 +89,7 @@ void TrafficLight::MakeDecisions(Frame* const frame,
 
   const std::vector<PathOverlap>& traffic_light_overlaps =
       reference_line_info->reference_line().map_path().signal_overlaps();
+  AINFO << "[traffic-light] overlaps=" << traffic_light_overlaps.size();
   for (const auto& traffic_light_overlap : traffic_light_overlaps) {
     if (traffic_light_overlap.end_s <= adc_back_edge_s) {
       continue;
@@ -125,8 +126,9 @@ void TrafficLight::MakeDecisions(Frame* const frame,
            << s_distance << "] actual_distance[" << distance << "]";
     if (s_distance >= 0 &&
         fabs(s_distance - distance) > kSDiscrepanceTolerance) {
-      ADEBUG << "SKIP traffic_light[" << traffic_light_overlap.object_id
-             << "] close in position, but far away along reference line";
+      AINFO << "[traffic-light] SKIP3 s_discrepance id="
+            << traffic_light_overlap.object_id << " s_distance=" << s_distance
+            << " distance=" << distance;
       continue;
     }
 
@@ -149,11 +151,18 @@ void TrafficLight::MakeDecisions(Frame* const frame,
     signal_debug->set_light_stop_s(traffic_light_overlap.start_s);
 
     // mayaochang add
-    if (signal_color != perception::TrafficLight::GREEN &&
-        signal_color != perception::TrafficLight::BLACK) {
-      // RED/YELLOW/UNKNOWN 都视为"曾要求停车", 记录该信号灯见过红
+    // 修复(2026-08-02): UNKNOWN(信号灯未触发/状态未知)不应视为"见过红"。
+    // 赛题8 Signal_5 一直绿/未触发(UNKNOWN): 误记后 crosswalk 跳过路口斑马线
+    // 限速(4.5)→ 车13.6m/s全速通过Signal_5路口(评测限速5, 超速扣分)。
+    // 只记真正的 RED/YELLOW。
+    if (signal_color == perception::TrafficLight::RED ||
+        signal_color == perception::TrafficLight::YELLOW) {
       GlobalSeenRedLight()[traffic_light_overlap.object_id] = true;
     }
+    AINFO << "[traffic-light] process id=" << traffic_light_overlap.object_id
+          << " start_s=" << traffic_light_overlap.start_s
+          << " color=" << signal_color
+          << " seen_red=" << GlobalSeenRedLight()[traffic_light_overlap.object_id];
     if (signal_color == perception::TrafficLight::GREEN ||
         signal_color == perception::TrafficLight::BLACK) {
       // competition: 赛题八(交通灯路口减速) 绿灯通过信号灯区域限速(≤5m/s,留4.5)
