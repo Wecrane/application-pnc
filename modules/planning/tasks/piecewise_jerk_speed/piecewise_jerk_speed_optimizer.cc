@@ -196,8 +196,17 @@ Status PiecewiseJerkSpeedOptimizer::Process(const PathData& path_data,
     // "巡航到包络交点→以max_dec急刹到停止线"。无阶跃、对init_v不敏感、帧间
     // 稳定, 消除: 提前减速(原用DP参考时间轴触发窗口错位) + 龟速蠕动(原brake_dist
     // 随init_v逐帧缩水正反馈) + 终点速度跳变(dx_ref阶跃置0)。
+    // P1-E v2(2026-08-03): 包络改用本帧车实际速度 v0 线性外推车位置(init_s[0]+
+    // v0*t)替代 DP 参考位置 x_ref。根因(014016实测): DP 参考因起步延迟~4s +
+    // 激进加速严重超前(DP 假设 t=0 即起步, 实测 DP 参考 t≈10s 已到 stop_s) →
+    // 包络 stop_s-x_ref 提前<21.3m → dx_ref 提前压 → 车距停止线~78m 就缓降,
+    // vmax 仅13.8(目标16), 刹车峰值-3.5(目标-6)。用 v0 外推: 车实际加速到16
+    // 后 v0=16, 包络在 stop_s-21.3m 才压 → 巡航到最晚刹车点才-6急刹; 起步段
+    // v0 小 → 包络不压 → 车正常加速。
+    const double v0 = std::max(0.0, init_s[1]);
     if (stop_s < total_length) {
-      const double dist_to_stop = std::max(0.0, stop_s - x_ref[i]);
+      const double s_est = v0 * curr_t;  // 车按当前速度可达位置(相对, 车位置=0)
+      const double dist_to_stop = std::max(0.0, stop_s - s_est);
       const double brake_envelope =
           std::sqrt(2.0 * std::abs(veh_param.max_deceleration()) *
                     dist_to_stop);
