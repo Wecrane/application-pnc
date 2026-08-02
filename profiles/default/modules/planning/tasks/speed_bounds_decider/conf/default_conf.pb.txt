@@ -1,9 +1,10 @@
 # speed_bounds_decider 配置（default profile 覆盖层）
-# 提速(2026-08-02): total_time 7.0->4.0 —— 解决停车蠕动(根因)
-# 根因: ST图/piecewise_jerk规划窗口7s, 停止线在窗口内时缓减速cost永远最优
-#       (急刹与缓减速平均速度相同→ref_v cost相当, 缓减速acc²/jerk²更小)
-#       → 车提前88m/7s缓减速+蠕动。窗口4s时"保持高速+最后-6急刹"变优。
-# 安全性: 16.667急刹需2.8s/23m(-6), 4s窗口内足够; s_bounds/s_dot_bounds硬约束
-# ⚠️风险: 跟车(普通路2)反应窗口4s(原7s), 靠FOLLOW边界+s_dot_bounds保护
-total_time: 4.0
+# 提速(2026-08-02): total_time 7.0->4.0 解决停车蠕动(根因)。
+# 2026-08-02 全局规划: total_time 4.0->10.0 —— 长远规划(用户要求)
+# 前瞻距离 = vmax(16.67) × 10 = 166.7m(覆盖参考线全程):
+#   → 人行道/红绿灯/停止标志/终点 STOP 从起步就进入速度规划, 提前减速。
+# ⚠️ 蠕动风险: 窗口10s比4s更大, QP更可能缓减速。但 dx_ref=0(piecewise_jerk
+#   停止线前急刹) + CREEP排除 已修复蠕动核心, 应能压住。若复发蠕动需回调。
+# ⚠️ 跟车(普通路2): 窗口10s反应更早, 靠FOLLOW边界+s_dot_bounds保护。
+total_time: 10.0
 boundary_buffer: 0.25
