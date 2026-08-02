@@ -135,6 +135,20 @@ void Crosswalk::MakeDecisions(Frame* const frame, ReferenceLineInfo* const refer
             PerceptionObstacle::Type obstacle_type = perception_obstacle.type();
             std::string obstacle_type_name = PerceptionObstacle_Type_Name(obstacle_type);
 
+            // 诊断日志(2026-08-03): 定位人行道刹-油-刹——STOP判定是否振荡(osc)。
+            // 打印每帧每行人的 stop 判定 + 位置 + 速度, 看 add5/默认逻辑 交替。
+            if (obstacle_type == PerceptionObstacle::PEDESTRIAN
+                || obstacle_type == PerceptionObstacle::BICYCLE) {
+                const auto& p_obs = obstacle->Perception();
+                const auto& sl_b = obstacle->PerceptionSLBoundary();
+                const double l_min = std::min(std::fabs(sl_b.start_l()), std::fabs(sl_b.end_l()));
+                const double obs_v = std::hypot(p_obs.velocity().x(), p_obs.velocity().y());
+                AINFO << "[crosswalk-stop] " << crosswalk_id << " obs=" << obstacle_id
+                      << " stop=" << stop << " l=" << l_min << " v=" << obs_v
+                      << " obs_s=" << sl_b.start_s() << " adc_end=" << adc_front_edge_s
+                      << " cw_start_s=" << crosswalk_overlap->start_s;
+            }
+
             // update stop timestamp on static pedestrian for watch timer
             const bool is_on_lane = reference_line.IsOnLane(obstacle->PerceptionSLBoundary());
             if (stop && !is_on_lane
