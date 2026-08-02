@@ -189,6 +189,10 @@ void Crosswalk::MakeDecisions(Frame* const frame, ReferenceLineInfo* const refer
                  reference_line_info->reference_line().map_path().signal_overlaps()) {
                 if (std::fabs(signal_overlap.start_s - crosswalk_overlap->start_s) < 30.0) {
                     // 附近有信号灯且见过红(赛题3红绿灯) → 绿灯通过路口不限速
+                    AINFO << "[crosswalk-limit] near_signal id=" << signal_overlap.object_id
+                          << " sig_start_s=" << signal_overlap.start_s
+                          << " cw=" << crosswalk_id << " cw_start_s=" << crosswalk_overlap->start_s
+                          << " seen_red=" << GlobalSeenRedLight()[signal_overlap.object_id];
                     if (GlobalSeenRedLight()[signal_overlap.object_id]) {
                         should_limit = false;
                     }
@@ -196,8 +200,14 @@ void Crosswalk::MakeDecisions(Frame* const frame, ReferenceLineInfo* const refer
                 }
             }
             if (should_limit) {
+                AINFO << "[crosswalk-limit] " << crosswalk_id << " AddSpeedLimit("
+                      << crosswalk_overlap->start_s - 50.0 << "," << crosswalk_overlap->end_s
+                      << ",4.5)";
                 reference_line_info->mutable_reference_line()->AddSpeedLimit(
                         crosswalk_overlap->start_s - 50.0, crosswalk_overlap->end_s, 4.5);
+            } else {
+                AINFO << "[crosswalk-limit] " << crosswalk_id
+                      << " SKIP speed limit (seen red nearby)";
             }
         }
     }
