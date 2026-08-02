@@ -104,19 +104,34 @@ Status PiecewiseJerkSpeedOptimizer::Process(
             switch (boundary->boundary_type()) {
             case STBoundary::BoundaryType::STOP:
             case STBoundary::BoundaryType::YIELD:
-                // 最晚刹车(2026-08-03): 恒定 stop_s 让QP全局优化提前减速(实测
-                // 车距停止线~50m就急刹到1, 刹-油-刹)。改为: 车以v_ref巡航, 在
-                // stop_s-v_ref²/2|dec| 处才开始需要减速——t_brake前 s_upper 不
-                // 约束(自由巡航), t_brake后受 stop_s 约束(最晚刹车点-6急刹)。
-                // 安全性: 车≤v_upper=16 → t_brake时s≤stop_s-21.3 → stop_s约束
-                // 不紧, 车有21.3m刹停空间, 无infeasible/冲过。
+                // 最晚刹车(2026-08-03 v3): 平滑分段——消除突变infeasible。
+                // v1(恒定stop_s)让QP提前减速(刹-油-刹); v2(突变)在t_brake处
+                // s_upper从total_length突降stop_s → QP primal infeasible
+                // (025136实测89次, 车停在斑马线前跑一半)。v3平滑:
+                //   t<t_brake: 自由巡航(车以v_ref到stop_s-v_ref²/2|dec|)
+                //   t_brake≤t≤T: s_upper=stop_s-0.5|dec|(T-t)² 平滑降(车-6急刹)
+                //   t>T: s_upper=stop_s(已停) —— 无突变, QP可行。
                 {
                     const double v_ref = FLAGS_planning_upper_speed_limit;
                     const double dec_abs = std::abs(veh_param.max_deceleration());
                     const double t_brake =
                             (s_upper - init_s[0] - v_ref * v_ref / (2.0 * dec_abs)) / v_ref;
-                    if (curr_t >= t_brake) {
+                    if (t_brake <= 0.0) {
+                        // 车已在刹车距离内(stop_s<v_ref²/2|dec|): 恒定stop_s约束
                         s_upper_bound = std::fmin(s_upper_bound, s_upper);
+                    } else {
+                        const double T_ = t_brake + v_ref / dec_abs;  // 刹停时刻
+                        if (curr_t < t_brake) {
+                            // 自由巡航(保持 total_length, 车受dx_bounds速度约束)
+                        } else if (curr_t <= T_) {
+                            // 最晚刹车曲线(平滑): s_upper = stop_s - 0.5|dec|(T-t)²
+                            const double s_late =
+                                    s_upper - 0.5 * dec_abs * (T_ - curr_t) * (T_ - curr_t);
+                            s_upper_bound =
+                                    std::fmin(s_upper_bound, std::max(s_late, 0.0));
+                        } else {
+                            s_upper_bound = std::fmin(s_upper_bound, s_upper);
+                        }
                     }
                     // 排除蠕行STOP(CREEP_前缀): 蠕行需低速通过路口, 若设dx_ref=0会
                     // 急刹停在蠕行目标前+等动态障碍物(本地实测停车8.4s vs 云端1.8s)
