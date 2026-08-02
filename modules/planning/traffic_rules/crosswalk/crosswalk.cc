@@ -301,9 +301,15 @@ bool Crosswalk::FindCrosswalks(ReferenceLineInfo* const reference_line_info) {
             overlap.end_s = max_s;
             extra_crosswalk_overlaps_.push_back(overlap);
             crosswalk_overlaps_.push_back(&extra_crosswalk_overlaps_.back());
+            AINFO << "[crosswalk-global] found " << cw->id().id()
+                  << " start_s=" << min_s << " end_s=" << max_s
+                  << " ref_len=" << reference_line.Length();
         }
     }
 
+    AINFO << "[crosswalk-global] total=" << crosswalk_overlaps_.size()
+          << " map_path=" << crosswalk_overlaps.size()
+          << " extra=" << extra_crosswalk_overlaps_.size();
     return crosswalk_overlaps_.size() > 0;
 }
 
