@@ -190,22 +190,17 @@ Status PiecewiseJerkSpeedOptimizer::Process(const PathData& path_data,
     // dx_ref。dx_ref 保持巡航速度(GetCruiseSpeed)，限速区减速完全由硬约束驱动
     // ——消除机制专项Q1确认的"提前减速"软目标牵引(dx_ref被限速回推拉低→QP无
     // 动力回冲→提前减速)。安全性不变: s_dot_bounds 硬约束(v_upper)仍在。
-    // P1-E(2026-08-03): 连续刹车包络替代阶跃'一脚刹死'。
-    // dx_ref=min(巡航, √(2·max_dec·max(0, stop_s-x_ref[i]))) —— s远离停止线
-    // 时=巡航, 进入包络(距离<巡航²/(2·6)=21.3m@16m/s)后连续下降 → QP 自然
-    // "巡航到包络交点→以max_dec急刹到停止线"。无阶跃、对init_v不敏感、帧间
-    // 稳定, 消除: 提前减速(原用DP参考时间轴触发窗口错位) + 龟速蠕动(原brake_dist
-    // 随init_v逐帧缩水正反馈) + 终点速度跳变(dx_ref阶跃置0)。
-    // ⚠️P1-E v2(2026-08-03 14:48实测)已回退: v0线性外推包络 sqrt(2*6*(stop_s-v0*t))
-    // 末端陡降(dx_ref 16→0 在1-2节点) → QP primal infeasible 282次 → fallback
-    // 丢限速 → 车冲过停止标志(vmax=21超速16) + 终点被PATH_END停。v1(x_ref)安全。
-    if (stop_s < total_length) {
-      const double dist_to_stop = std::max(0.0, stop_s - x_ref[i]);
-      const double brake_envelope =
-          std::sqrt(2.0 * std::abs(veh_param.max_deceleration()) *
-                    dist_to_stop);
-      dx_ref[i] = std::fmin(dx_ref[i], brake_envelope);
-    }
+    // P1-E 移除(2026-08-03 02:0x实测 pjs-debug): 连续刹车包络原意是"巡航到
+    // stop_s-21.3m 再-6急刹", 但包络用 DP 参考位置 x_ref 算 stop_s-x_ref——
+    // DP(SPEED_HEURISTIC)在 pipeline 中先于 speed_decider 运行, 不知道停止
+    // 标志/终点的 STOP boundary → DP 参考在10s窗口内巡航16超过 stop_s(x_ref
+    // t=10s=117.9 > stop_s=98) → 包络 max(0,stop_s-x_ref) 在 t 轴后段=0 →
+    // dx_ref 提前压0 → QP 全局优化看到"将来要停"提前减速 → 车从距停止线~98m
+    // 就缓降(vmax仅12.9, 目标16)。v2用v0外推也有末端陡降→infeasible 282次。
+    // 移除包络: dx_ref=GetCruiseSpeed=16 恒定, QP 靠 s_bounds 硬约束(s≤stop_s)
+    // 自然在"最晚刹车点"(stop_s-v²/2·6)以-6急刹——ref_v_weight=70强跟16, QP
+    // 全局最优=尽量保持16到最晚再刹, 无阶跃/infeasible。
+    // 由 [pjs-debug] 诊断日志验证: dx_ref[0]=16, v_upper[0]=16, stop_s 递减正常。
     s_dot_bounds.emplace_back(v_lower_bound, std::fmax(v_upper_bound, 0.0));
     print_debug.AddPoint("st_reference_line", curr_t, x_ref[i]);
     print_debug.AddPoint("st_penalty_dx", curr_t, penalty_dx.back());
