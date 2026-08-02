@@ -150,7 +150,9 @@ void TrafficLight::MakeDecisions(Frame* const frame,
     signal_debug->set_light_stop_s(traffic_light_overlap.start_s);
 
     // mayaochang add
-    if (signal_color == perception::TrafficLight::RED) {
+    if (signal_color != perception::TrafficLight::GREEN &&
+        signal_color != perception::TrafficLight::BLACK) {
+      // RED/YELLOW/UNKNOWN 都视为"曾要求停车", 记录该信号灯见过红
       g_seen_red_light[traffic_light_overlap.object_id] = true;
     }
     if (signal_color == perception::TrafficLight::GREEN ||
