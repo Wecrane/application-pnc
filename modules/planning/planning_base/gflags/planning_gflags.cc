@@ -58,6 +58,8 @@ DEFINE_string(planner_config_path,
               "The configuration for planner.");
 
 DEFINE_bool(publish_estop, false, "publish estop decision in planning");
+DEFINE_bool(destination_pass_through, false,
+            "pass through destination without stopping (competition test)");
 DEFINE_bool(enable_trajectory_stitcher, true, "enable stitching trajectory");
 
 DEFINE_bool(enable_reference_line_stitching, true,

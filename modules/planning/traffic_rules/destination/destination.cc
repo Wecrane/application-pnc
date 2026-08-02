@@ -114,6 +114,11 @@ int Destination::MakeDecisions(Frame* frame,
   }
 
   // build stop decision
+  if (FLAGS_destination_pass_through) {
+    // 实验(赛题五): 到终点后不停稳——放行通过终点, 躲评测"车停止采样"
+    ADEBUG << "BuildStopDecision: destination PASS-THROUGH (no stop)";
+    return 0;
+  }
   ADEBUG << "BuildStopDecision: destination";
   const double dest_lane_s =
       std::fmax(0.0, routing_end->s() - FLAGS_virtual_stop_wall_length -

@@ -25,6 +25,7 @@ DECLARE_bool(enable_scenario_side_pass_multiple_parked_obstacles);
 DECLARE_bool(enable_force_pull_over_open_space_parking_test);
 
 DECLARE_bool(publish_estop);
+DECLARE_bool(destination_pass_through);
 
 DECLARE_string(traffic_rule_config_filename);
 DECLARE_int32(planning_loop_rate);
