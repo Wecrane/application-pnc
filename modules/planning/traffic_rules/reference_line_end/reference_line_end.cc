@@ -43,6 +43,10 @@ bool ReferenceLineEnd::Init(
 
 Status ReferenceLineEnd::ApplyRule(
     Frame* frame, ReferenceLineInfo* const reference_line_info) {
+  if (FLAGS_disable_reference_line_end_stop) {
+    // 实验(赛题五): 禁用REF_END stop——避免提前28m减速和与destination fence竞争导致蠕动
+    return Status::OK();
+  }
   const auto& reference_line = reference_line_info->reference_line();
 
   ADEBUG << "ReferenceLineEnd length[" << reference_line.Length() << "]";
