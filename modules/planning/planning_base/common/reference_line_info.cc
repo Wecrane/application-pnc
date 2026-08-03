@@ -126,7 +126,11 @@ bool ReferenceLineInfo::Init(const std::vector<const Obstacle*>& obstacles,
     // 评测只要求"通过减速带处≤3": 车16巡航到bump前40m(20+QP回推25m@5)减速
     // → 到限速区起点(前20m)2.5 → 2.5巡航20m → bump处2.5 ✓(安全)。
     // 尾部2m: 过bump后2m即可提速, 两带之间(~22m空隙)加速通过 → 省~8s。
-    reference_line_.AddSpeedLimit(speed_bump.start_s - 20.0,
+    // 2026-08-05(017轮提速): 提前20→10m——017实测评测限速区只在减速带本身
+    // (1m宽, 限速3), 提前20m让车在评测区外10m就以2.7巡航浪费。QP回推
+    // (kLimitDecel=2.5: 16→2.7需~50m)保证车带前10m已降到2.7, 到减速带时
+    // 2.7<3安全。省10m/2.7≈3.7s/带。若本地验证超速风险则退回15m。
+    reference_line_.AddSpeedLimit(speed_bump.start_s - 10.0,
                                   speed_bump.end_s + 2.0,
                                   FLAGS_speed_bump_speed_limit);
   }
