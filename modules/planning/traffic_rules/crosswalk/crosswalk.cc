@@ -427,6 +427,9 @@ bool Crosswalk::CheckStopForObstacle(
         const double stop_deceleration,
         const double crosswalk_near_s,
         const double adc_front_s) {
+    // 参数保留(供add5精细放行使用), 当前add5用行人停止判据, 暂未使用
+    (void)crosswalk_near_s;
+    (void)adc_front_s;
     CHECK_NOTNULL(reference_line_info);
 
     std::string crosswalk_id = crosswalk_ptr->id().id();
@@ -463,23 +466,23 @@ bool Crosswalk::CheckStopForObstacle(
     // 行人在扩展区(含慢速/静止)都停, 更安全。行人走完(离开扩展区)→默认
     // 逻辑放行(车起步)。
     if (in_expanded_crosswalk) {
-        // 2026-08-04晚3: 车必须停(CrosswalkStop检测车头停斑马线前[1.5,2]m),
-        // 停稳后才能放行。车已接近/停过(车头距近边<=5m) 且 行人让出车道
-        // (|l|>4) → 放行提前通过(车通过不撞, Collision阈值0.1m, ST boundary
-        // 在行人横向>3.5m已空)。车接近中(车头距近边>5m, 未停过) → 必停
-        // (评测"ADC should stop when person cross")。103630实测|l|>4就放行
-        // 导致车冲过斑马线(CrosswalkStop硬失败) → 必须车接近/停过才放行。
-        // 104458实测车头停4.8m(参考线弯曲使stop_distance换算世界距离放大),
-        // kAtStop取5.0覆盖"已停"。放行后车头过近边(car_to_cw<0)持续放行不抖。
+        // 2026-08-04晚4: 提前放行修复——110008实测车t=13.5(行人l=4.28横穿中
+        // v=0.34, 车v=3.23没停稳)就放行 → 车提前起步+抖动(行人l在4阈值附近
+        // 波动4.28→3.48, 放行/必停交替)。且行人l从6.45减(走向车路线), |l|>4
+        // 在起点就满足不能作为放行判据。用户要求"先停住才能放行"。
+        // 恢复101332验证版: 行人横向离开车行驶带(|l|>3)且已停止(v<0.3, 横穿
+        // 结束) → 放行。行人横穿中(未停止) → 必停(车停[1.5,2]m, CrosswalkStop
+        // 安全)。总时间~60s(<90s达标)。
         const auto& reference_line = reference_line_info->reference_line();
         common::SLPoint obstacle_sl_point;
         reference_line.XYToSL(perception_obstacle.position(), &obstacle_sl_point);
-        const double car_to_crosswalk = crosswalk_near_s - adc_front_s;  // 车头距近边
-        const double kClearedLateral = 4.0;
-        const double kAtStop = 5.0;  // 车已接近/停过(车头距近边<=5m)
-        if (std::fabs(obstacle_sl_point.l()) > kClearedLateral && car_to_crosswalk <= kAtStop) {
+        const double obstacle_speed
+                = std::hypot(perception_obstacle.velocity().x(), perception_obstacle.velocity().y());
+        const double kClearedLateral = 3.0;
+        const double kClearedSpeed = 0.3;
+        if (std::fabs(obstacle_sl_point.l()) > kClearedLateral && obstacle_speed < kClearedSpeed) {
             ADEBUG << "pass(add5): obstacle_id[" << obstacle_id << "] l[" << obstacle_sl_point.l()
-                   << "] car_to_cw[" << car_to_crosswalk << "] 车已接近且行人让出车道, 放行";
+                   << "] speed[" << obstacle_speed << "] 行人走完且让出车道, 放行";
             return false;
         }
         ADEBUG << "need_stop(add5): obstacle_id[" << obstacle_id << "] type[" << obstacle_type_name
