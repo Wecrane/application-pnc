@@ -151,9 +151,16 @@ Status PiecewiseJerkSpeedOptimizer::Process(
                     // s_bounds最晚刹车曲线不冲突(车26s出区加速→29s撞曲线平滑
                     // 减速→停DEST), 不刹油刹不冲过. 24.6s刹油刹#2(v_ref=20
                     // 曲线过早)已由v_ref=16.39解决.
+                    // 2026-08-05(016轮): a0人行道(crosswalk行人STOP)恢复006
+                    // 满分——不跳过参考线外STOP(行人3060_0@200参与stop_s计算
+                    // →stop_s=0→dx_ref=0/v_up=0→QP infeasible→fast stop早触发
+                    // v=1.37急停→停1.684m达标)。016实测(跳过3060_0): stop_s
+                    // 只取CW@1.076→QP能解→车滑到v=1.04才fast stop→停1.325m
+                    // <min 1.5失败。其他赛题保持跳过(DEST/参考线外STOP,
+                    // 防scn4刹油刹)不受影响。
                     double b0 = 0.0, bl0 = 0.0;
                     boundary->GetUnblockSRange(0.0, &b0, &bl0);
-                    if (b0 > total_length) {
+                    if (!has_crosswalk_stop && b0 > total_length) {
                         continue;
                     }
                     // 2026-08-04晚2: v_ref用实际巡航min(20,default_cruise_speed
