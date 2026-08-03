@@ -1,10 +1,11 @@
 // ==UserScript==
 // @name         Apollo 测评场景 Log 手动下载器
 // @namespace    apollo-scenario-log-downloader
-// @version      2.0
+// @version      2.1
 // @description  在测评详情页右下角显示浮动窗口：扫描回放链接(offlineview?id=xxx)
-//               提取场景 id，每个场景一个【下载】按钮，手动点击才下载该系统日志(tgz)。
-//               不自动下载。旧赛题可直下，无权限返回 403 FAILED_TO_AUTH。
+//               提取场景 id，每个场景一个【下载】+【诊断】按钮，手动点击才下载该系统
+//               日志(tgz)。不自动下载。旧赛题可直下，无权限返回 403 FAILED_TO_AUTH。
+//               诊断：检查 Cookie / 网络 / 接口状态码并给出建议。
 // @author       mayaochang
 // @match        https://apollo.baidu.com/community/competition/*
 // @match        https://apollo.baidu.com/workspace-plus/*
@@ -101,11 +102,125 @@
             statusEl.textContent = `✅ ${filename} (${(blob.size / 1048576).toFixed(2)} MB)`;
             statusEl.style.color = '#1a7f37';
         } catch (e) {
-            statusEl.textContent = `⚠️ ${e}`;
+            const name = (e && e.name) || 'Error';
+            statusEl.textContent = `⚠️ ${name}: ${(e && e.message) ? e.message : e}`;
             statusEl.style.color = '#d33';
         } finally {
             btn.disabled = false;
         }
+    }
+
+    // ---------- 诊断 ----------
+    function statusHint(status) {
+        if (status === 200 || status === 206) return { ok: true, tip: '接口可达且允许下载 ✓' };
+        if (status === 401) return { ok: false, tip: '未登录（401）。请先登录 apollo.baidu.com 再试。' };
+        if (status === 403) return { ok: false, tip: '无权限（403 FAILED_TO_AUTH）。登录态可能失效，或该赛题记录已无下载权限。重新登录后重试；仍 403 则说明该记录无权下载。' };
+        if (status === 404) return { ok: false, tip: '记录不存在（404）。id 可能无效或接口路径有误。' };
+        if (status === 405) return { ok: false, tip: '方法不允许（405）。接口不支持当前请求方式。' };
+        if (status === 429) return { ok: false, tip: '请求太频繁（429）。稍等片刻再试。' };
+        if (status >= 500) return { ok: false, tip: `服务端错误（${status}）。服务器异常，稍后重试。` };
+        return { ok: false, tip: `HTTP ${status}。` };
+    }
+
+    async function diagnoseLog(id, info) {
+        const rows = []; // {k, v, cls}  cls: '' | 'ok' | 'bad' | 'warn'
+        const add = (k, v, cls) => rows.push({ k, v, cls: cls || '' });
+
+        add('页面 URL', location.href, '');
+        add('场景 id', id, '');
+        add('场景名', (info && info.name) ? info.name : '-', '');
+        const cookies = document.cookie.split(';').map(s => s.trim().split('=')[0]).filter(Boolean);
+        add('可见 Cookie (' + cookies.length + ')',
+            cookies.length ? cookies.join('、') : '无（登录态可能在 httpOnly，JS 不可见）',
+            cookies.length ? 'ok' : 'warn');
+
+        const url = LOG_API + id;
+        add('请求', 'GET ' + url, '');
+        let resp = null;
+        try {
+            // 用 Range 只拉 1 字节做探测，避免下载整个大文件
+            resp = await fetch(url, { credentials: 'include', headers: { 'Range': 'bytes=0-0' } });
+        } catch (e) {
+            const name = (e && e.name) || 'Error';
+            const msg = (e && e.message) || String(e);
+            add('网络异常', name + ': ' + msg, 'bad');
+            let guess;
+            if (/Failed to fetch|NetworkError|Network request failed/i.test(msg)) {
+                guess = '浏览器无法到达服务器：网络中断 / 跨域(CORS)被拦截 / 站点不可达。';
+            } else if (/Load failed/i.test(msg)) {
+                guess = '连接建立后中断：服务器主动断开或请求被拦截。';
+            } else {
+                guess = '未知网络错误。按 F12 → Network 查看该请求详情。';
+            }
+            add('判断', guess, 'bad');
+            add('建议', '1) 检查网络/代理；2) F12 控制台看是否有 CORS 报错；3) 确认当前页面确实是 apollo.baidu.com 域。', 'warn');
+            showDiagnose(id, rows);
+            return;
+        }
+
+        add('状态', resp.status + ' ' + resp.statusText, resp.ok ? 'ok' : 'bad');
+        const h = statusHint(resp.status);
+        add('判断', h.tip, h.ok ? 'ok' : 'bad');
+
+        const ct = resp.headers.get('content-type');
+        const cd = resp.headers.get('content-disposition');
+        const cr = resp.headers.get('content-range');
+        const cl = resp.headers.get('content-length');
+        if (ct) add('Content-Type', ct, '');
+        if (cr) add('Content-Range', cr, '');
+        if (cl) add('Content-Length', cl, '');
+        if (cd) add('Content-Disposition', cd, '');
+
+        // 只在失败或响应体很小时读取正文；200 全量响应直接中断，避免拉大文件
+        const full200 = resp.ok && resp.status === 200;
+        if (full200) {
+            try { resp.body && resp.body.cancel(); } catch (err) {}
+            add('响应体', '（200 全量响应，未读取正文以免下载大文件；直接点【下载】即可）', 'ok');
+        } else if (!resp.ok || parseInt(resp.headers.get('content-length') || '0', 10) < 8192) {
+            let body = '';
+            try { body = (await resp.text()).slice(0, 200); } catch (err) {}
+            if (body) add('响应体(前200)', body, '');
+        } else {
+            try { resp.body && resp.body.cancel(); } catch (err) {}
+        }
+
+        if (resp.status === 206 && cr) {
+            const m = cr.match(/\/(\d+)\s*$/);
+            if (m) add('文件总大小', (parseInt(m[1], 10) / 1048576).toFixed(2) + ' MB', 'ok');
+        }
+        if (!resp.ok) {
+            add('建议', '1) 403 → 先重新登录 apollo.baidu.com 再点【下载】；仍失败则该记录无权限。2) 5xx → 服务器问题，稍后重试。3) 其他 → 按 F12 Network 面板核对请求与响应。', 'warn');
+        } else {
+            add('建议', '接口可达且允许下载，直接点【下载】即可。', 'ok');
+        }
+        showDiagnose(id, rows);
+    }
+
+    // 诊断报告弹窗
+    function showDiagnose(id, rows) {
+        const mask = document.createElement('div');
+        mask.style.cssText = 'position:fixed;inset:0;z-index:2147483646;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;';
+        const box = document.createElement('div');
+        box.style.cssText = 'width:540px;max-width:92vw;max-height:80vh;overflow:auto;background:#111827;color:#e5e7eb;border:1px solid #374151;border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,.5);font:12px/1.6 -apple-system,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;';
+        let html = `<div style="padding:10px 14px;border-bottom:1px solid #374151;font-weight:700;font-size:13px;">🔍 诊断报告 <span style="color:#9ca3af;font-weight:400">${esc(id)}</span></div>`;
+        html += '<div style="padding:6px 14px;">';
+        for (const r of rows) {
+            const color = r.cls === 'ok' ? '#34d399' : r.cls === 'bad' ? '#f87171' : r.cls === 'warn' ? '#fbbf24' : '#9ca3af';
+            html += `<div style="padding:3px 0;border-bottom:1px dashed #1f2937;word-break:break-all;"><span style="color:#9ca3af;min-width:130px;display:inline-block;">${esc(r.k)}</span><span style="color:${color}">${esc(r.v)}</span></div>`;
+        }
+        html += '</div>';
+        const foot = document.createElement('div');
+        foot.style.cssText = 'padding:8px 14px;text-align:right;border-top:1px solid #374151;';
+        const closeBtn = document.createElement('button');
+        closeBtn.textContent = '关闭';
+        closeBtn.style.cssText = 'background:#374151;color:#e5e7eb;border:none;border-radius:5px;padding:4px 14px;cursor:pointer;font-size:12px;';
+        closeBtn.addEventListener('click', () => mask.remove());
+        foot.appendChild(closeBtn);
+        box.innerHTML = html;
+        box.appendChild(foot);
+        mask.appendChild(box);
+        mask.addEventListener('click', (e) => { if (e.target === mask) mask.remove(); });
+        document.body.appendChild(mask);
     }
 
     // ---------- 面板 ----------
@@ -199,13 +314,22 @@
             btn.textContent = '下载';
             btn.style.cssText = 'background:#2563eb;color:#fff;border:none;border-radius:5px;padding:4px 12px;cursor:pointer;font-size:12px;flex-shrink:0;';
             btn.addEventListener('click', () => downloadLog(id, btn, status));
+            const diagBtn = document.createElement('button');
+            diagBtn.textContent = '诊断';
+            diagBtn.title = '诊断该场景下载问题（Cookie/网络/状态码）';
+            diagBtn.style.cssText = 'background:#4b5563;color:#e5e7eb;border:none;border-radius:5px;padding:4px 10px;cursor:pointer;font-size:12px;flex-shrink:0;';
+            diagBtn.addEventListener('click', () => diagnoseLog(id, info));
             const status = document.createElement('div');
             status.style.cssText = 'flex:1;min-width:0;font-size:11px;color:#9ca3af;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right;';
             // 两行布局：名称+id / 按钮+状态
             txt.style.flex = '1';
             const right = document.createElement('div');
             right.style.cssText = 'display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;';
-            right.appendChild(btn);
+            const btnRow = document.createElement('div');
+            btnRow.style.cssText = 'display:flex;gap:4px;align-items:center;';
+            btnRow.appendChild(btn);
+            btnRow.appendChild(diagBtn);
+            right.appendChild(btnRow);
             right.appendChild(status);
             row.appendChild(txt);
             row.appendChild(right);
