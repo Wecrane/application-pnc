@@ -103,8 +103,7 @@ Status PiecewiseJerkSpeedOptimizer::Process(
         // 修复: 放宽 s_bounds 上界到 total_length+窗口巡航距离(车16巡航通过末端,
         // 切换参考线继续)。真实停车点(行人/终点)由 STOP 分支(fmin 收紧)+P0
         // (v_upper 按 sqrt(2|dec|·dist) 收紧)控制 → 车在真实 STOP 前最晚刹车, 安全。
-        const double kRefEndOvershoot =
-                FLAGS_planning_upper_speed_limit * (num_of_knots * delta_t);
+        const double kRefEndOvershoot = FLAGS_planning_upper_speed_limit * (num_of_knots * delta_t);
         double s_upper_bound = total_length + kRefEndOvershoot;
         for (const STBoundary* boundary : st_graph_data.st_boundaries()) {
             double s_lower = 0.0;
@@ -141,8 +140,7 @@ Status PiecewiseJerkSpeedOptimizer::Process(
                     // 开始收紧→与车实际(限速区4.5+出区16.39)不符→24.6s QP
                     // infeasible(刹油刹#2). 16.39: 车DEST前44.7m才开始减速,
                     // 车26s出限速区加速→29s撞曲线平滑减速→停DEST, 不冲突.
-                    const double v_ref = std::fmin(FLAGS_planning_upper_speed_limit,
-                                                   FLAGS_default_cruise_speed);
+                    const double v_ref = std::fmin(FLAGS_planning_upper_speed_limit, FLAGS_default_cruise_speed);
                     // 2026-08-04: 刹车减速度 6.0→3.0(jerk等效)。jerk±2约束下
                     // 车16→0实际需~43m(a从0以jerk-2到-6走39m + -6急刹4m),
                     // 等效 dec=16²/(2·43)≈2.97≈3.0。原用6.0(21.3m)太紧——
@@ -210,19 +208,21 @@ Status PiecewiseJerkSpeedOptimizer::Process(
     // 前仅0.251m(评测1.251m<min1.5停近失败207帧)。而车v高时(011)停0.804m
     // (评测2.004m>max2.0停远)。车停点波动(0.25-0.8)由车接近STOP速度决定,
     // 纯stop_distance无法调和。
-    // 修复: crosswalk行人STOP(id含CW_)场景已停分支阈值5.0→0.7 → 车距STOP
-    // <0.7m才强制停 → 车停fence前~0.5-0.66m(评测=sd+0.5~0.66, sd=1.0 →
-    // 1.5-1.66m达标)。其他场景(DEST终点/障碍物/停止标志)保持5.0不受影响。
+    // 修复: crosswalk行人STOP(id含CW_)场景已停分支阈值5.0→0.75, v阈值1.0→0.5
+    // → 车距STOP<0.75m且车速<0.5才强制停 → 车停fence前~0.56m(评测=sd+0.56,
+    // sd=1.0 → 1.56m达标)。其他场景(DEST终点/障碍物/停止标志)保持5.0/1.0不变。
+    // 013轮修正: 仅dist阈值不够——车v到0.251处(v_upper=0.52<1.0)仍触发已停
+    // (v<1.0) → 停0.251。必须同时降v阈值到0.5: 车v=0.52>0.5不触发 → 车继续
+    // 到dist<0.75处(v_upper=0) → 车停~0.56m(评测1.56)。
     bool has_crosswalk_stop = false;
     for (const auto* bd : st_graph_data.st_boundaries()) {
-        if (bd->boundary_type() == STBoundary::BoundaryType::STOP &&
-            bd->id().find("CW_") != std::string::npos) {
+        if (bd->boundary_type() == STBoundary::BoundaryType::STOP && bd->id().find("CW_") != std::string::npos) {
             has_crosswalk_stop = true;
             break;
         }
     }
-    const double kStopHeldDist =
-            has_crosswalk_stop ? 0.7 : 5.0;  // 已停分支阈值(crosswalk 0.7/其他 5.0)
+    const double kStopHeldDist = has_crosswalk_stop ? 0.75 : 5.0;  // 已停分支dist阈值(crosswalk 0.75/其他 5.0)
+    const double kStopHeldV = has_crosswalk_stop ? 0.5 : 1.0;      // 已停分支v阈值(crosswalk 0.5/其他 1.0)
     // P1-E v3(2026-08-03): 物理可达位置累积初始化——替代DP超前参考x_ref。
     // s_est/v_est: 车从本帧实际速度v0按+3加速的可达位置/速度(物理上限,不超前)。
     const double v0 = std::max(0.0, init_s[1]);
@@ -291,9 +291,8 @@ Status PiecewiseJerkSpeedOptimizer::Process(
             // 只距STOP 0.21m<0.78m jerk最小距离) → QP无法jerk刹停 → 终点段
             // infeasible滑行(101332)。jerk精确: 低v纯jerk段(1.5·d)^(2/3),
             // 高v jerk过渡(3s到-6)后-6急刹。与P0 v_upper一致。
-            const double brake_envelope = (dist_to_stop < 18.0)
-                    ? std::pow(1.5 * dist_to_stop, 2.0 / 3.0)
-                    : -9.0 + std::sqrt(108.0 + 12.0 * dist_to_stop);
+            const double brake_envelope = (dist_to_stop < 18.0) ? std::pow(1.5 * dist_to_stop, 2.0 / 3.0)
+                                                                : -9.0 + std::sqrt(108.0 + 12.0 * dist_to_stop);
             dx_ref[i] = std::fmin(dx_ref[i], brake_envelope);
         }
         // P0(2026-08-04修复): 接近STOP时同步收紧v_upper——消除infeasible根因。
@@ -314,7 +313,7 @@ Status PiecewiseJerkSpeedOptimizer::Process(
             // 马线前(位置合格)但P0允许v_upper=4.36 + 行人ST boundary
             // s_up[40]=1.22 + 参考线每帧重建车s=0恒定 → 车0.02-0.9m/s蠕动
             // 死循环。行驶中(速度>=1)或未到(<5m外) → 正常jerk等效刹车包络。
-            if (init_s[1] < 1.0 && dist_to_stop < kStopHeldDist) {
+            if (init_s[1] < kStopHeldV && dist_to_stop < kStopHeldDist) {
                 v_upper_bound = std::fmin(v_upper_bound, 0.0);
             } else {
                 // 2026-08-04晚2: jerk精确最大速度(车在dist内jerk刹停)。
@@ -323,9 +322,8 @@ Status PiecewiseJerkSpeedOptimizer::Process(
                 // 原sqrt(2·3·dist)(-3恒定抛物线)低v太松: 车v=1.11只距STOP
                 // 0.21m<0.78m(jerk最小) → QP无法jerk刹停 → 终点段连续
                 // infeasible(101332 t=60.8-64.9) → fallback滑行5s才停。
-                const double v_allow_stop = (dist_to_stop < 18.0)
-                        ? std::pow(1.5 * dist_to_stop, 2.0 / 3.0)
-                        : -9.0 + std::sqrt(108.0 + 12.0 * dist_to_stop);
+                const double v_allow_stop = (dist_to_stop < 18.0) ? std::pow(1.5 * dist_to_stop, 2.0 / 3.0)
+                                                                  : -9.0 + std::sqrt(108.0 + 12.0 * dist_to_stop);
                 v_upper_bound = std::fmin(v_upper_bound, v_allow_stop);
             }
         }
@@ -370,8 +368,9 @@ Status PiecewiseJerkSpeedOptimizer::Process(
         if (sl_pts.size() >= 2U) {
             auto get_sl = [&sl_pts](double s) {
                 auto it = std::lower_bound(
-                        sl_pts.begin(), sl_pts.end(), s,
-                        [](const std::pair<double, double>& p, double v) { return p.first < v; });
+                        sl_pts.begin(), sl_pts.end(), s, [](const std::pair<double, double>& p, double v) {
+                            return p.first < v;
+                        });
                 if (it == sl_pts.end()) {
                     return (it - 1)->second;
                 }
@@ -440,16 +439,13 @@ Status PiecewiseJerkSpeedOptimizer::Process(
                 for (int i = 0; i < static_cast<int>(speed_data->size()); ++i) {
                     auto& sp = (*speed_data)[i];
                     const double t = sp.t();
-                    const int idx = std::min(
-                            static_cast<int>(t / delta_t), num_of_knots - 1);
-                    const double v_up =
-                            std::fmax(0.0, s_dot_bounds_copy[idx].second);
+                    const int idx = std::min(static_cast<int>(t / delta_t), num_of_knots - 1);
+                    const double v_up = std::fmax(0.0, s_dot_bounds_copy[idx].second);
                     const double v = std::fmin(sp.v(), v_up);
                     sp.set_v(v);
                     if (i > 0) {
                         const double dt = sp.t() - (*speed_data)[i - 1].t();
-                        sp.set_s(pre_s +
-                                 0.5 * ((*speed_data)[i - 1].v() + v) * dt);
+                        sp.set_s(pre_s + 0.5 * ((*speed_data)[i - 1].v() + v) * dt);
                     }
                     pre_s = sp.s();
                 }
