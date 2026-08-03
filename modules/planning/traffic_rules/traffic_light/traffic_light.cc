@@ -116,9 +116,11 @@ void TrafficLight::MakeDecisions(Frame* const frame,
         // 到4.5→进路口区(s205)4.5稳态(sim超调+0.2=4.7<5✓)→4.5通过27m
         // 出区加速. 不刹油刹+不超速+不提前刹车(车16巡航到停止线前35m).
         // 时间: 4.5巡航47m比4.8慢~1.5s, TimeLimit裕量大可接受。
+        // 2026-08-05(017轮提速): 4.5→4.7——评测路口区限速5, sim超调+0.2
+        // →4.7+0.2=4.9<5安全(4.8+0.2=5.0贴线风险). 省~0.5s/绿灯段.
         reference_line_info->mutable_reference_line()->AddSpeedLimit(
             traffic_light_overlap.start_s - 35.0,
-            traffic_light_overlap.start_s + 27.0, 4.5);
+            traffic_light_overlap.start_s + 27.0, 4.7);
       }
     }
     if (traffic_light_overlap.end_s <= adc_back_edge_s) {
