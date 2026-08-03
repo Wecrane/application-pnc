@@ -123,20 +123,26 @@ Status PiecewiseJerkSpeedOptimizer::Process(
                 //   t_brake≤t≤T: s_upper=stop_s-0.5|dec|(T-t)² 平滑降(车-6急刹)
                 //   t>T: s_upper=stop_s(已停) —— 无突变, QP可行。
                 {
-                    // 2026-08-04晚: 参考线末端附近的STOP/YIELD(如DEST@129.5 vs
-                    // 末端130)不约束——车15s窗口按dx_ref巡航会到达boundary,
-                    // 但车到参考线末端就切换(kRefEndOvershoot), 不需在末端停.
-                    // 原v_ref=20最晚刹车曲线假设车20巡航过早收紧 → s_bounds
-                    // 与车实际(限速4.5+dx_ref16.39)冲突 → QP infeasible
-                    // (24.68s实测) → relaxed也失败 → fallback急刹(刹油刹#2).
-                    // 跳过末端附近boundary: 车正常巡航切参考线; 真实终点
-                    // (DEST深入参考线内)STOP正常生效停车.
+                    // 2026-08-04晚2: 只跳过参考线外(b0>total_length)的STOP/YIELD
+                    // ——车切参考线不停. 原跳过末端附近(-10)导致DEST被忽略→车
+                    // 出限速区后按dx_ref=16.39加速→DEST前31m(34.5s)才急刹
+                    // (DP找不到轨迹→fast stop→停DEST后起步冲过9.5m, 终点停车
+                    // 停过了). v_ref改实际巡航(16.39)后, DEST在参考线内时
+                    // s_bounds最晚刹车曲线不冲突(车26s出区加速→29s撞曲线平滑
+                    // 减速→停DEST), 不刹油刹不冲过. 24.6s刹油刹#2(v_ref=20
+                    // 曲线过早)已由v_ref=16.39解决.
                     double b0 = 0.0, bl0 = 0.0;
                     boundary->GetUnblockSRange(0.0, &b0, &bl0);
-                    if (b0 > total_length - 10.0) {
+                    if (b0 > total_length) {
                         continue;
                     }
-                    const double v_ref = FLAGS_planning_upper_speed_limit;
+                    // 2026-08-04晚2: v_ref用实际巡航min(20,default_cruise_speed
+                    // =16.39), 不用20. 原20假设车20巡航→曲线在DEST前66.7m就
+                    // 开始收紧→与车实际(限速区4.5+出区16.39)不符→24.6s QP
+                    // infeasible(刹油刹#2). 16.39: 车DEST前44.7m才开始减速,
+                    // 车26s出限速区加速→29s撞曲线平滑减速→停DEST, 不冲突.
+                    const double v_ref = std::fmin(FLAGS_planning_upper_speed_limit,
+                                                   FLAGS_default_cruise_speed);
                     // 2026-08-04: 刹车减速度 6.0→3.0(jerk等效)。jerk±2约束下
                     // 车16→0实际需~43m(a从0以jerk-2到-6走39m + -6急刹4m),
                     // 等效 dec=16²/(2·43)≈2.97≈3.0。原用6.0(21.3m)太紧——
