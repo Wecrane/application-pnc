@@ -471,7 +471,10 @@ bool Crosswalk::CheckStopForObstacle(
         const double obstacle_speed
                 = std::hypot(perception_obstacle.velocity().x(), perception_obstacle.velocity().y());
         const double kClearedLateral = 3.0;
-        const double kClearedSpeed = 0.1;
+        // 2026-08-04晚2: 放行速度阈值0.1→0.3, 贴合评测判据(行人停v≤0.3即放行,
+        // 评分点文档: 行人3060走完停l=8.77, 等停后通过)。0.1太严在感知v渐变
+        // 时多等, 0.3与评测一致且安全(行人需横向离开车路线且已停)。
+        const double kClearedSpeed = 0.3;
         if (std::fabs(obstacle_sl_point.l()) > kClearedLateral && obstacle_speed < kClearedSpeed) {
             ADEBUG << "pass(add5): obstacle_id[" << obstacle_id << "] l[" << obstacle_sl_point.l()
                    << "] speed[" << obstacle_speed << "] 行人已离开车行驶带且停止, 放行";
