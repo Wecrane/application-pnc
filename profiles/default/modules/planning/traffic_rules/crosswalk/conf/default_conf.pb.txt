@@ -8,7 +8,11 @@
 # 2026-08-05(008轮a0修复): 1.0→1.5——保留speed_data(ad1db76)后车停fence
 # 前仅0.21-0.25m(007/008实测: 评测距离1.21/1.25m<min1.5扣分), 而fast stop
 # (006)车停fence前0.68m(1.68m达标)。1.5+滑行0.25=1.75m, 落[1.5,2.0]中段。
-stop_distance: 1.5
+# 2026-08-05晚(009轮a0修复): 1.5→1.3——DP偶发失败触发fast stop(009实测:
+# 车停fence前0.62m → 评测距离2.12m>max2.0扣分)。车到fence距离随
+# stop_distance增大(P0更早触发): 1.0→0.25m, 1.5→0.62m。1.3→车停
+# 1.55(保留)/1.77(fast stop)m, 落[1.5,2.0]中段, 两轮都达标。
+stop_distance: 1.3
 max_stop_deceleration: 4.0
 min_pass_s_distance: 1.0
 # expand_s_distance 2.0→4.0→6.0：crosswalk 扩展区扩大，行人完全走完
