@@ -98,8 +98,10 @@ Status PiecewiseJerkSpeedOptimizer::Process(
     }
     // 2026-08-05(015轮): 场景区分日志——grep "[pjs-scene]" 判断是否触发
     // a0人行道(has_crosswalk_stop=true → 006满分参数) vs 其他赛题(435d28f参数)。
-    AINFO << "[pjs-scene] has_crosswalk_stop=" << has_crosswalk_stop << " CW_STOP_num=" << cw_stop_num
-          << " kLimitDecel=" << (has_crosswalk_stop ? 5.0 : 2.5) << " stopHeld=" << 5.0 << "/" << 1.0;
+    AINFO << "[pjs-scene] has_crosswalk_stop=" << has_crosswalk_stop
+          << " CW_STOP_num=" << cw_stop_num
+          << " kLimitDecel=" << (has_crosswalk_stop ? 5.0 : 2.5)
+          << " stopHeld=" << 5.0 << "/" << 1.0;
     double total_time = st_graph_data.total_time_by_conf();
     int num_of_knots = static_cast<int>(total_time / delta_t) + 1;
     print_debug.AddPoint("optimize_st_curve", 0, init_s[0]);
@@ -110,11 +112,6 @@ Status PiecewiseJerkSpeedOptimizer::Process(
     std::vector<std::pair<double, double>> s_bounds;
     // 停止线位置(STOP/YIELD边界, s_bounds上界), 用于dx_ref'一脚刹死'处理
     double stop_s = std::numeric_limits<double>::max();
-    // 2026-08-06(终点停稳): 最近STOP是否为DEST终点——DEST用更小已停阈值
-    // (1.0m)让车前缘停稳位置贴近fence(终点区内), 评测结束(ReachEnd判定)时
-    // 车已v=0, 消除"最后1km/h没完全停稳"争议。行人/障碍物STOP保持5.0
-    // (a0人行道006满分参数不破坏)。
-    bool nearest_stop_is_dest = false;
     for (int i = 0; i < num_of_knots; ++i) {
         double curr_t = i * delta_t;
         double s_lower_bound = 0.0;
@@ -175,10 +172,11 @@ Status PiecewiseJerkSpeedOptimizer::Process(
                     // 满分v_ref=20(006满分实测8赛题全满, 终点无DEST冲突),
                     // 其他赛题保持16.39(scn4 DEST刹油刹修复)不受影响.
                     const double v_ref = has_crosswalk_stop
-                            ? FLAGS_planning_upper_speed_limit
-                            : std::fmin(FLAGS_planning_upper_speed_limit, FLAGS_default_cruise_speed);
+                        ? FLAGS_planning_upper_speed_limit
+                        : std::fmin(FLAGS_planning_upper_speed_limit, FLAGS_default_cruise_speed);
                     // 2026-08-05(015轮): v_ref实际值日志(a0=20/其他=16.39)
-                    AINFO << "[pjs-scene] v_ref=" << v_ref << " has_crosswalk_stop=" << has_crosswalk_stop;
+                    AINFO << "[pjs-scene] v_ref=" << v_ref
+                          << " has_crosswalk_stop=" << has_crosswalk_stop;
                     // 2026-08-04: 刹车减速度 6.0→3.0(jerk等效)。jerk±2约束下
                     // 车16→0实际需~43m(a从0以jerk-2到-6走39m + -6急刹4m),
                     // 等效 dec=16²/(2·43)≈2.97≈3.0。原用6.0(21.3m)太紧——
@@ -205,10 +203,7 @@ Status PiecewiseJerkSpeedOptimizer::Process(
                     // 排除蠕行STOP(CREEP_前缀): 蠕行需低速通过路口, 若设dx_ref=0会
                     // 急刹停在蠕行目标前+等动态障碍物(本地实测停车8.4s vs 云端1.8s)
                     if (boundary->id().find("CREEP_") == std::string::npos) {
-                        if (s_upper < stop_s) {
-                            stop_s = s_upper;  // 记录停止线位置(最近STOP)
-                            nearest_stop_is_dest = (boundary->id() == FLAGS_destination_obstacle_id);
-                        }
+                        stop_s = std::min(stop_s, s_upper);  // 记录停止线位置
                     }
                 }
                 break;
@@ -260,10 +255,7 @@ Status PiecewiseJerkSpeedOptimizer::Process(
     // 实测不蠕动)。014轮0.75/100(蠕动停远2.35判FAIL)与012/013轮0.75/0.5
     // (停近1.251)均废弃。其他场景(DEST终点/障碍物/停止标志)原本就是5.0/1.0,
     // 不受影响。
-    // 2026-08-06(终点停稳): 已停分支dist阈值——a0人行道(crosswalk STOP)保持
-    // 006满分5.0; 非a0的DEST终点用1.0(车贴近fence停稳, 车前缘停在终点区内,
-    // 评测结束不再显示1km/h); 非a0行人/障碍物STOP保持5.0。
-    const double kStopHeldDist = (has_crosswalk_stop || !nearest_stop_is_dest) ? 5.0 : 1.0;
+    const double kStopHeldDist = 5.0;  // 已停分支dist阈值(006满分原始)
     const double kStopHeldV = 1.0;     // 已停分支v阈值(006满分原始)
     // P1-E v3(2026-08-03): 物理可达位置累积初始化——替代DP超前参考x_ref。
     // s_est/v_est: 车从本帧实际速度v0按+3加速的可达位置/速度(物理上限,不超前)。
@@ -365,9 +357,11 @@ Status PiecewiseJerkSpeedOptimizer::Process(
             // 判FAIL)与012/013轮0.75/0.5(停近1.251)均废弃。
             if (init_s[1] < kStopHeldV && dist_to_stop < kStopHeldDist) {
                 // 2026-08-05(015轮): 已停分支触发日志——确认车停稳触发点。
-                AINFO << "[pjs-stop-held] TRIGGER v=" << init_s[1] << " dist_to_stop=" << dist_to_stop
-                      << " has_crosswalk_stop=" << has_crosswalk_stop << " dest=" << nearest_stop_is_dest
-                      << " stopHeldDist=" << kStopHeldDist << " stopHeldV=" << kStopHeldV;
+                AINFO << "[pjs-stop-held] TRIGGER v=" << init_s[1]
+                      << " dist_to_stop=" << dist_to_stop
+                      << " has_crosswalk_stop=" << has_crosswalk_stop
+                      << " stopHeldDist=" << kStopHeldDist
+                      << " stopHeldV=" << kStopHeldV;
                 v_upper_bound = std::fmin(v_upper_bound, 0.0);
             } else {
                 // 2026-08-04晚2: jerk精确最大速度(车在dist内jerk刹停)。
