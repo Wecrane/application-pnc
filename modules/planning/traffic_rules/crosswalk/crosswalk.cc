@@ -60,6 +60,10 @@ bool Crosswalk::Init(const std::string& name, const std::shared_ptr<DependencyIn
     if (!TrafficRule::Init(name, injector)) {
         return false;
     }
+    // 2026-08-06 版本标记(编译验证): 日志出现该行=代码为最新(含v3a超时兜底
+    // 12.5s + 距离条件(0,5) + add5保留)。用户本地日志(01:27:52)搜v3a=0(旧
+    // 代码), 加此标记确认重新编译后版本生效。
+    AINFO << "[crosswalk-ver] v3a-timeout=12.5s dist=(0,5) add5=keep (2026-08-06 v2)";
     // Load the config this task.
     return TrafficRule::LoadConfig<CrosswalkConfig>(&config_);
 }
