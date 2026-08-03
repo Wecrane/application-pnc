@@ -124,12 +124,13 @@ bool ReferenceLineInfo::Init(const std::vector<const Obstacle*>& obstacles, doub
         // (1m宽, 限速3), 提前20m让车在评测区外10m就以2.7巡航浪费。QP回推
         // (kLimitDecel=2.5: 16→2.7需~50m)保证车带前10m已降到2.7, 到减速带时
         // 2.7<3安全。省10m/2.7≈3.7s/带。若本地验证超速风险则退回15m。
-        // 2026-08-05(本地实测): 提前10m第一个减速带22mph(9.9m/s)超速——
-        // QP回推(kLimitDecel)没让车提前减速, 车到限速区起点(带前10m)才急刹
-        // → 减速带处>3。第二个带正常(过第一带后已低速)。回退20m保安全。
-        // TODO: 分析QP回推为何未生效(kLimitDecel/kLimitLookAhead), 解决后
-        // 再试提前量缩短(15m/10m)。
-        reference_line_.AddSpeedLimit(speed_bump.start_s - 20.0, speed_bump.end_s + 2.0, FLAGS_speed_bump_speed_limit);
+        // 2026-08-05(本地实测): 提前10m本地第一个减速带22mph(9.9m/s)超速——
+        // 但云端017基础1全程kLimitDecel=2.5(回推强~100m), 本地减速带处
+        // has_crosswalk_stop=true→kLimitDecel=5.0(回推弱仅25m)→本地特有超速!
+        // 云端基础1无crosswalk STOP(kLimitDecel=2.5)提前量10m安全, 用户实测
+        // 云端第二个带可晚几m减速。本地场景与云端不同(本地验证无代表性)。
+        // 重新实施10m, 直接云端评测验证。
+        reference_line_.AddSpeedLimit(speed_bump.start_s - 10.0, speed_bump.end_s + 2.0, FLAGS_speed_bump_speed_limit);
     }
 
     SetCruiseSpeed(target_speed);
