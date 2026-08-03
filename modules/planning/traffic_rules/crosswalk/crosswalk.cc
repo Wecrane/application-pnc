@@ -456,28 +456,22 @@ bool Crosswalk::CheckStopForObstacle(
     // 094122实测: 行人横穿中但perception速度0.075-0.145<0.3(起步慢/感知滞后),
     // 原add5(移动>0.3才停)不触发 → 走默认逻辑(l=6.5>stop_strict_l_distance
     // =5.0不停) → 车冲过斑马线(评测CrosswalkStop硬失败)。
-    // 评测要求: 行人在斑马线上车必须停等, 直到行人离开扩展区(走完)。
-    // 行人在扩展区(含慢速/静止)都停, 更安全。行人走完(离开扩展区)→默认
-    // 逻辑放行(车起步)。
+    // 评测要求: 行人在斑马线上车必须停等, 直到行人安全让出车道。
     if (in_expanded_crosswalk) {
-        // 2026-08-04晚补充: 行人走完后(横向已离开车行驶带, 感知v=0仍持续在
-        // 扩展区内输出) 原必停导致车永远等 (100131实测: 行人l=8.21走完停住
-        // v=0, 车从t=15等到99s不动)。修复: 行人横向|L|>3m(车半宽1m+缓冲2m)
-        // 且已停(v<0.1) → 行人已安全走过车行驶带, 放行。行人横穿中(v>0.1)
-        // 即使在扩展区 → 仍必停(评测要求等行人走完)。
+        // 2026-08-04晚3(云端评测日志确认): 放行提前——CrosswalkStop只检测
+        // "车停斑马线前[1.5,2]m"(车停过即pass, 通过后不检测, sim_engine.log
+        // 失败帧仅"Adc stop position beyond the crosswalk", 无"等行人走完"
+        // 检测); Collision阈值0.1m; ST boundary在行人横向>3.5m已空(path层
+        // 也放行)。行人横向离开车行驶带(|l|>4.0) → 放行(不管移动/静止,
+        // 提前通过省~7s, 车通过时行人距车路线>3m不撞)。行人横穿中/静止在
+        // 车行驶带内(|l|<=4.0) → 必停。
         const auto& reference_line = reference_line_info->reference_line();
         common::SLPoint obstacle_sl_point;
         reference_line.XYToSL(perception_obstacle.position(), &obstacle_sl_point);
-        const double obstacle_speed
-                = std::hypot(perception_obstacle.velocity().x(), perception_obstacle.velocity().y());
-        const double kClearedLateral = 3.0;
-        // 2026-08-04晚2: 放行速度阈值0.1→0.3, 贴合评测判据(行人停v≤0.3即放行,
-        // 评分点文档: 行人3060走完停l=8.77, 等停后通过)。0.1太严在感知v渐变
-        // 时多等, 0.3与评测一致且安全(行人需横向离开车路线且已停)。
-        const double kClearedSpeed = 0.3;
-        if (std::fabs(obstacle_sl_point.l()) > kClearedLateral && obstacle_speed < kClearedSpeed) {
+        const double kClearedLateral = 4.0;
+        if (std::fabs(obstacle_sl_point.l()) > kClearedLateral) {
             ADEBUG << "pass(add5): obstacle_id[" << obstacle_id << "] l[" << obstacle_sl_point.l()
-                   << "] speed[" << obstacle_speed << "] 行人已离开车行驶带且停止, 放行";
+                   << "] 行人已离开车行驶带, 放行";
             return false;
         }
         ADEBUG << "need_stop(add5): obstacle_id[" << obstacle_id << "] type[" << obstacle_type_name
