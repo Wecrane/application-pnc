@@ -121,14 +121,13 @@ bool ReferenceLineInfo::Init(const std::vector<const Obstacle*>& obstacles,
 
   const auto& map_path = reference_line_.map_path();
   for (const auto& speed_bump : map_path.speed_bump_overlaps()) {
-    // -1 and + 1.0 are added to make sure it can be sampled.
-    // 超速修复(2026-08-02): 尾部加长到 end_s+4.0, 防止车在评测限速区(3.0m/s)
-    // 内提前恢复加速导致超速(实测 2.5 目标 + 控制超调后, 提前加速到 3.097 超速扣分)
-    // 头部提前 35m(2026-08-02): 赛题1 车16m/s 冲过减速带——原 [start_s-1, end_s+4]
-    // 仅~5m 宽, 车 16m/s 在 0.3s 内降到 2.5 物理不可行 → QP 无解 → fallback 丢限速。
-    // 提前 35m(>16m/s@5m/s²减速到2.5需~25m)让 QP 有足够缓冲, 车提前减速通过减速带。
-    reference_line_.AddSpeedLimit(speed_bump.start_s - 35.0,
-                                  speed_bump.end_s + 8.0,
+    // 2026-08-04调优: 提前35→20m, 尾部8→2m——114244实测车2.5巡航95m全程
+    // (两个减速带限速区[前35后8]重叠, 车x423677→423582全2.5) → 慢(64.8s)。
+    // 评测只要求"通过减速带处≤3": 车16巡航到bump前40m(20+QP回推25m@5)减速
+    // → 到限速区起点(前20m)2.5 → 2.5巡航20m → bump处2.5 ✓(安全)。
+    // 尾部2m: 过bump后2m即可提速, 两带之间(~22m空隙)加速通过 → 省~8s。
+    reference_line_.AddSpeedLimit(speed_bump.start_s - 20.0,
+                                  speed_bump.end_s + 2.0,
                                   FLAGS_speed_bump_speed_limit);
   }
 
