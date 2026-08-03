@@ -39,10 +39,31 @@ apollo::common::Status TrajectoryFallbackTask::Execute(
   GenerateFallbackPath(frame, reference_line_info);
 
   if (reference_line_info->speed_data().empty()) {
-    AERROR << "Speed fallback due to algorithm failure";
-    *reference_line_info->mutable_speed_data() = GenerateFallbackSpeed(
-        injector_->ego_info(), FLAGS_speed_fallback_distance);
-    AmendSpeedDataForControl(reference_line_info->mutable_speed_data());
+    // 2026-08-05(010轮a0修复): 优先用上一帧speed_data避免fast stop急刹。
+    // DP偶发失败(gridded_path_time_graph找不到可行) → speed_data空 →
+    // fast stop(3m急刹) → 车速度骤降 → 后续QP从低速继续 → 车停fence前
+    // 0.63m太远(评测距离1.93m>max扣分). 用上一帧QP轨迹(车停fence前
+    // 0.25m) → 车平滑延续 → 停准[1.5,1.8]m. fast stop仅保留为最后手段。
+    bool used_last_frame_speed = false;
+    const auto* ptr_last_frame = injector_->frame_history()->Latest();
+    if (ptr_last_frame != nullptr) {
+      for (const auto& last_rl_info :
+           ptr_last_frame->reference_line_info()) {
+        const auto& last_speed_data = last_rl_info.speed_data();
+        if (!last_speed_data.empty()) {
+          *reference_line_info->mutable_speed_data() = last_speed_data;
+          used_last_frame_speed = true;
+          AERROR << "Speed fallback: use last frame speed data";
+          break;
+        }
+      }
+    }
+    if (!used_last_frame_speed) {
+      AERROR << "Speed fallback due to algorithm failure";
+      *reference_line_info->mutable_speed_data() = GenerateFallbackSpeed(
+          injector_->ego_info(), FLAGS_speed_fallback_distance);
+      AmendSpeedDataForControl(reference_line_info->mutable_speed_data());
+    }
   }
 
   if (reference_line_info->trajectory_type() != ADCTrajectory::PATH_FALLBACK) {
