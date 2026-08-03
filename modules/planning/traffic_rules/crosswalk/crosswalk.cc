@@ -493,14 +493,14 @@ bool Crosswalk::CheckStopForObstacle(
         // (靠近车道) → 永久等 → 车停93s(planning)纯浪费。
         // 车停稳(距斑马线~1.68m达标)即放行 → 省~90s。
         // v3a超时兜底(2026-08-06): 车停稳且已到停车位(距斑马线1-3m达标)后
-        // 计时, 停稳≥kCrosswalkStopTimeout(35s, 覆盖行人0.5m/s横穿15.83m≈32s)
-        // → 无条件放行。018实测"停稳立即走"在行人横穿中越线失败(beyond
-        // crosswalk每帧100分); add5(|l|>6行人走完)017满分但行人感知异常时
-        // 可能永久等(017车停93s)。超时兜底: add5先放行(行人走完, 最短),
-        // 35s兜底防卡死。
+        // 计时, 停稳≥kCrosswalkStopTimeout(12.5s, 用户人工回放判断: 行人
+        // 12.5s后已离开车行驶带, 出发安全) → 无条件放行。018实测"停稳立即
+        // 走"在行人横穿中越线失败(beyond crosswalk每帧100分); add5(|l|>6
+        // 行人走完)017满分但行人感知异常时可能永久等(017车停93s)。超时
+        // 兜底: add5先放行(行人走完, 最短), 12.5s兜底防卡死+尽早出发。
         const double adc_speed = injector_->vehicle_state()->linear_velocity();
         const double dist_to_cw = crosswalk_near_s - adc_front_s;
-        static constexpr double kCrosswalkStopTimeout = 35.0;
+        static constexpr double kCrosswalkStopTimeout = 12.5;
         if (adc_speed < 0.1 && dist_to_cw > 1.0 && dist_to_cw < 3.0) {
             auto it = adc_stop_timer_.find(crosswalk_id);
             if (it == adc_stop_timer_.end()) {
