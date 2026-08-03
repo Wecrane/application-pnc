@@ -1,6 +1,6 @@
 start_stop_sign_scenario_distance: 4.0
 watch_vehicle_max_valid_stop_distance: 5.0
-max_valid_stop_distance: 2.0
+max_valid_stop_distance: 2.5  # 2026-08-04: 2.0→2.5(110452实测车头距停止线2.19m, P0停稳提前0.445m造成偏远; 2.19>2.0 → CheckADCStop失败 → PreStop卡死 → 不放行)
 stop_duration_sec: 0.5  # 提速2026-08-02: 1.0->0.5(停一下就起步, 评测只要求must stop)
 stop_timeout_sec: 8.0
 creep_timeout_sec: 10.0

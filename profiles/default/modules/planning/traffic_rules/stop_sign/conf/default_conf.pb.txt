@@ -1,4 +1,6 @@
 # stop_sign 停止标志规则配置（default profile 覆盖层）
 # 赛题四：遇停止标志需完全停止在停止线前 1.5~2.0m（原官方 1.0m 不达标）
 enabled: true
-stop_distance: 1.75
+# 2026-08-04: 1.75→1.60(110452实测车头距停止线2.19m, P0停稳提前0.445m; 减0.15
+# 让车头停~1.78m满足RunStopSign[1.5,2]m, 同时<max_valid_stop_distance=2.5放行)
+stop_distance: 1.60
