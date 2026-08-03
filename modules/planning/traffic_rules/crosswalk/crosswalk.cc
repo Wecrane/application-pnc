@@ -452,24 +452,16 @@ bool Crosswalk::CheckStopForObstacle(
         return false;
     }
 
-    // mayaochang add5: a pedestrian still inside the EXPANDED crosswalk polygon
-    // AND still MOVING (mid-crossing) must ALWAYS stop the ego. The default
-    // logic releases based on lateral distance (l >= stop_loose_l_distance) /
-    // path-crossing, which lets the ego drive through while the pedestrian is
-    // still crossing -> competition "crosswalk yield" grading fails.
-    //
-    // Note: we judge against the EXPANDED polygon and require the pedestrian to
-    // be moving, because the raw crosswalk polygon's far edge (y=4437636.57 for
-    // Crosswalk_62) is smaller than the scenario's crossing target
-    // (y=4437639.07): a raw-polygon check would release 2.5m too early. Once
-    // the pedestrian finishes and stops moving, we fall through to the default
-    // checks, which then release because the pedestrian has left the lane area
-    // (l > stop_loose_l_distance).
-    const double obstacle_speed = std::hypot(perception_obstacle.velocity().x(), perception_obstacle.velocity().y());
-    constexpr double kMovingPedestrianSpeed = 0.3;  // same as kMaxStopSpeed above
-    if (in_expanded_crosswalk && obstacle_speed > kMovingPedestrianSpeed) {
+    // 2026-08-04修复: 行人在扩展斑马线内 → 必须停(不依赖速度)。
+    // 094122实测: 行人横穿中但perception速度0.075-0.145<0.3(起步慢/感知滞后),
+    // 原add5(移动>0.3才停)不触发 → 走默认逻辑(l=6.5>stop_strict_l_distance
+    // =5.0不停) → 车冲过斑马线(评测CrosswalkStop硬失败)。
+    // 评测要求: 行人在斑马线上车必须停等, 直到行人离开扩展区(走完)。
+    // 行人在扩展区(含慢速/静止)都停, 更安全。行人走完(离开扩展区)→默认
+    // 逻辑放行(车起步)。
+    if (in_expanded_crosswalk) {
         ADEBUG << "need_stop(add5): obstacle_id[" << obstacle_id << "] type[" << obstacle_type_name
-               << "] moving inside expanded crosswalk, always stop";
+               << "] inside expanded crosswalk, always stop";
         return true;
     }
 
