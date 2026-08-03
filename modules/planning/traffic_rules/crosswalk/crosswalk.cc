@@ -234,10 +234,15 @@ void Crosswalk::MakeDecisions(Frame* const frame, ReferenceLineInfo* const refer
                 }
             }
             if (should_limit) {
-                AINFO << "[crosswalk-limit] " << crosswalk_id << " AddSpeedLimit(" << crosswalk_overlap->start_s - 50.0
+                // 提前量(2026-08-04调优): 50m→30m——090331实测车峰值只有12.8
+                // (限速区提前50m+限速回推23.6m → 车距斑马线74m就开始减速, 没
+                // 机会到16巡航)。评测限速区是斑马线本身(x∈[423659,423664]),
+                // 车只需在进入限速区前降到≤4.5。16→4.5@5m/s²需23.6m, 提前30m
+                // 足够(留5m余量), 车在距斑马线~54m才开始减速 → 峰值能到16。
+                AINFO << "[crosswalk-limit] " << crosswalk_id << " AddSpeedLimit(" << crosswalk_overlap->start_s - 30.0
                       << "," << crosswalk_overlap->end_s << ",4.5)";
                 reference_line_info->mutable_reference_line()->AddSpeedLimit(
-                        crosswalk_overlap->start_s - 50.0, crosswalk_overlap->end_s, 4.5);
+                        crosswalk_overlap->start_s - 30.0, crosswalk_overlap->end_s, 4.5);
             } else {
                 AINFO << "[crosswalk-limit] " << crosswalk_id << " SKIP speed limit (seen red / stop sign present)";
             }
