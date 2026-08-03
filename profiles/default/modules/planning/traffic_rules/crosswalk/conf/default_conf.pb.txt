@@ -21,7 +21,9 @@
 # 评测=sd+车到fence。1.15→fast stop(0.804)评测1.954m达标;
 # QP(0.593)评测1.743m达标。expand_s_distance同步源码2.0→8.0避免
 # 行人l=5.49提前放行(车在横穿中通过)。
-stop_distance: 1.15
+# 2026-08-05(用户调整): 1.15→1.0——fence前移0.15m, 评测=sd+车到fence
+# (fast stop 0.804→1.804, QP 0.593→1.593), 均落[1.5,2.0]中段。
+stop_distance: 1.0
 max_stop_deceleration: 4.0
 min_pass_s_distance: 1.0
 # expand_s_distance 2.0→4.0→6.0：crosswalk 扩展区扩大，行人完全走完
