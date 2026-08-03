@@ -255,6 +255,19 @@ Status PiecewiseJerkSpeedOptimizer::Process(
             const double brake_envelope = std::sqrt(2.0 * std::abs(veh_param.max_deceleration()) * dist_to_stop);
             dx_ref[i] = std::fmin(dx_ref[i], brake_envelope);
         }
+        // P0(2026-08-04修复): 接近STOP时同步收紧v_upper——消除infeasible根因。
+        // 032120实测: 终点段参考线缩到15-21m, stop_s=5-11m, 车高速(9-10.5m/s)接近
+        // 但 v_up[0] 仍=16(不收) → QP无法在stop_s前刹停 → primal infeasible(22次)
+        // → fallback放宽 → 车冲过STOP/终点 → 终点倒溜(v=-0.118, 冲过DEST 0.19m)。
+        // 修复: v_upper按最晚刹车距离收紧 v_allow_stop=√(2|dec|·(stop_s-s_est)),
+        // 与s_bounds最晚刹车曲线自洽(车到stop_s时v=0) → QP全程可行不fallback,
+        // 车在STOP/终点前刹住不倒溜。车距STOP>21.3m时 v_allow>16 不压(不影响
+        // 正常巡航/限速回推, 两者fmin取更小者)。
+        if (stop_s < total_length) {
+            const double dist_to_stop = std::max(0.0, stop_s - s_est);
+            const double v_allow_stop = std::sqrt(2.0 * std::abs(veh_param.max_deceleration()) * dist_to_stop);
+            v_upper_bound = std::fmin(v_upper_bound, v_allow_stop);
+        }
         // 车可达速度/位置累积(物理上限: 从v0以+3加速逼近dx_ref, 平滑无陡降)
         v_est = std::min(dx_ref[i], v_est + 3.0 * delta_t);
         s_est += v_est * delta_t;
