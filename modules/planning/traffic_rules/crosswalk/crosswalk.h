@@ -53,7 +53,9 @@ class Crosswalk : public TrafficRule {
   bool CheckStopForObstacle(ReferenceLineInfo* const reference_line_info,
                             const hdmap::CrosswalkInfoConstPtr crosswalk_ptr,
                             const Obstacle& obstacle,
-                            const double stop_deceleration);
+                            const double stop_deceleration,
+                            const double crosswalk_near_s,
+                            const double adc_front_s);
 
  private:
   CrosswalkConfig config_;
