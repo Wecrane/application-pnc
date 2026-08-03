@@ -183,9 +183,24 @@ void TrafficLight::MakeDecisions(Frame* const frame,
       // 16→4.8@-3需38.8m, 提前20m+QP回推23.6m=43.6m足够 → 车16巡航更久
       // +4.8巡航缩短 → 省~6s。
       if (!GlobalSeenRedLight()[traffic_light_overlap.object_id]) {
+        // 2026-08-04晚: 云端scn4 SpeedLimit=0根因修复。评测两个限速区:
+        // Zone1 进道区 y4438156(s124, 无地图元素) + Zone2 路口区
+        // y4438237-4438264(s205-232, 含Junction_9+Crosswalk_12/52/54)。
+        // 原仅 start_s-20 ~ end_s(=停止线s205) → 进道区无约束(16.4巡航
+        // 冲过, 实测超速)+ 停止线后立即+3.0加速冲路口(实测5.44→12.3超速)。
+        // 现扩展 [start_s-81, start_s+27] 全覆盖两个区。
         reference_line_info->mutable_reference_line()->AddSpeedLimit(
-            traffic_light_overlap.start_s - 20.0, traffic_light_overlap.end_s,
-            4.8);
+            traffic_light_overlap.start_s - 81.0,
+            traffic_light_overlap.start_s + 27.0, 4.8);
+      } else {
+        // 2026-08-04晚: 云端scn3 SpeedLimit=62根因修复——路口区超速
+        // (评测t=48.8-48.9, Max=11.18, ego=11.44)。scn3见过红灯后绿灯
+        // 通过路口, 原代码不限速 → 车加速冲过路口区。评测注入限速区
+        // y4438237.46-4438263.43(11.18m/s=40km/h), 现加11.0(留0.18裕量
+        // 防控制超调, 参考16.39→16.9超调教训)。
+        reference_line_info->mutable_reference_line()->AddSpeedLimit(
+            traffic_light_overlap.start_s,
+            traffic_light_overlap.start_s + 26.0, 11.0);
       }
       continue;
     }

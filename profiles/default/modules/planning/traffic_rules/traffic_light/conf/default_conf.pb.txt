@@ -1,5 +1,8 @@
 # traffic_light 红绿灯规则配置（default profile 覆盖层）
-# 赛题三：红灯需停车在停止线前 1.5~2.0m（原官方 1.0m 不达标）
+# 2026-08-04晚: 云端scn3 RedLightStop=80根因修复。车头停停止线前2.4~2.5m,
+# 评测要求≤2.0m(实测失败帧debug: "distance from Stopline to Adc: 2.401675
+# is more than 2.000000")。管线+0.75m额外偏移(P0在距栅栏0.62m处v_upper=0)。
+# 1.75→0.8: 车头停≈1.55m(裕量0.45m, 必须<1.25才能过2.0阈值)。
 enabled: true
-stop_distance: 1.75
+stop_distance: 0.8
 max_stop_deceleration: 4.0
