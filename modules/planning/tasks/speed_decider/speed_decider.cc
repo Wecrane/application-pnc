@@ -660,18 +660,20 @@ void SpeedDecider::HandlePedestrianStop(Obstacle* obstacle) const {
         // Pedestrian still inside the lane -> keep a stop fence.
         // mayaochang add18: only the stop DISTANCE is changed (scenario 5
         // experiment): non-crosswalk pedestrian ~2.5m, crosswalk keeps 1.75m.
-        // 2026-08-06(020): 跟随逻辑——行人移动时用动态fence(车跟着走, 保持
-        // 2-5m距离), 行人静止时固定fence(车停, 020满分行为)。
+        // 2026-08-06(020/021): 跟随逻辑——行人移动时用动态fence(车跟着走,
+        // 保持2-5m距离), 行人静止时固定fence(车停, 020满分行为)。
         const auto& perception = obstacle->Perception();
         const double obs_speed = std::hypot(perception.velocity().x(), perception.velocity().y());
-        // 行人移动判定: 感知速度>0.3m/s(与020行人50s后起步一致)
-        const bool ped_moving = obs_speed > 0.3;
+        // 行人移动判定(021修复): 感知速度>0.3 或 预测IsStatic()==false(有预测
+        // 轨迹)。021实测仅用感知速度时行人被判静止→动态fence不触发→跟车
+        // 距离14-20m太远。IsStatic()=预测动态标记, 行人起步即false。
+        const bool ped_moving = !obstacle->IsStatic() || obs_speed > 0.3;
         double stop_dist = -FLAGS_min_stop_distance_obstacle;
         if (IsPedestrianOnCrosswalk(*obstacle)) {
             stop_dist = -FLAGS_pedestrian_stop_distance;
         } else if (ped_moving) {
-            // 跟随距离: 保持3.5m(评测dist_to_obstacle_car[2,5.5]内居中)
-            stop_dist = -3.5;
+            // 跟随距离: 2.5m(用户要求"2点多米", 评测[2,5.5]内)
+            stop_dist = -2.5;
         } else {
             // 静止停车: -5.0(020满分标定, 车停行人前~5m, 不跟车评测不检测)
             stop_dist = -5.0;
