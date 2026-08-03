@@ -23,7 +23,6 @@
 #include <deque>
 #include <memory>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 #include "modules/planning/traffic_rules/crosswalk/proto/crosswalk.pb.h"
@@ -45,7 +44,6 @@ class Crosswalk : public TrafficRule {
   void Reset() override {
     crosswalk_overlaps_.clear();
     extra_crosswalk_overlaps_.clear();
-    adc_stop_timer_.clear();
   }
 
  private:
@@ -67,10 +65,6 @@ class Crosswalk : public TrafficRule {
   // 这里持久存储补充的 PathOverlap, crosswalk_overlaps_ 存其指针。
   // 用 deque: push_back 不使已有元素指针失效(vector 会 realloc 导致指针失效)。
   std::deque<hdmap::PathOverlap> extra_crosswalk_overlaps_;
-  // v3a超时兜底(2026-08-06): crosswalk_id → 车停稳时刻(Clock仿真时间)。
-  // 车停稳且到停车位后计时, 停稳≥kCrosswalkStopTimeout无条件放行,
-  // 防add5因行人感知异常永久等(017车停93s)。Reset清空。
-  std::unordered_map<std::string, double> adc_stop_timer_;
 };
 
 CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(apollo::planning::Crosswalk, TrafficRule)
