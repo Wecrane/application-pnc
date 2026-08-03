@@ -216,7 +216,11 @@ Status PiecewiseJerkSpeedOptimizer::Process(
         // P0-B(2026-08-03): kLimitDecel 4.0→5.0——回推起点从32m(4m/s²)前移到23.6m,
         // 减轻"提前减速"(机制专项Q1根因: 限速区前30m+就被硬性要求4m/s²减速)。
         static constexpr double kLimitLookAhead = 100.0;
-        static constexpr double kLimitDecel = 5.0;
+        // 2026-08-04: kLimitDecel 5.0→4.0(scn4本地刹油刹修复). 5.0回推太松
+        // (车s146才压16, 回推23.6m), 车减速不够(执行滞后~0.4s)→进限速区
+        // (s170)还6-7m/s超4.5→区内急刹到0.64(刹油刹)+起步. 4.0回推32m
+        // (s139压16), 车更早平滑降速(补偿执行滞后)→进限速区4.5稳态不刹油刹.
+        static constexpr double kLimitDecel = 4.0;
         for (const auto& lp : speed_limit.speed_limit_points()) {
             if (lp.first <= path_s) {
                 continue;
