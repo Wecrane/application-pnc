@@ -5,7 +5,10 @@
 # 评测min=1.5m(debug: "distance to cross walk: 1.496761 is less than valid
 # min distance")。标定: 评测距离≈stop_distance+0.80(0.7→1.497实测, QP停车
 # 偏移0.60+P0停稳)。0.7→1.0: 评测距离≈1.80m, 落[1.5,2.0]中段安全。
-stop_distance: 1.0
+# 2026-08-05(008轮a0修复): 1.0→1.5——保留speed_data(ad1db76)后车停fence
+# 前仅0.21-0.25m(007/008实测: 评测距离1.21/1.25m<min1.5扣分), 而fast stop
+# (006)车停fence前0.68m(1.68m达标)。1.5+滑行0.25=1.75m, 落[1.5,2.0]中段。
+stop_distance: 1.5
 max_stop_deceleration: 4.0
 min_pass_s_distance: 1.0
 # expand_s_distance 2.0→4.0→6.0：crosswalk 扩展区扩大，行人完全走完
