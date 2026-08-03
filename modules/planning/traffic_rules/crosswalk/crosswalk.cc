@@ -505,14 +505,13 @@ bool Crosswalk::CheckStopForObstacle(
         const double heading = injector_->vehicle_state()->heading();
         const double v_l = -perception_obstacle.velocity().x() * std::sin(heading)
                            + perception_obstacle.velocity().y() * std::cos(heading);
-        // 2026-08-06: 6.0→3.5→1.5——用户观察仿真: 行人靠近时speed_decider
-        // 生成行人停止墙, 行人从左往右完全走过车头(横向越过车宽)时停止墙
-        // 消失。1.5 = 车半宽(~0.95m) + 行人半宽(~0.5m) → 行人完全走过车头
-        // 即放行(用户确认)。满分代码add5要求|l|>6(行人到对侧)浪费等待。
-        const double kRoadClearedLateral = 1.5;
+        // 2026-08-06: 6.0→3.5→1.5→4.5——用户迭代调参。4.5: 行人横向离开
+        // 车道足够远(|l|≥4.5, 车道半宽~2.3+行人半宽~0.5+裕量)且远离/对侧
+        // 静止 → 放行。比1.5(行人刚过车头)安全, 比6.0(行人到对侧)早。
+        const double kRoadClearedLateral = 4.5;
         // 2026-08-04补强: 行人横穿到对侧后停下(v_l≈0, l*v_l=0不满足远离条件)
         // → 车会永远等。scn7行人走到北侧l≈-8.8停下(走完) → 已完全离开斑马线
-        // (横向±3.5m), 评测允许通过。补充: |l|>1.5且已到对侧(l<0)且静止(speed
+        // (横向±3.5m), 评测允许通过。补充: |l|>4.5且已到对侧(l<0)且静止(speed
         // <0.1) → 也放行。起点(l>0静止)不满足l<0, 不会误放行。
         if (std::fabs(obstacle_sl_point.l()) > kRoadClearedLateral &&
             (obstacle_sl_point.l() * v_l > 0.0 ||
