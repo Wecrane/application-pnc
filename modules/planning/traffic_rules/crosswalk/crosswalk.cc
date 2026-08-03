@@ -32,6 +32,7 @@
 #include "modules/planning/planning_base/proto/planning_status.pb.h"
 #include "cyber/time/clock.h"
 #include "modules/common/util/util.h"
+#include "modules/common/configs/vehicle_config_helper.h"
 #include "modules/common/vehicle_state/vehicle_state_provider.h"
 #include "modules/map/hdmap/hdmap_util.h"
 #include "modules/planning/planning_base/common/ego_info.h"
@@ -113,6 +114,30 @@ void Crosswalk::MakeDecisions(Frame* const frame, ReferenceLineInfo* const refer
             ADEBUG << "SKIP: crosswalk_id[" << crosswalk_id << "] crosswalk_overlap_end_s[" << crosswalk_overlap->end_s
                    << "] adc_front_edge_s[" << adc_front_edge_s << "]. adc_front_edge passes crosswalk_end_s + buffer.";
             continue;
+        }
+        // 2026-08-04: 世界坐标'已过'检查——修复投影错误导致参考线坐标检查失效。
+        // 车过斑马线后(世界坐标), 全局扫描的斑马线投影s仍可能在车前方(参考线
+        // 坐标), 限速区[start_s-30, end_s]错误出现在车前方 → 限速回推 → 车提前
+        // 减速(091204实测终点慢停: 车x=423631距终点59m就12→0缓慢减速14s,
+        // 车已过斑马线x=423664但限速区[104.5,139]还在车前方50m)。
+        // 车头沿heading方向投影 > 斑马线多边形最大投影 → 车头已越过 → 跳过。
+        if (crosswalk_ptr != nullptr) {
+            const auto* adc_state = injector_->vehicle_state();
+            const double heading = adc_state->heading();
+            const double c_h = std::cos(heading);
+            const double s_h = std::sin(heading);
+            const double front_dist =
+                    common::VehicleConfigHelper::GetConfig().vehicle_param().front_edge_to_center();
+            const double adc_front_proj = (adc_state->x() + front_dist * c_h) * c_h
+                                          + (adc_state->y() + front_dist * s_h) * s_h;
+            double cw_max_proj = -1e9;
+            for (const auto& pt : crosswalk_ptr->polygon().points()) {
+                cw_max_proj = std::max(cw_max_proj, pt.x() * c_h + pt.y() * s_h);
+            }
+            if (adc_front_proj > cw_max_proj) {
+                ADEBUG << "SKIP world: crosswalk_id[" << crosswalk_id << "] adc passed";
+                continue;
+            }
         }
 
         // check if crosswalk already finished
