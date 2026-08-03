@@ -243,7 +243,13 @@ Status PiecewiseJerkSpeedOptimizer::Process(
             const double dist_to_stop = std::max(0.0, stop_s - s_est);
             // 2026-08-04: 同STOP分支改jerk等效减速度3.0(车16→0需~43m)。
             // 原6.0(21.3m)包络太紧 → QP提前减速封顶(095032实测12.4)。
-            const double brake_envelope = std::sqrt(2.0 * 3.0 * dist_to_stop);
+            // 2026-08-04晚2: 改jerk精确——低v时sqrt(2·3·dist)太松(车v=1.11
+            // 只距STOP 0.21m<0.78m jerk最小距离) → QP无法jerk刹停 → 终点段
+            // infeasible滑行(101332)。jerk精确: 低v纯jerk段(1.5·d)^(2/3),
+            // 高v jerk过渡(3s到-6)后-6急刹。与P0 v_upper一致。
+            const double brake_envelope = (dist_to_stop < 18.0)
+                    ? std::pow(1.5 * dist_to_stop, 2.0 / 3.0)
+                    : -9.0 + std::sqrt(108.0 + 12.0 * dist_to_stop);
             dx_ref[i] = std::fmin(dx_ref[i], brake_envelope);
         }
         // P0(2026-08-04修复): 接近STOP时同步收紧v_upper——消除infeasible根因。
@@ -267,7 +273,15 @@ Status PiecewiseJerkSpeedOptimizer::Process(
             if (init_s[1] < 1.0 && dist_to_stop < 5.0) {
                 v_upper_bound = std::fmin(v_upper_bound, 0.0);
             } else {
-                const double v_allow_stop = std::sqrt(2.0 * 3.0 * dist_to_stop);
+                // 2026-08-04晚2: jerk精确最大速度(车在dist内jerk刹停)。
+                // 低v纯jerk段: 从v(a=0)以jerk-2刹停 s=2/3·v^1.5 → v=(1.5d)^(2/3)。
+                // 高v: jerk过渡3s(a到-6,走3v-9)后-6急刹 → 反函数 v=-9+√(108+12d)。
+                // 原sqrt(2·3·dist)(-3恒定抛物线)低v太松: 车v=1.11只距STOP
+                // 0.21m<0.78m(jerk最小) → QP无法jerk刹停 → 终点段连续
+                // infeasible(101332 t=60.8-64.9) → fallback滑行5s才停。
+                const double v_allow_stop = (dist_to_stop < 18.0)
+                        ? std::pow(1.5 * dist_to_stop, 2.0 / 3.0)
+                        : -9.0 + std::sqrt(108.0 + 12.0 * dist_to_stop);
                 v_upper_bound = std::fmin(v_upper_bound, v_allow_stop);
             }
         }
