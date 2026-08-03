@@ -412,6 +412,30 @@ Status PiecewiseJerkSpeedOptimizer::Process(
             // relaxed对init_v<v_upper帧无效(v_upper=max(4.5,init_v-6t)仍4.5)
             // → 保留旧轨迹是唯一平滑出路. 真实STOP(行人/终点)由s_bounds+
             // P0 v_upper保证, 旧轨迹不会冲过(车已在STOP前减速).
+            // 2026-08-05(007轮a1/a3修复): 保留轨迹裁剪到限速回推包络(v_upper)。
+            // 007轮实测: a1车13s QP失败(init_v波动11.1>v_up 6.56) → 保留6.92
+            // 旧轨迹 → 车在限速5区内7.78m/s超速(评测扣40分). 裁剪后车≤v_upper
+            // (进入限速区时≤4.8), 不超速; 保留机制仍避免scn4刹油刹(巡航无
+            // 限速压力时v_upper=20不裁剪, 车4.5平滑延续).
+            if (!speed_data->empty()) {
+                double pre_s = (*speed_data)[0].s();
+                for (int i = 0; i < static_cast<int>(speed_data->size()); ++i) {
+                    auto& sp = (*speed_data)[i];
+                    const double t = sp.t();
+                    const int idx = std::min(
+                            static_cast<int>(t / delta_t), num_of_knots - 1);
+                    const double v_up =
+                            std::fmax(0.0, s_dot_bounds_copy[idx].second);
+                    const double v = std::fmin(sp.v(), v_up);
+                    sp.set_v(v);
+                    if (i > 0) {
+                        const double dt = sp.t() - (*speed_data)[i - 1].t();
+                        sp.set_s(pre_s +
+                                 0.5 * ((*speed_data)[i - 1].v() + v) * dt);
+                    }
+                    pre_s = sp.s();
+                }
+            }
             // speed_data->clear();
             print_debug.AddPoint("optimize_st_curve", 0, init_s[0]);
             print_debug.AddPoint("optimize_vt_curve", 0, init_s[1]);
