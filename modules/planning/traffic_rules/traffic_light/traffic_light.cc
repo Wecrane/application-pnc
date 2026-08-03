@@ -174,16 +174,18 @@ void TrafficLight::MakeDecisions(Frame* const frame,
     }
     if (signal_color == perception::TrafficLight::GREEN ||
         signal_color == perception::TrafficLight::BLACK) {
-      // competition: 赛题八(交通灯路口减速) 绿灯通过信号灯区域限速(≤5m/s,留4.5)
+      // competition: 赛题八(交通灯路口减速) 绿灯通过信号灯区域限速(≤5m/s)
       // 仅当该信号灯【从未出现过红灯】时生效——赛题3(红绿灯场景)红灯停车后
       // 绿灯通过路口不限速(评测无路口限速要求, 且避免限速导致的顿挫+耗时)
-      // 修复(2026-08-02): 原区间[start_s,end_s]只有0m(信号灯是点)→限速无效
-      // → 车16.5m/s全速通过Signal_5路口(本地222245)+云端scn8斑马线超速16.2。
-      // 提前50m限速: 16.5m/s减到4.5需21m, 50m足够, 车提前减速通过路口。
+      // 2026-08-04调优: 4.5→4.8(评测是5m/s, 4.5太保守) + 提前50→20m——
+      // 112948实测车4.5巡航50m(提前50m限速, 评测限速区只有~27m宽) → 慢。
+      // 评测要求"限速区(y4438237-4438264)内≤5", 车只需进入限速区前降到≤5:
+      // 16→4.8@-3需38.8m, 提前20m+QP回推23.6m=43.6m足够 → 车16巡航更久
+      // +4.8巡航缩短 → 省~6s。
       if (!GlobalSeenRedLight()[traffic_light_overlap.object_id]) {
         reference_line_info->mutable_reference_line()->AddSpeedLimit(
-            traffic_light_overlap.start_s - 50.0, traffic_light_overlap.end_s,
-            4.5);
+            traffic_light_overlap.start_s - 20.0, traffic_light_overlap.end_s,
+            4.8);
       }
       continue;
     }
