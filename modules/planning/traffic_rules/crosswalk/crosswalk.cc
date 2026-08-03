@@ -197,13 +197,33 @@ void Crosswalk::MakeDecisions(Frame* const frame, ReferenceLineInfo* const refer
             // 赛题八(交通灯路口减速通行): 路口斑马线也要限速5——限速条件:
             //   附近30m无信号灯(普通斑马线) 或 附近信号灯从未见红(赛题8一直绿)
             // 不限速条件: 附近信号灯见过红(赛题3红绿灯, 绿灯通过路口不限速)。
-            // 限速区间提前(start_s-50)延长: 车提前减速(16.5m/s减到4.5需21m)。
+            // 限速区间提前(start_s-30)延长: 车提前减速(16.5m/s减到4.5需21m)。
             // 修复(2026-08-02): 原条件signal_overlaps().empty()在参考线有远处
             // Signal_5(400m外)时跳过斑马线限速→scn8斑马线超速16.2(评测限速5);
             // 又改'附近30m有信号灯即不限速'→路口斑马线(Crosswalk_52/54与Signal_5
             // 同处)被跳过→本地222245车16.6全速通过Signal_5路口。用
             // GlobalSeenRedLight(共享traffic_light状态)区分赛题3(见红)与赛题8(未红)。
+            // 2026-08-04: 斑马线附近有行人 → 不限速(车停在斑马线前不进入限速区,
+            // 由QP的P0在STOP前最晚刹车)。091204实测行人stop抖动(起步stop=1→0,
+            // 行人l 4.35→6.59越stop_strict_l_distance=5.0)导致限速4.5生效 →
+            // 车提前减速峰值只有14.4(没到16, 用户理想满加速→16巡航→最晚刹车)。
+            // 行人在斑马线 → 车最终要停 → 无需限速4.5拖累。scn8无人→无行人
+            // →仍限速4.5通过(评测≤5)。
             bool should_limit = true;
+            for (const auto* obstacle : path_decision->obstacles().Items()) {
+                if (obstacle->IsVirtual()) continue;
+                const auto& p_obs = obstacle->Perception();
+                if (p_obs.type() != PerceptionObstacle::PEDESTRIAN
+                    && p_obs.type() != PerceptionObstacle::BICYCLE) continue;
+                const auto& sl_b = obstacle->PerceptionSLBoundary();
+                if (sl_b.end_s() >= crosswalk_overlap->start_s - 15.0
+                    && sl_b.start_s() <= crosswalk_overlap->end_s + 15.0) {
+                    should_limit = false;
+                    AINFO << "[crosswalk-limit] " << crosswalk_id
+                          << " SKIP (pedestrian nearby s=" << sl_b.start_s() << ")";
+                    break;
+                }
+            }
             for (const auto& signal_overlap : reference_line_info->reference_line().map_path().signal_overlaps()) {
                 if (std::fabs(signal_overlap.start_s - crosswalk_overlap->start_s) < 30.0) {
                     // 附近有信号灯且见过红(赛题3红绿灯) → 绿灯通过路口不限速
