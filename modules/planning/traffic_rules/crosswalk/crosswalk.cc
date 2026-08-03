@@ -501,7 +501,10 @@ bool Crosswalk::CheckStopForObstacle(
         const double adc_speed = injector_->vehicle_state()->linear_velocity();
         const double dist_to_cw = crosswalk_near_s - adc_front_s;
         static constexpr double kCrosswalkStopTimeout = 12.5;
-        if (adc_speed < 0.1 && dist_to_cw > 1.0 && dist_to_cw < 3.0) {
+        // 2026-08-06: 放宽距离条件——019实测车停稳距斑马线~3.08m(超3.0上限),
+        // 原[1,3]不满足→超时兜底不启动→车无限等(019等>30s)。车停稳(距斑马线
+        // 0-5m)=合格停车位置 → 12.5s无条件放行。
+        if (adc_speed < 0.1 && dist_to_cw > 0.0 && dist_to_cw < 5.0) {
             auto it = adc_stop_timer_.find(crosswalk_id);
             if (it == adc_stop_timer_.end()) {
                 adc_stop_timer_[crosswalk_id] = Clock::NowInSeconds();
