@@ -16,7 +16,12 @@
 # 冲过斑马线, 0分)恢复fast stop后, 云端010多帧DP失败fast stop车停fence前
 # 0.79m(评测2.09m>max超标0.09)。1.2→fast stop评测1.99m达标; QP正常
 # (0.63)评测1.83m达标; 车停fence前0.25m(保留)评测1.45m略低于min, 少见。
-stop_distance: 1.2
+# 2026-08-05深夜(011轮云端实测): 1.2→1.15——011车停fence前0.804m
+# (评测2.004m>max 2.0超标0.004, 164帧扣分)。车停x=423669.872,
+# 评测=sd+车到fence。1.15→fast stop(0.804)评测1.954m达标;
+# QP(0.593)评测1.743m达标。expand_s_distance同步源码2.0→8.0避免
+# 行人l=5.49提前放行(车在横穿中通过)。
+stop_distance: 1.15
 max_stop_deceleration: 4.0
 min_pass_s_distance: 1.0
 # expand_s_distance 2.0→4.0→6.0：crosswalk 扩展区扩大，行人完全走完
