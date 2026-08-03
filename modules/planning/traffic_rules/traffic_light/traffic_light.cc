@@ -91,6 +91,29 @@ void TrafficLight::MakeDecisions(Frame* const frame,
       reference_line_info->reference_line().map_path().signal_overlaps();
   AINFO << "[traffic-light] overlaps=" << traffic_light_overlaps.size();
   for (const auto& traffic_light_overlap : traffic_light_overlaps) {
+    // 2026-08-04晚第2轮: 限速持续到车头驶出路口区。
+    // 原GREEN分支在 end_s<=adc_back_edge_s 的continue之后 → 车后轴一过停止线
+    // (end_s≈停止线)整个规则跳过 → 参考线限速消失 → 车加速冲路口区
+    // (scn3 11.24>11.18, scn4 5.0→10.8 连续超速, 评测SpeedLimit扣分)。
+    // 现在只要车头未出路口区(start_s+27)且信号已知(非UNKNOWN), 每帧都加限速
+    // (即使车已过停止线), 直到完全通过评测限速区。
+    const auto tl_color = frame->GetSignal(traffic_light_overlap.object_id).color();
+    if (adc_front_edge_s < traffic_light_overlap.start_s + 27.0 &&
+        tl_color != perception::TrafficLight::UNKNOWN) {
+      if (GlobalSeenRedLight()[traffic_light_overlap.object_id]) {
+        // scn3: 见过红灯, 绿灯通过路口区限速10.7(评测11.18, 留裕量防超调;
+        // 尾段自由加速+控制超调约+0.24, 11.0→实测11.24超速, 故取10.7)
+        reference_line_info->mutable_reference_line()->AddSpeedLimit(
+            traffic_light_overlap.start_s,
+            traffic_light_overlap.start_s + 26.0, 10.7);
+      } else {
+        // scn4/scn8: 绿灯通过, 限速4.8覆盖进道区+路口区(评测两区≤5;
+        // 根因是限速空洞不是超调, 保持4.8: Zone1实测4.8巡航全程通过)
+        reference_line_info->mutable_reference_line()->AddSpeedLimit(
+            traffic_light_overlap.start_s - 81.0,
+            traffic_light_overlap.start_s + 27.0, 4.8);
+      }
+    }
     if (traffic_light_overlap.end_s <= adc_back_edge_s) {
       continue;
     }
@@ -174,34 +197,8 @@ void TrafficLight::MakeDecisions(Frame* const frame,
     }
     if (signal_color == perception::TrafficLight::GREEN ||
         signal_color == perception::TrafficLight::BLACK) {
-      // competition: 赛题八(交通灯路口减速) 绿灯通过信号灯区域限速(≤5m/s)
-      // 仅当该信号灯【从未出现过红灯】时生效——赛题3(红绿灯场景)红灯停车后
-      // 绿灯通过路口不限速(评测无路口限速要求, 且避免限速导致的顿挫+耗时)
-      // 2026-08-04调优: 4.5→4.8(评测是5m/s, 4.5太保守) + 提前50→20m——
-      // 112948实测车4.5巡航50m(提前50m限速, 评测限速区只有~27m宽) → 慢。
-      // 评测要求"限速区(y4438237-4438264)内≤5", 车只需进入限速区前降到≤5:
-      // 16→4.8@-3需38.8m, 提前20m+QP回推23.6m=43.6m足够 → 车16巡航更久
-      // +4.8巡航缩短 → 省~6s。
-      if (!GlobalSeenRedLight()[traffic_light_overlap.object_id]) {
-        // 2026-08-04晚: 云端scn4 SpeedLimit=0根因修复。评测两个限速区:
-        // Zone1 进道区 y4438156(s124, 无地图元素) + Zone2 路口区
-        // y4438237-4438264(s205-232, 含Junction_9+Crosswalk_12/52/54)。
-        // 原仅 start_s-20 ~ end_s(=停止线s205) → 进道区无约束(16.4巡航
-        // 冲过, 实测超速)+ 停止线后立即+3.0加速冲路口(实测5.44→12.3超速)。
-        // 现扩展 [start_s-81, start_s+27] 全覆盖两个区。
-        reference_line_info->mutable_reference_line()->AddSpeedLimit(
-            traffic_light_overlap.start_s - 81.0,
-            traffic_light_overlap.start_s + 27.0, 4.8);
-      } else {
-        // 2026-08-04晚: 云端scn3 SpeedLimit=62根因修复——路口区超速
-        // (评测t=48.8-48.9, Max=11.18, ego=11.44)。scn3见过红灯后绿灯
-        // 通过路口, 原代码不限速 → 车加速冲过路口区。评测注入限速区
-        // y4438237.46-4438263.43(11.18m/s=40km/h), 现加11.0(留0.18裕量
-        // 防控制超调, 参考16.39→16.9超调教训)。
-        reference_line_info->mutable_reference_line()->AddSpeedLimit(
-            traffic_light_overlap.start_s,
-            traffic_light_overlap.start_s + 26.0, 11.0);
-      }
+      // 限速已在上方循环顶部(车头未出路口区)每帧持续下发, 见限速块注释。
+      // 这里只负责绿灯不建STOP。
       continue;
     }
 

@@ -3,6 +3,10 @@
 # 评测要求≤2.0m(实测失败帧debug: "distance from Stopline to Adc: 2.401675
 # is more than 2.000000")。管线+0.75m额外偏移(P0在距栅栏0.62m处v_upper=0)。
 # 1.75→0.8: 车头停≈1.55m(裕量0.45m, 必须<1.25才能过2.0阈值)。
+# 2026-08-04晚第2轮: 云端scn3 RedLightStop=80(17.8-42.4s)。第1轮改0.8后
+# 车头距停止线1.298m<评测min=1.5m(debug "1.298072 is more than 2.000000",
+# 实际判定区间[1.5,2.0]) → 调过头太近。标定: 车头距停止线≈1.213*stop+0.328
+# (0.8→1.298, 1.75→2.4)。0.8→1.2: 车头≈1.78m, 区间中部安全。
 enabled: true
-stop_distance: 0.8
+stop_distance: 1.2
 max_stop_deceleration: 4.0
