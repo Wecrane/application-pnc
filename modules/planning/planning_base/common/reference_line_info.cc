@@ -130,18 +130,13 @@ bool ReferenceLineInfo::Init(const std::vector<const Obstacle*>& obstacles, doub
         // 云端基础1无crosswalk STOP(kLimitDecel=2.5)提前量10m安全, 用户实测
         // 云端第二个带可晚几m减速。本地场景与云端不同(本地验证无代表性)。
         // 重新实施10m, 直接云端评测验证。
-        // 2026-08-06(018实测): 两个减速带分开处理——评测"减速带A"(x≈423593,
-        // 车后到)车7.5m/s通过超速(没减速到位), 恢复017满分参数(提前20m+限速
-        // 2.5); 评测"减速带B"(x≈423643, 车先到)车2.65m/s达标(刚刚好), 保持
-        // 当前(提前10m+限速2.7)。017满分基线: 提前20m(f66eef9) + 限速2.5。
-        const double bump_x = reference_line_.GetReferencePoint(speed_bump.start_s).x();
-        double bump_lead = 10.0;
-        double bump_limit = FLAGS_speed_bump_speed_limit;  // 2.7
-        if (bump_x < 423600.0) {
-            bump_lead = 20.0;  // 017满分提前量(带A x≈423593)
-            bump_limit = 2.5;  // 017满分限速(带A)
-        }
-        reference_line_.AddSpeedLimit(speed_bump.start_s - bump_lead, speed_bump.end_s + 2.0, bump_limit);
+        // 2026-08-06: 完整恢复0803_225106满分版本——统一提前20m + FLAGS限速。
+        // 019实测: 带B(10m+2.7)提前减速、带A仍超速 → 019用户要求整个减速带
+        // 逻辑恢复到满分版本(统一提前20m + speed_bump_speed_limit=2.5)。
+        // 满分基线: 提前20m(f66eef9 35→20) + 尾部2m + 限速2.5(planning.conf)。
+        reference_line_.AddSpeedLimit(speed_bump.start_s - 20.0,
+                                      speed_bump.end_s + 2.0,
+                                      FLAGS_speed_bump_speed_limit);
     }
 
     SetCruiseSpeed(target_speed);
