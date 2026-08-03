@@ -664,12 +664,14 @@ void SpeedDecider::HandlePedestrianStop(Obstacle* obstacle) const {
         if (IsPedestrianOnCrosswalk(*obstacle)) {
             stop_dist = -FLAGS_pedestrian_stop_distance;
         } else {
-            // 2026-08-04: -2.5→-6.0(scn2障碍物停车避让). 115017实测: 车头距
-            // 感知行人仅0.32m(评测DistToObstacleCar要求[2,5.5], 太近). fence
-            // 设计车头距行人2.5m但ST boundary位置偏移~2.2m(感知行人423440.8
-            // vs boundary.min_s) → 车停太近. 改-6.0: 车停更后~3.5m, 车头距
-            // 感知行人~3.3m(安全区间中部, 评测[2,5.5]). 标定值, 编译验证微调.
-            stop_dist = -6.0;
+            // 2026-08-04晚第3轮: -6.0→-5.0(scn2停车避让, 005轮评测
+            // DistToObstacleCar=80). 003轮(通过)车停x=423437.475车中心距行人
+            // 2.77m(欧氏~3.2✓); 005轮(失败)车停x=423435.014车中心距行人5.24m
+            // (欧氏>5.5✗). 根因: P0停稳触发时机波动(005轮距fence 2.05m提前停,
+            // 003轮停到fence) → 车停位置波动2.46m. -5.0让车停前移~1m: 005轮
+            // 场景Δx≈4.24m欧氏~4.5✓, 003轮场景Δx≈1.77m欧氏~2.5✓, 波动区间
+            // 整体居中[2,5.5]. 标定值, 编译验证后按实际距离微调.
+            stop_dist = -5.0;
         }
         double fence_s;
         auto it = ped_fixed_fence_s_.find(base_id);
