@@ -475,7 +475,15 @@ Status PiecewiseJerkSpeedOptimizer::Process(
             // 旧轨迹 → 车在限速5区内7.78m/s超速(评测扣40分). 裁剪后车≤v_upper
             // (进入限速区时≤4.8), 不超速; 保留机制仍避免scn4刹油刹(巡航无
             // 限速压力时v_upper=20不裁剪, 车4.5平滑延续).
-            if (!speed_data->empty()) {
+            // 2026-08-05(015轮): a0人行道(crosswalk行人STOP)恢复006满分——
+            // QP失败清空speed_data → trajectory_fallback_task走fast_stop急停
+            // (006满分实测: v=1.37急停→停1.684m达标)。47e3b45(保留旧轨迹)
+            // 在a0导致车滑行停1.251m(<min 1.5失败, 015轮实测)。
+            // 其他赛题保持47e3b45(保留+裁剪到v_upper)——防scn4刹油刹、
+            // 防007轮a1限速区超速。
+            if (has_crosswalk_stop) {
+                speed_data->clear();
+            } else if (!speed_data->empty()) {
                 double pre_s = (*speed_data)[0].s();
                 for (int i = 0; i < static_cast<int>(speed_data->size()); ++i) {
                     auto& sp = (*speed_data)[i];
