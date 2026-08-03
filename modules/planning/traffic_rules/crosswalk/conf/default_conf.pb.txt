@@ -1,17 +1,7 @@
-# 2026-08-05深夜(011轮a0修复): 源码配置同步profiles/default——云端用源码配置!
-# 011轮云端CrosswalkStop=0硬失败根因: 源码expand_s_distance=2.0(扩展斑马线
-# 横向边界≈3.5+2.0=5.5m), 011场景行人l=5.44→5.49(在5.5边界附近)时内时外
-# → crosswalk stop=1→0 → 车不停直接通过 → 评测"beyond valid max distance"失败。
-# 本地用profiles(expand=8.0, 边界11.5m)行人l=5.14-5.35在扩展内→stop=1达标。
-# 修复: expand_s_distance 2.0→8.0, stop_timeout 10.0→30.0(与profiles一致)。
-# stop_distance: 1.3→1.2→1.15(011轮实测车停fence前0.804m, 评测2.004m
-# >max 2.0超标0.004 → 1.15使评测1.954m达标)。
-# 2026-08-05(用户调整): 1.15→1.0→1.15→1.0(012轮sd=1.0车停fence前0.251m
-# 评测1.251m<min 1.5停近 → 配合QP已停分支crosswalk 0.7车停0.5-0.66)。
 stop_distance: 1.0
 max_stop_deceleration: 4.0
 min_pass_s_distance: 1.0
-expand_s_distance: 8.0
+expand_s_distance: 2.0
 stop_strict_l_distance: 5.0
 stop_loose_l_distance: 5.0
-stop_timeout: 30.0
+stop_timeout: 10.0
