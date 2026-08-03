@@ -205,6 +205,24 @@ Status PiecewiseJerkSpeedOptimizer::Process(
     std::vector<double> penalty_dx;
     std::vector<std::pair<double, double>> s_dot_bounds;
     const SpeedLimit& speed_limit = st_graph_data.speed_limit();
+    // 2026-08-05(012轮a0修复): 只在【斑马线+行人STOP】场景收紧车停点。
+    // 012轮实测: 车v极低接近STOP触发P0已停分支(dist<5.0强制停) → 车停fence
+    // 前仅0.251m(评测1.251m<min1.5停近失败207帧)。而车v高时(011)停0.804m
+    // (评测2.004m>max2.0停远)。车停点波动(0.25-0.8)由车接近STOP速度决定,
+    // 纯stop_distance无法调和。
+    // 修复: crosswalk行人STOP(id含CW_)场景已停分支阈值5.0→0.7 → 车距STOP
+    // <0.7m才强制停 → 车停fence前~0.5-0.66m(评测=sd+0.5~0.66, sd=1.0 →
+    // 1.5-1.66m达标)。其他场景(DEST终点/障碍物/停止标志)保持5.0不受影响。
+    bool has_crosswalk_stop = false;
+    for (const auto* bd : st_graph_data.st_boundaries()) {
+        if (bd->boundary_type() == STBoundary::BoundaryType::STOP &&
+            bd->id().find("CW_") != std::string::npos) {
+            has_crosswalk_stop = true;
+            break;
+        }
+    }
+    const double kStopHeldDist =
+            has_crosswalk_stop ? 0.7 : 5.0;  // 已停分支阈值(crosswalk 0.7/其他 5.0)
     // P1-E v3(2026-08-03): 物理可达位置累积初始化——替代DP超前参考x_ref。
     // s_est/v_est: 车从本帧实际速度v0按+3加速的可达位置/速度(物理上限,不超前)。
     const double v0 = std::max(0.0, init_s[1]);
@@ -296,7 +314,7 @@ Status PiecewiseJerkSpeedOptimizer::Process(
             // 马线前(位置合格)但P0允许v_upper=4.36 + 行人ST boundary
             // s_up[40]=1.22 + 参考线每帧重建车s=0恒定 → 车0.02-0.9m/s蠕动
             // 死循环。行驶中(速度>=1)或未到(<5m外) → 正常jerk等效刹车包络。
-            if (init_s[1] < 1.0 && dist_to_stop < 5.0) {
+            if (init_s[1] < 1.0 && dist_to_stop < kStopHeldDist) {
                 v_upper_bound = std::fmin(v_upper_bound, 0.0);
             } else {
                 // 2026-08-04晚2: jerk精确最大速度(车在dist内jerk刹停)。
