@@ -1,11 +1,12 @@
 // ==UserScript==
 // @name         Apollo 测评场景 Log 手动下载器
 // @namespace    apollo-scenario-log-downloader
-// @version      2.1
+// @version      2.2
 // @description  在测评详情页右下角显示浮动窗口：扫描回放链接(offlineview?id=xxx)
 //               提取场景 id，每个场景一个【下载】+【诊断】按钮，手动点击才下载该系统
 //               日志(tgz)。不自动下载。旧赛题可直下，无权限返回 403 FAILED_TO_AUTH。
 //               诊断：检查 Cookie / 网络 / 接口状态码并给出建议。
+//               fetch 失败(TypeError)自动降级浏览器原生下载，绕过 JS 层拦截。
 // @author       mayaochang
 // @match        https://apollo.baidu.com/community/competition/*
 // @match        https://apollo.baidu.com/workspace-plus/*
@@ -22,7 +23,7 @@
     function extractId(href) {
         if (!href) return null;
         const m = href.match(/[?&]id=([0-9a-fA-F]{24})/)
-               || href.match(/scenario-logs\/([0-9a-fA-F]{24})/);
+            || href.match(/scenario-logs\/([0-9a-fA-F]{24})/);
         return m ? m[1].toLowerCase() : null;
     }
 
@@ -49,7 +50,7 @@
         try {
             const num = new URL(a.href).searchParams.get('num');
             if (num) return num;
-        } catch (e) {}
+        } catch (e) { }
         // 3) 链接自身文本
         const t = a.textContent.trim();
         if (t) return t;
@@ -74,15 +75,31 @@
     }
 
     // ---------- 下载 ----------
+    // fetch 失败时降级：浏览器原生导航下载（不经过 JS fetch，绕过扩展/插件拦截）
+    function nativeDownload(url) {
+        try {
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = '';
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => a.remove(), 5000);
+        } catch (e) {
+            try { window.open(url, '_blank'); } catch (e2) { }
+        }
+    }
+
     async function downloadLog(id, btn, statusEl) {
         btn.disabled = true;
         statusEl.textContent = '下载中…';
         statusEl.style.color = '#888';
+        const url = LOG_API + id;
         try {
-            const resp = await fetch(LOG_API + id, { credentials: 'include' });
+            const resp = await fetch(url, { credentials: 'include' });
             if (!resp.ok) {
                 let body = '';
-                try { body = (await resp.text()).slice(0, 80); } catch (e) {}
+                try { body = (await resp.text()).slice(0, 80); } catch (e) { }
                 statusEl.textContent = `❌ HTTP ${resp.status} ${body}`;
                 statusEl.style.color = '#d33';
                 return;
@@ -103,8 +120,9 @@
             statusEl.style.color = '#1a7f37';
         } catch (e) {
             const name = (e && e.name) || 'Error';
-            statusEl.textContent = `⚠️ ${name}: ${(e && e.message) ? e.message : e}`;
+            statusEl.textContent = `⚠️ ${name}，改用浏览器原生下载…`;
             statusEl.style.color = '#d33';
+            nativeDownload(url);
         } finally {
             btn.disabled = false;
         }
@@ -144,16 +162,46 @@
             const name = (e && e.name) || 'Error';
             const msg = (e && e.message) || String(e);
             add('网络异常', name + ': ' + msg, 'bad');
+
+            // 环境排查：Service Worker / CSP
+            try {
+                add('Service Worker',
+                    navigator.serviceWorker.controller ? '页面被 SW 控制(可能拦截请求)' : '无 SW 控制',
+                    navigator.serviceWorker.controller ? 'warn' : 'ok');
+            } catch (err) { }
+            const cspMeta = document.querySelector('meta[http-equiv="Content-Security-Policy" i]');
+            if (cspMeta) add('页面 CSP', cspMeta.getAttribute('content') || '(有 meta CSP)', 'warn');
+
+            // XHR 兜底探测：XHR 成功 → fetch 被特定机制拦截；XHR 也失败 → 网络/插件
+            let xhrOk = false, xhrInfo = '';
+            try {
+                const xhrResp = await new Promise((resolve, reject) => {
+                    const x = new XMLHttpRequest();
+                    x.open('GET', url, true);
+                    x.withCredentials = true;
+                    x.onload = () => resolve({ status: x.status, len: (x.responseText || '').length });
+                    x.onerror = () => reject(new Error('xhr onerror status=' + x.status));
+                    x.send();
+                });
+                xhrOk = true;
+                xhrInfo = 'XHR 可达 (HTTP ' + xhrResp.status + ', ' + xhrResp.len + 'B)';
+            } catch (err) {
+                xhrInfo = 'XHR 也失败: ' + ((err && err.message) || err);
+            }
+            add('XHR 兜底', xhrInfo, xhrOk ? 'ok' : 'bad');
+
             let guess;
-            if (/Failed to fetch|NetworkError|Network request failed/i.test(msg)) {
-                guess = '浏览器无法到达服务器：网络中断 / 跨域(CORS)被拦截 / 站点不可达。';
+            if (xhrOk) {
+                guess = 'fetch 被拦截但 XHR 可达 → 常见原因是浏览器扩展(广告拦截/隐私插件)按规则拦截了 fetch/api 请求，或页面脚本干扰。';
+            } else if (/Failed to fetch|NetworkError|Network request failed/i.test(msg)) {
+                guess = '浏览器无法到达服务器：网络中断 / 跨域(CORS)被拦截 / 广告拦截插件拦截 / 站点不可达。';
             } else if (/Load failed/i.test(msg)) {
                 guess = '连接建立后中断：服务器主动断开或请求被拦截。';
             } else {
                 guess = '未知网络错误。按 F12 → Network 查看该请求详情。';
             }
             add('判断', guess, 'bad');
-            add('建议', '1) 检查网络/代理；2) F12 控制台看是否有 CORS 报错；3) 确认当前页面确实是 apollo.baidu.com 域。', 'warn');
+            add('建议', '1) 关闭广告拦截/隐私插件(如 uBlock/AdBlock)后重试；2) F12 控制台看是否有 CORS 报错；3) F12 → Network 看请求是否发出、被谁中止；4) 直接浏览器访问 ' + url + ' 看能否下载。', 'warn');
             showDiagnose(id, rows);
             return;
         }
@@ -174,14 +222,14 @@
         // 只在失败或响应体很小时读取正文；200 全量响应直接中断，避免拉大文件
         const full200 = resp.ok && resp.status === 200;
         if (full200) {
-            try { resp.body && resp.body.cancel(); } catch (err) {}
+            try { resp.body && resp.body.cancel(); } catch (err) { }
             add('响应体', '（200 全量响应，未读取正文以免下载大文件；直接点【下载】即可）', 'ok');
         } else if (!resp.ok || parseInt(resp.headers.get('content-length') || '0', 10) < 8192) {
             let body = '';
-            try { body = (await resp.text()).slice(0, 200); } catch (err) {}
+            try { body = (await resp.text()).slice(0, 200); } catch (err) { }
             if (body) add('响应体(前200)', body, '');
         } else {
-            try { resp.body && resp.body.cancel(); } catch (err) {}
+            try { resp.body && resp.body.cancel(); } catch (err) { }
         }
 
         if (resp.status === 206 && cr) {
