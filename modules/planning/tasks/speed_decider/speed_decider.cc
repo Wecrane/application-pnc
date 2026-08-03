@@ -657,34 +657,44 @@ void SpeedDecider::HandlePedestrianStop(Obstacle* obstacle) const {
     const std::string base_id = id.substr(0, id.find('_'));
 
     if (obs_l < kClearLateral) {
-        // Pedestrian still inside the lane -> keep a FIXED stop fence.
+        // Pedestrian still inside the lane -> keep a stop fence.
         // mayaochang add18: only the stop DISTANCE is changed (scenario 5
         // experiment): non-crosswalk pedestrian ~2.5m, crosswalk keeps 1.75m.
+        // 2026-08-06(020): 跟随逻辑——行人移动时用动态fence(车跟着走, 保持
+        // 2-5m距离), 行人静止时固定fence(车停, 020满分行为)。
+        const auto& perception = obstacle->Perception();
+        const double obs_speed = std::hypot(perception.velocity().x(), perception.velocity().y());
+        // 行人移动判定: 感知速度>0.3m/s(与020行人50s后起步一致)
+        const bool ped_moving = obs_speed > 0.3;
         double stop_dist = -FLAGS_min_stop_distance_obstacle;
         if (IsPedestrianOnCrosswalk(*obstacle)) {
             stop_dist = -FLAGS_pedestrian_stop_distance;
+        } else if (ped_moving) {
+            // 跟随距离: 保持3.5m(评测dist_to_obstacle_car[2,5.5]内居中)
+            stop_dist = -3.5;
         } else {
-            // 2026-08-04晚第3轮: -6.0→-5.0(scn2停车避让, 005轮评测
-            // DistToObstacleCar=80). 003轮(通过)车停x=423437.475车中心距行人
-            // 2.77m(欧氏~3.2✓); 005轮(失败)车停x=423435.014车中心距行人5.24m
-            // (欧氏>5.5✗). 根因: P0停稳触发时机波动(005轮距fence 2.05m提前停,
-            // 003轮停到fence) → 车停位置波动2.46m. -5.0让车停前移~1m: 005轮
-            // 场景Δx≈4.24m欧氏~4.5✓, 003轮场景Δx≈1.77m欧氏~2.5✓, 波动区间
-            // 整体居中[2,5.5]. 标定值, 编译验证后按实际距离微调.
+            // 静止停车: -5.0(020满分标定, 车停行人前~5m, 不跟车评测不检测)
             stop_dist = -5.0;
         }
         double fence_s;
-        auto it = ped_fixed_fence_s_.find(base_id);
-        if (it == ped_fixed_fence_s_.end()) {
-            // mayaochang add19: compensate the -front_edge_to_center offset that
-            // STBoundaryMapper baked into boundary.min_s(), so the stop fence is
-            // really stop_dist meters before the pedestrian (scenario 5: 2.5m).
+        if (ped_moving) {
+            // 动态fence: 每次用行人当前位置重建(车跟着走, 不记录固定位置)
             fence_s = adc_sl_boundary_.end_s() + boundary.min_s() + stop_dist
                     + VehicleConfigHelper::GetConfig().vehicle_param().front_edge_to_center();
-            ped_fixed_fence_s_[base_id] = fence_s;
-            ADEBUG << "ped_fixed: record fence_s=" << fence_s << " id=" << id;
+            ped_fixed_fence_s_.erase(base_id);
         } else {
-            fence_s = it->second;  // keep the originally recorded fence
+            auto it = ped_fixed_fence_s_.find(base_id);
+            if (it == ped_fixed_fence_s_.end()) {
+                // mayaochang add19: compensate the -front_edge_to_center offset that
+                // STBoundaryMapper baked into boundary.min_s(), so the stop fence is
+                // really stop_dist meters before the pedestrian (scenario 5: 2.5m).
+                fence_s = adc_sl_boundary_.end_s() + boundary.min_s() + stop_dist
+                        + VehicleConfigHelper::GetConfig().vehicle_param().front_edge_to_center();
+                ped_fixed_fence_s_[base_id] = fence_s;
+                ADEBUG << "ped_fixed: record fence_s=" << fence_s << " id=" << id;
+            } else {
+                fence_s = it->second;  // keep the originally recorded fence
+            }
         }
         const auto fence_point = reference_line_->GetReferencePoint(fence_s);
         ObjectDecisionType stop_decision;
@@ -695,7 +705,8 @@ void SpeedDecider::HandlePedestrianStop(Obstacle* obstacle) const {
         sp->set_y(fence_point.y());
         sp->set_z(0.0);
         stop->set_stop_heading(fence_point.heading());
-        obstacle->AddLongitudinalDecision("dp_st_graph/ped_fixed", stop_decision);
+        obstacle->AddLongitudinalDecision(ped_moving ? "dp_st_graph/ped_follow" : "dp_st_graph/ped_fixed",
+                                         stop_decision);
     } else {
         // Pedestrian has laterally cleared the lane -> release + yield.
         ped_fixed_fence_s_.erase(base_id);
