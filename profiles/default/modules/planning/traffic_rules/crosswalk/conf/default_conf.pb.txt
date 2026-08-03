@@ -1,7 +1,7 @@
 # crosswalk 人行道规则配置（default profile 覆盖层）
 # 赛题二：有人人行道需停车在人行道前 1.5~2.0m（原官方 1.0m 不达标）
 # 赛题七：无人人行道通过限速 ≤5m/s（如需另配限速）
-stop_distance: 1.75
+stop_distance: 0.7
 max_stop_deceleration: 4.0
 min_pass_s_distance: 1.0
 # expand_s_distance 2.0→4.0→6.0：crosswalk 扩展区扩大，行人完全走完

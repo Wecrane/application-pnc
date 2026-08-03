@@ -464,21 +464,22 @@ bool Crosswalk::CheckStopForObstacle(
     // 逻辑放行(车起步)。
     if (in_expanded_crosswalk) {
         // 2026-08-04晚3: 车必须停(CrosswalkStop检测车头停斑马线前[1.5,2]m),
-        // 停稳后才能放行。车头已到停车位置(距近边<=2.0m, 车已在[1.5,2]区间
-        // 停留过) 且 行人让出车道(|l|>4) → 放行提前通过(车通过不撞, Collision
-        // 阈值0.1m, ST boundary在行人横向>3.5m已空)。车接近中(车头未到停车
-        // 位置) → 必停(评测"ADC should stop when person cross")。103630实测
-        // |l|>4就放行导致车冲过斑马线(CrosswalkStop硬失败) → 必须车到位才
-        // 放行。放行后车头过近边(car_to_cw<0)持续放行不抖动。
+        // 停稳后才能放行。车已接近/停过(车头距近边<=5m) 且 行人让出车道
+        // (|l|>4) → 放行提前通过(车通过不撞, Collision阈值0.1m, ST boundary
+        // 在行人横向>3.5m已空)。车接近中(车头距近边>5m, 未停过) → 必停
+        // (评测"ADC should stop when person cross")。103630实测|l|>4就放行
+        // 导致车冲过斑马线(CrosswalkStop硬失败) → 必须车接近/停过才放行。
+        // 104458实测车头停4.8m(参考线弯曲使stop_distance换算世界距离放大),
+        // kAtStop取5.0覆盖"已停"。放行后车头过近边(car_to_cw<0)持续放行不抖。
         const auto& reference_line = reference_line_info->reference_line();
         common::SLPoint obstacle_sl_point;
         reference_line.XYToSL(perception_obstacle.position(), &obstacle_sl_point);
         const double car_to_crosswalk = crosswalk_near_s - adc_front_s;  // 车头距近边
         const double kClearedLateral = 4.0;
-        const double kAtStop = 2.0;  // 车头已在停车位置[1.5,2]m区间
+        const double kAtStop = 5.0;  // 车已接近/停过(车头距近边<=5m)
         if (std::fabs(obstacle_sl_point.l()) > kClearedLateral && car_to_crosswalk <= kAtStop) {
             ADEBUG << "pass(add5): obstacle_id[" << obstacle_id << "] l[" << obstacle_sl_point.l()
-                   << "] car_to_cw[" << car_to_crosswalk << "] 车已停且行人让出车道, 放行";
+                   << "] car_to_cw[" << car_to_crosswalk << "] 车已接近且行人让出车道, 放行";
             return false;
         }
         ADEBUG << "need_stop(add5): obstacle_id[" << obstacle_id << "] type[" << obstacle_type_name
