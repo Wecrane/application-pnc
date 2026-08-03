@@ -153,7 +153,8 @@ void Crosswalk::MakeDecisions(Frame* const frame, ReferenceLineInfo* const refer
             const double stop_deceleration = util::GetADCStopDeceleration(
                     injector_->vehicle_state(), adc_front_edge_s, crosswalk_overlap->start_s);
 
-            bool stop = CheckStopForObstacle(reference_line_info, crosswalk_ptr, *obstacle, stop_deceleration);
+            bool stop = CheckStopForObstacle(reference_line_info, crosswalk_ptr, *obstacle, stop_deceleration,
+                                             crosswalk_overlap->start_s, adc_front_edge_s);
 
             const std::string& obstacle_id = obstacle->Id();
             const PerceptionObstacle& perception_obstacle = obstacle->Perception();
@@ -423,7 +424,9 @@ bool Crosswalk::CheckStopForObstacle(
         ReferenceLineInfo* const reference_line_info,
         const CrosswalkInfoConstPtr crosswalk_ptr,
         const Obstacle& obstacle,
-        const double stop_deceleration) {
+        const double stop_deceleration,
+        const double crosswalk_near_s,
+        const double adc_front_s) {
     CHECK_NOTNULL(reference_line_info);
 
     std::string crosswalk_id = crosswalk_ptr->id().id();
@@ -460,24 +463,22 @@ bool Crosswalk::CheckStopForObstacle(
     // 行人在扩展区(含慢速/静止)都停, 更安全。行人走完(离开扩展区)→默认
     // 逻辑放行(车起步)。
     if (in_expanded_crosswalk) {
-        // 2026-08-04晚补充: 行人走完后(横向已离开车行驶带, 感知v=0仍持续在
-        // 扩展区内输出) 原必停导致车永远等 (100131实测: 行人l=8.21走完停住
-        // v=0, 车从t=15等到99s不动)。修复: 行人横向|L|>3m(车半宽1m+缓冲2m)
-        // 且已停(v<0.1) → 行人已安全走过车行驶带, 放行。行人横穿中(v>0.1)
-        // 即使在扩展区 → 仍必停(评测要求等行人走完)。
+        // 2026-08-04晚3: 车必须停(CrosswalkStop检测车头停斑马线前[1.5,2]m),
+        // 停稳后才能放行。车头已到停车位置(距近边<=2.0m, 车已在[1.5,2]区间
+        // 停留过) 且 行人让出车道(|l|>4) → 放行提前通过(车通过不撞, Collision
+        // 阈值0.1m, ST boundary在行人横向>3.5m已空)。车接近中(车头未到停车
+        // 位置) → 必停(评测"ADC should stop when person cross")。103630实测
+        // |l|>4就放行导致车冲过斑马线(CrosswalkStop硬失败) → 必须车到位才
+        // 放行。放行后车头过近边(car_to_cw<0)持续放行不抖动。
         const auto& reference_line = reference_line_info->reference_line();
         common::SLPoint obstacle_sl_point;
         reference_line.XYToSL(perception_obstacle.position(), &obstacle_sl_point);
-        const double obstacle_speed
-                = std::hypot(perception_obstacle.velocity().x(), perception_obstacle.velocity().y());
-        const double kClearedLateral = 3.0;
-        // 2026-08-04晚2: 放行速度阈值0.1→0.3, 贴合评测判据(行人停v≤0.3即放行,
-        // 评分点文档: 行人3060走完停l=8.77, 等停后通过)。0.1太严在感知v渐变
-        // 时多等, 0.3与评测一致且安全(行人需横向离开车路线且已停)。
-        const double kClearedSpeed = 0.3;
-        if (std::fabs(obstacle_sl_point.l()) > kClearedLateral && obstacle_speed < kClearedSpeed) {
+        const double car_to_crosswalk = crosswalk_near_s - adc_front_s;  // 车头距近边
+        const double kClearedLateral = 4.0;
+        const double kAtStop = 2.0;  // 车头已在停车位置[1.5,2]m区间
+        if (std::fabs(obstacle_sl_point.l()) > kClearedLateral && car_to_crosswalk <= kAtStop) {
             ADEBUG << "pass(add5): obstacle_id[" << obstacle_id << "] l[" << obstacle_sl_point.l()
-                   << "] speed[" << obstacle_speed << "] 行人已离开车行驶带且停止, 放行";
+                   << "] car_to_cw[" << car_to_crosswalk << "] 车已停且行人让出车道, 放行";
             return false;
         }
         ADEBUG << "need_stop(add5): obstacle_id[" << obstacle_id << "] type[" << obstacle_type_name
