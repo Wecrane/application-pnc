@@ -493,11 +493,19 @@ bool Crosswalk::CheckStopForObstacle(
         // 道路(l与v_l同号, |l|增大)"才放行; 横穿中/等待横穿(向路移动或静止)→必停。
         // v_l=速度在参考线横向(l)方向分量(用自车heading近似参考线方向);
         // l*v_l>0 ⟺ |l|增大 ⟺ 远离道路。
+        const double obstacle_speed = std::hypot(perception_obstacle.velocity().x(),
+                                                 perception_obstacle.velocity().y());
         const double heading = injector_->vehicle_state()->heading();
         const double v_l = -perception_obstacle.velocity().x() * std::sin(heading)
                            + perception_obstacle.velocity().y() * std::cos(heading);
         const double kRoadClearedLateral = 6.0;
-        if (std::fabs(obstacle_sl_point.l()) > kRoadClearedLateral && obstacle_sl_point.l() * v_l > 0.0) {
+        // 2026-08-04补强: 行人横穿到对侧后停下(v_l≈0, l*v_l=0不满足远离条件)
+        // → 车会永远等。scn7行人走到北侧l≈-8.8停下(走完) → 已完全离开斑马线
+        // (横向±3.5m), 评测允许通过。补充: |l|>6且已到对侧(l<0)且静止(speed
+        // <0.1) → 也放行。起点(l>0静止)不满足l<0, 不会误放行。
+        if (std::fabs(obstacle_sl_point.l()) > kRoadClearedLateral &&
+            (obstacle_sl_point.l() * v_l > 0.0 ||
+             (obstacle_sl_point.l() < 0.0 && obstacle_speed < 0.1))) {
             ADEBUG << "pass(add5): obstacle_id[" << obstacle_id << "] l[" << obstacle_sl_point.l()
                    << "] v_l[" << v_l << "] 行人已横穿结束并离开路面, 放行";
             return false;
