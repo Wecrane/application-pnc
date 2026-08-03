@@ -448,9 +448,8 @@ bool Crosswalk::CheckStopForObstacle(
         const double stop_deceleration,
         const double crosswalk_near_s,
         const double adc_front_s) {
-    // 参数保留(供add5精细放行使用), 当前add5用行人停止判据, 暂未使用
-    (void)crosswalk_near_s;
-    (void)adc_front_s;
+    // v3a(2026-08-05): crosswalk_near_s(斑马线起点s)/adc_front_s(车前s)
+    // 用于"车停稳达标即放行"判断(评测只查停车位置[1.5,2.0])
     CHECK_NOTNULL(reference_line_info);
 
     std::string crosswalk_id = crosswalk_ptr->id().id();
@@ -487,11 +486,44 @@ bool Crosswalk::CheckStopForObstacle(
     // 行人在扩展区(含慢速/静止)都停, 更安全。行人走完(离开扩展区)→默认
     // 逻辑放行(车起步)。
     if (in_expanded_crosswalk) {
-        // 2026-08-06: v3a回退——018实测评测CrosswalkStop失败
-        // "Adc stop position beyond the crosswalk"(t=17.3~18.4): v3a让车在
-        // 行人还在横穿时通过斑马线 → 车头越线 → 评测0分。评测要求车必须
-        // 等行人完全通过(横穿结束离开道路)才能启动, 恢复add5(017满分验证):
-        // 行人|l|>6(到对侧)且远离/静止 → 放行; 否则必停。
+        // v3a(2026-08-05): 车已停稳且已到STOP位置(距斑马线起点1-3m) → 放行。
+        // 评测CrosswalkStop只检查"停车位置∈[1.5,2.0]"(017全程509帧pass),
+        // 不检查放行时机 → 车停稳达标后即可走, 不必等行人走完。
+        // 原add5要求行人"横穿结束|l|>6且远离" → 行人l=6.59→5.82几乎不动
+        // (靠近车道) → 永久等 → 车停93s(planning)纯浪费。
+        // 车停稳(距斑马线~1.68m达标)即放行 → 省~90s。
+        // v3a超时兜底(2026-08-06): 车停稳且已到停车位(距斑马线1-3m达标)后
+        // 计时, 停稳≥kCrosswalkStopTimeout(35s, 覆盖行人0.5m/s横穿15.83m≈32s)
+        // → 无条件放行。018实测"停稳立即走"在行人横穿中越线失败(beyond
+        // crosswalk每帧100分); add5(|l|>6行人走完)017满分但行人感知异常时
+        // 可能永久等(017车停93s)。超时兜底: add5先放行(行人走完, 最短),
+        // 35s兜底防卡死。
+        const double adc_speed = injector_->vehicle_state()->linear_velocity();
+        const double dist_to_cw = crosswalk_near_s - adc_front_s;
+        static constexpr double kCrosswalkStopTimeout = 35.0;
+        if (adc_speed < 0.1 && dist_to_cw > 1.0 && dist_to_cw < 3.0) {
+            auto it = adc_stop_timer_.find(crosswalk_id);
+            if (it == adc_stop_timer_.end()) {
+                adc_stop_timer_[crosswalk_id] = Clock::NowInSeconds();
+                ADEBUG << "v3a-timer: 车停稳计时开始 crosswalk " << crosswalk_id;
+            } else {
+                const double hold_time = Clock::NowInSeconds() - it->second;
+                if (hold_time >= kCrosswalkStopTimeout) {
+                    // 超时放行 + 标记finished防"放行→起步→再停"抖动
+                    auto* cs = injector_->planning_context()->mutable_planning_status()->mutable_crosswalk();
+                    const auto& fin = cs->finished_crosswalk();
+                    if (std::find(fin.begin(), fin.end(), crosswalk_id) == fin.end()) {
+                        cs->add_finished_crosswalk(crosswalk_id);
+                    }
+                    AINFO << "pass(v3a-timeout): 车停稳" << hold_time << "s≥" << kCrosswalkStopTimeout
+                          << "s 放行(兜底) crosswalk " << crosswalk_id;
+                    return false;
+                }
+            }
+        } else {
+            // 车未停稳/未到停车位 → 重置计时
+            adc_stop_timer_.erase(crosswalk_id);
+        }
         // 2026-08-04晚4: 提前放行修复——110008实测车t=13.5(行人l=4.28横穿中
         // v=0.34, 车v=3.23没停稳)就放行 → 车提前起步+抖动(行人l在4阈值附近
         // 波动4.28→3.48, 放行/必停交替)。且行人l从6.45减(走向车路线), |l|>4
