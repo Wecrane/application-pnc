@@ -107,17 +107,18 @@ void TrafficLight::MakeDecisions(Frame* const frame,
             traffic_light_overlap.start_s,
             traffic_light_overlap.start_s + 26.0, 10.7);
       } else {
-        // scn4/scn8: 绿灯通过, 限速4.8只覆盖评测路口区(不提前刹车)。
-        // 2026-08-04晚第4轮: 评分文档+002轮实测——scn4只查路口区
-        // y4438237-4438264(s205-232)≤5, 无进道区(002轮车16.4冲过进道区
-        // s124-150只报"Max 16.39"全局超速不报5.0)。原[start_s-81,...]从
-        // s124限速→车4.8巡航108m(36s)→提前刹车+刹油刹(005轮15.8s急刹
-        // 到0.4再起步)。改[start_s-20,...]: 车16巡航到停止线前20m(s185)
-        // 才限速, 配合QP回推(100m前瞻)车在s160降速→进路口区≤4.8→4.8
-        // 通过27m→出区加速, 时间从48s缩到~30s。
+        // scn4/scn8: 绿灯通过, 限速4.5覆盖评测路口区(不提前刹车+防超调)。
+        // 2026-08-04晚第5轮(006轮SpeedLimit=52): [start_s-20]太紧——
+        // 车12.4s s155才减速(回推v_allow不够), 停止线前y4438231急刹到0.82
+        // 几乎停再起步(刹油刹), 进路口区时planning 4.6-4.79+sim控制超调
+        // +0.2→5.003-5.04>5.0贴线超速。
+        // 改[start_s-35]+4.5: 车s161(QP回推kLimitDecel=5)平滑降速→s185
+        // 到4.5→进路口区(s205)4.5稳态(sim超调+0.2=4.7<5✓)→4.5通过27m
+        // 出区加速. 不刹油刹+不超速+不提前刹车(车16巡航到停止线前35m).
+        // 时间: 4.5巡航47m比4.8慢~1.5s, TimeLimit裕量大可接受。
         reference_line_info->mutable_reference_line()->AddSpeedLimit(
-            traffic_light_overlap.start_s - 20.0,
-            traffic_light_overlap.start_s + 27.0, 4.8);
+            traffic_light_overlap.start_s - 35.0,
+            traffic_light_overlap.start_s + 27.0, 4.5);
       }
     }
     if (traffic_light_overlap.end_s <= adc_back_edge_s) {
