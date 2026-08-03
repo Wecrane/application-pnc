@@ -124,7 +124,13 @@ Status PiecewiseJerkSpeedOptimizer::Process(
                 //   t>T: s_upper=stop_s(已停) —— 无突变, QP可行。
                 {
                     const double v_ref = FLAGS_planning_upper_speed_limit;
-                    const double dec_abs = std::abs(veh_param.max_deceleration());
+                    // 2026-08-04: 刹车减速度 6.0→3.0(jerk等效)。jerk±2约束下
+                    // 车16→0实际需~43m(a从0以jerk-2到-6走39m + -6急刹4m),
+                    // 等效 dec=16²/(2·43)≈2.97≈3.0。原用6.0(21.3m)太紧——
+                    // QP在21.3m内无法jerk刹停 → 提前减速封顶(095032实测车
+                    // 12.4不加速到16, v[30]=15.57→14.32提前降)。用3.0: 车16
+                    // 巡航到距STOP 42.7m处-3减速停(最晚刹车, jerk可达)。
+                    const double dec_abs = 3.0;
                     const double t_brake = (s_upper - init_s[0] - v_ref * v_ref / (2.0 * dec_abs)) / v_ref;
                     if (t_brake <= 0.0) {
                         // 车已在刹车距离内(stop_s<v_ref²/2|dec|): 恒定stop_s约束
@@ -235,7 +241,9 @@ Status PiecewiseJerkSpeedOptimizer::Process(
         // ⚠️v2(v0*t直线)末端陡降→infeasible 282次已回退; v3用v_est累积平滑, 无陡降。
         if (stop_s < total_length) {
             const double dist_to_stop = std::max(0.0, stop_s - s_est);
-            const double brake_envelope = std::sqrt(2.0 * std::abs(veh_param.max_deceleration()) * dist_to_stop);
+            // 2026-08-04: 同STOP分支改jerk等效减速度3.0(车16→0需~43m)。
+            // 原6.0(21.3m)包络太紧 → QP提前减速封顶(095032实测12.4)。
+            const double brake_envelope = std::sqrt(2.0 * 3.0 * dist_to_stop);
             dx_ref[i] = std::fmin(dx_ref[i], brake_envelope);
         }
         // P0(2026-08-04修复): 接近STOP时同步收紧v_upper——消除infeasible根因。
@@ -244,11 +252,14 @@ Status PiecewiseJerkSpeedOptimizer::Process(
         // → fallback放宽 → 车冲过STOP/终点 → 终点倒溜(v=-0.118, 冲过DEST 0.19m)。
         // 修复: v_upper按最晚刹车距离收紧 v_allow_stop=√(2|dec|·(stop_s-s_est)),
         // 与s_bounds最晚刹车曲线自洽(车到stop_s时v=0) → QP全程可行不fallback,
-        // 车在STOP/终点前刹住不倒溜。车距STOP>21.3m时 v_allow>16 不压(不影响
+        // 车在STOP/终点前刹住不倒溜。车距STOP>42.7m时 v_allow>16 不压(不影响
         // 正常巡航/限速回推, 两者fmin取更小者)。
         if (stop_s < total_length) {
             const double dist_to_stop = std::max(0.0, stop_s - s_est);
-            const double v_allow_stop = std::sqrt(2.0 * std::abs(veh_param.max_deceleration()) * dist_to_stop);
+            // 2026-08-04: 同STOP分支改jerk等效减速度3.0(与s_bounds曲线自洽,
+            // 车到stop_s时v=0)。原6.0(21.3m)与曲线都太紧 → 车12.4封顶。
+            // 用3.0: 车16巡航到距STOP 42.7m处v_upper收紧(>42.7m不压)。
+            const double v_allow_stop = std::sqrt(2.0 * 3.0 * dist_to_stop);
             v_upper_bound = std::fmin(v_upper_bound, v_allow_stop);
         }
         // 车可达速度/位置累积(物理上限: 从v0以+3加速逼近dx_ref, 平滑无陡降)
