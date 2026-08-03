@@ -94,35 +94,18 @@ Status PiecewiseJerkSpeedOptimizer::Process(
     for (int i = 0; i < num_of_knots; ++i) {
         double curr_t = i * delta_t;
         double s_lower_bound = 0.0;
-        // 参考线末端最晚刹车(2026-08-03修复刹-油-刹根因):
-        // 原 s_upper_bound=total_length 硬约束 → QP 全局优化知道 10s 窗口内 s≤127,
-        // 车距末端73m/距斑马线80m 时 v[0] 就提前缓降(030359实测 t=10.4s v 11.9→2.9)。
-        // 末端不是停车点(参考线每帧从车位置重建, 车恒在 s=0 距末端 total_length),
-        // 应巡航到接近末端再减速。用最晚刹车曲线替代硬约束:
-        //   t<t_brake_end: 自由巡航(不压, v[0]=巡航速度, 消除提前缓降)
-        //   t_brake_end≤t≤T_end: s_upper=total_length-0.5|dec|(T_end-t)² 平滑降
-        //   t>T_end: s_upper=total_length
-        // 正常场景(参考线长>窗口巡航距离+刹车距离) t_brake_end>窗口 → 行为不变。
-        double s_upper_bound = total_length;
-        {
-            const double v_ref = FLAGS_planning_upper_speed_limit;
-            const double dec_abs = std::abs(veh_param.max_deceleration());
-            const double t_brake_end =
-                    (total_length - init_s[0] - v_ref * v_ref / (2.0 * dec_abs)) / v_ref;
-            if (t_brake_end > 0.0) {
-                const double T_end = t_brake_end + v_ref / dec_abs;
-                if (curr_t > t_brake_end && curr_t <= T_end) {
-                    const double s_late =
-                            total_length - 0.5 * dec_abs * (T_end - curr_t) * (T_end - curr_t);
-                    s_upper_bound = std::fmin(s_upper_bound, std::max(s_late, 0.0));
-                } else if (curr_t > T_end) {
-                    s_upper_bound = std::fmin(s_upper_bound, total_length);
-                }
-            } else {
-                // 车已在末端刹车距离内: 末端硬约束(立即减速)
-                s_upper_bound = std::fmin(s_upper_bound, total_length);
-            }
-        }
+        // 参考线末端(2026-08-04调优): 参考线每帧从车位置重建(车恒在 s=0, 距末端
+        // total_length≈127m), 末端不是停车点(车会平滑切换参考线继续开)。
+        // 原 total_length 硬约束(2026-08-03前) → QP 知道 10s 窗口内 s≤127 提前缓降;
+        // 7bda67d 改末端最晚刹车(假设16从s=0巡航) → 对起步中的车(v0<16)仍太紧:
+        // 车 v0=12 加速到16后位置超前(122.6@8s)超曲线(122.2) → QP 停止加速
+        // (092945实测车12.7封顶 → 刹-油-刹 + infeasible 55次)。
+        // 修复: 放宽 s_bounds 上界到 total_length+窗口巡航距离(车16巡航通过末端,
+        // 切换参考线继续)。真实停车点(行人/终点)由 STOP 分支(fmin 收紧)+P0
+        // (v_upper 按 sqrt(2|dec|·dist) 收紧)控制 → 车在真实 STOP 前最晚刹车, 安全。
+        const double kRefEndOvershoot =
+                FLAGS_planning_upper_speed_limit * (num_of_knots * delta_t);
+        double s_upper_bound = total_length + kRefEndOvershoot;
         for (const STBoundary* boundary : st_graph_data.st_boundaries()) {
             double s_lower = 0.0;
             double s_upper = 0.0;
@@ -319,10 +302,22 @@ Status PiecewiseJerkSpeedOptimizer::Process(
             sl0 = get_sl(0.0);
             sl60 = get_sl(60.0);
         }
+        // STOP/YIELD 诊断(2026-08-04): 092945实测 stop_s 从116(DEST)跳0(车位置)
+        // → s_bounds 全压0 + P0 v_upper=0 → infeasible 55次 + 刹-油-刹。
+        // 打印所有 STOP/YIELD boundary 的 id 和 s_upper(t=0), 定位哪个在0。
+        std::string stops_str;
+        for (const auto* bd : st_graph_data.st_boundaries()) {
+            if (bd->boundary_type() == STBoundary::BoundaryType::STOP
+                || bd->boundary_type() == STBoundary::BoundaryType::YIELD) {
+                double su = 0.0, sl = 0.0;
+                bd->GetUnblockSRange(0.0, &su, &sl);
+                stops_str += bd->id() + "@" + std::to_string(su) + ";";
+            }
+        }
         AINFO << "[pjs2] init_v=" << init_s[1] << " stop_s=" << stop_s << " s_up[0/40/80]=" << s_bounds[0].second << "/"
               << s_bounds[i40].second << "/" << s_bounds[i80].second << " dx_ref[0/40]=" << dx_ref[0] << "/"
               << dx_ref[j40] << " v_up[0]=" << s_dot_bounds[0].second << " ref_len=" << total_length
-              << " sl[0/60]=" << sl0 << "/" << sl60 << " npts=" << sl_pts.size();
+              << " sl[0/60]=" << sl0 << "/" << sl60 << " npts=" << sl_pts.size() << " stops=" << stops_str;
     }
     piecewise_jerk_problem.set_x_bounds(std::move(s_bounds));
     piecewise_jerk_problem.set_dx_ref(dx_ref_weight, dx_ref);
