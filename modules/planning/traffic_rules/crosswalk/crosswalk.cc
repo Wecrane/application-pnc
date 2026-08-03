@@ -296,10 +296,17 @@ void Crosswalk::MakeDecisions(Frame* const frame, ReferenceLineInfo* const refer
                 // 5.16超5(评测按车体完全离开判定, 车后悬1.043m; 规划按车中心
                 // s判定, end_s即解除4.8 → 车立即加速在评测区内涨到5.16)。
                 // 尾部+3m: 4.8保持到车尾完全离开斑马线+1m裕量才解除。
-                AINFO << "[crosswalk-limit] " << crosswalk_id << " AddSpeedLimit(" << crosswalk_overlap->start_s - 15.0
+                // 2026-08-05(008轮a1修复): 提前量15m→24m——评测限速区
+                // (speed_limit_regions)起点在斑马线前23.5m(008实测: 车
+                // x423686.1评测限速区内6.93m/s超速, crosswalk限速区起点
+                // x423678(提前15m), 错配8.5m → 车在评测限速区起点不限速
+                // → 超速扣42分). 提前量24m → 车在评测限速区起点(x423686.5)
+                // 已≤4.8 → 通过. 只影响无人斑马线限速(有信号灯/停止标志的
+                // crosswalk SKIP, 如scn3/scn4不受影响).
+                AINFO << "[crosswalk-limit] " << crosswalk_id << " AddSpeedLimit(" << crosswalk_overlap->start_s - 24.0
                       << "," << crosswalk_overlap->end_s + 3.0 << ",4.8)";
                 reference_line_info->mutable_reference_line()->AddSpeedLimit(
-                        crosswalk_overlap->start_s - 15.0, crosswalk_overlap->end_s + 3.0, 4.8);
+                        crosswalk_overlap->start_s - 24.0, crosswalk_overlap->end_s + 3.0, 4.8);
             } else {
                 AINFO << "[crosswalk-limit] " << crosswalk_id << " SKIP speed limit (seen red / stop sign present)";
             }
