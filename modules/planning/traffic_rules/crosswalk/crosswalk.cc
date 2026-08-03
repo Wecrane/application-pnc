@@ -60,10 +60,6 @@ bool Crosswalk::Init(const std::string& name, const std::shared_ptr<DependencyIn
     if (!TrafficRule::Init(name, injector)) {
         return false;
     }
-    // 2026-08-06 版本标记(编译验证): 日志出现该行=代码为最新(含v3a超时兜底
-    // 12.5s + 距离条件(0,5) + add5保留)。用户本地日志(01:27:52)搜v3a=0(旧
-    // 代码), 加此标记确认重新编译后版本生效。
-    AINFO << "[crosswalk-ver] v3a-timeout=12.5s dist=(0,5) add5=keep (2026-08-06 v2)";
     // Load the config this task.
     return TrafficRule::LoadConfig<CrosswalkConfig>(&config_);
 }
@@ -130,9 +126,10 @@ void Crosswalk::MakeDecisions(Frame* const frame, ReferenceLineInfo* const refer
             const double heading = adc_state->heading();
             const double c_h = std::cos(heading);
             const double s_h = std::sin(heading);
-            const double front_dist = common::VehicleConfigHelper::GetConfig().vehicle_param().front_edge_to_center();
-            const double adc_front_proj
-                    = (adc_state->x() + front_dist * c_h) * c_h + (adc_state->y() + front_dist * s_h) * s_h;
+            const double front_dist =
+                    common::VehicleConfigHelper::GetConfig().vehicle_param().front_edge_to_center();
+            const double adc_front_proj = (adc_state->x() + front_dist * c_h) * c_h
+                                          + (adc_state->y() + front_dist * s_h) * s_h;
             double cw_max_proj = -1e9;
             for (const auto& pt : crosswalk_ptr->polygon().points()) {
                 cw_max_proj = std::max(cw_max_proj, pt.x() * c_h + pt.y() * s_h);
@@ -156,13 +153,8 @@ void Crosswalk::MakeDecisions(Frame* const frame, ReferenceLineInfo* const refer
             const double stop_deceleration = util::GetADCStopDeceleration(
                     injector_->vehicle_state(), adc_front_edge_s, crosswalk_overlap->start_s);
 
-            bool stop = CheckStopForObstacle(
-                    reference_line_info,
-                    crosswalk_ptr,
-                    *obstacle,
-                    stop_deceleration,
-                    crosswalk_overlap->start_s,
-                    adc_front_edge_s);
+            bool stop = CheckStopForObstacle(reference_line_info, crosswalk_ptr, *obstacle, stop_deceleration,
+                                             crosswalk_overlap->start_s, adc_front_edge_s);
 
             const std::string& obstacle_id = obstacle->Id();
             const PerceptionObstacle& perception_obstacle = obstacle->Perception();
@@ -227,7 +219,7 @@ void Crosswalk::MakeDecisions(Frame* const frame, ReferenceLineInfo* const refer
             crosswalks_to_stop.emplace_back(crosswalk_overlap, pedestrians);
             ADEBUG << "crosswalk_id[" << crosswalk_id << "] STOP";
         } else {
-            // competition: 赛题七 无人人行道限速通过（≤5m/s，留裕量取4.5）
+        // competition: 赛题七 无人人行道限速通过（≤5m/s，留裕量取4.5）
             // 赛题八(交通灯路口减速通行): 路口斑马线也要限速5——限速条件:
             //   附近30m无信号灯(普通斑马线) 或 附近信号灯从未见红(赛题8一直绿)
             // 不限速条件: 附近信号灯见过红(赛题3红绿灯, 绿灯通过路口不限速)。
@@ -245,17 +237,16 @@ void Crosswalk::MakeDecisions(Frame* const frame, ReferenceLineInfo* const refer
             // →仍限速4.5通过(评测≤5)。
             bool should_limit = true;
             for (const auto* obstacle : path_decision->obstacles().Items()) {
-                if (obstacle->IsVirtual())
-                    continue;
+                if (obstacle->IsVirtual()) continue;
                 const auto& p_obs = obstacle->Perception();
-                if (p_obs.type() != PerceptionObstacle::PEDESTRIAN && p_obs.type() != PerceptionObstacle::BICYCLE)
-                    continue;
+                if (p_obs.type() != PerceptionObstacle::PEDESTRIAN
+                    && p_obs.type() != PerceptionObstacle::BICYCLE) continue;
                 const auto& sl_b = obstacle->PerceptionSLBoundary();
                 if (sl_b.end_s() >= crosswalk_overlap->start_s - 15.0
                     && sl_b.start_s() <= crosswalk_overlap->end_s + 15.0) {
                     should_limit = false;
-                    AINFO << "[crosswalk-limit] " << crosswalk_id << " SKIP (pedestrian nearby s=" << sl_b.start_s()
-                          << ")";
+                    AINFO << "[crosswalk-limit] " << crosswalk_id
+                          << " SKIP (pedestrian nearby s=" << sl_b.start_s() << ")";
                     break;
                 }
             }
@@ -452,8 +443,9 @@ bool Crosswalk::CheckStopForObstacle(
         const double stop_deceleration,
         const double crosswalk_near_s,
         const double adc_front_s) {
-    // v3a(2026-08-05): crosswalk_near_s(斑马线起点s)/adc_front_s(车前s)
-    // 用于"车停稳达标即放行"判断(评测只查停车位置[1.5,2.0])
+    // 参数保留(供add5精细放行使用), 当前add5用行人停止判据, 暂未使用
+    (void)crosswalk_near_s;
+    (void)adc_front_s;
     CHECK_NOTNULL(reference_line_info);
 
     std::string crosswalk_id = crosswalk_ptr->id().id();
@@ -490,47 +482,6 @@ bool Crosswalk::CheckStopForObstacle(
     // 行人在扩展区(含慢速/静止)都停, 更安全。行人走完(离开扩展区)→默认
     // 逻辑放行(车起步)。
     if (in_expanded_crosswalk) {
-        // v3a(2026-08-05): 车已停稳且已到STOP位置(距斑马线起点1-3m) → 放行。
-        // 评测CrosswalkStop只检查"停车位置∈[1.5,2.0]"(017全程509帧pass),
-        // 不检查放行时机 → 车停稳达标后即可走, 不必等行人走完。
-        // 原add5要求行人"横穿结束|l|>6且远离" → 行人l=6.59→5.82几乎不动
-        // (靠近车道) → 永久等 → 车停93s(planning)纯浪费。
-        // 车停稳(距斑马线~1.68m达标)即放行 → 省~90s。
-        // v3a超时兜底(2026-08-06): 车停稳且已到停车位(距斑马线1-3m达标)后
-        // 计时, 停稳≥kCrosswalkStopTimeout(12.5s, 用户人工回放判断: 行人
-        // 12.5s后已离开车行驶带, 出发安全) → 无条件放行。018实测"停稳立即
-        // 走"在行人横穿中越线失败(beyond crosswalk每帧100分); add5(|l|>6
-        // 行人走完)017满分但行人感知异常时可能永久等(017车停93s)。超时
-        // 兜底: add5先放行(行人走完, 最短), 12.5s兜底防卡死+尽早出发。
-        const double adc_speed = injector_->vehicle_state()->linear_velocity();
-        const double dist_to_cw = crosswalk_near_s - adc_front_s;
-        static constexpr double kCrosswalkStopTimeout = 12.5;
-        // 2026-08-06: 放宽距离条件——019实测车停稳距斑马线~3.08m(超3.0上限),
-        // 原[1,3]不满足→超时兜底不启动→车无限等(019等>30s)。车停稳(距斑马线
-        // 0-5m)=合格停车位置 → 12.5s无条件放行。
-        if (adc_speed < 0.1 && dist_to_cw > 0.0 && dist_to_cw < 5.0) {
-            auto it = adc_stop_timer_.find(crosswalk_id);
-            if (it == adc_stop_timer_.end()) {
-                adc_stop_timer_[crosswalk_id] = Clock::NowInSeconds();
-                ADEBUG << "v3a-timer: 车停稳计时开始 crosswalk " << crosswalk_id;
-            } else {
-                const double hold_time = Clock::NowInSeconds() - it->second;
-                if (hold_time >= kCrosswalkStopTimeout) {
-                    // 超时放行 + 标记finished防"放行→起步→再停"抖动
-                    auto* cs = injector_->planning_context()->mutable_planning_status()->mutable_crosswalk();
-                    const auto& fin = cs->finished_crosswalk();
-                    if (std::find(fin.begin(), fin.end(), crosswalk_id) == fin.end()) {
-                        cs->add_finished_crosswalk(crosswalk_id);
-                    }
-                    AINFO << "pass(v3a-timeout): 车停稳" << hold_time << "s≥" << kCrosswalkStopTimeout
-                          << "s 放行(兜底) crosswalk " << crosswalk_id;
-                    return false;
-                }
-            }
-        } else {
-            // 车未停稳/未到停车位 → 重置计时
-            adc_stop_timer_.erase(crosswalk_id);
-        }
         // 2026-08-04晚4: 提前放行修复——110008实测车t=13.5(行人l=4.28横穿中
         // v=0.34, 车v=3.23没停稳)就放行 → 车提前起步+抖动(行人l在4阈值附近
         // 波动4.28→3.48, 放行/必停交替)。且行人l从6.45减(走向车路线), |l|>4
@@ -549,20 +500,21 @@ bool Crosswalk::CheckStopForObstacle(
         // 道路(l与v_l同号, |l|增大)"才放行; 横穿中/等待横穿(向路移动或静止)→必停。
         // v_l=速度在参考线横向(l)方向分量(用自车heading近似参考线方向);
         // l*v_l>0 ⟺ |l|增大 ⟺ 远离道路。
-        const double obstacle_speed
-                = std::hypot(perception_obstacle.velocity().x(), perception_obstacle.velocity().y());
+        const double obstacle_speed = std::hypot(perception_obstacle.velocity().x(),
+                                                 perception_obstacle.velocity().y());
         const double heading = injector_->vehicle_state()->heading();
         const double v_l = -perception_obstacle.velocity().x() * std::sin(heading)
-                + perception_obstacle.velocity().y() * std::cos(heading);
+                           + perception_obstacle.velocity().y() * std::cos(heading);
         const double kRoadClearedLateral = 6.0;
         // 2026-08-04补强: 行人横穿到对侧后停下(v_l≈0, l*v_l=0不满足远离条件)
         // → 车会永远等。scn7行人走到北侧l≈-8.8停下(走完) → 已完全离开斑马线
         // (横向±3.5m), 评测允许通过。补充: |l|>6且已到对侧(l<0)且静止(speed
         // <0.1) → 也放行。起点(l>0静止)不满足l<0, 不会误放行。
-        if (std::fabs(obstacle_sl_point.l()) > kRoadClearedLateral
-            && (obstacle_sl_point.l() * v_l > 0.0 || (obstacle_sl_point.l() < 0.0 && obstacle_speed < 0.1))) {
-            ADEBUG << "pass(add5): obstacle_id[" << obstacle_id << "] l[" << obstacle_sl_point.l() << "] v_l[" << v_l
-                   << "] 行人已横穿结束并离开路面, 放行";
+        if (std::fabs(obstacle_sl_point.l()) > kRoadClearedLateral &&
+            (obstacle_sl_point.l() * v_l > 0.0 ||
+             (obstacle_sl_point.l() < 0.0 && obstacle_speed < 0.1))) {
+            ADEBUG << "pass(add5): obstacle_id[" << obstacle_id << "] l[" << obstacle_sl_point.l()
+                   << "] v_l[" << v_l << "] 行人已横穿结束并离开路面, 放行";
             return false;
         }
         ADEBUG << "need_stop(add5): obstacle_id[" << obstacle_id << "] type[" << obstacle_type_name
