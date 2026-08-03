@@ -259,8 +259,17 @@ Status PiecewiseJerkSpeedOptimizer::Process(
             // 2026-08-04: 同STOP分支改jerk等效减速度3.0(与s_bounds曲线自洽,
             // 车到stop_s时v=0)。原6.0(21.3m)与曲线都太紧 → 车12.4封顶。
             // 用3.0: 车16巡航到距STOP 42.7m处v_upper收紧(>42.7m不压)。
-            const double v_allow_stop = std::sqrt(2.0 * 3.0 * dist_to_stop);
-            v_upper_bound = std::fmin(v_upper_bound, v_allow_stop);
+            // 2026-08-04晚: 车已停(速度<1.0)且已接近STOP(<5m, 已到停车位
+            // 置) → v_upper=0停稳, 消除刹-油-刹蠕动。100131实测: 车停在斑
+            // 马线前(位置合格)但P0允许v_upper=4.36 + 行人ST boundary
+            // s_up[40]=1.22 + 参考线每帧重建车s=0恒定 → 车0.02-0.9m/s蠕动
+            // 死循环。行驶中(速度>=1)或未到(<5m外) → 正常jerk等效刹车包络。
+            if (init_s[1] < 1.0 && dist_to_stop < 5.0) {
+                v_upper_bound = std::fmin(v_upper_bound, 0.0);
+            } else {
+                const double v_allow_stop = std::sqrt(2.0 * 3.0 * dist_to_stop);
+                v_upper_bound = std::fmin(v_upper_bound, v_allow_stop);
+            }
         }
         // 车可达速度/位置累积(物理上限: 从v0以+3加速逼近dx_ref, 平滑无陡降)
         v_est = std::min(dx_ref[i], v_est + 3.0 * delta_t);

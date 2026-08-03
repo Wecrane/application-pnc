@@ -460,6 +460,23 @@ bool Crosswalk::CheckStopForObstacle(
     // 行人在扩展区(含慢速/静止)都停, 更安全。行人走完(离开扩展区)→默认
     // 逻辑放行(车起步)。
     if (in_expanded_crosswalk) {
+        // 2026-08-04晚补充: 行人走完后(横向已离开车行驶带, 感知v=0仍持续在
+        // 扩展区内输出) 原必停导致车永远等 (100131实测: 行人l=8.21走完停住
+        // v=0, 车从t=15等到99s不动)。修复: 行人横向|L|>3m(车半宽1m+缓冲2m)
+        // 且已停(v<0.1) → 行人已安全走过车行驶带, 放行。行人横穿中(v>0.1)
+        // 即使在扩展区 → 仍必停(评测要求等行人走完)。
+        const auto& reference_line = reference_line_info->reference_line();
+        common::SLPoint obstacle_sl_point;
+        reference_line.XYToSL(perception_obstacle.position(), &obstacle_sl_point);
+        const double obstacle_speed
+                = std::hypot(perception_obstacle.velocity().x(), perception_obstacle.velocity().y());
+        const double kClearedLateral = 3.0;
+        const double kClearedSpeed = 0.1;
+        if (std::fabs(obstacle_sl_point.l()) > kClearedLateral && obstacle_speed < kClearedSpeed) {
+            ADEBUG << "pass(add5): obstacle_id[" << obstacle_id << "] l[" << obstacle_sl_point.l()
+                   << "] speed[" << obstacle_speed << "] 行人已离开车行驶带且停止, 放行";
+            return false;
+        }
         ADEBUG << "need_stop(add5): obstacle_id[" << obstacle_id << "] type[" << obstacle_type_name
                << "] inside expanded crosswalk, always stop";
         return true;
