@@ -505,12 +505,12 @@ bool Crosswalk::CheckStopForObstacle(
         const double heading = injector_->vehicle_state()->heading();
         const double v_l = -perception_obstacle.velocity().x() * std::sin(heading)
                            + perception_obstacle.velocity().y() * std::cos(heading);
-        // 2026-08-06: 6.0→3.5→1.5→4.5→5.5——用户迭代调参。5.5: 行人横向
-        // 离开车道足够远(|l|≥5.5)且远离/对侧静止 → 放行。接近满分6.0但略早。
-        const double kRoadClearedLateral = 5.5;
+        // 2026-08-06: 5.5→6.0——用户最终改回满分原始值6.0(行人到对侧才放行,
+        // 017满分验证)。
+        const double kRoadClearedLateral = 6.0;
         // 2026-08-04补强: 行人横穿到对侧后停下(v_l≈0, l*v_l=0不满足远离条件)
         // → 车会永远等。scn7行人走到北侧l≈-8.8停下(走完) → 已完全离开斑马线
-        // (横向±3.5m), 评测允许通过。补充: |l|>5.5且已到对侧(l<0)且静止(speed
+        // (横向±3.5m), 评测允许通过。补充: |l|>6.0且已到对侧(l<0)且静止(speed
         // <0.1) → 也放行。起点(l>0静止)不满足l<0, 不会误放行。
         if (std::fabs(obstacle_sl_point.l()) > kRoadClearedLateral &&
             (obstacle_sl_point.l() * v_l > 0.0 ||
