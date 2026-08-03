@@ -123,6 +123,19 @@ Status PiecewiseJerkSpeedOptimizer::Process(
                 //   t_brake≤t≤T: s_upper=stop_s-0.5|dec|(T-t)² 平滑降(车-6急刹)
                 //   t>T: s_upper=stop_s(已停) —— 无突变, QP可行。
                 {
+                    // 2026-08-04晚: 参考线末端附近的STOP/YIELD(如DEST@129.5 vs
+                    // 末端130)不约束——车15s窗口按dx_ref巡航会到达boundary,
+                    // 但车到参考线末端就切换(kRefEndOvershoot), 不需在末端停.
+                    // 原v_ref=20最晚刹车曲线假设车20巡航过早收紧 → s_bounds
+                    // 与车实际(限速4.5+dx_ref16.39)冲突 → QP infeasible
+                    // (24.68s实测) → relaxed也失败 → fallback急刹(刹油刹#2).
+                    // 跳过末端附近boundary: 车正常巡航切参考线; 真实终点
+                    // (DEST深入参考线内)STOP正常生效停车.
+                    double b0 = 0.0, bl0 = 0.0;
+                    boundary->GetUnblockSRange(0.0, &b0, &bl0);
+                    if (b0 > total_length - 10.0) {
+                        continue;
+                    }
                     const double v_ref = FLAGS_planning_upper_speed_limit;
                     // 2026-08-04: 刹车减速度 6.0→3.0(jerk等效)。jerk±2约束下
                     // 车16→0实际需~43m(a从0以jerk-2到-6走39m + -6急刹4m),
@@ -216,11 +229,14 @@ Status PiecewiseJerkSpeedOptimizer::Process(
         // P0-B(2026-08-03): kLimitDecel 4.0→5.0——回推起点从32m(4m/s²)前移到23.6m,
         // 减轻"提前减速"(机制专项Q1根因: 限速区前30m+就被硬性要求4m/s²减速)。
         static constexpr double kLimitLookAhead = 100.0;
-        // 2026-08-04: kLimitDecel 5.0→4.0(scn4本地刹油刹修复). 5.0回推太松
-        // (车s146才压16, 回推23.6m), 车减速不够(执行滞后~0.4s)→进限速区
-        // (s170)还6-7m/s超4.5→区内急刹到0.64(刹油刹)+起步. 4.0回推32m
-        // (s139压16), 车更早平滑降速(补偿执行滞后)→进限速区4.5稳态不刹油刹.
-        static constexpr double kLimitDecel = 4.0;
+        // 2026-08-04晚: kLimitDecel 4.0→2.5(scn4本地刹油刹#1根因). 4.0回推
+        // 仍太紧: v_upper包络以4.0/s降, 车jerk约束实际只能~3.5/s减速, 且
+        // 控制执行滞后0.4s(车晚6.4m开始, 初始超包络~1.6m/s) → 车持续超
+        // v_upper(init_v>v_up[0], 实测14.6s超0.28→9.2s超2.0) → QP
+        // infeasible(91次) → fallback急刹 → 刹过头到0.64(刹油刹#1).
+        // 2.5回推47m: 车实际3.5减速>包络2.5, 追得上 → 进限速区≤4.5稳态,
+        // 不超速不infeasible. 减速更早但平滑(-3.5), 不刹油刹.
+        static constexpr double kLimitDecel = 2.5;
         for (const auto& lp : speed_limit.speed_limit_points()) {
             if (lp.first <= path_s) {
                 continue;
