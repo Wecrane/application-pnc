@@ -252,14 +252,17 @@ void Crosswalk::MakeDecisions(Frame* const frame, ReferenceLineInfo* const refer
             }
             for (const auto& signal_overlap : reference_line_info->reference_line().map_path().signal_overlaps()) {
                 if (std::fabs(signal_overlap.start_s - crosswalk_overlap->start_s) < 30.0) {
-                    // 附近有信号灯且见过红(赛题3红绿灯) → 绿灯通过路口不限速
+                    // 附近有信号灯 → 由 traffic_light 规则统一处理限速
+                    // (scn4绿灯未红→限4.8, scn3见过红→不限速), crosswalk跳过
+                    // 避免重复限速。113537实测scn4: traffic_light+crosswalk都
+                    // 限4.8 → 限速区叠加+参考线重建波动 → QP回推突变 → 车
+                    // 4.8→0.4刹-油-刹。单一限速源(traffic_light) → 波动小。
                     AINFO << "[crosswalk-limit] near_signal id=" << signal_overlap.object_id
                           << " sig_start_s=" << signal_overlap.start_s << " cw=" << crosswalk_id
                           << " cw_start_s=" << crosswalk_overlap->start_s
-                          << " seen_red=" << GlobalSeenRedLight()[signal_overlap.object_id];
-                    if (GlobalSeenRedLight()[signal_overlap.object_id]) {
-                        should_limit = false;
-                    }
+                          << " seen_red=" << GlobalSeenRedLight()[signal_overlap.object_id]
+                          << " -> crosswalk skip (traffic_light handles)";
+                    should_limit = false;
                     break;
                 }
             }
