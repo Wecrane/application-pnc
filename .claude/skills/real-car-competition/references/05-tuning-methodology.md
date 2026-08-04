@@ -15,7 +15,8 @@
 
 - 运行期实际读取 = 源码默认 + profile 覆盖（buildtool 构建时合成；容器内 `/apollo` 软链 → `profiles/current` → `default`）
 - **pb.txt/conf 改动不需编译**，`aem profile use default` + 重启 Dreamview 即生效
-- 改 C++ 源码/新增 proto 才需 `buildtool build -p modules/planning/ -j15`（实车赛尽量避免）
+- 改 C++ 源码/新增 proto 才需 `buildtool build -p modules/planning/ -j15`
+- ⚠️ **实车赛只调参不改代码 → 全程无需编译**，改配置后 `aem profile use default` 即可（见 car_connect/apply_config.sh）
 
 ### 1.2 关键配置文件位置
 

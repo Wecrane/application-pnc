@@ -15,7 +15,8 @@
 | `mount_car.sh` | 仅挂载 `profiles/` + `modules/` 到 `~/car/`（`--full` 挂全工程） |
 | `umount_car.sh` | 卸载 |
 | `check_car.sh` | 实车健康检查（系统/磁盘/内存/工程目录/进程） |
-| `car_cmd.sh` | 在实车容器内执行命令（如编译、aem profile use） |
+| `apply_config.sh` | **改完配置一键生效**：`aem profile use default`（实车无需编译） |
+| `car_cmd.sh` | 在实车容器内执行命令（查看配置等；编译仅改代码时需要） |
 | `backup_car.sh` | 备份实车配置到本地（改配置前必做，回滚用） |
 
 ## 现场最快路径（30 分钟内）
@@ -28,16 +29,15 @@ bash shiche/car_connect/connect_car.sh 802
 # 脚本自动完成：连Wi-Fi → 等ping通 → 免密 → 探测工程目录名 → 挂载
 ```
 
-### 连接后标准动作
+### ② 连接后标准动作（实车只调参，**全程无需编译**）
 
 ```bash
-bash shiche/car_connect/check_car.sh          # 1. 健康检查
-bash shiche/car_connect/backup_car.sh         # 2. 备份原配置（回滚保险）
-bash shiche/car_connect/car_cmd.sh 'aem profile use default'   # 3. 确认 profile
-# 4. 调参：本工作区 AI 改配置（实时写回实车）或新开 VSCode 窗口改 ~/car/profiles
-# 5. 编译（若改了代码）：
-bash shiche/car_connect/car_cmd.sh 'buildtool build -p modules/planning/ -j15'
-# 6. 重启 Dreamview：浏览器 192.168.10.6:8888 操作
+bash shiche/car_connect/check_car.sh           # 1. 健康检查
+bash shiche/car_connect/backup_car.sh          # 2. 备份原配置（回滚保险）
+# 3. 调参：本工作区 AI 改配置（实时写回实车）或新开 VSCode 窗口改 ~/car/profiles
+bash shiche/car_connect/apply_config.sh        # 4. 一键生效: aem profile use default
+# 5. 测试 → 看评分 → 不达标微调 → 重复
+# ⚠️ 无需编译！只有改 C++ 源码才需要 buildtool build（实车赛基本不会）
 ```
 
 ## 手动分步（脚本失败时的备用）
@@ -75,15 +75,20 @@ bash shiche/car_connect/umount_car.sh
 **方式 C：终端直连**
 ```bash
 ssh car                              # 交互式
-ssh car "cd ~/apollo-edu-9.1.1 && aem enter -- buildtool build -p modules/planning/ -j15"
+ssh car "cd ~/apollo-edu-9.1.1 && aem exec -- cat /apollo/.../planning.conf"
 ```
 
-### 编译/重启/测试（AI 或终端）
+### 配置生效 / 重启（AI 或终端）—— 无需编译
 
 ```bash
-ssh car "cd ~/apollo-edu-9.1.1 && aem enter -- buildtool build -p modules/planning/ -j15"
-ssh car "cd ~/apollo-edu-9.1.1 && aem profile use default"   # 若需
-# Dreamview 浏览器：192.168.10.6:8888
+# 改完配置一键生效（推荐）：
+bash shiche/car_connect/apply_config.sh
+# 手动方式：
+ssh car "cd ~/apollo-edu-9.1.1 && aem profile use default"
+# 若配置未生效再重启 Dreamview：
+bash shiche/car_connect/apply_config.sh --restart
+# 浏览器：192.168.10.6:8888
+# ⚠️ 实车只调参 → 不要执行 buildtool build（仅改 C++ 源码才需要，实车赛基本不会）
 ```
 
 ## 合规红线提醒（重要）

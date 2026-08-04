@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
 # =============================================================================
 # car_cmd.sh — 在实车容器内执行命令（非交互）
+# ⚠️ 实车只调参不改代码 → 无需编译！改配置后只需 aem profile use default
+#    （见 apply_config.sh）。buildtool build 仅在改 C++ 源码时才需要。
 # 用法：
 #   bash car_cmd.sh 'aem profile use default'
-#   bash car_cmd.sh 'buildtool build -p modules/planning/ -j15'
+#   bash car_cmd.sh 'buildtool build -p modules/planning/ -j15'   # 仅改代码时
 #   bash car_cmd.sh 'cat /apollo/modules/planning/planning_component/conf/planning.conf | grep speed_bump'
 # 说明：优先用 aem exec；若实车 aem 不支持，改用交互方式：ssh car 后 aem enter
 # =============================================================================
