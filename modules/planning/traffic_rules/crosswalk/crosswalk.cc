@@ -309,11 +309,10 @@ void Crosswalk::MakeDecisions(Frame* const frame, ReferenceLineInfo* const refer
                 // 已≤4.8 → 通过. 只影响无人斑马线限速(有信号灯/停止标志的
                 // crosswalk SKIP, 如scn3/scn4不受影响).
                 AINFO << "[crosswalk-limit] " << crosswalk_id << " AddSpeedLimit(" << crosswalk_overlap->start_s - 24.0
-                      << "," << crosswalk_overlap->end_s + 3.0 << ",4.85)";
-                // 2026-08-04: 4.8→4.85——评测≤5, sim超调~0.15, 4.85+0.15=5.0贴线
-                // 但省时间(用户要求提速试试)。若超速则退回4.8。
+                      << "," << crosswalk_overlap->end_s + 3.0 << ",4.9)";
+                // 2026-08-04: 4.85→4.9——评测≤5, 用户要求提速试试。若超速则回退。
                 reference_line_info->mutable_reference_line()->AddSpeedLimit(
-                        crosswalk_overlap->start_s - 24.0, crosswalk_overlap->end_s + 3.0, 4.85);
+                        crosswalk_overlap->start_s - 24.0, crosswalk_overlap->end_s + 3.0, 4.9);
             } else {
                 AINFO << "[crosswalk-limit] " << crosswalk_id << " SKIP speed limit (seen red / stop sign present)";
             }

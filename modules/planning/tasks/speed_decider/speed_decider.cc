@@ -679,7 +679,24 @@ void SpeedDecider::HandlePedestrianStop(Obstacle* obstacle) const {
             stop_dist = -5.0;
         }
         double fence_s;
-        if (ped_moving) {
+        if (ped_moving && IsPedestrianOnCrosswalk(*obstacle)) {
+            // 人行道移动行人: 保持原动态STOP fence——人行道赛题已有特调
+            // (车停斑马线前~1.7m达标), 不受障碍物停车避让FOLLOW跟车影响。
+            fence_s = adc_sl_boundary_.end_s() + boundary.min_s() + stop_dist
+                    + VehicleConfigHelper::GetConfig().vehicle_param().front_edge_to_center();
+            ped_fixed_fence_s_.erase(base_id);
+            const auto fence_point = reference_line_->GetReferencePoint(fence_s);
+            ObjectDecisionType stop_decision;
+            auto* stop = stop_decision.mutable_stop();
+            stop->set_distance_s(stop_dist);
+            auto* sp = stop->mutable_stop_point();
+            sp->set_x(fence_point.x());
+            sp->set_y(fence_point.y());
+            sp->set_z(0.0);
+            stop->set_stop_heading(fence_point.heading());
+            obstacle->AddLongitudinalDecision("dp_st_graph/ped_follow", stop_decision);
+        } else if (ped_moving) {
+            // 障碍物停车避让(非人行道)移动行人: FOLLOW真正跟车。
             // 2026-08-04: 动态STOP fence改FOLLOW决策——真正跟车。
             // 根因(本地123655日志): 动态STOP fence随行人前移(1.8→7.0m)但QP
             // 已停分支(v<1.0 && dist<5.0 → v_upper=0)锁死车→车不跟移动行人
