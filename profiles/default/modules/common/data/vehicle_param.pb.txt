@@ -12,8 +12,8 @@ vehicle_param {
   width: 2.11
   height: 1.48
   min_turn_radius: 5.05386147161
-  # 提速2026-08-04: 车辆最大加速度 2.0 -> 2.8 (评测 AccelerationLimit 上限3.0, 留0.2裕量)
-  max_acceleration: 2.8
+  # 提速2026-08-04: 车辆最大加速度 2.0 -> 2.9 (评测 AccelerationLimit 上限3.0, 留0.1裕量)
+  max_acceleration: 2.9
   max_deceleration: -6.0
   max_steer_angle: 8.20304748437
   max_steer_angle_rate: 6.98131700798
