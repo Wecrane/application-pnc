@@ -8,13 +8,27 @@ Claude Code 专属技能位于 `.claude/skills/`，提供 Planning 模块的深�
 
 | Skill | 路径 | 用途 |
 |-------|------|------|
+| **🚗 实车挑战赛调参指南（最高优先级）** | `.claude/skills/real-car-competition/SKILL.md` | **⭐ 优先于其他所有技能触发**。实车挑战赛（8月6-7日）备赛与调参：竞赛规则/红线、SSH 连接与闭环操作、限速插件 scene_speed_limit、9 赛题纯参数方案、调参方法论、实车vs仿真代码差异分析 |
 | Apollo 仿真开发指南 | `.claude/skills/apollo-simulation-guide/SKILL.md` | Planning 架构（17 Scenario + 10 TrafficRule + 35 Task）、插件开发、配置链路、参数调优、地图/路由/障碍物解析 |
 | 参考文档 | `.claude/skills/apollo-simulation-guide/references/` | 14 份技术参考：架构、场景、交通规则、任务、算法、工具链、CyberRT、PnC Map、日志、地图路由等 |
 | **日志与回放分析** | `.claude/skills/log-replay-analysis/SKILL.md` | **本地日志/本地回放/云端回放/云端日志的架构与结构、sim_engine 评分解析（唯一计分帧）、评测时间轴映射、关键日志模式、排障工作流**（800 分实战沉淀） |
 | 分析实操手册 | `.claude/skills/log-replay-analysis/references/01-analysis-playbook.md` | sim_engine 解析代码、时间轴 T0 校准、planning 日志提取、云端回放解密实操 |
 
+**技能优先级**：
+1. **实车挑战赛调参指南**（`.claude/skills/real-car-competition/`）——用户提及实车赛、比赛调参、竞赛规则、SSH 连接、限速插件、赛题、定速巡航等实车赛话题时**必须最先触发**
+2. Apollo 仿真开发指南（`.claude/skills/apollo-simulation-guide/`）——Planning 代码导航、插件开发、仿真赛题分析
+3. 日志与回放分析（`.claude/skills/log-replay-analysis/`）——日志分析、回放分析、云端评测
+
 当用户提出 Planning 代码导航、插件开发、赛题分析等问题时，优先检索 `.claude/skills/apollo-simulation-guide/references/`。
 当用户提出日志分析、回放分析、云端评测、评分解析、sim_engine、计分帧、时间轴等问题时，使用 `.claude/skills/log-replay-analysis/`。
+**当用户提出实车赛、比赛调参、竞赛、限速插件、实车连接等话题时，使用 `.claude/skills/real-car-competition/`（最高优先级）**。
+
+## 实车挑战赛材料（shiche/）
+
+实车赛主办方材料与转换产物：
+- `shiche/秩序册.md`（PDF 转换）、`shiche/附录一_智能驾驶实车赛_笔记本远程实车连接操作手册.md`、`shiche/自动驾驶闭环文档.md`（docx 转换）
+- `shiche/hqev_speed_limit.tar.gz`（限速插件）+ `shiche/_extracted/`（解压源码）
+- 解题知识沉淀在 `.claude/skills/real-car-competition/`（参考 `output/solutions/` 仿真 800/800 记录）
 
 ## 知识库
 
