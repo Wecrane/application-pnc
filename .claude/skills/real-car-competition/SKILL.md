@@ -309,6 +309,7 @@ bash shiche/car_connect/apply_config.sh           # ⑤ 生效：aem profile use
 | `references/05-tuning-methodology.md` | 调参方法论、评分机制、实车差异、时间管理 |
 | `references/06-official-config-solutions.md` | **官方代码+限速插件环境**：9赛题插件矩阵、纯配置方案、官方默认值、与仿真魔改差异、开放问题 |
 | `references/07-car-connect-toolkit.md` | **连接工具包 car_connect**：8 个脚本、一键流程、官方环境搭建、插件下载/注册机制 |
+| `references/08-tuning-playbook.md` | **调参手册（详细定稿）**：参数速查表、9赛题固定调参方案、调大调小效果、失效排查、30分钟时间线 |
 
 工具包位置：`shiche/car_connect/`（connect_car / check_car / backup_car / apply_config / car_cmd / mount / umount / setup_ssh_config / restore_official）
 
