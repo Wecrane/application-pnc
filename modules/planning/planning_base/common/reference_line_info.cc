@@ -123,10 +123,12 @@ bool ReferenceLineInfo::Init(const std::vector<const Obstacle*>& obstacles, doub
     // 2026-08-04: 第一个带提前量20→25→23→25→23→21m(用户迭代, 晚减速2m)。
     // 第二个带提前量11.5→10m(晚减速1.5m)——限速窗口更紧凑、更晚开始,
     // 车在接近减速带前更久保持高速, 带间提速空间更大。
+    // 2026-08-04(加速度三档化{-5.9}后): 刹车更猛→减速距离缩短, 提前量全减10m:
+    // 第一个21→11m, 第二个10→0m(窗口从减速带起点开始)。旧值保留在注释。
     const auto& speed_bumps = map_path.speed_bump_overlaps();
     size_t speed_bump_index = 0;
     for (const auto& speed_bump : speed_bumps) {
-        const double kAdvanceDist = (speed_bump_index == 0) ? 21.0 : 10.0;
+        const double kAdvanceDist = (speed_bump_index == 0) ? 11.0 : 0.0;
         const double kTailDist = (speed_bump_index == 0) ? 2.0 : 0.5;
         reference_line_.AddSpeedLimit(
                 speed_bump.start_s - kAdvanceDist, speed_bump.end_s + kTailDist, FLAGS_speed_bump_speed_limit);
