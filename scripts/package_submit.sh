@@ -86,19 +86,11 @@ ARCHIVE_PATH="${OUTPUT_DIR}/${ARCHIVE_NAME}"
 
 info "正在打包..."
 
-if [ "$HAS_SRC_CHANGE" = true ]; then
-    # 改了源码 → 打包 modules/planning/ + profiles/
-    info "打包方式：源码 + 配置"
-    tar -zcvf "$ARCHIVE_PATH" modules/planning/ "$PROFILE_DIR"
-elif [ "$HAS_PROFILE_CHANGE" = true ]; then
-    # 仅改配置 → 打包 profiles/
-    info "打包方式：仅配置"
-    tar -zcvf "$ARCHIVE_PATH" "$PROFILE_DIR"
-else
-    # 无检测到改动 → 打包全部
-    info "打包方式：全量（源码 + 配置）"
-    tar -zcvf "$ARCHIVE_PATH" modules/planning/ "$PROFILE_DIR"
-fi
+# 2026-08-04: 始终打包源码 + 配置。原逻辑用 git diff 检测未提交改动——
+# 代码改动常已 git 提交(git diff 检测不到)，会被误判为"仅配置"，导致提交包
+# 不含最新代码、云端评测用旧代码。故不再依赖检测结果，总是打源码+配置。
+info "打包方式：源码 + 配置（始终）"
+tar -zcvf "$ARCHIVE_PATH" modules/planning/ "$PROFILE_DIR"
 
 echo ""
 info "✅ 打包完成！"
