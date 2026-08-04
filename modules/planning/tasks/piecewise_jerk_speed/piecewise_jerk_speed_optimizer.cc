@@ -180,7 +180,11 @@ Status PiecewiseJerkSpeedOptimizer::Process(
                     // QP在21.3m内无法jerk刹停 → 提前减速封顶(095032实测车
                     // 12.4不加速到16, v[30]=15.57→14.32提前降)。用3.0: 车16
                     // 巡航到距STOP 42.7m处-3减速停(最晚刹车, jerk可达)。
-                    const double dec_abs = 3.0;
+                    // 2026-08-04(用户要求): 加速度三档化输出-5.9, 开始减速距离
+                    // 按5.9写死——车16巡航到距STOP 21.7m处才-5.9猛刹, 与输出
+                    // 加速度一致(不再提前停/蠕行)。⚠️QP jerk约束下21.7m内可能
+                    // infeasible→fallback, 实测为准可回调。
+                    const double dec_abs = 5.9;
                     const double t_brake = (s_upper - init_s[0] - v_ref * v_ref / (2.0 * dec_abs)) / v_ref;
                     if (t_brake <= 0.0) {
                         // 车已在刹车距离内(stop_s<v_ref²/2|dec|): 恒定stop_s约束
@@ -326,8 +330,10 @@ Status PiecewiseJerkSpeedOptimizer::Process(
             // 只距STOP 0.21m<0.78m jerk最小距离) → QP无法jerk刹停 → 终点段
             // infeasible滑行(101332)。jerk精确: 低v纯jerk段(1.5·d)^(2/3),
             // 高v jerk过渡(3s到-6)后-6急刹。与P0 v_upper一致。
-            const double brake_envelope = (dist_to_stop < 18.0) ? std::pow(1.5 * dist_to_stop, 2.0 / 3.0)
-                                                                : -9.0 + std::sqrt(108.0 + 12.0 * dist_to_stop);
+            // 2026-08-04(用户要求): 包络按-5.9恒定减速(与输出加速度一致)——
+            // v=sqrt(2*5.9*dist), 车在距STOP 21.7m处才收紧dx_ref(原jerk=2包络
+            // 43m就提前收紧→提前停/蠕行)。
+            const double brake_envelope = std::sqrt(2.0 * 5.9 * dist_to_stop);
             dx_ref[i] = std::fmin(dx_ref[i], brake_envelope);
         }
         // P0(2026-08-04修复): 接近STOP时同步收紧v_upper——消除infeasible根因。
@@ -365,8 +371,9 @@ Status PiecewiseJerkSpeedOptimizer::Process(
                 // 原sqrt(2·3·dist)(-3恒定抛物线)低v太松: 车v=1.11只距STOP
                 // 0.21m<0.78m(jerk最小) → QP无法jerk刹停 → 终点段连续
                 // infeasible(101332 t=60.8-64.9) → fallback滑行5s才停。
-                const double v_allow_stop = (dist_to_stop < 18.0) ? std::pow(1.5 * dist_to_stop, 2.0 / 3.0)
-                                                                  : -9.0 + std::sqrt(108.0 + 12.0 * dist_to_stop);
+                // 2026-08-04(用户要求): v_upper按-5.9恒定减速收紧(与输出加速度
+                // 一致)——v=sqrt(2*5.9*dist), 车距STOP 21.7m处v_upper才开始压。
+                const double v_allow_stop = std::sqrt(2.0 * 5.9 * dist_to_stop);
                 v_upper_bound = std::fmin(v_upper_bound, v_allow_stop);
             }
         }
@@ -391,7 +398,9 @@ Status PiecewiseJerkSpeedOptimizer::Process(
     piecewise_jerk_problem.set_scale_factor({1.0, 10.0, 100.0});
     piecewise_jerk_problem.set_x_bounds(0.0, total_length);
     // 提速(2026-08-02): 加速上限用 gflag(默认2.7=0.9*评测3.0), 减速保持 vehicle_param(-6)
-    piecewise_jerk_problem.set_ddx_bounds(veh_param.max_deceleration(), FLAGS_planning_max_acceleration);
+    // 2026-08-04(用户要求): 减速下界写死-5.9——不依赖veh_param(传进来的可能是
+    // 别的值), 与输出给control的加速度档-5.9完全一致。
+    piecewise_jerk_problem.set_ddx_bounds(-5.9, FLAGS_planning_max_acceleration);
     piecewise_jerk_problem.set_dddx_bound(FLAGS_longitudinal_jerk_lower_bound, FLAGS_longitudinal_jerk_upper_bound);
     // 诊断日志(2026-08-03): 定位人行道刹-油-刹/提前刹车——s_bounds在t轴是否提前收窄。
     // 带边界保护(避免上次s_up越界): 索引 clamp 到 [0, size-1]。
@@ -459,7 +468,8 @@ Status PiecewiseJerkSpeedOptimizer::Process(
         std::vector<std::pair<double, double>> relaxed_dx_bounds;
         relaxed_dx_bounds.reserve(num_of_knots);
         for (int i = 0; i < num_of_knots; ++i) {
-            const double v_feasible = std::max(0.0, init_s[1] - 6.0 * (i * delta_t));
+            // 2026-08-04(用户要求): fallback放宽也用5.9, 与写死的-5.9一致
+            const double v_feasible = std::max(0.0, init_s[1] - 5.9 * (i * delta_t));
             relaxed_dx_bounds.emplace_back(0.0, std::fmax(s_dot_bounds_copy[i].second, v_feasible));
         }
         piecewise_jerk_problem.set_dx_bounds(std::move(relaxed_dx_bounds));
