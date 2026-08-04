@@ -31,22 +31,20 @@ namespace apollo {
 namespace planning {
 
 class StopSignUnprotectedStagePreStop : public Stage {
- public:
-  StageResult Process(const common::TrajectoryPoint& planning_init_point,
-                      Frame* frame) override;
+public:
+    StageResult Process(const common::TrajectoryPoint& planning_init_point, Frame* frame) override;
 
- private:
-  int AddWatchVehicle(const Obstacle& obstacle,
-                      std::unordered_map<std::string, std::vector<std::string>>*
-                          watch_vehicles);
+private:
+    int AddWatchVehicle(
+            const Obstacle& obstacle,
+            std::unordered_map<std::string, std::vector<std::string>>* watch_vehicles);
 
-  bool CheckADCStop();
+    bool CheckADCStop();
 
-  StageResult FinishStage();
+    StageResult FinishStage();
 };
 
-CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(
-    apollo::planning::StopSignUnprotectedStagePreStop, Stage)
+CYBER_PLUGIN_MANAGER_REGISTER_PLUGIN(apollo::planning::StopSignUnprotectedStagePreStop, Stage)
 
 }  // namespace planning
 }  // namespace apollo
