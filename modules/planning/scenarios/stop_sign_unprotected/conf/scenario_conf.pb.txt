@@ -1,8 +1,8 @@
 start_stop_sign_scenario_distance: 4.0
 watch_vehicle_max_valid_stop_distance: 5.0
 max_valid_stop_distance: 2.5  # 2026-08-04: 2.0→2.5(110452实测车头距停止线2.19m, P0停稳提前0.445m造成偏远; 2.19>2.0 → CheckADCStop失败 → PreStop卡死 → 不放行)
-stop_duration_sec: 0.2  # 提速2026-08-04: 0.5->0.2(停了立马走, 评测只要求must stop;
- # 025实测停~1s=0.5 stop_duration+CheckADCStop判定延迟, 减到0.2后停~0.7s更快)
+stop_duration_sec: 0  # 提速2026-08-04: 0.2->0(跳过CheckADCStop+等待0s, 停了立马走;
+ # 评测只要求must stop; 停车由STOP决策任务+QP保证物理停住)
 stop_timeout_sec: 8.0
 creep_timeout_sec: 10.0
 creep_stage_config {
