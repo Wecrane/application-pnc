@@ -707,15 +707,20 @@ void SpeedDecider::HandlePedestrianStop(Obstacle* obstacle) const {
         sp->set_y(fence_point.y());
         sp->set_z(0.0);
         stop->set_stop_heading(fence_point.heading());
-        obstacle->AddLongitudinalDecision(ped_moving ? "dp_st_graph/ped_follow" : "dp_st_graph/ped_fixed",
-                                         stop_decision);
+        obstacle->AddLongitudinalDecision(
+                ped_moving ? "dp_st_graph/ped_follow" : "dp_st_graph/ped_fixed", stop_decision);
     } else {
-        // Pedestrian has laterally cleared the lane -> release + yield.
+        // Pedestrian has laterally cleared the lane -> release (IGNORE).
+        // 2026-08-04(022/023分析): 原YIELD放行(ped_yield_clear)会让
+        // STBoundaryMapper(ComputeSTBoundaryWithDecision)对YIELD决策生成让行
+        // ST boundary → DP/QP按"让行"语义让车低速蠕行, 直到行人横向超过
+        // ST boundary几何范围(~3.29m)才消失 → 车"直到行人走出道路不挡道
+        // 才走"(kClearLateral调小也被吞掉)。改IGNORE: ST boundary不生成 →
+        // 车放行后立即加速, kClearLateral真正生效。
         ped_fixed_fence_s_.erase(base_id);
-        ObjectDecisionType yield_decision;
-        if (CreateYieldDecision(*obstacle, &yield_decision)) {
-            obstacle->AddLongitudinalDecision("dp_st_graph/ped_yield_clear", yield_decision);
-        }
+        ObjectDecisionType ignore_decision;
+        ignore_decision.mutable_ignore();
+        obstacle->AddLongitudinalDecision("dp_st_graph/ped_release", ignore_decision);
     }
 }
 
