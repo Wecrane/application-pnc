@@ -680,10 +680,25 @@ void SpeedDecider::HandlePedestrianStop(Obstacle* obstacle) const {
         }
         double fence_s;
         if (ped_moving) {
-            // 动态fence: 每次用行人当前位置重建(车跟着走, 不记录固定位置)
+            // 2026-08-04: 动态STOP fence改FOLLOW决策——真正跟车。
+            // 根因(本地123655日志): 动态STOP fence随行人前移(1.8→7.0m)但QP
+            // 已停分支(v<1.0 && dist<5.0 → v_upper=0)锁死车→车不跟移动行人
+            // (x423438.8停37s)。FOLLOW: STBoundaryMapper生成跟随边界→DP ST
+            // 生成跟随曲线(速度匹配行人, 保持stop_dist距离), QP无STOP不触发
+            // 已停分支→车真正跟随, 行人离开道路(kClearLateral)后IGNORE加速。
             fence_s = adc_sl_boundary_.end_s() + boundary.min_s() + stop_dist
                     + VehicleConfigHelper::GetConfig().vehicle_param().front_edge_to_center();
             ped_fixed_fence_s_.erase(base_id);
+            const auto fence_point = reference_line_->GetReferencePoint(fence_s);
+            ObjectDecisionType follow_decision;
+            auto* follow = follow_decision.mutable_follow();
+            follow->set_distance_s(stop_dist);
+            auto* fp = follow->mutable_fence_point();
+            fp->set_x(fence_point.x());
+            fp->set_y(fence_point.y());
+            fp->set_z(0.0);
+            follow->set_fence_heading(fence_point.heading());
+            obstacle->AddLongitudinalDecision("dp_st_graph/ped_follow", follow_decision);
         } else {
             auto it = ped_fixed_fence_s_.find(base_id);
             if (it == ped_fixed_fence_s_.end()) {
@@ -697,18 +712,17 @@ void SpeedDecider::HandlePedestrianStop(Obstacle* obstacle) const {
             } else {
                 fence_s = it->second;  // keep the originally recorded fence
             }
+            const auto fence_point = reference_line_->GetReferencePoint(fence_s);
+            ObjectDecisionType stop_decision;
+            auto* stop = stop_decision.mutable_stop();
+            stop->set_distance_s(stop_dist);
+            auto* sp = stop->mutable_stop_point();
+            sp->set_x(fence_point.x());
+            sp->set_y(fence_point.y());
+            sp->set_z(0.0);
+            stop->set_stop_heading(fence_point.heading());
+            obstacle->AddLongitudinalDecision("dp_st_graph/ped_fixed", stop_decision);
         }
-        const auto fence_point = reference_line_->GetReferencePoint(fence_s);
-        ObjectDecisionType stop_decision;
-        auto* stop = stop_decision.mutable_stop();
-        stop->set_distance_s(stop_dist);
-        auto* sp = stop->mutable_stop_point();
-        sp->set_x(fence_point.x());
-        sp->set_y(fence_point.y());
-        sp->set_z(0.0);
-        stop->set_stop_heading(fence_point.heading());
-        obstacle->AddLongitudinalDecision(
-                ped_moving ? "dp_st_graph/ped_follow" : "dp_st_graph/ped_fixed", stop_decision);
     } else {
         // Pedestrian has laterally cleared the lane -> release (IGNORE).
         // 2026-08-04(022/023分析): 原YIELD放行(ped_yield_clear)会让
