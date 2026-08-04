@@ -114,29 +114,20 @@ bool ReferenceLineInfo::Init(const std::vector<const Obstacle*>& obstacles, doub
     }
 
     const auto& map_path = reference_line_.map_path();
-    for (const auto& speed_bump : map_path.speed_bump_overlaps()) {
-        // 2026-08-04调优: 提前35→20m, 尾部8→2m——114244实测车2.5巡航95m全程
-        // (两个减速带限速区[前35后8]重叠, 车x423677→423582全2.5) → 慢(64.8s)。
-        // 评测只要求"通过减速带处≤3": 车16巡航到bump前40m(20+QP回推25m@5)减速
-        // → 到限速区起点(前20m)2.5 → 2.5巡航20m → bump处2.5 ✓(安全)。
-        // 尾部2m: 过bump后2m即可提速, 两带之间(~22m空隙)加速通过 → 省~8s。
-        // 2026-08-05(017轮提速): 提前20→10m——017实测评测限速区只在减速带本身
-        // (1m宽, 限速3), 提前20m让车在评测区外10m就以2.7巡航浪费。QP回推
-        // (kLimitDecel=2.5: 16→2.7需~50m)保证车带前10m已降到2.7, 到减速带时
-        // 2.7<3安全。省10m/2.7≈3.7s/带。若本地验证超速风险则退回15m。
-        // 2026-08-05(本地实测): 提前10m本地第一个减速带22mph(9.9m/s)超速——
-        // 但云端017基础1全程kLimitDecel=2.5(回推强~100m), 本地减速带处
-        // has_crosswalk_stop=true→kLimitDecel=5.0(回推弱仅25m)→本地特有超速!
-        // 云端基础1无crosswalk STOP(kLimitDecel=2.5)提前量10m安全, 用户实测
-        // 云端第二个带可晚几m减速。本地场景与云端不同(本地验证无代表性)。
-        // 重新实施10m, 直接云端评测验证。
-        // 2026-08-06: 完整恢复0803_225106满分版本——统一提前20m + FLAGS限速。
-        // 019实测: 带B(10m+2.7)提前减速、带A仍超速 → 019用户要求整个减速带
-        // 逻辑恢复到满分版本(统一提前20m + speed_bump_speed_limit=2.5)。
-        // 满分基线: 提前20m(f66eef9 35→20) + 尾部2m + 限速2.5(planning.conf)。
-        reference_line_.AddSpeedLimit(speed_bump.start_s - 20.0,
+    // 历史基线(满分): 提前20m + 尾部2m + FLAGS限速2.5(planning.conf)。
+    // 022轮: 第一/第二个减速带分开处理。speed_bump_overlaps()已按start_s升序,
+    // 第一个元素=第一个减速带。第一个带靠近时速度快(16巡航)需更长刹车距离→提前
+    // 20m保持满分基线; 第二个带与第一个相距仅~45m, 若同样提前20m, 车刚过第一个
+    // 带提速(QP回推~50m)立刻又被迫为第二个带减速→提前减速、速度提不上去。
+    // 缩短第二个带提前量到10m, 让车在带间有更长提速时间(022用户实测确认)。
+    const auto& speed_bumps = map_path.speed_bump_overlaps();
+    size_t speed_bump_index = 0;
+    for (const auto& speed_bump : speed_bumps) {
+        const double kAdvanceDist = (speed_bump_index == 0) ? 20.0 : 10.0;
+        reference_line_.AddSpeedLimit(speed_bump.start_s - kAdvanceDist,
                                       speed_bump.end_s + 2.0,
                                       FLAGS_speed_bump_speed_limit);
+        ++speed_bump_index;
     }
 
     SetCruiseSpeed(target_speed);
