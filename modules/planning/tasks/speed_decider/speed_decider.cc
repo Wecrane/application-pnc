@@ -641,12 +641,11 @@ void SpeedDecider::HandlePedestrianStop(Obstacle* obstacle) const {
     const auto& boundary = obstacle->path_st_boundary();
     const auto& sl = obstacle->PerceptionSLBoundary();
     const double obs_l = std::fabs((sl.start_l() + sl.end_l()) / 2.0);
-    // mayaochang: lateral clear of lane. 2.5 was too small - a pedestrian
-    // 2.5m off center is still inside/near the lane (lane half width ~2.3m +
-    // pedestrian half width), so releasing at 2.5m let the ego drive past
-    // while the pedestrian was still beside the lane -> competition "follow
-    // limit" still failed. 3.5m = lane half width + pedestrian + buffer.
-    static constexpr double kClearLateral = 3.5;  // lateral clear of lane
+    // 022轮: 行人离开道路边界即放开。当前停车避让场景车道半宽~2.0m
+    // (Lane_1724 width=3.98), 行人半宽~0.5m → 行人完全离开道路=2.5m。
+    // 原3.5m要等行人走到道路外1.5m车才走→启动慢、跟太远。改2.5m: 行人
+    // 一离开道路边界立即YIELD放行。
+    static constexpr double kClearLateral = 2.5;  // 离开道路边界(车道半宽+行人半宽)
     // mayaochang add20: use the BASE id (7673_0 -> 7673) as fence key. The
     // perception id flips to 7673_0 once the pedestrian gets a predicted
     // trajectory; with the full id the fence got RE-recorded at the new
@@ -672,8 +671,9 @@ void SpeedDecider::HandlePedestrianStop(Obstacle* obstacle) const {
         if (IsPedestrianOnCrosswalk(*obstacle)) {
             stop_dist = -FLAGS_pedestrian_stop_distance;
         } else if (ped_moving) {
-            // 跟随距离: 2.5m(用户要求"2点多米", 评测[2,5.5]内)
-            stop_dist = -2.5;
+            // 跟随距离: 2.2m(022用户要求"始终跟行人保持2.2m最近距离",
+            // 评测DistToObstacleCar[2,5.5]内安全)
+            stop_dist = -2.2;
         } else {
             // 静止停车: -5.0(020满分标定, 车停行人前~5m, 不跟车评测不检测)
             stop_dist = -5.0;
