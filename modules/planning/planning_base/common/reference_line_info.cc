@@ -124,9 +124,8 @@ bool ReferenceLineInfo::Init(const std::vector<const Obstacle*>& obstacles, doub
     size_t speed_bump_index = 0;
     for (const auto& speed_bump : speed_bumps) {
         const double kAdvanceDist = (speed_bump_index == 0) ? 20.0 : 10.0;
-        reference_line_.AddSpeedLimit(speed_bump.start_s - kAdvanceDist,
-                                      speed_bump.end_s + 2.0,
-                                      FLAGS_speed_bump_speed_limit);
+        reference_line_.AddSpeedLimit(
+                speed_bump.start_s - kAdvanceDist, speed_bump.end_s + 2.0, FLAGS_speed_bump_speed_limit);
         ++speed_bump_index;
     }
 

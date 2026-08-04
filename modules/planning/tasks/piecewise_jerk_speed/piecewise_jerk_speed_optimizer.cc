@@ -98,10 +98,8 @@ Status PiecewiseJerkSpeedOptimizer::Process(
     }
     // 2026-08-05(015轮): 场景区分日志——grep "[pjs-scene]" 判断是否触发
     // a0人行道(has_crosswalk_stop=true → 006满分参数) vs 其他赛题(435d28f参数)。
-    AINFO << "[pjs-scene] has_crosswalk_stop=" << has_crosswalk_stop
-          << " CW_STOP_num=" << cw_stop_num
-          << " kLimitDecel=" << (has_crosswalk_stop ? 5.0 : 2.5)
-          << " stopHeld=" << 5.0 << "/" << 1.0;
+    AINFO << "[pjs-scene] has_crosswalk_stop=" << has_crosswalk_stop << " CW_STOP_num=" << cw_stop_num
+          << " kLimitDecel=" << (has_crosswalk_stop ? 5.0 : 2.5) << " stopHeld=" << 5.0 << "/" << 1.0;
     double total_time = st_graph_data.total_time_by_conf();
     int num_of_knots = static_cast<int>(total_time / delta_t) + 1;
     print_debug.AddPoint("optimize_st_curve", 0, init_s[0]);
@@ -172,11 +170,10 @@ Status PiecewiseJerkSpeedOptimizer::Process(
                     // 满分v_ref=20(006满分实测8赛题全满, 终点无DEST冲突),
                     // 其他赛题保持16.39(scn4 DEST刹油刹修复)不受影响.
                     const double v_ref = has_crosswalk_stop
-                        ? FLAGS_planning_upper_speed_limit
-                        : std::fmin(FLAGS_planning_upper_speed_limit, FLAGS_default_cruise_speed);
+                            ? FLAGS_planning_upper_speed_limit
+                            : std::fmin(FLAGS_planning_upper_speed_limit, FLAGS_default_cruise_speed);
                     // 2026-08-05(015轮): v_ref实际值日志(a0=20/其他=16.39)
-                    AINFO << "[pjs-scene] v_ref=" << v_ref
-                          << " has_crosswalk_stop=" << has_crosswalk_stop;
+                    AINFO << "[pjs-scene] v_ref=" << v_ref << " has_crosswalk_stop=" << has_crosswalk_stop;
                     // 2026-08-04: 刹车减速度 6.0→3.0(jerk等效)。jerk±2约束下
                     // 车16→0实际需~43m(a从0以jerk-2到-6走39m + -6急刹4m),
                     // 等效 dec=16²/(2·43)≈2.97≈3.0。原用6.0(21.3m)太紧——
@@ -357,10 +354,8 @@ Status PiecewiseJerkSpeedOptimizer::Process(
             // 判FAIL)与012/013轮0.75/0.5(停近1.251)均废弃。
             if (init_s[1] < kStopHeldV && dist_to_stop < kStopHeldDist) {
                 // 2026-08-05(015轮): 已停分支触发日志——确认车停稳触发点。
-                AINFO << "[pjs-stop-held] TRIGGER v=" << init_s[1]
-                      << " dist_to_stop=" << dist_to_stop
-                      << " has_crosswalk_stop=" << has_crosswalk_stop
-                      << " stopHeldDist=" << kStopHeldDist
+                AINFO << "[pjs-stop-held] TRIGGER v=" << init_s[1] << " dist_to_stop=" << dist_to_stop
+                      << " has_crosswalk_stop=" << has_crosswalk_stop << " stopHeldDist=" << kStopHeldDist
                       << " stopHeldV=" << kStopHeldV;
                 v_upper_bound = std::fmin(v_upper_bound, 0.0);
             } else {
