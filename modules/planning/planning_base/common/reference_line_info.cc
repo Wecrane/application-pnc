@@ -120,13 +120,13 @@ bool ReferenceLineInfo::Init(const std::vector<const Obstacle*>& obstacles, doub
     // 20m; 第二个带与第一个相距仅~45m, 若同样提前20m, 车刚过第一个带提速
     // (QP回推~50m)立刻又被迫为第二个带减速→提前减速、速度提不上去。缩短第二个
     // 带提前量到10m, 让车在带间有更长提速时间(022用户实测确认)。
-    // 2026-08-04: 第一个带提前量20→25→23→25→23m(用户迭代)。第二个带:
-    // 开始限速和解除限速都提前1.5m(提前量10→11.5m, 尾部2→0.5m)——限速窗口
-    // 在带间更紧凑, 更早解除让带间提速空间更大。
+    // 2026-08-04: 第一个带提前量20→25→23→25→23→21m(用户迭代, 晚减速2m)。
+    // 第二个带提前量11.5→10m(晚减速1.5m)——限速窗口更紧凑、更晚开始,
+    // 车在接近减速带前更久保持高速, 带间提速空间更大。
     const auto& speed_bumps = map_path.speed_bump_overlaps();
     size_t speed_bump_index = 0;
     for (const auto& speed_bump : speed_bumps) {
-        const double kAdvanceDist = (speed_bump_index == 0) ? 23.0 : 11.5;
+        const double kAdvanceDist = (speed_bump_index == 0) ? 21.0 : 10.0;
         const double kTailDist = (speed_bump_index == 0) ? 2.0 : 0.5;
         reference_line_.AddSpeedLimit(
                 speed_bump.start_s - kAdvanceDist, speed_bump.end_s + kTailDist, FLAGS_speed_bump_speed_limit);
