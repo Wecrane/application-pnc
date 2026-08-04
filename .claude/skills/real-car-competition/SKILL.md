@@ -293,6 +293,7 @@ aem bootstrap start --plus
 | `references/03-speed-limit-plugin.md` | 限速插件源码/配置/部署全解析 |
 | `references/04-scenario-tuning.md` | 9 赛题逐题调参方案（机制+配置+经验） |
 | `references/05-tuning-methodology.md` | 调参方法论、评分机制、实车差异、时间管理 |
+| `references/06-official-config-solutions.md` | **官方代码+限速插件环境**：9赛题插件矩阵、纯配置方案、官方默认值、与仿真魔改差异、开放问题 |
 
 原始材料：
 - `shiche/秩序册.md`（转换自 PDF）

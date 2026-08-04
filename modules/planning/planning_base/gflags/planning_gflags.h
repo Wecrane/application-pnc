@@ -25,8 +25,6 @@ DECLARE_bool(enable_scenario_side_pass_multiple_parked_obstacles);
 DECLARE_bool(enable_force_pull_over_open_space_parking_test);
 
 DECLARE_bool(publish_estop);
-DECLARE_bool(destination_pass_through);
-DECLARE_bool(disable_reference_line_end_stop);
 
 DECLARE_string(traffic_rule_config_filename);
 DECLARE_int32(planning_loop_rate);
@@ -51,7 +49,6 @@ DECLARE_double(reference_line_endpoint_extend_length);
 DECLARE_bool(enable_trajectory_stitcher);
 DECLARE_double(change_lane_min_length);
 DECLARE_double(planning_upper_speed_limit);
-DECLARE_double(planning_max_acceleration);
 DECLARE_double(trajectory_time_length);
 DECLARE_double(trajectory_time_min_interval);
 DECLARE_double(trajectory_time_max_interval);
@@ -77,7 +74,6 @@ DECLARE_double(static_obstacle_nudge_l_buffer);
 DECLARE_double(nonstatic_obstacle_nudge_l_buffer);
 DECLARE_double(lateral_ignore_buffer);
 DECLARE_double(min_stop_distance_obstacle);
-DECLARE_double(pedestrian_stop_distance);
 DECLARE_double(max_stop_distance_obstacle);
 DECLARE_double(follow_min_distance);
 DECLARE_double(yield_distance);
