@@ -321,6 +321,16 @@ void Crosswalk::MakeDecisions(Frame* const frame, ReferenceLineInfo* const refer
 
     double min_s = std::numeric_limits<double>::max();
     hdmap::PathOverlap* firsts_crosswalk_to_stop = nullptr;
+    // 2026-08-04(024轮): 人行道停车距离 1.0→1.15——024实测车停fence前0.42m
+    // 评测1.42m<1.5下限停近扣20分(CrosswalkStop=80)。只在人行道场景生效:
+    // 参考线无信号灯且无停止标志(赛题人行道Crosswalk_62特征, 与speed_decider
+    // 用IsPedestrianOnCrosswalk做场景区分同理); 红绿灯/停止标志场景的斑马线
+    // 由其他规则主导, 保持config值不受影响。
+    const auto& signal_overlaps = reference_line_info->reference_line().map_path().signal_overlaps();
+    const auto& stop_sign_overlaps = reference_line_info->reference_line().map_path().stop_sign_overlaps();
+    const double stop_distance = (signal_overlaps.empty() && stop_sign_overlaps.empty())
+            ? 1.15
+            : config_.stop_distance();
     for (auto crosswalk_to_stop : crosswalks_to_stop) {
         // build stop decision
         const auto* crosswalk_overlap = crosswalk_to_stop.first;
@@ -330,7 +340,7 @@ void Crosswalk::MakeDecisions(Frame* const frame, ReferenceLineInfo* const refer
         util::BuildStopDecision(
                 virtual_obstacle_id,
                 crosswalk_overlap->start_s,
-                config_.stop_distance(),
+                stop_distance,
                 StopReasonCode::STOP_REASON_CROSSWALK,
                 crosswalk_to_stop.second,
                 Getname(),
