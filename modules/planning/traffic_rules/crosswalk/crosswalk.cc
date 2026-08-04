@@ -308,11 +308,13 @@ void Crosswalk::MakeDecisions(Frame* const frame, ReferenceLineInfo* const refer
                 // → 超速扣42分). 提前量24m → 车在评测限速区起点(x423686.5)
                 // 已≤4.8 → 通过. 只影响无人斑马线限速(有信号灯/停止标志的
                 // crosswalk SKIP, 如scn3/scn4不受影响).
-                AINFO << "[crosswalk-limit] " << crosswalk_id << " AddSpeedLimit(" << crosswalk_overlap->start_s - 24.0
+                AINFO << "[crosswalk-limit] " << crosswalk_id << " AddSpeedLimit(" << crosswalk_overlap->start_s - 19.0
                       << "," << crosswalk_overlap->end_s + 3.0 << ",4.9)";
                 // 2026-08-04: 4.85→4.9——评测≤5, 用户要求提速试试。若超速则回退。
+                // 2026-08-04: 提前量24→19m——限速开始减少5m, 更晚开始限速
+                // (车更晚减速, 省时间)。
                 reference_line_info->mutable_reference_line()->AddSpeedLimit(
-                        crosswalk_overlap->start_s - 24.0, crosswalk_overlap->end_s + 3.0, 4.9);
+                        crosswalk_overlap->start_s - 19.0, crosswalk_overlap->end_s + 3.0, 4.9);
             } else {
                 AINFO << "[crosswalk-limit] " << crosswalk_id << " SKIP speed limit (seen red / stop sign present)";
             }
