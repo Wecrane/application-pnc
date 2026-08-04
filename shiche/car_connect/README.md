@@ -10,47 +10,58 @@
 
 | 脚本 | 作用 |
 |------|------|
-| `setup_ssh_config.sh` | 免密配置（笔记本侧 ControlMaster，实车零改动，合规） |
-| `mount_car.sh` | 挂载实车 `profiles/` + `modules/` 到 `~/car/`（`--full` 挂全工程） |
+| `connect_car.sh` | **一键连接**：输入车辆编号 → 连隐藏Wi-Fi → 免密 → 自动挂载（现场主入口） |
+| `setup_ssh_config.sh` | 仅免密配置（笔记本侧 ControlMaster，实车零改动，合规） |
+| `mount_car.sh` | 仅挂载 `profiles/` + `modules/` 到 `~/car/`（`--full` 挂全工程） |
 | `umount_car.sh` | 卸载 |
+| `check_car.sh` | 实车健康检查（系统/磁盘/内存/工程目录/进程） |
+| `car_cmd.sh` | 在实车容器内执行命令（如编译、aem profile use） |
+| `backup_car.sh` | 备份实车配置到本地（改配置前必做，回滚用） |
 
-## 使用流程（现场，30 分钟内）
+## 现场最快路径（30 分钟内）
 
-### 第 1 步：连 Wi-Fi + 免密（约 2 分钟）
+### 一键连接（推荐）
 
 ```bash
-# 连车载 Wi-Fi（隐藏网络）：HQEV+车辆编号后三位，密码 apollo123
-# Ubuntu 最稳方式（hidden yes 是关键）：
+bash shiche/car_connect/connect_car.sh 802
+# 或交互式（会让你输入编号）：bash shiche/car_connect/connect_car.sh
+# 脚本自动完成：连Wi-Fi → 等ping通 → 免密 → 探测工程目录名 → 挂载
+```
+
+### 连接后标准动作
+
+```bash
+bash shiche/car_connect/check_car.sh          # 1. 健康检查
+bash shiche/car_connect/backup_car.sh         # 2. 备份原配置（回滚保险）
+bash shiche/car_connect/car_cmd.sh 'aem profile use default'   # 3. 确认 profile
+# 4. 调参：本工作区 AI 改配置（实时写回实车）或新开 VSCode 窗口改 ~/car/profiles
+# 5. 编译（若改了代码）：
+bash shiche/car_connect/car_cmd.sh 'buildtool build -p modules/planning/ -j15'
+# 6. 重启 Dreamview：浏览器 192.168.10.6:8888 操作
+```
+
+## 手动分步（脚本失败时的备用）
+
+```bash
+# 1. 连隐藏 Wi-Fi（nmcli hidden yes 是关键）
 nmcli dev wifi connect "HQEV802" password "apollo123" hidden yes
-ping -c 2 192.168.10.6    # 确认能通实车
-# 详细教程（GUI/持久配置/排查）见技能 references/02-connection-guide.md 3.1.1
+ping -c 2 192.168.10.6
 
-# 配置免密（写 ~/.ssh/config，只改笔记本，不碰实车）
+# 2. 免密配置（只改笔记本，实车零改动）
 bash shiche/car_connect/setup_ssh_config.sh
+ssh car                      # 首次输一次密码；ls ~ 确认工程目录名
 
-# 首次连接，输入一次密码（之后 4 小时免密）
-ssh car
-# 进入后确认工程目录真实名称（下划线还是横杠）
-ls ~
-# 退出
-exit
-```
-
-### 第 2 步：挂载（约 1 分钟）
-
-```bash
-# 确认工程目录名后（如为 apollo-edu_9.1.1）：
-PROJ_DIR=apollo-edu_9.1.1 bash shiche/car_connect/mount_car.sh
-# 若默认名 apollo-edu-9.1.1 正确则直接：
+# 3. 挂载（工程目录名不对时用 PROJ_DIR 指定）
 bash shiche/car_connect/mount_car.sh
+# PROJ_DIR=apollo-edu_9.1.1 bash shiche/car_connect/mount_car.sh
+
+# 4. 卸载
+bash shiche/car_connect/umount_car.sh
 ```
 
-挂载点：
-- `~/car/profiles` ← 实车 `apollo-edu-9.1.1/profiles`
-- `~/car/modules`  ← 实车 `apollo-edu-9.1.1/modules`
-- （`--full` 额外挂 `~/car/root` 全工程，浏览代码用）
+挂载点：`~/car/profiles`、`~/car/modules`、（`--full`）`~/car/root`
 
-### 第 3 步：三种操作方式（按需选择）
+### 三种操作方式（按需选择）
 
 **方式 A：AI 助手直接改（推荐）**
 - 本工作区目录 + 当前 VSCode，让 AI（我）通过挂载路径编辑配置 = 实时写回实车
@@ -67,7 +78,7 @@ ssh car                              # 交互式
 ssh car "cd ~/apollo-edu-9.1.1 && aem enter -- buildtool build -p modules/planning/ -j15"
 ```
 
-### 第 4 步：编译/重启/测试（AI 或终端）
+### 编译/重启/测试（AI 或终端）
 
 ```bash
 ssh car "cd ~/apollo-edu-9.1.1 && aem enter -- buildtool build -p modules/planning/ -j15"
@@ -75,20 +86,22 @@ ssh car "cd ~/apollo-edu-9.1.1 && aem profile use default"   # 若需
 # Dreamview 浏览器：192.168.10.6:8888
 ```
 
-## 合规说明
+## 合规红线提醒（重要）
 
-- **免密用 ControlMaster**：只改笔记本 `~/.ssh/config`，实车 SSH 配置/安全策略**零改动** → 符合秩序册"不得修改…SSH 配置及安全策略"
+- ⚠️ **比赛期间（8月6-7日 30 分钟）严禁手机个人热点**（秩序册选手须知第 7 条）→ 现场断外网是正常的，方案已提前备好，不需要联网
+- 免密用 ControlMaster：只改笔记本 `~/.ssh/config`，实车 SSH 配置/安全策略**零改动** → 符合"不得修改…SSH 配置及安全策略"
 - sshfs 只装笔记本（已装），车上零安装 → 不违反"严禁安装未经允许软件"
 - 只改实车 `profiles/` 和 `modules/`（允许修改范围）
+- 备赛/在家用手机 USB 共享网络给 AI 完全没问题
 
 ## 现场检查清单
 
 - [ ] 连上 HQEV 车载 Wi-Fi（密码 apollo123）
-- [ ] `setup_ssh_config.sh` 后 `ssh car` 输一次密码成功
-- [ ] `ls ~` 确认工程目录名（下划线/横杠）
-- [ ] `mount_car.sh` 挂载成功，`ls ~/car/profiles` 能看到文件
+- [ ] `connect_car.sh` 一键完成（或分步验证：ssh car 免密成功、挂载可读）
+- [ ] `ls ~/car/profiles` 能看到文件
 - [ ] 新开 VSCode 窗口能打开 `~/car/profiles` 并编辑
-- [ ] 备好回滚：改前记录原值 / 备份 conf
+- [ ] 备份原配置（backup_car.sh）
+- [ ] 备好回滚：每处修改记录原值
 
 ## 备用（挂载失败时）
 
