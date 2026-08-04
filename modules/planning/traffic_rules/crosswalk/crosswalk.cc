@@ -330,9 +330,8 @@ void Crosswalk::MakeDecisions(Frame* const frame, ReferenceLineInfo* const refer
     // 由其他规则主导, 保持config值不受影响。
     const auto& signal_overlaps = reference_line_info->reference_line().map_path().signal_overlaps();
     const auto& stop_sign_overlaps = reference_line_info->reference_line().map_path().stop_sign_overlaps();
-    const double stop_distance = (signal_overlaps.empty() && stop_sign_overlaps.empty())
-            ? 1.15
-            : config_.stop_distance();
+    const double stop_distance
+            = (signal_overlaps.empty() && stop_sign_overlaps.empty()) ? 1.15 : config_.stop_distance();
     for (auto crosswalk_to_stop : crosswalks_to_stop) {
         // build stop decision
         const auto* crosswalk_overlap = crosswalk_to_stop.first;
