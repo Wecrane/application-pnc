@@ -180,12 +180,12 @@ Status PiecewiseJerkSpeedOptimizer::Process(
                     // QP在21.3m内无法jerk刹停 → 提前减速封顶(095032实测车
                     // 12.4不加速到16, v[30]=15.57→14.32提前降)。用3.0: 车16
                     // 巡航到距STOP 42.7m处-3减速停(最晚刹车, jerk可达)。
-                    // 2026-08-04: 用户要求按-5.9最晚刹车。但jerk=-6约束下
-                    // 16→0物理最小29.3m(不是21.7m), 原5.9抛物线→QP infeasible
-                    // →fallback→走走停停(23:40:56日志实锤)。dec_abs降到4.3
-                    // (s_bounds曲线29.8m收紧), 由v_upper(jerk精确包络29.3m)
-                    // 主导且QP可达。
-                    const double dec_abs = 4.3;
+                    // 2026-08-04: 用户要求按-5.9最晚刹车。但实测(停止标志/终点
+                    // 日志): 29.3m物理极限包络在离散QP下仍primal infeasible×34
+                    // →fallback→走走停停。恢复015轮已验证满分稳定值dec_abs=3.0
+                    // (s_bounds 42.7m), 由v_upper(jerk=2精确包络43m)主导,
+                    // QP可行不抖动。5.9最晚刹车需先解决infeasible根因(未解决)。
+                    const double dec_abs = 3.0;
                     const double t_brake = (s_upper - init_s[0] - v_ref * v_ref / (2.0 * dec_abs)) / v_ref;
                     if (t_brake <= 0.0) {
                         // 车已在刹车距离内(stop_s<v_ref²/2|dec|): 恒定stop_s约束
@@ -331,13 +331,11 @@ Status PiecewiseJerkSpeedOptimizer::Process(
             // 只距STOP 0.21m<0.78m jerk最小距离) → QP无法jerk刹停 → 终点段
             // infeasible滑行(101332)。jerk精确: 低v纯jerk段(1.5·d)^(2/3),
             // 高v jerk过渡(3s到-6)后-6急刹。与P0 v_upper一致。
-            // 2026-08-04: 包络改jerk=6/dec=5.9精确可达版(29.3m最晚刹车点,
-            // 原sqrt(2*5.9*d)的21.7m在jerk=-6下不可达→QP infeasible→fallback)。
-            // 低v段(dist<1.9)纯jerk刹停, 高v段jerk过渡到-5.9后恒减速。
-            const double brake_envelope =
-                    (dist_to_stop < 1.9)
-                            ? std::pow(1.5 * dist_to_stop, 2.0 / 3.0) * 1.4422495703
-                            : -2.9 + std::sqrt(11.21 + 11.8 * dist_to_stop);
+            // 2026-08-04: 恢复015轮稳定包络(jerk=2精确, 43m最晚刹车点)。
+            // 5.9/29.3m版本实测QP infeasible×34→fallback→走走停停, 已回退。
+            const double brake_envelope = (dist_to_stop < 18.0)
+                                                  ? std::pow(1.5 * dist_to_stop, 2.0 / 3.0)
+                                                  : -9.0 + std::sqrt(108.0 + 12.0 * dist_to_stop);
             dx_ref[i] = std::fmin(dx_ref[i], brake_envelope);
         }
         // P0(2026-08-04修复): 接近STOP时同步收紧v_upper——消除infeasible根因。
@@ -375,14 +373,12 @@ Status PiecewiseJerkSpeedOptimizer::Process(
                 // 原sqrt(2·3·dist)(-3恒定抛物线)低v太松: 车v=1.11只距STOP
                 // 0.21m<0.78m(jerk最小) → QP无法jerk刹停 → 终点段连续
                 // infeasible(101332 t=60.8-64.9) → fallback滑行5s才停。
-                // 2026-08-04: v_upper用jerk=6/dec=5.9精确可达包络(29.3m最晚
-                // 刹车点)——原sqrt(2*5.9*d)21.7m在jerk=-6下不可达→QP infeasible
-                // →fallback→走走停停(日志实锤)。此包络QP可达, 车29.3m处
-                // 才开始收紧, 比原43m晚13m。
+                // 2026-08-04: 恢复015轮稳定包络(jerk=2精确, 43m最晚刹车点)。
+                // 5.9/29.3m版本实测QP infeasible×34→fallback→走走停停, 已回退。
                 const double v_allow_stop =
-                        (dist_to_stop < 1.9)
-                                ? std::pow(1.5 * dist_to_stop, 2.0 / 3.0) * 1.4422495703
-                                : -2.9 + std::sqrt(11.21 + 11.8 * dist_to_stop);
+                        (dist_to_stop < 18.0)
+                                ? std::pow(1.5 * dist_to_stop, 2.0 / 3.0)
+                                : -9.0 + std::sqrt(108.0 + 12.0 * dist_to_stop);
                 v_upper_bound = std::fmin(v_upper_bound, v_allow_stop);
             }
         }
