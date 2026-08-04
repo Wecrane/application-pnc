@@ -48,6 +48,48 @@ ssh -V
 - **名称**：`HQEV` + 车辆编号后三位（如车辆 0802 → `HQEV802`）
 - **密码**：`apollo123`
 - 实际车辆编号以本赛位车辆铭牌、现场公布信息或裁判指引为准
+- ⚠️ 连上车载 Wi-Fi 后**会断外网**（车载网络隔离，正常现象；比赛规则禁止同时用个人热点）
+
+#### 3.1.1 Ubuntu 连接隐藏 Wi-Fi 详细教程（官方附录只一句话，这里补全）
+
+> 官方附录原文："点击右上角网络图标 → 选择'连接到隐藏的 Wi-Fi 网络'→ 输入名称/密码"。但部分 GNOME 版本没有该入口，**`nmcli` 命令行最可靠**。
+
+**方法 A：`nmcli` 命令行（最可靠，推荐）**
+```bash
+nmcli radio wifi on                                          # 开启 Wi-Fi
+nmcli dev wifi connect "HQEV802" password "apollo123" hidden yes   # hidden yes 是关键！
+nmcli dev status                                             # 验证已连接
+ping -c 2 192.168.10.6                                       # 验证能通实车
+```
+
+**方法 B：持久连接配置（一次配好自动重连，比赛最稳）**
+```bash
+nmcli con add \
+  type wifi \
+  con-name car-wifi \
+  ssid HQEV802 \
+  wifi-sec.key-mgmt wpa-psk \
+  wifi-sec.psk apollo123 \
+  wifi.hidden yes
+nmcli con up car-wifi     # 手动激活
+# 之后开机/断线自动重连；查看：nmcli con show car-wifi
+```
+
+**方法 C：GUI（GNOME）**
+1. 右上角网络图标 → 设置/Wi-Fi
+2. Wi-Fi 面板 ⋮ 菜单 → "连接到隐藏网络…"
+3. 输入 SSID `HQEV802`，安全类型 WPA2 Personal，密码 `apollo123`
+4. 无此入口 → 改用 nmcli
+
+**排查：**
+
+| 现象 | 处理 |
+|------|------|
+| 找不到隐藏网络名 | 必须手动输入完整 SSID，隐藏网络不广播名字 |
+| `nmcli connect` 报找不到 | 加 `hidden yes` 强制扫描 |
+| 连上但 ping 不通 | 确认连的是本赛位车；`ip -4 addr` 看是否拿到 10.x 网段 IP |
+| 连上就断 | `nmcli con show car-wifi` 里 `wifi.hidden` 是否为 `yes` |
+| Wi-Fi 显示 unmanaged | NetworkManager 未接管：`sudo systemctl restart NetworkManager` |
 
 ### 3.2 SSH 登录
 

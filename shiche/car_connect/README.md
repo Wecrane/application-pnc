@@ -19,7 +19,12 @@
 ### 第 1 步：连 Wi-Fi + 免密（约 2 分钟）
 
 ```bash
-# 连车载 Wi-Fi：HQEV+车辆编号后三位，密码 apollo123（隐藏网络）
+# 连车载 Wi-Fi（隐藏网络）：HQEV+车辆编号后三位，密码 apollo123
+# Ubuntu 最稳方式（hidden yes 是关键）：
+nmcli dev wifi connect "HQEV802" password "apollo123" hidden yes
+ping -c 2 192.168.10.6    # 确认能通实车
+# 详细教程（GUI/持久配置/排查）见技能 references/02-connection-guide.md 3.1.1
+
 # 配置免密（写 ~/.ssh/config，只改笔记本，不碰实车）
 bash shiche/car_connect/setup_ssh_config.sh
 
