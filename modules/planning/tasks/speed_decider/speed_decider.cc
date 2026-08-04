@@ -707,8 +707,8 @@ void SpeedDecider::HandlePedestrianStop(Obstacle* obstacle) const {
         sp->set_y(fence_point.y());
         sp->set_z(0.0);
         stop->set_stop_heading(fence_point.heading());
-        obstacle->AddLongitudinalDecision(
-                ped_moving ? "dp_st_graph/ped_follow" : "dp_st_graph/ped_fixed", stop_decision);
+        obstacle->AddLongitudinalDecision(ped_moving ? "dp_st_graph/ped_follow" : "dp_st_graph/ped_fixed",
+                                         stop_decision);
     } else {
         // Pedestrian has laterally cleared the lane -> release + yield.
         ped_fixed_fence_s_.erase(base_id);
