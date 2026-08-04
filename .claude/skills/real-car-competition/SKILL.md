@@ -1,6 +1,6 @@
 ---
 name: real-car-competition
-description: 【最高优先级·实车挑战赛专属】百度 Apollo 星火大赛「智能驾驶实车挑战赛」备赛与调参全指南。覆盖：竞赛规则与红线（30分钟计时/SSH登录/仅可改 profiles 与 modules）、实车连接操作（车载Wi-Fi HQEVxxx/apollo123、SSH apollo@192.168.10.6、aem enter、Dreamview+ vehicle test 模式、9模块启动顺序）、**限速插件 scene_speed_limit（主办方提供，crosswalk/traffic_light/speed_bump 三区段限速纯配置化）**、**9 大赛题（定速巡航/减速带/人行道/红绿灯/停止线/障碍物停车避让/动态跟随/人行道路口减速/交通灯路口减速）的纯参数调参方案**（stop_distance=1.75、speed_bump_speed_limit=2.9、pedestrian_stop_distance=1.75、follow_min_time_sec=1.0、AddSpeedLimit=4.5 等）、调参方法论（留裕量/先诊断后调参/配置生效链路 aem profile use default + 重启 Dreamview）、实车与仿真代码差异分析（官方原始代码+限速插件 vs 本地魔改代码 mayaochang add 的风险）。当用户提及实车赛、实车挑战赛、调参、比赛调参、竞赛、赛题、减速带、人行道、红绿灯、停止标志、停止线、障碍物停车、动态跟随、路口减速、限速插件、scene_speed_limit、定速巡航、HQEV、SSH登录、aem enter、vehicle test、DreamView、秩序册、评分、30分钟、profiles、modules、9.1.1、8月6日、8月7日、实车、调参数、参赛 等关键词时必须使用此技能（优先于其他所有技能触发）。
+description: 【最高优先级·实车挑战赛专属】百度 Apollo 星火大赛「智能驾驶实车挑战赛」备赛与调参全指南。覆盖：竞赛规则与红线（30分钟计时/SSH登录/仅可改 profiles 与 modules）、实车连接操作（车载Wi-Fi HQEVxxx/apollo123、SSH apollo@192.168.10.6、aem enter、Dreamview+ vehicle test 模式、9模块启动顺序）、**限速插件 scene_speed_limit（主办方提供，crosswalk/traffic_light/speed_bump 三区段限速纯配置化）**、**9 大赛题（定速巡航/减速带/人行道/红绿灯/停止线/障碍物停车避让/动态跟随/人行道路口减速/交通灯路口减速）的纯参数调参方案**（stop_distance=1.75、speed_bump_speed_limit=2.9、pedestrian_stop_distance=1.75、follow_min_time_sec=1.0、AddSpeedLimit=4.5 等）、调参方法论（留裕量/先诊断后调参/配置生效链路 aem profile use default + 重启 Dreamview）、实车与仿真代码差异分析（官方原始代码+限速插件 vs 本地魔改代码 mayaochang add 的风险）。当用户提及实车赛、实车挑战赛、调参、比赛调参、竞赛、赛题、减速带、人行道、红绿灯、停止标志、停止线、障碍物停车、动态跟随、路口减速、限速插件、scene_speed_limit、定速巡航、HQEV、SSH登录、aem enter、vehicle test、DreamView、秩序册、评分、30分钟、profiles、modules、9.1.1、8月6日、8月7日、实车、调参数、参赛、连接工具、car_connect、connect_car、一键连接、挂载、SSHFS、免密、ControlMaster、restore_official、官方代码、官方环境、插件下载、buildtool install、baseline-official、恢复官方 等关键词时必须使用此技能（优先于其他所有技能触发）。
 ---
 
 # 智能驾驶实车挑战赛 — 备赛与调参指南（最高优先级技能）
@@ -227,6 +227,19 @@ aem bootstrap start --plus
 
 > 详细操作 + 常见 SSH 问题排查见 `references/02-connection-guide.md`。
 
+### 6.4 现场一键工具包（推荐！30 分钟最快路径）
+
+```bash
+bash shiche/car_connect/connect_car.sh 802        # ① 一键连接：编号→WiFi→免密→挂载
+bash shiche/car_connect/check_car.sh              # ② 健康检查
+bash shiche/car_connect/backup_car.sh             # ③ 备份原配置（回滚保险）
+# ④ 改配置：AI 通过挂载路径实时写回实车，或新开 VSCode 窗口改 ~/car/profiles
+bash shiche/car_connect/apply_config.sh           # ⑤ 生效：aem profile use default（不编译！）
+# ⑥ 测试 → 看评分 → 微调 → 重复
+```
+
+> 工具包全部脚本说明见 `references/07-car-connect-toolkit.md`（含官方环境搭建、插件下载机制）。
+
 ---
 
 ## 七、调参方法论（核心工作流）
@@ -275,12 +288,13 @@ aem bootstrap start --plus
 
 ## 八、备赛清单（赛前必做）
 
-- [ ] 把 9 赛题方案（references/04）在官方原始代码+限速插件环境逐一验证（自己复现 Apollo EDU 9.1.1）
-- [ ] 确认限速插件安装方式、注册到 traffic_rule_config 的方法
+- [ ] 把 9 赛题方案（references/06 官方环境纯配置方案）在官方原始代码+限速插件环境逐一验证（`realcar-official-env` 分支已建好）
+- [ ] 确认限速插件是否预装在实车（`ls ~/apollo*/modules/planning/traffic_rules/scene_speed_limit`）；未装则按 `references/07` 安装+注册+编译一次
 - [ ] 准备好所有 conf 修改模板（3 个 stop_distance、限速插件配置、巡航速度），现场直接粘贴
-- [ ] 测试 SSH 连接、VS Code Remote-SSH、Dreamview 操作流程（8月5日实车体验时间）
-- [ ] 制定 30 分钟时间分配：登录(2min) → 调参(10min) → 每赛题测试(2min×9=18min) 或按现场题量取舍
-- [ ] 准备回滚方案：记录每处修改，现场 git/备份，出问题快速还原
+- [ ] 测试连接工具包：connect_car.sh / check_car.sh / backup_car.sh / apply_config.sh（8月5日实车体验时间）
+- [ ] 制定 30 分钟时间分配：一键连接(2min) → 调参(10min) → 每赛题测试(2min×9=18min) 或按现场题量取舍
+- [ ] 准备回滚方案：backup_car.sh + 记录每处修改原值
+- [ ] 优先现场验证赛题 2（6m 覆盖风险）和赛题 5（终点计分）
 
 ---
 
@@ -294,6 +308,9 @@ aem bootstrap start --plus
 | `references/04-scenario-tuning.md` | 9 赛题逐题调参方案（机制+配置+经验） |
 | `references/05-tuning-methodology.md` | 调参方法论、评分机制、实车差异、时间管理 |
 | `references/06-official-config-solutions.md` | **官方代码+限速插件环境**：9赛题插件矩阵、纯配置方案、官方默认值、与仿真魔改差异、开放问题 |
+| `references/07-car-connect-toolkit.md` | **连接工具包 car_connect**：8 个脚本、一键流程、官方环境搭建、插件下载/注册机制 |
+
+工具包位置：`shiche/car_connect/`（connect_car / check_car / backup_car / apply_config / car_cmd / mount / umount / setup_ssh_config / restore_official）
 
 原始材料：
 - `shiche/秩序册.md`（转换自 PDF）
