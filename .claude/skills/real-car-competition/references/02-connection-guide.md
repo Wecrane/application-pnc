@@ -124,6 +124,7 @@ Wi-Fi 连接异常自查：车辆编号后三位、名称 HQEV 开头、密码 a
 
 > 适用：选手笔记本是 Ubuntu（新版），想继续用新版 VSCode 和 AI 助手，不切换到 Windows 或旧版 VSCode。
 > **核心结论：完全可行。** 官方 Remote-SSH 连不上 18.04 的原因是车上 vscode-server 需要 glibc≥2.28（18.04 只有 2.27）——只要不依赖 Remote-SSH 扩展，改用**文件挂载（SSHFS）+ 终端 SSH**，新版 VSCode 和 AI 都能用，且车上零安装、不违反红线。
+> **工具包**：`shiche/car_connect/`（setup_ssh_config.sh / mount_car.sh / umount_car.sh / README.md）
 
 ### 7.1 为什么新版 VSCode 连不上
 
@@ -132,58 +133,61 @@ Wi-Fi 连接异常自查：车辆编号后三位、名称 HQEV 开头、密码 a
 - 组委会让装旧版 VSCode（1.96）正是因为旧版服务端兼容 18.04
 - **绕过思路**：不用 Remote-SSH 扩展，用 sshfs 把文件挂到本地 + 用 ssh 终端执行命令
 
-### 7.2 方案 A：SSHFS 挂载（推荐，首选）
+### 7.2 免密：用 ControlMaster（合规，实车零改动）
 
-**合规性**：sshfs 只安装在**笔记本**，通过车上已有的 sshd/SFTP 传输，**车上不装任何软件** → 不违反"严禁安装未经允许软件"红线。等价于官方 Remote-SSH 的数据通路。
-
-```bash
-# 1. 笔记本安装 sshfs（Ubuntu 24.04 用 fuse3）
-sudo apt update && sudo apt install -y sshfs
-
-# 2. 建挂载点，只挂允许修改的两个目录（轻量，避免挂全工程卡顿）
-mkdir -p ~/car/profiles ~/car/modules
-sshfs apollo@192.168.10.6:/home/apollo/apollo-edu-9.1.1/profiles ~/car/profiles \
-  -o reconnect,ServerAliveInterval=15,ServerAliveCountMax=3,dir_cache=yes
-sshfs apollo@192.168.10.6:/home/apollo/apollo-edu-9.1.1/modules ~/car/modules \
-  -o reconnect,ServerAliveInterval=15,ServerAliveCountMax=3,dir_cache=yes
-```
-
-> ⚠️ 现场先 `ls ~` 确认工程目录真实名称（附录写 `apollo-edu-9.1.1`，秩序册一处写 `apollo-edu_9.1.1`，现场核实）。
-> 挂载其他子目录（如 conf）同理；不建议挂全工程（bazel-* 符号链接/构建产物会拖慢 VSCode 索引）。
-
-**使用**：
-- 本地新版 VSCode 打开 `~/car/profiles` → 完整 AI 支持（记忆库/技能都在本地）
-- AI/选手编辑挂载路径下的文件 = **实时写回实车**
-- 卸载：`fusermount -u ~/car/profiles`
-
-### 7.3 方案 B：AI 全程 SSH 终端操作（兜底）
-
-不依赖挂载，AI 在终端直接 SSH 操作实车：
+⚠️ 秩序册红线"不得修改…SSH 配置及安全策略" → **禁止往实车写 authorized_keys**。合规方案是**笔记本侧 ControlMaster 连接复用**：
 
 ```bash
-# 一次性命令（编译等）
-ssh apollo@192.168.10.6 "cd ~/apollo-edu-9.1.1 && aem enter -- buildtool build -p modules/planning/ -j15"
-# 交互式容器会话 → 用后台持久终端（async）保持
-ssh apollo@192.168.10.6
+# 运行 shiche/car_connect/setup_ssh_config.sh 自动写入：
+Host car
+    HostName 192.168.10.6
+    User apollo
+    IdentityFile ~/.ssh/id_ed25519
+    ServerAliveInterval 15
+    ServerAliveCountMax 3
+    ControlMaster auto
+    ControlPath ~/.ssh/cm-%r@%h:%p
+    ControlPersist 4h
 ```
 
-文件编辑：`scp`/`rsync` 双向同步，或终端 heredoc 写入。
+- 首次 `ssh car` 输一次密码 → **4 小时内 ssh/scp/sshfs 全部免密**
+- 只改笔记本 `~/.ssh/config`，实车 SSH 配置零改动 → 合规
 
-### 7.4 混合工作流（推荐）
+### 7.3 挂载（SSHFS）
+
+```bash
+bash shiche/car_connect/mount_car.sh              # 挂 profiles/ + modules/（调参推荐）
+bash shiche/car_connect/mount_car.sh --full       # 挂全工程（浏览代码）
+# 挂载点：~/car/profiles、~/car/modules、（--full）~/car/root
+# 卸载：bash shiche/car_connect/umount_car.sh
+```
+
+> ⚠️ 现场先 `ssh car 'ls ~'` 确认工程目录真实名称（附录 `apollo-edu-9.1.1` vs 秩序册 `apollo-edu_9.1.1`，下划线/横杠现场核实），用 `PROJ_DIR=xxx bash mount_car.sh` 指定。
+
+### 7.4 三种操作方式（按需）
+
+**方式 A：AI 助手直接改（推荐）** — 本工作区 + 当前 VSCode，AI 通过挂载路径编辑 = 实时写回实车；AI 终端 `ssh car "..."` 执行编译/重启。
+
+**方式 B：新开 VSCode 窗口手动看** — 新窗口打开本地挂载目录 `~/car/profiles`（本地文件夹，不经过 Remote-SSH → **绕过版本问题**），手动改代码/配置即写回实车。
+
+**方式 C：终端直连** — `ssh car` 交互式，或 `ssh car "cd ~/apollo-edu-9.1.1 && aem enter -- buildtool build -p modules/planning/ -j15"`。
+
+### 7.5 混合工作流（推荐）
 
 ```
 本地新版 VSCode + AI 助手 ──SSHFS 挂载实时读写──▶ 实车 profiles/ + modules/
 本地新版 VSCode + AI 助手 ──SSH 终端 aem enter──▶ 实车容器内 build/重启/测试
 ```
 
-1. 挂载后本地 VSCode 打开挂载目录 → AI 改配置（带完整记忆库/技能）
-2. 终端 `ssh` 上去 `aem enter` 编译、`aem profile use default`、重启 Dreamview
-3. 车上 Dreamview 浏览器操作（`192.168.10.6:8888`）照旧
+1. `setup_ssh_config.sh` 免密 → `ssh car` 输一次密码
+2. `mount_car.sh` 挂载 profiles/modules
+3. 本工作区 AI 改配置（实时写回）+ 终端 `ssh car` 编译/重启
+4. 新开 VSCode 窗口打开挂载目录手动看代码
+5. 车上 Dreamview 浏览器（`192.168.10.6:8888`）照旧
 
-### 7.5 注意事项
+### 7.6 注意事项
 
 - SSHFS 走车载 Wi-Fi，性能对配置文件足够；大文件/大目录操作会慢
-- 挂载中途断线：`-o reconnect` 会自动重连；卡住可用 `fusermount -u` 强制卸载重挂
-- 备好方案 B（scp/rsync）作为挂载失败兜底
+- 挂载中途断线：`-o reconnect` 自动重连；卡住 `bash umount_car.sh` 强制卸载重挂
+- 备好兜底（挂载失败时）：纯 SSH 终端 + `scp`/`rsync` 双向同步
 - 现场时间紧张（30 分钟）：先确认挂载通、VSCode 能编辑，再开始调参
-- 如需 AI 编译/重启：用 `ssh ... "aem enter -- ..."` 一次性命令最稳；交互式用后台持久终端
