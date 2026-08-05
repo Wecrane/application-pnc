@@ -97,10 +97,46 @@
 
 ---
 
-## 5. 苏州地图资源情况
+## 5. 🚨 苏州地图资源情况（⚠️ 实车地图未拷贝，需补拷！）
 
-- **苏州实车测试场精确地图（"测试场星火测试2"）不在拷贝产物里**（suzhou.tar.gz 只有评分代码+场景注入，无 base_map）
-- 本地 `data/map_data/Xh_2026_contest/`（2026 星火大赛官方地图）**坐标系一致**（left=423223, top=4438490，覆盖苏州场景坐标），但**元素位置不同**（Signal_1/StopSign_1/Crosswalk_5 不在场景沿线）→ 是仿真赛道图，不是实车测试场图
+### 5.1 确认遗漏（2026-08-05 复盘）
+- 从实车拷贝时**只打包了 `data/map_data`（hehai_contest 4 张比赛图）**，未打容器地图目录 `/apollo/modules/map/data/`！
+- 苏州/海驾测试场地图**全部遗漏**，需下次连车补拷。
+
+### 5.2 车上地图完整清单（从已拷 global_flagfile.txt 归纳）
+
+| 地图 | 路径 | 是否已拷 | 价值 |
+|------|------|---------|------|
+| **slame-HaiDianJiaXiao-0827** | /apollo/modules/map/data/ | ❌ | ⭐ **苏州场景 json 引用的地图**（localization 实载），最关键 |
+| slame-HaiDianJiaXiao-0827_1~_4 | 同上 | ❌ | 海驾 0827 变体 |
+| slame-HaiDianJiaXiao-0904_Sroad_area | 同上 | ❌ | 海驾 0904 |
+| slam_tf_haijia827 | 同上 | ❌ | 海驾 tf |
+| **test_cefang** | 同上 | ❌ | 测试车坊（可能苏州测试场） |
+| **hohai_contest_1** | 同上 | ❌ | ⭐ 河海赛区（苏州可能在河海大学！） |
+| 海淀大圈 | 同上 | ❌ | 中文名地图 |
+| AnnotatedMap_202607291120 | 同上 | ❌ | 标注地图 |
+| apollo_virutal_map / sunnyvale_big_loop / demo | 同上 | ❌(demo已拷) | 通用 |
+| hehai_contest_{6_am,6_pm,7_am,7_pm}_3 | data/map_data/ | ✅ | 北京比赛图 |
+
+### 5.3 补拷命令（下次连车执行）
+```bash
+# 1. 查看车上地图目录确认
+ssh car "ls /apollo/modules/map/data/ 2>/dev/null; ls /apollo_workspace/data/map_data/ 2>/dev/null"
+
+# 2. 打包苏州/海驾/河海相关地图
+ssh car "cd /apollo/modules/map/data && tar czf /tmp/car_maps_suzhou.tar.gz \
+  slame-HaiDianJiaXiao-0827* slam_tf_haijia827 slame-HaiDianJiaXiao-0904_Sroad_area \
+  test_cefang hohai_contest_1 海淀大圈 AnnotatedMap_202607291120 2>/dev/null; ls -lh /tmp/car_maps_suzhou.tar.gz"
+
+# 3. 下载到本地
+scp car:/tmp/car_maps_suzhou.tar.gz ~/application-pnc/shiche/car_890/
+
+# 4. 清理车端残留
+ssh car "rm -f /tmp/car_maps_suzhou.tar.gz"
+```
+
+### 5.4 本地可用资源
+- 本地 `data/map_data/Xh_2026_contest/`（2026 星火大赛官方地图）**坐标系一致**（left=423223, top=4438490，覆盖苏州场景坐标），但**元素位置不同**（Signal_1/StopSign_1/Crosswalk_5 不在场景沿线）→ 仿真赛道图，非实车测试场图
 - 备赛时可用 `Xh_2026_contest` 练机制（含 StopSign_1 可练停止牌），但**赛道细节以现场为准**
 
 ---
