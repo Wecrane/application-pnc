@@ -1,0 +1,284 @@
+# 16 实车赛评分细则（源码级 · 2026-08-05 从实车拷贝反推）
+
+> **🚨 本文档基于实车 890 拷贝的官方评分系统一手资料**：
+> - 评分控制台：`shiche/car_890/grading_console/auto_drive_console/`（presets.json + 16 metric json + 4 场次场景 json + runtime.py）
+> - 评分引擎源码：`shiche/car_890/xh_bak/.XH_2026_bak/grading_system_py/`（main.py 2062 行 + condition/ 12 个 handler）
+> - 苏州实战数据：`maps_tools/suzhou.tar.gz` → `records/score_history.json`（10 次实测）
+> - 4 张正式地图：`maps_tools/data/map_data/hehai_contest_*_3/`
+> **回答**：具体怎么评分、哪些动作会扣分、扣多少、怎么拿满分。
+
+---
+
+## 一、评分系统总框架
+
+### 1.1 评分流程
+
+```
+实车运行（vehicle_test + 场景注入）→ 每 0.1s 一帧采集（底盘/定位/感知）
+→ 评分系统 feed_frame 逐帧评估各 metric
+→ 场景分 = 100 − Σ(各 metric 扣分)，clamp [0,100]
+→ 4 场次独立评分，取最优成绩
+```
+
+### 1.2 核心机制（main.py 源码）
+
+| 机制 | 说明 |
+|------|------|
+| **扣分制** | 每个 metric 从 **100 分起扣**：`metric_score = max(0, 100 − Σ每帧delta)` |
+| **场景分** | `场景分 = max(0, 100 − Σ(100 − metric_score_i))`（各 metric 扣分简单相加） |
+| **is_critical** | 该 metric 是硬性要求，不达标即场景失败 |
+| **require_all_time_pass** | **全程每一帧都必须达标**，任何一帧违规 = 该 metric 不 PASS |
+| **硬失败** | delta_score = **100**（直接清空该 metric 分，如压线/碰撞） |
+| **软扣分** | delta_score = single_deduction（如停太近扣 **20**）或按单位累计（超速每 m/s 扣 **2**/帧） |
+
+### 1.3 多场景总分
+
+```
+总分 = 各场次场景分的平均（有数据场景），map_unavailable 场景计 0 拉低平均
+```
+
+---
+
+## 二、🚨 全局铁律：cruise_speed_check（一票否决）
+
+> 来源：`grading_console/auto_drive_console/presets.json`
+
+```json
+"cruise_speed_check": {
+  "enabled": true,
+  "conf_file": "/apollo/modules/planning/planning_component/conf/planning.conf",
+  "min_default_cruise_speed": 1.5,  "max_default_cruise_speed": 5.1,
+  "min_planning_upper_speed_limit": 1.5, "max_planning_upper_speed_limit": 5.1,
+  "scope": "all"
+}
+```
+
+| 检查项 | 合法范围 | 越界后果 |
+|--------|---------|---------|
+| `--default_cruise_speed`（planning.conf） | **[1.5, 5.1]** | **整次评测判 0 分**（scope=all 全场生效） |
+| `--planning_upper_speed_limit`（planning.conf） | **[1.5, 5.1]** | **整次评测判 0 分** |
+
+> 🚨 **这是最高优先级红线**：任何调参都不得让这两个参数超出 [1.5, 5.1]！实车当前 5.0/5.0 达标。
+
+---
+
+## 三、4 场次赛题组合（每场 3 题）
+
+| 场次 | 地图 | 停车题（scope 限定） | 巡航题（full） | 限速题（full） |
+|------|------|---------------------|---------------|---------------|
+| 6号上午 | `hehai_contest_6_am_3` | Crosswalk_1 停车 | cruise | traffic_road_speed（减速带） |
+| 6号下午 | `hehai_contest_6_pm_3` | Signal_1 红灯停车 | cruise | traffic_road_speed（减速带） |
+| 7号上午 | `hehai_contest_7_am_3` | Signal_1 红灯停车 | cruise | crosswalk_road_speed（减速带） |
+| 7号下午 | `hehai_contest_7_pm_3` | Crosswalk_5 停车 | cruise | crosswalk_road_speed（减速带） |
+
+> 每场次 = 1 个定点停车题（`scope_ids` 限定，scope_forward 80m / scope_past 8m）+ cruise（全程）+ 减速带限速（全程）。
+
+---
+
+## 四、各赛题评分细则（metric 级，源码判定）
+
+### 4.1 🚨 cruise 定速巡航（4 场次完全相同）—— 2 个 metric
+
+> 来源：`metric/*_cruise.json`
+
+**Metric A：AccelerationLimit（加速度）**
+
+| 项 | 值 |
+|----|-----|
+| 范围 | **max +2.0 / min -3.0 m/s²** |
+| 扣分 | 每超 1 m/s² 扣 **1 分/帧**（single_deduction=1, unit=1） |
+| 判定 | 加速度超出 [−3, 2] 即扣 |
+| 硬性 | is_critical + require_all_time_pass |
+
+**Metric B：CruiseSpeedLimit（速度）**
+
+| 项 | 值 |
+|----|-----|
+| 范围 | **max +3.0556（11km/h）/ min -0.5 m/s** |
+| 扣分 | 每超 1 m/s 扣 **2 分/帧**（single_deduction=2, unit=1） |
+| 判定 | `over = speed − 3.0556`，`delta = ceil(over/1) × 2` |
+| 硬性 | is_critical + require_all_time_pass |
+
+> ⚠️ **超速扣分示例**：车以 5.0 m/s 巡航（超 1.94）→ 每帧扣 ceil(1.94)×2 = **4 分/帧**，几秒即清空！这就是苏州 road_speed 从不满分的根因。
+
+### 4.2 🚨 crosswalk 人行道停车（6上午 Crosswalk_1 / 7下午 Crosswalk_5）—— 2 个 metric
+
+> 来源：`metric/*_crosswalk.json` + `condition/crosswalk_stop_handler.py`
+
+**Metric A：Collision（碰撞）**
+
+| 项 | 值 |
+|----|-----|
+| 判定 | 主车多边形与目标障碍物距离 ≤ **0.1m** |
+| 方向 | INCLUDE_BACK（含后方） |
+| 后果 | delta = **100（硬失败）** |
+
+**Metric B：CrosswalkStop（人行道停车）** —— 只在**有行人/非机动车占用人行横道**时检测（无人占用全部放行）
+
+| 动作 | 判定条件（源码） | 后果 |
+|------|----------------|------|
+| ① 车压入被占用的人行横道 | car_polygon 与 crosswalk 重叠 | delta=**100 硬失败** |
+| ② 占用期间从 stopline 前跨到后 | 移动中 + 位置跨越 | delta=**100 硬失败** |
+| ③ 移动中距横道 < 1.0m | 0 ≤ 车头距 < min_distance(1.0) | delta=**100 硬失败** |
+| ④ **停稳后距 [1.0, 1.5]m** | speed≤0.1 且 1.0 ≤ 车头距 ≤ 1.5 | ✅ **合格停车** |
+| ⑤ 停稳后距 < 1.0m | 停稳 + 车头距 < 1.0 | delta=**20 软扣分** |
+| ⑥ 停稳后距 > 1.5m | 停稳 + 车头距 > 1.5 | 不算停车点，**不扣分**，可继续接近 |
+| ⑦ 合格停车后行人未清空就移动 | 已 qualified + 提前移动 | delta=**100 硬失败** |
+
+> 💡 **战术要点**：停车距离**宁远勿近**！停远(>1.5)不扣分可继续微调；停近(<1.0)直接扣 20；压线/越线/移动中太近直接硬失败 100。
+> 💡 车头位置 = 后轴中心 + front_edge_to_center(3.62m) × heading。
+
+### 4.3 🚨 red_light 红灯停车（6下午/7上午 Signal_1）—— 1 个 metric
+
+> 来源：`metric/*_red_light.json` + `condition/red_light_stop_handler.py`
+> 只在感知到目标信号灯 **RED** 时检测，绿灯/黄灯放行。
+
+| 动作 | 判定条件（源码） | 后果 |
+|------|----------------|------|
+| ① 车压停止线 | car_polygon 与 stopline 重叠 | delta=**100 硬失败**（闯红灯） |
+| ② 红灯期间越线 | 红灯时跨越 stopline | delta=**100 硬失败** |
+| ③ 移动中距停止线 < 1.0m | 0 ≤ 车头距 < 1.0 | delta=**100 硬失败** |
+| ④ **停稳后距 [1.0, 1.5]m** | 停稳 + 1.0 ≤ 车头距 ≤ 1.5 | ✅ **合格停车** |
+| ⑤ 停稳后距 < 1.0m | 停稳 + 车头距 < 1.0 | delta=**20 软扣分** |
+| ⑥ 停稳后距 > 1.5m | 停稳 + 车头距 > 1.5 | 不算停车点，**不扣分**，可继续接近 |
+
+### 4.4 🚨 减速带区域限速（traffic_road_speed / crosswalk_road_speed）—— 1 个 metric
+
+> 来源：`metric/*_traffic_road_speed.json` + `condition/speed_handler.py`
+
+**Metric：RoadSpeedLimit**
+
+| 项 | 值 |
+|----|-----|
+| 全局 max_speed | 1000.0（全局不限速，只限区域内） |
+| 区域内限速 | **[-0.5, 1.0] m/s**（≤1.0 通过） |
+| 扣分 | 每超 1 m/s 扣 **2 分/帧**（unit=1, single=2） |
+| 判定 | **car_polygon（车辆包围盒）与限速多边形重叠**即生效（车头进入区域即算，不是车中心！） |
+| 硬性 | is_critical + require_all_time_pass |
+
+> ⚠️ **减速带区域是精确多边形**（4 个角点坐标，见下），车头一进区域就按 ≤1.0 判定。
+> 💡 超速示例：车以 3.0 m/s 进入区域（超 2.0）→ 每帧扣 ceil(2.0)×2 = **4 分/帧**。
+
+**4 场次减速带区域精确坐标**（Δy = 距起点距离，起点 y=3476108.50）：
+
+| 场次 | 多边形 Δy 范围 | 覆盖元素 |
+|------|---------------|---------|
+| 6上午 | 24.7 ~ 30.5m | Signal_1（常绿） |
+| 6下午 | 26.9 ~ 32.6m | Signal_6（常绿） |
+| 7上午 | 23.0 ~ 28.9m | Crosswalk_1 |
+| 7下午 | 23.5 ~ 29.1m | Crosswalk_1 |
+
+---
+
+## 五、评分引擎其他 metric（备用/辅助）
+
+> 来源：`grading_system_py/condition/` 全部 handler + `README.md`
+
+| Metric | handler | 判定 | 扣分 |
+|--------|---------|------|------|
+| OnRoad | on_road_handler | 中心点+四角点是否在车道/道路边界内 | 越界 = 硬失败 100 |
+| ObstacleBypass | obstacle_bypass_handler | 绕行横向距离、速度 | 未绕行 = 100 |
+| TTC | ttc_handler | 碰撞时间 < 阈值 | 按单位扣 |
+| CentripetalAccel | centripetal_acceleration_handler | \|speed×spin\| > 上限 | 按单位扣 |
+| TimeLimit | time_limit_handler | 超过 timeout | 得分制 0 |
+| ReachEnd | region_overlap_lw_handler | 进入终点矩形区域 | 得分制 100 |
+| HardBrake | acceleration_handler | 急刹（排除合理场景） | 按单位扣 |
+
+> 实车 4 场次 metric 中**未启用**这些（只启用 cruise/crosswalk/red_light/road_speed/collision），但了解机制有助于理解评测。
+
+---
+
+## 六、4 场次场景定义（何时触发停车/限速）
+
+> 来源：`grading_console/auto_drive_console/{6号上午,6号下午,7号上午,7号下午}_1.json`
+
+### 6.1 公共：起点 (272589.88, 3476108.50) → 终点 (272594.16, 3476211.38)，全程 ~103m，120s
+
+### 6.2 6号上午（人行道题）+ 7号下午（人行道题）—— 5 个行人横穿
+
+| id | 距起点 start_distance | 速度 | 方向 |
+|----|---------------------|------|------|
+| 5844 | 35m | 1.0 m/s | 向西 |
+| 6840 | 25m | 0.6 m/s | 向东 |
+| 6841 | 20m | 0.5 m/s | 向西 |
+| 6844 | 15m | 0.5 m/s | 向西 |
+| 6845 | 15m | 0.5 m/s | 向东 |
+
+> 行人横穿位置 = Crosswalk_1（6上午，Δy 61.3m）/ Crosswalk_5（7下午，Δy 60.8m）。行人速度 0.5-1.0 m/s，横穿时间较长 → 需耐心等待。
+
+### 6.3 6号下午 + 7号上午（红灯题）—— Signal_1 灯序
+
+```
+Signal_1: 绿(3s) → 红(25s) → 绿(100s)
+触发: 距信号灯 30s（约 Δy 60-63m 处）
+```
+
+> 车以 3.0 m/s 巡航，约 21s 到达 Signal_1（Δy 62m）→ **正好赶上红灯区间**（出发后 3s 变红，红 25s）。红灯停车 → 绿灯后通过。
+
+---
+
+## 七、🚨 苏州 score_history 10 次实战（丢分实证）
+
+> 来源：`suzhou.tar.gz` → `records/score_history.json`（2026-07-28，旧版 4 题制）
+
+| 时间 | 总分 | road_speed | crosswalk | red_light | stop_sign |
+|------|------|-----------|-----------|-----------|-----------|
+| 15:03 | **90.8** | 63.0 | 100 | 100 | 100 |
+| 15:14 | 54.2 | 17.0 | 100 | 100 | 0 |
+| 15:18 | 86.2 | 45.0 | 100 | 100 | 100 |
+| 16:19 | 25.0 | 0 | 0 | 100 | 0 |
+| 16:29 | 61.0 | 44.0 | 0 | 100 | 100 |
+| 17:48 | 33.3 | 0 | 0 | 100 | 0 |
+| 17:57 | 27.8 | 11.0 | 0 | 100 | 0 |
+| 18:11 | 58.5 | 34.0 | 100 | 100 | 0 |
+| 18:17 | 57.2 | 29.0 | 100 | 100 | 0 |
+| 18:21 | 59.5 | 38.0 | 100 | 100 | 0 |
+
+### 统计规律（决定性）
+
+1. **red_light 10/10 全满分** → 红灯题最容易，停对位置即 100
+2. **road_speed（限速题）从不满分**（0~63）→ 🚨 **超速是最大丢分源**（11km/h 限速极易超）
+3. **crosswalk 一半 100 一半 0** → 停车时机/距离不稳（急刹 + 停太近）
+4. **stop_sign 一半 100 一半 0** → 停止牌题不稳
+5. 最高 90.8 仍被 road_speed=63 拖累 → **攻克限速题是拿高分/满分关键**
+
+---
+
+## 八、扣分速查表（现场一页纸）
+
+| 动作 | 扣分 | 类型 |
+|------|------|------|
+| 巡航超速（>3.0556 m/s） | 2 分/帧/m/s | 软扣 |
+| 加速度超界（>2 或 <-3 m/s²） | 1 分/帧/m/s² | 软扣 |
+| 减速带区域超速（>1.0 m/s） | 2 分/帧/m/s | 软扣 |
+| 停车距离 <1.0m（crosswalk/红灯） | **20 分/次** | 软扣 |
+| 停车距离 >1.5m | 0（可继续接近） | 不计 |
+| 压入人行横道 / 占用期越线 | **100** | 硬失败 |
+| 红灯压线 / 红灯越线 | **100** | 硬失败 |
+| 移动中距停止线 <1.0m | **100** | 硬失败 |
+| 合格停车后行人未清空就移动 | **100** | 硬失败 |
+| 碰撞（距离 ≤0.1m） | **100** | 硬失败 |
+| cruise/upper_speed_limit 越界 [1.5,5.1] | **整次判 0** | 一票否决 |
+| 超时（>120s） | 0 分 | 失败 |
+
+---
+
+## 九、满分策略（基于评分细则）
+
+| 赛题 | 满分做法 |
+|------|---------|
+| cruise | `default_cruise_speed=3.0`（≤3.0556 留 0.05 裕量）；加速度控制 [-3,2] 内（平缓加减速） |
+| 人行道停车 | `stop_distance=1.25`（停 [1.0,1.5] 中值）+ 提前减速防急刹 + 等行人完全走完再动 |
+| 红灯停车 | `stop_distance=1.25`（停 [1.0,1.5] 中值）+ 红灯停稳 + 绿灯才走 |
+| 减速带 | 插件限速 0.8（≤1.0 留 0.2 裕量）+ forward_buffer 8m 提前降速 |
+
+> 对应调参：见 `realcar_tuning/RECOMMENDED/` + `参数改动清单.md` + `references/15-final-tuning-guide.md`。
+
+---
+
+## 十、⚠️ 现场必须确认的不确定点
+
+1. **评分版本**：新版 3 题制（正式图 hehai_contest_*_3，减速带 ≤1.0，无 stop_sign）vs 旧版 4 题制（训练场，减速带 ≤1.5，含 stop_sign [0,2]m）——现场确认后按对应参数
+2. **场景注入**：行人/信号灯是否经 scenario_injection 注入、感知是否识别为真实信号灯（8/4 日志显示未注入时被感知为 UNKNOWN_UNMOVABLE 静态障碍）
+3. **评分采样**：是否每 0.1s 一帧、require_all_time_pass 是否全程（源码确认是）
+4. **现场手册**：秩序册声明"赛题题库以现场竞赛手册为准"——以上以实车拷贝配置为准，现场若有差异以现场为准
