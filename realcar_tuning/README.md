@@ -47,7 +47,7 @@ realcar_tuning/
 | 参数 | ORIGINAL（实车） | RECOMMENDED | 说明 |
 |------|-----------------|-------------|------|
 | `--planning_upper_speed_limit` | 5.0 | **5.0（别动）** | 评分铁律 [1.5,5.1]，越界整次判 0 |
-| `--default_cruise_speed` | 5.0 | **3.0** | 评分 cruise ≤3.0556；5.0 持续超速扣分 |
+| `--default_cruise_speed` | 5.0 | **2.8** | 评分 cruise ≤3.0556；3.0 实测峰值 3.14-3.16 会超速，2.8 留 0.25 裕量 |
 | `--min_stop_distance_obstacle` | 0.0 | 现场验证 | 障碍停车距离兜底 |
 
 ### ② `traffic_rules/crosswalk/conf/default_conf.pb.txt`
@@ -56,6 +56,8 @@ realcar_tuning/
 |------|-----------------|-------------|------|
 | `stop_distance` | 0.10 | **1.25** | 评分停车 [1.0,1.5]m；0.1 停太近扣 20 |
 | `expand_s_distance` | 0.0 | **6.0** | 行人提前识别，防急刹（急刹 4.9-6.9 双扣分） |
+| `stop_strict_l_distance` | 1.0 | **4.0** | 🆕 防 SKIP 提前放行（源码回归） |
+| `stop_loose_l_distance` | 1.5 | **5.0** | 🆕 斑马线全宽行人必停（源码回归） |
 | `stop_timeout` | 3.0 | **30.0** | 防行人未走完提前放行 |
 
 ### ③ `traffic_rules/traffic_light/conf/default_conf.pb.txt`

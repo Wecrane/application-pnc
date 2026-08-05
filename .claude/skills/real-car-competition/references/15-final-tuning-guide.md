@@ -107,11 +107,11 @@ RoadSpeedLimit: speed_limit_regions: limit_max_speed=1.0, 扣 2 分/单位/帧
 | 参数 | 实车当前值 | 推荐值 | 依据 |
 |------|-----------|--------|------|
 | `--planning_upper_speed_limit` | **5.0** | **5.0（别动！）** | 铁律 [1.5,5.1]，动了判 0 |
-| `--default_cruise_speed` | **5.0** | **3.0** | 评分 cruise ≤3.0556；5.0 会持续超速（苏州 road_speed 从不满分根因！） |
+| `--default_cruise_speed` | **5.0** | **2.8** | 评分 cruise ≤3.0556；5.0 会持续超速；日志实车速度峰值 3.14-3.16（3.0 配置仍可能超调超速），取 2.8 留 0.25 裕量 |
 | `--destination_check_distance` | 20.0 | 不动 | — |
 | `--min/max_stop_distance_obstacle` | 0.0/0.0 | 现场验证 | 静态障碍 STOP 距离兜底 |
 
-> ⚠️ **default_cruise_speed=3.0 是全场最关键的修改**：地图限速 5.5556 + 配置 5.0 → 车按 ~5.0 巡航，远超 3.0556 上限 → 每帧扣 2 分。降到 3.0 后 cruise 题满分。
+> ⚠️ **default_cruise_speed=2.8 是全场最关键的修改**：地图限速 5.5556 + 配置 5.0 → 车按 ~5.0 巡航，远超 3.0556 上限 → 每帧扣 2 分。降到 2.8 后 cruise 题满分，且停车接近速度更低（减速度更小，防 SKIP/加速度扣分）。
 
 ### 3.2 停车类 TrafficRule（评分 [1.0,1.5]m，标定 1:1）
 
@@ -122,6 +122,8 @@ RoadSpeedLimit: speed_limit_regions: limit_max_speed=1.0, 扣 2 分/单位/帧
 | crosswalk | `stop_distance` | **0.10** | **1.25** | 🚨 0.1 停太近 → 扣 20 + 急刹 4.9-6.9 双扣分 |
 | crosswalk | `expand_s_distance` | **0.0** | **6.0** | 行人更早被识别 → 提前平缓减速（防急刹） |
 | crosswalk | `stop_timeout` | **3.0** | **30.0** | 防行人未走完提前放行 |
+| crosswalk | `stop_strict_l_distance` | **1.0** | **4.0** | 🆕 回归源码：SKIP 条件=`stop_deceleration≥4.0 且 l>此值`→1.0 时行人 l>1.0 可能被放行（冲斑马线=硬失败 100）；调回官方默认 4.0 |
+| crosswalk | `stop_loose_l_distance` | **1.5** | **5.0** | 🆕 回归源码：l≥loose 仅路径交叉才停；1.5 太小（斑马线宽 3.9m），调回官方默认 5.0 确保全宽必停 |
 | crosswalk | `max_stop_deceleration` | 4.0 | 4.0（不动） | — |
 | traffic_light | `stop_distance` | **0.10** | **1.25** | 红灯停车 [1.0,1.5] |
 | traffic_light | `max_stop_deceleration` | 4.0 | 4.0（不动） | — |
@@ -163,16 +165,18 @@ RoadSpeedLimit: speed_limit_regions: limit_max_speed=1.0, 扣 2 分/单位/帧
 
 **文件 1：`planning_component/conf/planning.conf`**
 ```text
---default_cruise_speed=3.0        # 5.0 → 3.0（评分 cruise ≤3.0556，留裕量）
+--default_cruise_speed=2.8        # 5.0 → 2.8（评分 cruise ≤3.0556，留 0.25 裕量）
 --planning_upper_speed_limit=5.0  # 保持不动！
 ```
 
 **文件 2：`traffic_rules/crosswalk/conf/default_conf.pb.txt`**
 ```text
-stop_distance: 1.25        # 0.10 → 1.25
-expand_s_distance: 6.0     # 0.0 → 6.0
-stop_timeout: 30.0         # 3.0 → 30.0
-max_stop_deceleration: 4.0 # 保持
+stop_distance: 1.25          # 0.10 → 1.25
+stop_strict_l_distance: 4.0  # 1.0 → 4.0（防 SKIP 提前放行）
+stop_loose_l_distance: 5.0   # 1.5 → 5.0（斑马线全宽必停）
+expand_s_distance: 6.0       # 0.0 → 6.0
+stop_timeout: 30.0           # 3.0 → 30.0
+max_stop_deceleration: 4.0   # 保持
 ```
 
 **文件 3：`traffic_rules/traffic_light/conf/default_conf.pb.txt`**
@@ -309,9 +313,11 @@ ssh car "cat /apollo/modules/planning/traffic_rules/crosswalk/conf/default_conf.
 
 | 文件 | 参数 | 值 |
 |------|------|-----|
-| planning.conf | `default_cruise_speed` | **3.0** |
+| planning.conf | `default_cruise_speed` | **2.8** |
 | planning.conf | `planning_upper_speed_limit` | **5.0（别动）** |
 | crosswalk conf | `stop_distance` | **1.25** |
+| crosswalk conf | `stop_strict_l_distance` | **4.0** |
+| crosswalk conf | `stop_loose_l_distance` | **5.0** |
 | crosswalk conf | `expand_s_distance` | **6.0** |
 | crosswalk conf | `stop_timeout` | **30.0** |
 | traffic_light conf | `stop_distance` | **1.25** |
