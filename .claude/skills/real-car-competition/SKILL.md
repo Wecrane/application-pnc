@@ -307,6 +307,7 @@ aem bootstrap start --plus
 | `references/11-realcar-config-audit.md` | **实车配置实测审计（890 车）**：实测 planning.conf/traffic_rules/tasks 全量差异、profile=HQEV_BDN、工程名下划线、USB 路由冲突排障、9 赛题基于实车基线的调整建议 |
 | `references/12-grading-rules.md` | **🚨 官方评分细则（一手资料）**：presets cruise_speed_check 铁律（[1.5,5.1] 越界判 0）、人行道/红灯停 1.0~1.5m、减速带区域限速 ≤1.0、4 场次赛题组合、DKIT 车辆参数、**苏州赛区 10 次真实评分数据（限速题最大丢分源）** |
 | `references/13-artifacts-deep-analysis.md` | **拷贝产物深度分析（源码级）**：评分引擎 handler 判定逻辑（crosswalk/red_light/speed/collision 源码）、苏州 score_history 10 次实测、4 场次赛道精确几何（减速带/人行道/信号灯坐标）、减速带实现机制（地图无 speed_bump）、容器默认 vs profile 覆盖、msg_adapter 场景注入评测机制 |
+| `references/14-suzhou-competition.md` | **🚨 苏州赛区专属（本队主战场）**：苏州 4 题制（road_speed/crosswalk_Crosswalk5/red_light_Signal1/stop_sign_StopSign1）、减速带限速 ≤1.5（非北京 1.0）、加速度 [-2,2]、苏州 score_history 10 次实测（限速题最大丢分源）、苏州测试场景（8 agent + Signal_1 绿5红15）、地图资源情况、苏州调参重点 |
 
 原始材料：
 - `shiche/秩序册.md`（转换自 PDF）
