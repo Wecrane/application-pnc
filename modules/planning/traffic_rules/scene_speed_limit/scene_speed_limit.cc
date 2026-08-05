@@ -70,6 +70,16 @@ Status SceneSpeedLimit::ApplyRule(Frame* const frame, ReferenceLineInfo* const r
         }
     }
 
+    if (config_.junction_enabled()) {
+        const std::vector<PathOverlap>& junction_overlaps = map_path.junction_overlaps();
+        for (const auto& pnc_junction_overlap : junction_overlaps) {
+            reference_line->AddSpeedLimit(
+                    pnc_junction_overlap.start_s - config_.junction_forward_buffer(),
+                    pnc_junction_overlap.end_s + config_.junction_backward_buffer(),
+                    config_.junction_limit_speed());
+        }
+    }
+
     return Status::OK();
 }
 

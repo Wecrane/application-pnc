@@ -12,3 +12,8 @@ speed_bump_enabled: false
 speed_bump_forward_buffer: 1.0
 speed_bump_backward_buffer: 1.0
 speed_bump_limit_speed: 1.0
+
+junction_enabled: false
+junction_forward_buffer: 1.0
+junction_backward_buffer: 1.0
+junction_limit_speed: 1.0
