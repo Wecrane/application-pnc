@@ -1,0 +1,7 @@
+grid_width: 60
+grid_height: 60
+resolution: 1.0
+threshold: 0.1
+min_pt_number: 3
+search_radius: 2
+height_threshold: 2.0

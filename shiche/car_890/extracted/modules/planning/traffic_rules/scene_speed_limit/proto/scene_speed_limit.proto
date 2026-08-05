@@ -1,0 +1,25 @@
+syntax = "proto2";
+
+package apollo.planning;
+
+message SceneSpeedLimitConfig {
+  optional bool crosswalk_enabled = 1 [default = true];
+  optional double crosswalk_forward_buffer = 2 [default = 5.0];
+  optional double crosswalk_backward_buffer = 3 [default = 2.0];
+  optional double crosswalk_limit_speed = 4 [default = 3.0];
+
+  optional bool traffic_light_enabled = 5 [default = true];
+  optional double traffic_light_forward_buffer = 6 [default = 8.0];
+  optional double traffic_light_backward_buffer = 7 [default = 2.0];
+  optional double traffic_light_limit_speed = 8 [default = 4.0];
+
+  optional bool speed_bump_enabled = 9 [default = true];
+  optional double speed_bump_forward_buffer = 10 [default = 3.0];
+  optional double speed_bump_backward_buffer = 11 [default = 1.0];
+  optional double speed_bump_limit_speed = 12 [default = 2.0];
+
+  optional bool junction_enabled = 13 [default = true];
+  optional double junction_forward_buffer = 14 [default = 5.0];
+  optional double junction_backward_buffer = 15 [default = 2.0];
+  optional double junction_limit_speed = 16 [default = 3.0];
+}

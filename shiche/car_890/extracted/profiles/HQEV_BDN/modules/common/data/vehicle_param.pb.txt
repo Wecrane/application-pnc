@@ -1,0 +1,27 @@
+vehicle_param {
+  # 车型名称
+  brand: DKIT
+  vehicle_id {
+      other_unique_id: "HQEV"        # 车型id
+  }
+  front_edge_to_center: 3.62    # 后轴中心到车辆前边缘距离
+  back_edge_to_center: 0.87    # 后轴中心到车辆后边缘距离
+  left_edge_to_center: 1.007    # 后轴中心到车辆左边缘距离
+  right_edge_to_center: 1.007    # 后轴中心到车辆右边缘距离
+ 
+  length: 4.49    # 整车长度
+  width: 2.014    # 整车宽度
+  height: 1.98   # 整车高度
+  min_turn_radius: 5.5    # 车辆最小转弯半径
+  max_acceleration: 2.0    # 车辆最大加速度
+  max_deceleration: -2.0    # 车辆最大减速度
+  max_steer_angle: 8.37333    # 车辆方向盘最大转角（弧度）
+#  max_steer_angle_rate: 6.97    # 车辆方向盘最大转速率（弧度/秒）
+  max_steer_angle_rate: 400.0
+  steer_ratio: 16.18    # 车辆方向盘到车前轮转角转换系数
+  wheel_base: 2.75    # 车辆前后轴距离
+  wheel_rolling_radius: 0.3341    # 车辆轮胎最小滚动半径
+  max_abs_speed_when_stopped: 0.1    # 车辆停车会最大绝对速度
+  brake_deadzone: 0.05    # 车辆刹车踏板无效区
+  throttle_deadzone: 0.05    # 车辆油门踏板无效区
+}
