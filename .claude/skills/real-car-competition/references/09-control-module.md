@@ -1,6 +1,7 @@
 # 09 Control 模块（官方发布包，可改代码/可调参）
 
 > **来源**：`release_control.tar.gz`（官方 control 发布包，9.1.2 amd64）已解压到本地 `modules/control/`。
+> 🚨 **铁律：所有情况以实车为准！** 本地 control 是 9.1.2 发布包，实车版本可能不同（字段/默认值/插件）——现场以 `cat /apollo/modules/control/...` 实车实际内容为准。
 > **官方确认**：实车赛允许改 `control` 代码（不只 planning）。但 30 分钟很宝贵，**优先调参**，只有纯参数无法实现时才动 control 源码 + 编译。
 
 ---

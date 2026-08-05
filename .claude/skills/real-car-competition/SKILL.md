@@ -6,6 +6,7 @@ description: 【最高优先级·实车挑战赛专属】百度 Apollo 星火大
 # 智能驾驶实车挑战赛 — 备赛与调参指南（最高优先级技能）
 
 > 本技能是所有 Apollo 技能中**优先级最高**的技能。用户进入实车赛备赛/参赛场景时**必须先触发本技能**。
+> ⚠️ **铁律：所有情况以实车为准！** 本技能所有参数值/默认值/赛题标准均基于仿真赛沉淀 + 官方资料推断，**实车代码版本、插件、配置、评分细则可能与文档不同**——现场先 `check_car.sh` 摸底、以实车实际行为/现场手册为准，文档仅作参考基线。
 > 实车赛核心原则：**优先只改配置文件（`profiles/`），尽量不动源码**。理论上所有赛题均可通过配置参数完赛拿满分。
 > - ✅ **只改配置**：`profiles/` 下的 pb.txt / planning.conf，改完**重启对应模块**即生效（**不用编译、不用 `aem profile use default`**）
 > - 🔄 **生效方式（官方确认）**：只改参数 → 改哪个模块就重启哪个模块（Dreamview+ 模块栏把该模块开关关掉再打开即可），全程不编译
@@ -281,8 +282,9 @@ aem bootstrap start --plus
 
 - [ ] 把 9 赛题方案（references/04）在官方原始代码+限速插件环境逐一验证（自己复现 Apollo EDU 9.1.1）
 - [ ] 现场确认限速插件已预装（`ls ~/apollo*/modules/planning/traffic_rules/scene_speed_limit`），并验证 traffic_rule_config 含 SCENE_SPEED_LIMIT
-- [ ] 准备好所有 conf 修改模板（3 个 stop_distance、限速插件配置、巡航速度），现场直接粘贴
-- [ ] 测试 SSH 连接、VS Code Remote-SSH、Dreamview 操作流程（8月5日实车体验时间）
+- [ ] 准备好所有 conf 修改模板（3 个 stop_distance、限速插件配置、巡航速度），现场直接粘贴（全参数表见 references/10）
+- [ ] 测试 SSH 连接、VS Code Remote-SSH、Dreamview 操作流程（8月5日实车体验时间；工具包见 references/07）
+- [ ] 熟读 references/08 调参手册：固定方案、七步定式、失效排查、30 分钟时间线
 - [ ] 制定 30 分钟时间分配：登录(2min) → 调参(10min) → 每赛题测试(2min×9=18min) 或按现场题量取舍
 - [ ] 准备回滚方案：记录每处修改，现场 git/备份，出问题快速还原
 
@@ -298,6 +300,8 @@ aem bootstrap start --plus
 | `references/04-scenario-tuning.md` | 9 赛题逐题调参方案（机制+配置+经验） |
 | `references/05-tuning-methodology.md` | 调参方法论、评分机制、实车差异、时间管理 |
 | `references/06-official-config-solutions.md` | **官方代码+限速插件环境**：9赛题插件矩阵、纯配置方案、官方默认值、与仿真魔改差异、开放问题 |
+| `references/07-car-connect-toolkit.md` | **连接工具包 car_connect**：8 个脚本、一键流程、官方环境搭建、插件下载/注册机制 |
+| `references/08-tuning-playbook.md` | **调参手册（详细定稿）**：参数速查表（调大调小效果）、9赛题固定方案、七步定式、失效排查、30分钟时间线、记录模板 |
 | `references/09-control-module.md` | **Control 模块**：本地 `modules/control/`（官方发布包）、control.conf/LQR/PID 配置体系、生效方式、何时才动 control |
 | `references/10-quick-tuning-guide.md` | **快速调参指南（全参数手册）**：Planning+Control 两模块全参数表（含 ⭐需手动添加的参数）、9 赛题速查、生效流程 |
 
