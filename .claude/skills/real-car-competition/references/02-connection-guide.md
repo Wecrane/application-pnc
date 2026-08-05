@@ -136,6 +136,33 @@ aem bootstrap start --plus    # 启动 Dreamview+
 4. **模块栏依次启动**：
    `Gnss Driver` → `RtkLocalization` → `Transform` → `LidarDriver` → `LidarPerception` → `Prediction` → `Planing` → `ExternalCmd` → `Canbus` → `SafetyManager` → `TaskManager`
    - 注意：若车不在地图内，先开进地图（感知会屏蔽道路外障碍物）
+
+### 4.1 调参后重启单个模块（官方确认：只改参数不用编译、不用 use default）
+
+> **核心原则**：改哪个模块就重启哪个模块，**不用编译、不用 `aem profile use default`**！
+> 改 `planning` 配置 → 重启 Planning；改 `control` 配置 → 重启 Control。
+
+**方式一（Dreamview+ 模块栏，推荐，最快）**：
+- 在模块栏中找到对应模块（如 `Planning` / `Control`），点开关**关掉 → 再打开**（stop → start）即完成重启，配置立即生效
+
+**方式二（命令行，可远程）**：
+```bash
+# 重启 Planning（改 planning 参数后）
+cyber_launch stop /apollo/modules/planning/planning_component/launch/planning.launch
+cyber_launch start /apollo/modules/planning/planning_component/launch/planning.launch
+# 重启 Control（改 control 参数后）
+cyber_launch stop /apollo/modules/control/launch/control.launch
+cyber_launch start /apollo/modules/control/launch/control.launch
+```
+
+**方式三（工具包一键）**：
+```bash
+bash shiche/car_connect/apply_config.sh planning   # 重启 Planning
+bash shiche/car_connect/apply_config.sh control    # 重启 Control
+```
+
+⚠️ **只有改 C++ 源码编译后**才需要 `aem profile use default` + 重启 Dreamview；纯参数修改完全不需要。
+
 5. 车辆可视化 → 点"路由编辑" → 设置途径点 → "保存编辑" → 点左下角"发送路由"（生成路线+规划轨迹）
 6. 系好主副驾安全带、关好 4 门、档位切 N 档 → 点左下角"自动驾驶"按钮
    - 状态由"自动驾驶"→"运行中"
