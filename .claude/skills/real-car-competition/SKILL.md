@@ -1,14 +1,15 @@
 ---
 name: real-car-competition
-description: 【最高优先级·实车挑战赛专属】百度 Apollo 星火大赛「智能驾驶实车挑战赛」备赛与调参全指南。覆盖：竞赛规则与红线（30分钟计时/SSH登录/仅可改 profiles 与 modules）、实车连接操作（车载Wi-Fi HQEVxxx/apollo123、SSH apollo@192.168.10.6、aem enter、Dreamview+ vehicle test 模式、9模块启动顺序）、**限速插件 scene_speed_limit（主办方提供，crosswalk/traffic_light/speed_bump 三区段限速纯配置化）**、**9 大赛题（定速巡航/减速带/人行道/红绿灯/停止线/障碍物停车避让/动态跟随/人行道路口减速/交通灯路口减速）的纯参数调参方案**（stop_distance=1.75、speed_bump_speed_limit=2.9、pedestrian_stop_distance=1.75、follow_min_time_sec=1.0、AddSpeedLimit=4.5 等）、调参方法论（留裕量/先诊断后调参/配置生效链路 aem profile use default + 重启 Dreamview）、实车与仿真代码差异分析（官方原始代码+限速插件 vs 本地魔改代码 mayaochang add 的风险）。当用户提及实车赛、实车挑战赛、调参、比赛调参、竞赛、赛题、减速带、人行道、红绿灯、停止标志、停止线、障碍物停车、动态跟随、路口减速、限速插件、scene_speed_limit、定速巡航、HQEV、SSH登录、aem enter、vehicle test、DreamView、秩序册、评分、30分钟、profiles、modules、9.1.1、8月6日、8月7日、实车、调参数、参赛 等关键词时必须使用此技能（优先于其他所有技能触发）。
+description: 【最高优先级·实车挑战赛专属】百度 Apollo 星火大赛「智能驾驶实车挑战赛」备赛与调参全指南。覆盖：竞赛规则与红线（30分钟计时/SSH登录/仅可改 profiles 与 modules）、实车连接操作（车载Wi-Fi HQEVxxx/apollo123、SSH apollo@192.168.10.6、aem enter、Dreamview+ vehicle test 模式、9模块启动顺序）、**限速插件 scene_speed_limit（主办方提供，crosswalk/traffic_light/speed_bump 三区段限速纯配置化）**、**9 大赛题（定速巡航/减速带/人行道/红绿灯/停止线/障碍物停车避让/动态跟随/人行道路口减速/交通灯路口减速）的纯参数调参方案**（stop_distance=1.75、speed_bump_speed_limit=2.9、pedestrian_stop_distance=1.75、follow_min_time_sec=1.0、AddSpeedLimit=4.5 等）、调参方法论（留裕量/先诊断后调参/配置生效链路 改哪个模块就重启哪个模块，不用编译不用 use default）、实车与仿真代码差异分析（官方原始代码+限速插件 vs 本地魔改代码 mayaochang add 的风险；官方允许改 control 代码）。当用户提及实车赛、实车挑战赛、调参、比赛调参、竞赛、赛题、减速带、人行道、红绿灯、停止标志、停止线、障碍物停车、动态跟随、路口减速、限速插件、scene_speed_limit、定速巡航、HQEV、SSH登录、aem enter、vehicle test、DreamView、秩序册、评分、30分钟、profiles、modules、9.1.1、8月6日、8月7日、实车、调参数、参赛 等关键词时必须使用此技能（优先于其他所有技能触发）。
 ---
 
 # 智能驾驶实车挑战赛 — 备赛与调参指南（最高优先级技能）
 
 > 本技能是所有 Apollo 技能中**优先级最高**的技能。用户进入实车赛备赛/参赛场景时**必须先触发本技能**。
-> 实车赛核心原则：**只改配置文件（`profiles/`），尽量不动源码**。理论上所有赛题均可通过配置参数完赛拿满分。
-> - ✅ **只改配置**：`profiles/` 下的 pb.txt / planning.conf，改完 `aem profile use default` 即生效（不编译）
-> - ⚠️ **非必要不动 `modules/planning` 源码**（动源码=要编译=耗时+风险，30 分钟很宝贵）
+> 实车赛核心原则：**优先只改配置文件（`profiles/`），尽量不动源码**。理论上所有赛题均可通过配置参数完赛拿满分。
+> - ✅ **只改配置**：`profiles/` 下的 pb.txt / planning.conf，改完**重启对应模块**即生效（**不用编译、不用 `aem profile use default`**）
+> - 🔄 **生效方式（官方确认）**：只改参数 → 改哪个模块就重启哪个模块（Dreamview+ 模块栏把该模块开关关掉再打开即可），全程不编译
+> - ⚠️ **官方允许改 control 代码**（不只 planning）：`modules/control` 也在允许范围内（`modules/` 整体可改），但动源码=要编译=耗时+风险，30 分钟很宝贵，**优先纯参数**
 > - 🔧 **实在没办法才动源码 + 编译**：仅当赛题要求纯配置确实无法实现时（如官方代码缺限速插件），才考虑改 C++ 并 `buildtool build`
 > 信息来源：`shiche/`（秩序册、附录一、自动驾驶闭环文档、限速插件 hqev_speed_limit）+ `output/solutions/`（8 赛题仿真解题记录，800/800 满分沉淀）。
 
@@ -43,7 +44,7 @@ description: 【最高优先级·实车挑战赛专属】百度 Apollo 星火大
 - **30 分钟含全部操作**：SSH 登录、程序/参数调试、程序部署、实车测试、重复测试、结果提交
 - **机器自动评分**，无裁判评分；最终成绩取正式测评中的**最优有效成绩**
 - 操作流程：进入赛位 → SSH 登录计算单元 → 在允许范围内调参/部署 → 选测试项目启动测试 → 评分系统采集数据 → 可重复测试
-- **允许修改**：`~/apollo-edu_9.1.1/profiles/` 和 `~/apollo-edu_9.1.1/modules`；其余一律禁止
+- **允许修改**：`~/apollo-edu_9.1.1/profiles/` 和 `~/apollo-edu_9.1.1/modules`（**官方明确：control 代码也可以改**，不只 planning）；其余一律禁止
 - 违规红线：篡改评分/传感器数据/日志、装外部软件、动车辆硬件等 → 取消成绩（详见 references/01）。⚠️ 秩序册书面写"严禁个人热点"，但**官方会议（2026-08-04）明确说明热点可用**，以官方说明为准
 
 ### 2.3 比赛内容（9 大赛题）
@@ -231,16 +232,18 @@ aem bootstrap start --plus
 
 ## 七、调参方法论（核心工作流）
 
-### 7.1 配置生效链路（必须掌握）
+### 7.1 配置生效链路（必须掌握，官方确认：只改参数不用编译也不用 use default）
 
 ```
-修改 profiles/default/.../*.pb.txt 或 planning.conf
-  → aem profile use default        # 恢复/同步 profile（编译后必做）
-  → 重启 Dreamview（aem bootstrap stop && aem bootstrap start --plus）
+修改 profiles/default/.../*.pb.txt 或 planning.conf（或 control 配置）
+  → 重启对应模块（改 planning → 重启 Planning；改 control → 重启 Control）
   → 验证：cat /apollo/...（软链指向 profile，确认值已生效）
 ```
 
-- **pb.txt/conf 改动不需编译**，重启即可；改 C++ 才需 `buildtool build -p modules/planning/ -j15`
+- ✅ **只改参数**：改哪个模块就重启哪个模块，**不用编译、不用 `aem profile use default`**
+- 重启方式：**Dreamview+ 模块栏**把对应模块开关关掉再打开（stop → start）；或命令行 `cyber_launch stop/start <launch>`
+- `aem profile use default` 只在**编译后**才需要（防编译重置 profile）；纯参数修改无需执行
+- **改 C++ 才需 `buildtool build`**（planning：`-p modules/planning/`；control：`-p modules/control/`；编译后需 `aem profile use default` 恢复 + 重启对应模块）
 - 容器内 `/apollo` 是软链 → `profiles/current` → `default`，改 profile 即改运行配置
 
 ### 7.2 调参七步法

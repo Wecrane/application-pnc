@@ -59,7 +59,7 @@
 
 ## 3. 9 赛题纯配置方案（官方 + 插件）
 
-> 通用：改配置 → `aem profile use default` → 重启/测试（**不编译**，除非装插件首次编译）
+> 通用：改配置 → 重启对应模块（不用编译、不用 use default）→ 测试（除非装插件首次编译）
 
 ### 赛题 0：定速巡航（≤11 km/h ≈ 3.06 m/s）
 ```text
@@ -155,7 +155,7 @@ traffic_light_backward_buffer: 2.0
 1. 连车 → `check_car.sh` → `backup_car.sh`
 2. 确认限速插件是否在车（`ls ~/apollo*/modules/planning/traffic_rules/scene_speed_limit`）
 3. 按"先限速类(1/7/8 插件) → 停车类(2/3/4 stop_distance) → 巡航(0) → 障碍类(5/6)"配配置
-4. 每改一组 `apply_config.sh` 生效 → 测试 → 看评分
+4. 每改一组配置 → 重启对应模块 → 测试 → 看评分
 5. **优先验证赛题 2**（6m 覆盖风险最大）和**赛题 5**（终点计分）
 
 ## 6. 需要现场确认的开放问题

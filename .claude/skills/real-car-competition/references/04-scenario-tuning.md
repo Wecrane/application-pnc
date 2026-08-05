@@ -2,8 +2,9 @@
 
 > 来源：`output/solutions/00~08_*.md`（仿真 800/800 满分沉淀）+ 限速插件分析
 > ⚠️ 实车赛题扣分标准以现场手册为准；仿真值作参考。**仿真限速类取值（≤5m/s 场景 4.5）与实车（≤1.5m/s）不同，实车限速取 1.2~1.4！**
-> ⚠️ **实车只调参不改代码 → 全程无需编译！** 改完配置 `aem profile use default` 即生效（仿真文档里的 `buildtool build` 步骤仅在改 C++ 源码时需要，实车赛基本不会发生）
+> ⚠️ **实车只调参不改代码 → 全程无需编译、无需 `aem profile use default`！** 改哪个模块就重启哪个模块即生效（仿真文档里的 `buildtool build` 步骤仅在改 C++ 源码时需要，实车赛基本不会发生）
 > 🔧 **分级策略（用户明确定义）**：① 只改 `profiles/` 配置（不编译）→ ② 非必要不动 `modules/planning` 源码 → ③ 实在无法实现才动源码+编译
+> ✅ **官方允许改 `control` 代码**（不只 planning），但动源码=编译=耗时+风险，优先纯参数
 
 ---
 
@@ -49,7 +50,7 @@ HD Map speed_bump_overlaps（路线 Lane_1962 上 SpeedBump_3/4）
 
 **经验**：
 - 留裕量原则：3.0 贴边有超调风险（2.9+0.2=3.1 超速）；2.5 保守 / 2.7 激进
-- 生效：改配置 → `aem profile use default` → 重启 Dreamview → 验证 `grep speed_bump_speed_limit /apollo/.../planning.conf`
+- 生效：改配置 → 重启 Planning 模块（Dreamview+ 模块栏关开）→ 验证 `grep speed_bump_speed_limit /apollo/.../planning.conf`
 
 ---
 
@@ -284,4 +285,4 @@ stop_follow_distance: 1.5
 1. **先解决会 0 分/超时的**：限速类（1/7/8，插件配置一次搞定）→ 停车距离类（2/3/4，stop_distance）→ 巡航（0）
 2. **再优化拿满**：5/6 看现场障碍类型再定
 3. **每改一个参数测一个赛题**（一次只改一个），记录结果
-4. 改配置 → `aem profile use default` → 重启 Dreamview → 测试 → 看评分
+4. 改配置 → 重启对应模块 → 测试 → 看评分

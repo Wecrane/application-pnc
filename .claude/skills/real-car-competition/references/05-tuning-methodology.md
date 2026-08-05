@@ -14,10 +14,11 @@
 | **profile 覆盖层** | `profiles/default/modules/planning/` | **比赛只改这层**（在允许修改范围内） |
 
 - 运行期实际读取 = 源码默认 + profile 覆盖（buildtool 构建时合成；容器内 `/apollo` 软链 → `profiles/current` → `default`）
-- **pb.txt/conf 改动不需编译**，`aem profile use default` + 重启 Dreamview 即生效
-- 改 C++ 源码/新增 proto 才需 `buildtool build -p modules/planning/ -j15`
-- ⚠️ **实车赛只调参不改代码 → 全程无需编译**，改配置后 `aem profile use default` 即可（见 car_connect/apply_config.sh）
+- **pb.txt/conf 改动不需编译**，改哪个模块就重启哪个模块即生效（**不用 `aem profile use default`**）
+- 改 C++ 源码/新增 proto 才需 `buildtool build -p modules/planning/ -j15`（control：`-p modules/control/`）
+- ⚠️ **实车赛只调参不改代码 → 全程无需编译**，改配置后**重启对应模块**即可（见 car_connect/apply_config.sh）
 - 🔧 **分级策略（用户明确定义）**：① 优先只改 `profiles/` 配置（不编译）→ ② 非必要不动 `modules/planning` 源码 → ③ 实在无法实现才动源码+编译
+- ✅ **官方允许改 `control` 代码**（不只 planning）：`modules/` 整体可改，但动源码=编译=耗时+风险，优先纯参数
 
 ### 1.2 关键配置文件位置
 
@@ -34,12 +35,21 @@
 | 路径权重 | `.../tasks/lane_follow_path/conf/default_conf.pb.txt` |
 | 速度平滑 | `.../tasks/piecewise_jerk_speed/conf/default_conf.pb.txt` |
 
-### 1.3 生效三步
+### 1.3 生效（只改参数：改哪个模块就重启哪个模块）
 
 ```bash
+# 只改参数时：不用编译、不用 aem profile use default！
+# 方式一（推荐）：Dreamview+ 模块栏，把对应模块开关关掉再打开（stop → start）
+#   改 planning 配置 → 重启 Planning 模块
+#   改 control 配置  → 重启 Control 模块
+# 方式二（命令行）：
+cyber_launch stop /apollo/modules/planning/planning_component/launch/planning.launch
+cyber_launch start /apollo/modules/planning/planning_component/launch/planning.launch
+cat /apollo/.../conf/default_conf.pb.txt            # 验证软链值已生效
+
+# ⚠️ 只有改 C++ 源码编译后才需要：
 aem profile use default        # 同步 profile（编译后必做，防配置丢失）
 aem bootstrap stop && aem bootstrap start --plus   # 重启 Dreamview
-cat /apollo/.../conf/default_conf.pb.txt            # 验证软链值已生效
 ```
 
 ---
@@ -123,7 +133,7 @@ cat /apollo/.../conf/default_conf.pb.txt            # 验证软链值已生效
 
 | 现象 | 可能原因 | 处理 |
 |------|---------|------|
-| 改配置不生效 | 没 `aem profile use default` / 没重启 / 改错文件（软链） | 三步验证：profile use → 重启 → cat 验证 |
+| 改配置不生效 | 没重启对应模块 / 改错文件（软链） | 重启对应模块 → cat 验证 |
 | 启动报未知 flag | 配置引用实车没有的 gflag（pedestrian_stop_distance 等） | 从官方默认配置起步，只加官方存在的 flag |
 | 停车距离不对 | stop_distance 不匹配 / 被 speed_decider 6m 覆盖 | 查 STOP reason_code（104 crosswalk / 1 车辆 / 2 终点） |
 | 超速 | 限速值贴边 / planning_upper_speed_limit 太低 | 限速值留裕量；勿把全局限速调低 |

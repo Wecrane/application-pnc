@@ -80,13 +80,16 @@ ssh car "cd ~/apollo-edu-9.1.1 && aem exec -- cat /apollo/.../planning.conf"
 
 ### 配置生效 / 重启（AI 或终端）—— 无需编译
 
+> **官方确认（2026-08-05）**：只改参数时，**改哪个模块就重启哪个模块**即可，**不用编译、不用 `aem profile use default`**！官方也允许改 control 代码（不只 planning）。
+
 ```bash
 # 改完配置一键生效（推荐）：
-bash shiche/car_connect/apply_config.sh
-# 手动方式：
+bash shiche/car_connect/apply_config.sh planning   # 改 planning 参数后 → 重启 Planning
+bash shiche/car_connect/apply_config.sh control    # 改 control 参数后  → 重启 Control
+# 手动方式（Dreamview+ 模块栏）：把对应模块开关关掉再打开（stop → start）
+# 若改了 C++ 源码编译后，才需要：
 ssh car "cd ~/apollo-edu-9.1.1 && aem profile use default"
-# 若配置未生效再重启 Dreamview：
-bash shiche/car_connect/apply_config.sh --restart
+# 全部重启：bash shiche/car_connect/apply_config.sh --restart-all
 # 浏览器：192.168.10.6:8888
 # ⚠️ 实车只调参 → 不要执行 buildtool build（仅改 C++ 源码才需要，实车赛基本不会）
 ```
