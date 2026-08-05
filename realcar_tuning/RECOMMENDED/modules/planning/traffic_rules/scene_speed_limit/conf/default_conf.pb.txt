@@ -1,12 +1,12 @@
 crosswalk_enabled: true            # 原 false → true（7上午/7下午减速带=Crosswalk_1 位置，开人行道区段限速）
-crosswalk_forward_buffer: 8.0      # 原 1.0 → 8.0（提前 8m 开始限速，2.8→0.8 平缓减速）
+crosswalk_forward_buffer: 8.0      # 原 1.0 → 8.0（提前 8m 开始限速，2.5→0.7 平缓减速）
 crosswalk_backward_buffer: 2.0     # 原 1.0 → 2.0（区域后 2m 恢复巡航）
-crosswalk_limit_speed: 0.8         # 原 1.0 → 0.8（评分减速带区域 ≤1.0，留 0.2 裕量）
+crosswalk_limit_speed: 0.7         # 原 1.0 → 0.7（评分减速带区域 ≤1.0，留 0.3 裕量）
 
 traffic_light_enabled: true        # 原 false → true（6上午/6下午减速带=Signal_1/Signal_6 位置，开信号灯区段限速）
 traffic_light_forward_buffer: 8.0  # 原 1.0 → 8.0（提前 8m 开始限速）
 traffic_light_backward_buffer: 2.0 # 原 1.0 → 2.0（区域后 2m 恢复巡航）
-traffic_light_limit_speed: 0.8     # 原 1.0 → 0.8（评分减速带区域 ≤1.0，留 0.2 裕量）
+traffic_light_limit_speed: 0.7     # 原 1.0 → 0.7（评分减速带区域 ≤1.0，留 0.3 裕量）
 
 speed_bump_enabled: false
 speed_bump_forward_buffer: 1.0

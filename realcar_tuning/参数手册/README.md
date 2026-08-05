@@ -20,7 +20,7 @@
 
 | 模块 | 关键参数 | 实车值 | 含义 |
 |------|---------|--------|------|
-| planning | `default_cruise_speed` | 5.0 | 巡航速度（评分 ≤3.0556，建议 3.0）⭐ |
+| planning | `default_cruise_speed` | 5.0 | 巡航速度（评分 ≤3.0556，**推荐 2.5** 留 0.56 裕量）⭐ |
 | planning | `planning_upper_speed_limit` | 5.0 | 全局限速（铁律 [1.5,5.1] 别动）⭐ |
 | crosswalk | `stop_distance` / `expand_s_distance` / `stop_timeout` | 0.10 / 0.0 / 3.0 | 人行道停车距离/检测区/等待超时 ⭐ |
 | traffic_light | `stop_distance` | 0.10 | 红灯停车距离 ⭐ |

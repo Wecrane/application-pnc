@@ -51,11 +51,11 @@
 | ⭐ crosswalk_enabled | false | `if (config_.crosswalk_enabled())` 才遍历 `map_path.crosswalk_overlaps()` 下发斑马线限速区 | 置 true→斑马线区段限速生效（实车赛题"人行道限速/减速带"用）。实车 false = 未启用（待赛前按赛题配置） |
 | ○ crosswalk_forward_buffer | 1.0 | 限速区起点 = `start_s - crosswalk_forward_buffer`（斑马线前提前量）。proto 默认 5.0 | 调大→更早进入限速区（减速更从容）；调小→更晚。实车 1.0 提前量很小（限速起点几乎贴斑马线，可能刹不及时，需按减速能力上调） |
 | ○ crosswalk_backward_buffer | 1.0 | 限速区终点 = `end_s + crosswalk_backward_buffer`（斑马线后保持量，防出区即加速）。proto 默认 2.0 | 调大→出斑马线后限速保持更久（防评分区超速）；实车 1.0 较小 |
-| ⭐ crosswalk_limit_speed | 1.0 | 斑马线限速值（m/s）。proto 默认 3.0 | 实车 1.0 对应"≤1.5m/s 减速带/人行道"的限速值；调大→更快（但超评分上限）；调小→更慢（耗时↑）。现场按评分上限 1.5 取 1.2~1.4 留裕量 |
+| ⭐ crosswalk_limit_speed | 1.0 | 斑马线限速值（m/s）。proto 默认 3.0 | 实车 1.0。**新版评分上限 1.0 → 推荐 0.7（留 0.3 裕量）**；旧版 4 题制上限 1.5 取 1.2~1.4 |
 | ⭐ traffic_light_enabled | false | 同上，遍历 `map_path.signal_overlaps()` 对信号灯区段限速 | 置 true→信号灯区段限速（实车赛题"交通灯路口减速/减速带"用）。实车 false |
 | ○ traffic_light_forward_buffer | 1.0 | 信号灯前提前量（proto 默认 8.0） | 同上，1.0 偏小 |
 | ○ traffic_light_backward_buffer | 1.0 | 信号灯后保持量（proto 默认 2.0） | 同上 |
-| ⭐ traffic_light_limit_speed | 1.0 | 信号灯区段限速值（proto 默认 4.0） | 实车 1.0（≤1.5 上限）；按现场调 1.2~1.4 |
+| ⭐ traffic_light_limit_speed | 1.0 | 信号灯区段限速值（proto 默认 4.0） | 实车 1.0。**新版评分上限 1.0 → 推荐 0.7（留 0.3 裕量）**；旧版取 1.2~1.4 |
 | ○ speed_bump_enabled | false | 遍历 `map_path.speed_bump_overlaps()` | ⚠️苏州正式图 speed_bump=0（减速带评分区=第 1 个信号灯/人行道位置），此区段**大概率无效**，减速带应靠 crosswalk/traffic_light 区段覆盖 |
 | ○ speed_bump_forward_buffer | 1.0 | 减速带前提前量（proto 默认 3.0） | 仅当图中有 speed_bump 才相关 |
 | ○ speed_bump_backward_buffer | 1.0 | 减速带后保持量（proto 默认 1.0） | 同上 |

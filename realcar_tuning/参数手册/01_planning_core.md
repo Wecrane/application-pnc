@@ -14,7 +14,7 @@
 | `--flagfile` | `/apollo/modules/common/data/global_flagfile.txt` | — | 引入全局 flagfile | 全局公共参数入口 |
 | `--traffic_rule_config_filename` | `/apollo/modules/planning/planning_component/conf/traffic_rule_config.pb.txt` | 相对路径 | TrafficRule 插件列表配置文件名 | 指定规则管线配置 ⭐ |
 | `--planning_upper_speed_limit` | **5.0** | 31.3 | 规划最大速度 (m/s)。`reference_line.cc::GetSpeedLimitFromS` 默认限速兜底，与车道限速取 min；`piecewise_jerk_speed_optimizer.cc:174` 与 cruise 取 min | **全局限速 18 km/h**。调大→车速上限提高；调小→更保守 ⭐（铁律 [1.5,5.1] 别动） |
-| `--default_cruise_speed` | 5.0 | 5.0 | 默认巡航速度。`frame.cc:185` 等无显式限速时取此值 | 各 Stage 默认目标速度 ⭐（评分 ≤3.0556，建议 3.0） |
+| `--default_cruise_speed` | 5.0 | 5.0 | 默认巡航速度。`frame.cc:185` 等无显式限速时取此值 | 各 Stage 默认目标速度 ⭐（评分 ≤3.0556，**推荐 2.5** 留 0.56 裕量） |
 | `--ignore_overlapped_obstacle` | true | ❌未定义 | **当前代码无此 gflags 定义**，遗留参数 | **no-op 无效果** △ |
 | `--prioritize_change_lane` | true | false | 变道优先级更高：`reference_line_provider.cc:624` 始终优先选有效变道路径 | 开启更积极变道绕行 ⭐ |
 | `--min_length_for_lane_change` | 5.0 | ❌未定义 | **当前代码无此定义**，旧版"变道路段最小长度" | no-op；现役为 `change_lane_min_length`(30.0 未设置) △ |

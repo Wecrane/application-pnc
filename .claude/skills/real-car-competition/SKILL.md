@@ -132,8 +132,8 @@ description: 【最高优先级·实车挑战赛专属】百度 Apollo 星火大
 | 4 | 停止标志停车 | `stop_distance` | stop_sign conf | 1.75 | 赛题 1~1.5m |
 | 5 | 障碍物停车 | `min_stop_distance_obstacle` | planning.conf | 6.0（默认） | 静态障碍 STOP 6m ≥2m 达标；无需改 |
 | 6 | 动态跟随 | `follow_min_time_sec` / `stop_follow_distance` | speed_decider conf | 1.0 / 1.5 | 缩短恢复迟滞 |
-| 7 | 人行道路口减速 | `crosswalk_limit_speed`（插件） | scene_speed_limit conf | 1.2~1.4（≤1.5 留裕量） | **实车插件方案**；无插件则需代码 |
-| 8 | 交通灯路口减速 | `traffic_light_limit_speed`（插件） | scene_speed_limit conf | 1.2~1.4 | **实车插件方案** |
+| 7 | 人行道路口减速 | `crosswalk_limit_speed`（插件） | scene_speed_limit conf | **0.7**（新版 ≤1.0 留 0.3；旧版 ≤1.5 用 1.2~1.4） | **实车插件方案**；无插件则需代码 |
+| 8 | 交通灯路口减速 | `traffic_light_limit_speed`（插件） | scene_speed_limit conf | **0.7**（新版 ≤1.0 留 0.3） | **实车插件方案** |
 
 > ⚠️ **仿真限速值 4.5 是仿真赛题（≤5m/s）的取值**；实车赛题是 **≤1.5 m/s**，插件限速值应取 **1.2~1.4**（留 0.1~0.3 裕量）！
 
@@ -308,7 +308,7 @@ aem bootstrap start --plus
 | `references/12-grading-rules.md` | **🚨 官方评分细则（一手资料）**：presets cruise_speed_check 铁律（[1.5,5.1] 越界判 0）、人行道/红灯停 1.0~1.5m、减速带区域限速 ≤1.0、4 场次赛题组合、DKIT 车辆参数、**苏州赛区 10 次真实评分数据（限速题最大丢分源）** |
 | `references/13-artifacts-deep-analysis.md` | **拷贝产物深度分析（源码级）**：评分引擎 handler 判定逻辑（crosswalk/red_light/speed/collision 源码）、苏州 score_history 10 次实测、4 场次赛道精确几何（减速带/人行道/信号灯坐标）、减速带实现机制（地图无 speed_bump）、容器默认 vs profile 覆盖、msg_adapter 场景注入评测机制 |
 | `references/14-suzhou-competition.md` | **🚨 苏州赛区专属（本队主战场）**：苏州 4 题制（road_speed/crosswalk_Crosswalk5/red_light_Signal1/stop_sign_StopSign1）、减速带限速 ≤1.5（非北京 1.0）、加速度 [-2,2]、苏州 score_history 10 次实测（限速题最大丢分源）、苏州测试场景（8 agent + Signal_1 绿5红15）、地图资源情况、苏州调参重点 |
-| `references/15-final-tuning-guide.md` | **🚨 最终调参指南（评分规则反推定稿）**：评分精确解析（cruise ≤3.0556 / 停车 [1.0,1.5] / 减速带 ≤1.0）+ 4 张地图赛道几何（speed_bump=0、减速带区=第1个信号灯/人行道位置、地图限速 5.5556）+ 推荐配置（default_cruise_speed=3.0、stop_distance=1.25、插件限速 0.8/8.0 buffer）+ 30 分钟操作流程 + 失效排查 + 现场风险清单 |
+| `references/15-final-tuning-guide.md` | **🚨 最终调参指南（评分规则反推定稿）**：评分精确解析（cruise ≤3.0556 / 停车 [1.0,1.5] / 减速带 ≤1.0）+ 4 张地图赛道几何（speed_bump=0、减速带区=第1个信号灯/人行道位置、地图限速 5.5556）+ 推荐配置（default_cruise_speed=2.5、planning_upper_speed_limit=4.5、stop_distance=1.25、插件限速 0.7/8.0 buffer）+ 30 分钟操作流程 + 失效排查 + 现场风险清单 |
 | `references/16-grading-details.md` | **🚨 评分细则（源码级）**：评分系统框架（metric 100 起扣/场景分 clamp/require_all_time_pass）+ cruise_speed_check 铁律 [1.5,5.1] + 4 场次 3 题组合 + 各 metric 逐动作判定（硬失败 100 / 软扣 20 / 超速 2 分每帧）+ 减速带区域坐标 + 场景定义（行人/灯序）+ 苏州 10 次实战丢分实证 + 扣分速查表 + 满分策略 |
 
 原始材料：
