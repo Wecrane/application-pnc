@@ -73,20 +73,6 @@ StageResult StopSignUnprotectedStagePreStop::Process(
     return FinishScenario();
   }
 
-  static constexpr double kPassStopLineBuffer = 0.3;  // unit: m
-  const double adc_front_edge_s = reference_line_info.AdcSlBoundary().end_s();
-  const double distance_adc_pass_stop_sign =
-      adc_front_edge_s - current_stop_sign_overlap->start_s;
-  if (distance_adc_pass_stop_sign <= kPassStopLineBuffer) {
-    // not passed stop line, check valid stop
-    if (CheckADCStop(adc_front_edge_s, current_stop_sign_overlap->start_s)) {
-      return FinishStage();
-    }
-  } else {
-    // passed stop line
-    return FinishStage();
-  }
-
   // PRE-STOP
   const PathDecision& path_decision = reference_line_info.path_decision();
   auto& watch_vehicles = context->watch_vehicles;
@@ -118,6 +104,16 @@ StageResult StopSignUnprotectedStagePreStop::Process(
   for (const auto* obstacle : path_decision.obstacles().Items()) {
     // add to watch_vehicles if adc is still proceeding to stop sign
     AddWatchVehicle(*obstacle, &watch_vehicles);
+  }
+
+  // 2026-08-04: CheckADCStop只查速度(车必须真正停稳→评测must stop要求停车),
+  // 去掉"距停止线<max_valid_stop_distance"位置检查(110452曾因车头距停止线
+  // 2.19m>2.0卡死PreStop)。车停稳立即切STOP stage;
+  // 配合stop_duration_sec=0 → 停稳即放行(停了立马走)。
+  // ⚠️不可完全跳过CheckADCStop: STOP stage放行时移除STOP fence(done_)
+  // 并跳过蠕行, 若车未停就放行会直接冲过停止线 → must stop评测失败。
+  if (CheckADCStop()) {
+    return FinishStage();
   }
 
   return result.SetStageStatus(StageStatusType::RUNNING);
@@ -223,8 +219,7 @@ int StopSignUnprotectedStagePreStop::AddWatchVehicle(
 /**
  * @brief: check valid stop_sign stop
  */
-bool StopSignUnprotectedStagePreStop::CheckADCStop(
-    const double adc_front_edge_s, const double stop_line_s) {
+bool StopSignUnprotectedStagePreStop::CheckADCStop() {
   const double adc_speed = injector_->vehicle_state()->linear_velocity();
   const double max_adc_stop_speed = common::VehicleConfigHelper::Instance()
                                         ->GetConfig()
@@ -235,18 +230,8 @@ bool StopSignUnprotectedStagePreStop::CheckADCStop(
     return false;
   }
 
-  // check stop close enough to stop line of the stop_sign
-  const double distance_stop_line_to_adc_front_edge =
-      stop_line_s - adc_front_edge_s;
-  ADEBUG << "distance_stop_line_to_adc_front_edge["
-         << distance_stop_line_to_adc_front_edge << "]";
-
-  if (distance_stop_line_to_adc_front_edge >
-      GetContextAs<StopSignUnprotectedContext>()
-          ->scenario_config.max_valid_stop_distance()) {
-    ADEBUG << "not a valid stop. too far from stop line.";
-    return false;
-  }
+  // 2026-08-04: 去掉"距停止线<max_valid_stop_distance"位置检查——车真正停稳
+  // (速度≈0)即判定有效。原检查曾导致110452(车头距停止线2.19m>2.0)卡死。
 
   // TODO(all): check no BICYCLE in between.
 

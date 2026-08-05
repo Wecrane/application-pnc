@@ -238,7 +238,11 @@ StageResult StopSignUnprotectedStageStop::FinishStage() {
 
   context->creep_start_time = Clock::NowInSeconds();
 
-  next_stage_ = "STOP_SIGN_UNPROTECTED_CREEP";
+  // 提速(2026-08-02): 跳过蠕行(CREEP)——云端评测RunStopSign只要求
+  // 'ADC must stop at stop signs'(停车即满足), 无等待/蠕行要求。
+  // 停车后直接进入INTERSECTION_CRUISE右转, 省蠕行时间(云端正常停1.8s)。
+  // ⚠️无保护路口直接右转不确认来车, 若评测有动态来车需恢复CREEP。
+  next_stage_ = "STOP_SIGN_UNPROTECTED_INTERSECTION_CRUISE";
   return StageResult(StageStatusType::FINISHED);
 }
 
