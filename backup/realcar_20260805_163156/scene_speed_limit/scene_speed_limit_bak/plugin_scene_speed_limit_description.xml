@@ -1,3 +1,0 @@
-<library path="modules/planning/traffic_rules/scene_speed_limit/libscene_speed_limit.so">
-    <class type="apollo::planning::SceneSpeedLimit" base_class="apollo::planning::TrafficRule"></class>
-</library>
