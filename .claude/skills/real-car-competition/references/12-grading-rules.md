@@ -199,5 +199,34 @@ throttle_deadzone: 0.05
 - `shiche/car_890/grading_console/auto_drive_console/` 全量（server.py / runtime.py / cyber_action.py 评分引擎源码，可研究实现）
 - 4 个场次场景 json（6/7号上午下午_1.json）
 - 17 个 metric json（全部赛题指标）
-- `records/score_history.json`（历史成绩，可能为空）
+- `records/score_history.json`（历史成绩）
 - `presets.json`（全局配置，含 cruise_speed_check 铁律）
+
+---
+
+## 8. 🚨 苏州赛区真实评分数据（score_history.json 10 次实测，2026-07-28）
+
+> 来源：`maps_tools/suzhou.tar.gz`（苏州赛区完整包，`/tmp/suzhou_x/auto_drive_console/records/score_history.json`）。
+> 苏州题型：road_speed（3.056 限速）+ crosswalk（Crosswalk_5）+ red_light（Signal_1）+ stop_sign（StopSign_1，0-2m）。
+
+| 时间 | 总分 | road_speed | crosswalk | red_light | stop_sign |
+|------|------|-----------|-----------|-----------|-----------|
+| 15:03 | 90.8 | 63.0 | 100 | 100 | 100 |
+| 15:14 | 54.2 | 17.0 | 100 | 100 | 0 |
+| 15:18 | 86.2 | 45.0 | 100 | 100 | 100 |
+| 16:19 | 25.0 | 0 | 0 | 100 | 0 |
+| 16:29 | 61.0 | 44.0 | 0 | 100 | 100 |
+| 17:48 | 33.3 | 0 | 0 | 100 | 0 |
+| 17:57 | 27.8 | 11.0 | 0 | 100 | 0 |
+| 18:11 | 58.5 | 34.0 | 100 | 100 | 0 |
+| 18:17 | 57.2 | 29.0 | 100 | 100 | 0 |
+| 18:21 | 59.5 | 38.0 | 100 | 100 | 0 |
+
+### 📊 决定性规律
+1. **red_light 10/10 全满分** —— 停车题只要停对位置就 100
+2. **road_speed（限速题）从不满分**（0~63）—— ⚠️ **超速是最大丢分源**！11km/h 限速极易超
+3. **crosswalk / stop_sign 各一半 100 一半 0** —— 停车时机/距离不稳
+4. 最高 90.8 也是被 road_speed=63 拖累 → **想拿高分必须攻克限速题**
+
+> 💡 苏州 road_speed ≈ 北京 cruise；北京还多"减速带区域限速"题（全 4 场次都有）。
+> 📄 评分引擎 handler 源码级判定逻辑、赛道几何、减速带机制见 **references/13-artifacts-deep-analysis.md**。
