@@ -126,7 +126,7 @@ aem bootstrap stop && aem bootstrap start --plus   # 重启 Dreamview
 | 阶段 | 时间 | 内容 |
 |------|------|------|
 | 连接 | ~2min | Wi-Fi → SSH → aem enter → bootstrap start --plus |
-| 摸底 | ~3min | 确认工程目录、profile 结构、限速插件是否在、traffic_rule 注册 |
+| 摸底 | ~3min | 确认工程目录、profile 结构、限速插件是否在（预计已预装）、traffic_rule 注册 |
 | 调参 | ~10min | 按赛题优先级改配置（限速类→停车类→巡航），一次一个 |
 | 测试 | ~15min | 逐赛题测试（9 题 × ~1.5min + 重启缓冲），重复测试取最优 |
 | 收尾 | ~2min | 保存、确认最优成绩、停止操作 |

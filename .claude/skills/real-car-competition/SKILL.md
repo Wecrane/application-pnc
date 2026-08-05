@@ -183,7 +183,8 @@ SceneSpeedLimit::ApplyRule()  // 每个规划周期执行
 
 ### 5.4 部署要点
 
-- 插件是独立包 `scene-speed-limit`（bazel 插件，`libscene_speed_limit.so`），需按官方方式安装/注册到 `traffic_rule_config.pb.txt`
+- ✅ **实车预计已预装编译好**（主办方提供，`SCENE_SPEED_LIMIT` 已在 `traffic_rule_config.pb.txt` 注册）→ 现场**只需确认路径存在，直接改配置即可**，无需自己注册/编译
+- ⚠️ 若现场确认实车**没有**插件（`ls ~/apollo*/modules/planning/traffic_rules/scene_speed_limit` 无结果）：才需手动安装 + 注册 `rule{name:"SCENE_SPEED_LIMIT",type:"SceneSpeedLimit"}` + 编译一次（见 references/03）
 - 与内置 crosswalk/traffic_light 规则**共存**：内置规则管"停车/避让"，插件只管"限速"，互不冲突
 - 优先级/冲突：`AddSpeedLimit` 取**更小的限速值**（speed_limit_decider 取所有限速最小值）→ 插件限速与其他限速并存时按最小生效
 
@@ -279,7 +280,7 @@ aem bootstrap start --plus
 ## 八、备赛清单（赛前必做）
 
 - [ ] 把 9 赛题方案（references/04）在官方原始代码+限速插件环境逐一验证（自己复现 Apollo EDU 9.1.1）
-- [ ] 确认限速插件安装方式、注册到 traffic_rule_config 的方法
+- [ ] 现场确认限速插件已预装（`ls ~/apollo*/modules/planning/traffic_rules/scene_speed_limit`），并验证 traffic_rule_config 含 SCENE_SPEED_LIMIT
 - [ ] 准备好所有 conf 修改模板（3 个 stop_distance、限速插件配置、巡航速度），现场直接粘贴
 - [ ] 测试 SSH 连接、VS Code Remote-SSH、Dreamview 操作流程（8月5日实车体验时间）
 - [ ] 制定 30 分钟时间分配：登录(2min) → 调参(10min) → 每赛题测试(2min×9=18min) 或按现场题量取舍

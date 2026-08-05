@@ -95,10 +95,13 @@ speed_bump_limit_speed: 1.0
 
 ## 6. 部署与生效
 
-1. 安装插件包（把 `scene_speed_limit` 目录放到 `modules/planning/traffic_rules/` 下，按官方插件安装流程构建注册）
-2. 注册到 TrafficRule 配置：`traffic_rule_config.pb.txt` 添加 `scene_speed_limit` 条目
+> ✅ **实车预计已预装编译好**（主办方提供，`traffic_rule_config.pb.txt` 已含 `SCENE_SPEED_LIMIT` 条目）——现场**直接改配置即可**，跳过 1-2 步。
+> ⚠️ 若现场确认实车**没有**插件（`ls ~/apollo*/modules/planning/traffic_rules/scene_speed_limit` 无结果）才走完整流程：
+
+1. （仅缺失时）安装插件包：把 `scene_speed_limit` 目录放到 `modules/planning/traffic_rules/` 下，按官方插件安装流程构建注册
+2. （仅缺失时）注册到 TrafficRule 配置：`traffic_rule_config.pb.txt` 添加 `rule{name:"SCENE_SPEED_LIMIT",type:"SceneSpeedLimit"}`
 3. 配置 `conf/default_conf.pb.txt`（或 profile 覆盖层）设置 enabled=true + 限速值
-4. 生效：**重启 Planning 模块**（Dreamview+ 模块栏关开，或 `apply_config.sh planning`）——不用编译、不用 `aem profile use default`（⚠️ 仅**首次安装插件**需要编译一次，之后纯调参只重启模块）
+4. 生效：**重启 Planning 模块**（Dreamview+ 模块栏关开，或 `apply_config.sh planning`）——不用编译、不用 `aem profile use default`
 5. 验证：`cat /apollo/modules/planning/traffic_rules/scene_speed_limit/conf/default_conf.pb.txt` 确认生效
 
 ## 7. 注意事项

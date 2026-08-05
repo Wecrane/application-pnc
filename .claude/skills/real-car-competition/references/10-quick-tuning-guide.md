@@ -178,7 +178,8 @@ bash shiche/car_connect/apply_config.sh control     # 改 control 相关
 ### 2.10 ⭐ SceneSpeedLimit（限速插件）赛题1/7/8 核心
 
 > 文件：`traffic_rules/scene_speed_limit/conf/default_conf.pb.txt` ｜ proto：`scene_speed_limit.proto`
-> ⚠️ **当前 traffic_rule_config.pb.txt 没有注册该规则**——需添加 `rule{name:"SCENE_SPEED_LIMIT",type:"SceneSpeedLimit"}` 并编译一次才生效（见 references/03）。
+> ✅ **实车预计已预装编译好**（主办方提供，SCENE_SPEED_LIMIT 已在 traffic_rule_config 注册）→ 现场确认后**直接改配置即可**，无需自己加注册项/编译。
+> ⚠️ 若现场确认实车**没有**该插件（`ls ~/apollo*/modules/planning/traffic_rules/scene_speed_limit` 无结果）：才需按 references/03 手动安装 + 添加 `rule{name:"SCENE_SPEED_LIMIT",type:"SceneSpeedLimit"}` + 编译一次。
 
 | 参数 | 当前值 | 源码默认 | 作用 |
 |------|--------|---------|------|
