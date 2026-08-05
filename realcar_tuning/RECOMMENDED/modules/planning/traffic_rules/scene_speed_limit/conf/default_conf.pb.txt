@@ -1,5 +1,5 @@
 crosswalk_enabled: true            # 原 false → true（7上午/7下午减速带=Crosswalk_1 位置，开人行道区段限速）
-crosswalk_forward_buffer: 8.0      # 原 1.0 → 8.0（提前 8m 开始限速，3.0→0.8 平缓减速）
+crosswalk_forward_buffer: 8.0      # 原 1.0 → 8.0（提前 8m 开始限速，2.8→0.8 平缓减速）
 crosswalk_backward_buffer: 2.0     # 原 1.0 → 2.0（区域后 2m 恢复巡航）
 crosswalk_limit_speed: 0.8         # 原 1.0 → 0.8（评分减速带区域 ≤1.0，留 0.2 裕量）
 

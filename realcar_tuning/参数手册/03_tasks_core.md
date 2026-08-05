@@ -3,6 +3,7 @@
 > 配置：`realcar_tuning/ORIGINAL/modules/planning/tasks/<task>/conf/default_conf.pb.txt`
 > 源码：`modules/planning/tasks/<task>/{proto,*.cc}`
 > 标注：⭐=比赛核心 ○=一般 △=无关/当前未生效
+> ⚠️ 本地 `modules/planning` 已恢复官方基线（2b48d5e）；正文"本地魔改"备注指恢复前版本，仅为历史对照
 
 ---
 
@@ -199,10 +200,10 @@
 
 | 参数 | 实车值 | 含义 | 备注 |
 |------|--------|------|------|
-| fallback_path_type | （原值） | 兜底路径类型 | ○ 主路径失败时用 |
+| extend_buffer | 0.5 | 兜底路径边界扩展缓冲（`FallbackPathConfig` 实际字段） | ○ 主路径失败时用；proto 仅 is_extend_lane_bounds_to_include_adc/extend_buffer/path_optimizer_config 三组字段 |
 
 ## 16. reuse_path（路径复用）○
 
 | 参数 | 实车值 | 含义 | 备注 |
 |------|--------|------|------|
-| reuse_path_valid_distance | （原值） | 路径复用有效距离 | ○ 上周期路径复用 |
+| enable_reuse_path_in_lane_follow | true | 车道跟随中启用上周期路径复用（`ReusePathConfig` 实际字段） | ○ 上周期路径复用；short_path_threshold 官方默认 60 未显式配置 |

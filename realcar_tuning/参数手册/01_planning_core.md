@@ -3,6 +3,7 @@
 > 配置：`realcar_tuning/ORIGINAL/modules/planning/planning_component/conf/`
 > 源码：`modules/planning/planning_base/gflags/planning_gflags.cc`、`planning_base/proto/`、`planning_open_space/proto/planner_open_space_config.proto`
 > 标注：⭐=比赛核心 ○=一般 △=无关/泊车
+> ⚠️ 本地 `modules/planning` 已恢复官方基线（2b48d5e）；正文中"本地魔改/本地竞赛代码"备注指恢复前 add5 版（备份于 backup/），仅为历史对照
 
 ---
 

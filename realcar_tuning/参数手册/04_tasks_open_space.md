@@ -3,6 +3,7 @@
 > 配置：`realcar_tuning/ORIGINAL/modules/planning/tasks/<task>/conf/default_conf.pb.txt`
 > 源码：`modules/planning/tasks/<task>/` + `planning_open_space/`
 > **总体结论**：16 个文件中除 pull_over_path / reverse_* / square_path / rss_decider 外，其余均为 **open_space 泊车/掉头专用**，与实车 9 赛题（车道内行驶）无关（△），**保持原值即可**。
+> ⚠️ 本地 `modules/planning` 已恢复官方基线（2b48d5e）；`open_space_fallback_decider_park.cc` 仍含基线自带 mayaochang 一处
 
 ---
 
@@ -122,9 +123,9 @@
 
 | 参数 | 实车值 | 含义 | 备注 |
 |------|--------|------|------|
-| pull_over_destination_to_adc_buffer | （原值） | 靠边点距自车缓冲 | ○ 靠边停车用 |
-| pull_over_destination_to_parking_point_buffer | （原值） | 终点到停车点缓冲 | ○ |
-| open_space_prediction_time_period | （原值） | 预测时间视界 | ○ |
+| pull_over_destination_to_adc_buffer | 4.0 | 靠边点距自车缓冲 | ○ 靠边停车用 |
+| pull_over_destination_to_pathend_buffer | 4.0 | 终点到路径末端缓冲（官方默认 10.0，实车改 4.0） | ○ |
+| pull_over_approach_lon_distance_adjust_factor | 1.6 | 靠边接近纵向距离调整系数（官方默认 1.5，实车改 1.6） | ○ |
 
 ## 13. reverse_path / reverse_speed（倒车路径/速度）△
 

@@ -1,7 +1,7 @@
 # 05 planning scenarios 17 个（回归代码版）
 
 > 配置：`realcar_tuning/ORIGINAL/modules/planning/scenarios/<scenario>/conf/`
-> 源码：`modules/planning/scenarios/<scenario>/`（⚠️ 本地含竞赛魔改，已标注）
+> 源码：`modules/planning/scenarios/<scenario>/`（✅ 已恢复官方基线 2b48d5e，无魔改）
 > 标注：⭐=比赛核心 ○=一般 △=无关/泊车
 
 ---
@@ -19,7 +19,7 @@
 
 | 参数 | 实车值 | 含义 | 影响/备注 |
 |------|--------|------|-----------|
-| start_stop_sign_scenario_distance | 15.0 | 车头到停止牌 ≤15m 进入场景 | 实车 15 > 默认 5 → 更早触发 ⭐ |
+| start_stop_sign_scenario_distance | 15.0 | 车头到停止牌 ≤15m 进入场景 | 实车 15 > 官方 conf 4.0 → 更早触发 ⭐ |
 | watch_vehicle_max_valid_stop_distance | 5.0 | 关联车道车辆距停止线 ≤5m 加入 watch | ⭐ |
 | max_valid_stop_distance | 6.0 | 官方判定有效停车距离 | ⚠️ 本地魔改已删位置检查，仅参考 ⭐ |
 | stop_duration_sec | 1.0 | STOP 等待时间 ≥1s 放行 | 调大→停更久 ⭐ |
@@ -52,7 +52,7 @@
 
 | 参数 | 实车值 | 含义 | 备注 |
 |------|--------|------|------|
-| start_traffic_light_scenario_distance | 5.0 | 进入场景距离 | ⭐ |
+| start_traffic_light_scenario_distance | 5.0 | 进入场景距离 | ⚠️ 实车 5 << 官方 conf 30.0（差异 6 倍，更晚进入红灯场景）⭐ |
 | approach_cruise_speed | 2.78 | Approach 限速 2.78 m/s 接近 | 调大→接近更快 ⭐ |
 | max_valid_stop_distance | 2.0 | 停止线判定距离（实车 2.0 < 默认 3.5） | ⭐ |
 | creep_timeout_sec | 10.0 | 蠕行超时 | ⭐ |
@@ -74,7 +74,7 @@
 | max_adc_speed_before_creep | 3.0 | 车速 >3.0 跳过蠕行 | 比左转保守 ⭐ |
 | creep_stage_config（3 项） | 6.0/0.1/15.0 | 蠕行判定 | ⭐ |
 
-**pipeline**：`APPROACH` → `CREEP` → `INTERSECTION_CRUISE`。
+**pipeline**：`STOP`（TrafficLightUnprotectedRightTurnStageStop）→ `CREEP` → `INTERSECTION_CRUISE`。
 
 ## 6. bare_intersection_unprotected（无保护裸路口）○
 
@@ -103,7 +103,7 @@
 | 参数 | 实车值 | 含义 | 备注 |
 |------|--------|------|------|
 | front_obstacle_buffer | 10.0 | 前方 10m 内非虚拟障碍即判被堵不能起步 | 实车 10 > 默认 4 → 起步更保守 ⭐ |
-| heading_buffer | 0.3 | 航向与参考线夹角 <0.1 rad 才起步 | 实车 0.3 < 默认 0.5 → 更严格 ⭐ |
+| heading_buffer | 0.3 | 航向与参考线夹角须 ∈ (-0.1, 0.3) rad 才起步（下限由 heading_buffer-0.2 硬编码） | 实车 0.3 < 默认 0.5 → 更严格 ⭐ |
 | min_dist_to_dest | 10.0 | 距目的地 >10m 才进入 ParkAndGo | 实车 10 < 默认 25 → 更易触发 ⭐ |
 | max_steering_percentage_when_cruise | 20.0 | 转角 <20% 才切 CRUISE | 实车 20 < 默认 90 → 要求方向回正 ⭐ |
 

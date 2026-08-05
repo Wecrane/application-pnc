@@ -81,7 +81,7 @@
 
 | 要点 | 说明 |
 |------|------|
-| 结构 | 数百行 `calibration { speed; acceleration; command }` 三元组（speed≈0~3 m/s、acceleration 从刹车-0.94 到油门 2.15、command 从 -36 到 +36%） |
+| 结构 | 212 行 `calibration { speed; acceleration; command }` 三元组（speed **0.0306~5.0** m/s、acceleration **-2.64~2.95** m/s²、command **-36.86~+100.0** %） |
 | 作用 | 把"期望加速度"映射为踏板指令 %（负=刹车，正=油门），纵向控制地基 |
 | 实车 | HQEV_BDN 专用标定（与车型强绑定） |
 | 标注 | **△ 绝对不动**（动了油门刹车映射全乱） |

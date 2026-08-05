@@ -3,6 +3,7 @@
 > 数据源：`realcar_tuning/ORIGINAL/modules/planning/traffic_rules/`（实车 HQEV_BDN 值）
 > 回归依据：`modules/planning/traffic_rules/<rule>/proto/*.proto` + `<rule>.cc` + `planning_base/common/util/common.cc`（BuildStopDecision）
 > 标注：⭐比赛核心 / ○一般 / △无关
+> ⚠️ 本地 `modules/planning` 已恢复官方基线（2b48d5e）；正文"本地竞赛代码"备注指恢复前 add5 版（备份于 backup/），仅为历史对照
 > 说明：实车跑的是**官方基线代码 + 限速插件**（无本地竞赛魔改）。本地竞赛代码中若存在硬编码覆盖（注释标出），只影响仿真，不影响实车；参数本身语义以官方逻辑为准。
 
 ---
@@ -28,7 +29,7 @@
 |------|--------|----------------------|-----------|
 | ⭐ enabled | true | `MakeDecisions` 开头：`if (!config_.enabled()) return;` 规则总开关。false 则不处理信号灯（不建 STOP、本地代码中也不下发绿灯限速） | 置 false→彻底忽略信号灯（危险，红绿灯赛题必挂）；置 true→红绿灯赛题生效。实车 true，保持 |
 | ⭐ stop_distance | 0.10 | 红灯/黄灯分支 `BuildStopDecision(vo_id, start_s, stop_distance, STOP_REASON_SIGNAL, ...)`；停车点 = 信号灯停止线 start_s - 0.10m。proto 默认 1.0，实车压到 0.10 | 调大→红灯停车离停止线更远；调小→更贴线。实车 0.10 几乎贴线停（红绿灯赛题停车区间若要求 1.0~1.5m 需留意：0.10 会停得很近，需按现场评分区间重标定，参考仿真经验 1.25） |
-| ○ max_stop_deceleration | 4.0 | 红/黄灯分支：`if (stop_deceleration > config_.max_stop_deceleration())` 表示"刹不住"→ **SKIP 红灯直接继续走**（忽略红灯）。proto 默认 4.0 | 调大→更晚刹车也会坚持停红灯；调小→更容易闯红灯（危险）。实车 4.0 = 默认。本地竞赛代码绿灯分支还有硬编码限速（见过红→10.7 / 未见过红→4.9），实车官方代码无 |
+| ○ max_stop_deceleration | 4.0 | 红/黄灯分支：`if (stop_deceleration > config_.max_stop_deceleration())` 表示"刹不住"→ **SKIP 红灯直接继续走**（忽略红灯）。proto 默认 4.0 | 调大→更晚刹车也会坚持停红灯；调小→更容易闯红灯（危险）。实车 4.0 = 默认。⚠️ 基线自带：`GREEN\|\|BLACK → continue`（绿灯/黑灯直接放行不建 STOP，绿灯题必要）；历史 add5 版曾有绿灯硬编码限速 10.7/4.9（已随恢复官方移除，见 backup） |
 
 ---
 
@@ -116,4 +117,4 @@
 
 | 参数 | 实车值 | 源码含义（回归代码） | 影响/备注 |
 |------|--------|----------------------|-----------|
-| △ backside_lane_width | 4.0 | `MakeLaneKeepingObstacleDecision`：对车后障碍（end_s < adc.start_s），若其横向投影与 `[-backside_lane_width, backside_lane_width]` 有交 → **不 ignore**（保留其约束，防被忽略后追尾/被插入）；横向完全在 ±4.0m 外才 ignore。proto 默认 4.0 | 调大→更多后方障碍不被忽略（更保守，变道/被超车时更谨慎）；调小→更多忽略（更激进）。实车 4.0 = 默认。直线赛题基本无影响 |
+| △ backside_lane_width | 4.0 | `MakeLaneKeepingObstacleDecision`（backside_vehicle.cc:81-93）：对车后/侧障碍（start_s < adc.end_s），若横向投影**与 [-w,w] 有交 → 加 ignore 决策**（忽略后方同车道车，防自车为它刹车）；横向**完全在 ±w 外（start_l>w ∥ end_l<-w）→ continue 不 ignore**（保留约束，防相邻车道车切入）。proto 默认 4.0 | 调大→更多障碍落入带内被忽略（**更激进**）；调小→更多保留约束（更保守）。实车 4.0=默认。直线赛题基本无影响 |
