@@ -5,8 +5,8 @@ modules/map/data
 docs/demo_guide/*.record
 .errors.log
 
-# 实车备份：只保留 tar.gz + 小配置（评分系统源码/脚本），解压大目录不入库
-shiche/car_890/extracted/modules/
+# 实车备份：只保留 tar.gz + 小配置（评分系统源码/脚本），解压大目录不入库（已加.前缀隐藏防buildtool扫描）
+shiche/car_890/.extracted/modules/
 shiche/car_890/replay_logs/
 shiche/car_890/selected_logs/
 shiche/car_890/maps_tools/
@@ -15,6 +15,9 @@ shiche/car_890/xh_bak/.XH_2026_bak/hehai_contest_*/
 shiche/car_890/xh_bak/.XH_2026_bak/modules/
 shiche/car_890/xh_bak/.XH_2026_bak/HQEV_BDN/
 shiche/car_890/xh_bak/.XH_2026_bak/0001_20260805_092032/
+shiche/car_890/.suzhou_extracted/
+backup/realcar_20260805_163156/.scene_speed_limit_bak/
+# 注: shiche/._extracted 已跟踪(主办方版插件源码)，改名保留不入ignore
 
 # ===== 2026-08-05 追加：构建缓存/日志/临时冗余不入库 =====
 # Bazel 构建缓存(符号链接不带斜杠)
@@ -26,8 +29,8 @@ bazel-*
 tools
 third_party/
 
-# 本地日志与运行时数据
-data/
+# 本地日志与运行时数据(仅根目录,避免误伤子目录data/)
+/data/
 dumps/
 
 # 旧代码与备份大目录
@@ -58,7 +61,6 @@ backup/realcar_20260804_223228/
 backup/realcar_20260805_163156/planning_current.tar.gz
 backup/realcar_20260805_163156/profiles_default.tar.gz
 shiche/car_890/car_more_logs.tar.gz
-shiche/car_890/suzhou_extracted/
 release-donglixue.tar.gz
 
 # buildtool安装缓存
