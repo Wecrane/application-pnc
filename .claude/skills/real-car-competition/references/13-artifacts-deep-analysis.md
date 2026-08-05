@@ -113,15 +113,15 @@ Metric ... Result ... Score ... Fail/Total
 1. **red_light 10/10 全满分** —— 红灯停车题最容易，只要停对位置就 100
 2. **road_speed（限速题）从不满分**（0~63）—— ⚠️ **超速扣分是最大丢分源**！11km/h 限速极易超
 3. **crosswalk 一半 100 一半 0** —— 不稳定，行人占用时停车时机/距离把握是关键
-4. **stop_sign 一半 100 一半 0** —— 停止牌题（北京无此题）同样不稳
+4. **stop_sign 一半 100 一半 0** —— 停止牌题同样不稳
 5. **最高分 90.8**（road_speed 63 拖后腿），**说明想拿 100 必须 road_speed 不丢分**
 
-### 💡 苏州 → 北京映射
-- 苏州 `road_speed`（3.056 限速 + 加速度 [-2,2]）≈ 北京 `cruise`（3.0556 + 加速度 [-3,2]）
-- 苏州 `crosswalk_pedestrian`（Crosswalk_5，1.0-1.5m）≈ 北京 crosswalk
-- 苏州 `red_light`（Signal_1，1.0-1.5m）≈ 北京 red_light
-- 苏州 `stop_sign`（0.0-2.0m）→ 北京无
-- **北京多一个"减速带区域限速"题（traffic_road_speed / crosswalk_road_speed）**，全 4 场次都有
+### 💡 苏州两套评分体系对照（hehai=河海=苏州）
+> ⚠️ 之前误以为存在"北京赛区"，实际 **hehai=河海=苏州**，两套评分都是本队的：
+- **旧版（7/28，suzhou.tar.gz，训练场"测试场星火测试2"）**：4 题制 `road_speed`（3.056+3减速带1.5）+ `crosswalk`（Crosswalk_5，1-1.5m）+ `red_light`（Signal_1，1-1.5m）+ `stop_sign`（StopSign_1，0-2m）
+- **新版（8/4，grading_console，正式图 hehai_contest_*_3）**：3 题/场次 `cruise`（3.0556+[-3,2]）+ `crosswalk`或`red_light`（1-1.5m）+ `减速带`（≤1.0，单独成题）
+- **差异关键**：旧版有 stop_sign、减速带 ≤1.5、加速度 [-2,2]；新版无 stop_sign、减速带 ≤1.0、加速度 [-3,2]
+- **现场确认用哪套**（见 14 文档 §4）
 
 ---
 
@@ -229,15 +229,15 @@ state_group: 绿(3) 保持 3s → 红(1) 保持 25s → 绿(3) 保持 100s
 
 ### 🎯 最大机会点（苏州数据支撑）
 1. **保住 red_light/crosswalk 满分**：把 stop_distance 调到 1.25，停车题稳拿 100
-2. **攻克限速题**：default_cruise_speed ≤3.0 + 减速带区域限速 —— 这是北京赛唯一"从不满分"的题，也是拉开差距的关键
+2. **攻克限速题**：default_cruise_speed ≤3.0 + 减速带区域限速 —— 这是苏州两套评分里唯一"从不满分"的题，也是拉开差距的关键
 3. **加速度注意**：急刹（<-3）会扣分，用 planning 的纵向加速度边界 [-2,2] 已经安全
 
 ---
 
 ## 8.5 🚨 实车日志全量分析（8/3 + 8/4，10 个 planning 日志）
 
-> ⚠️ **重要**：全部 10 个日志都在 **hehai（海驾）赛道**（start x=272589 y=3476107）——**不是河海/苏州赛道**！
-> 这辆车 8/3-8/4 用海驾比赛图测试（北京赛道训练）。**行为机制通用，但赛道不同**，河海赛道日志需补拷 hohai_contest_1 后现场测。
+> ✅ **重大确认（用户 2026-08-05）：`hehai` = 河海（苏州）！** 车 8/4 已在苏州 → 全部 10 个日志在 **hehai_contest（河海苏州正式赛道）** 上录制 = **苏州正式赛道实测数据！**（start x=272589 y=3476107 就是苏州河海赛道坐标）
+> 📊 此前的赛道几何（§4：Crosswalk_1/5、Signal_1、减速带位置）**就是苏州正式赛道布局**，可直接用于备赛。
 
 ### 8.5.1 全部 planning 日志批量分析
 
@@ -254,27 +254,27 @@ state_group: 绿(3) 保持 3s → 红(1) 保持 25s → 绿(3) 保持 100s
 | 8/4 19:28 | 19:28-19:36 | hehai | 100m | 1.03-1.81 / 1.55 | DEST 2270 | 巡航 |
 | 8/4 19:36 | 19:36-19:44 | hehai | 106m | 1.03-3.16 / 1.62 | DEST 2068 | 巡航 |
 
-### 8.5.2 🚨 关键机制发现（实车行为根因）
+### 8.5.2 🚨 关键机制发现（实车行为根因，苏州正式赛道）
 
 1. **信号灯/人行道被感知为 `UNKNOWN_UNMOVABLE` 静态障碍**（nudge_calculation.cc）
    - `build reference line st boundary. id:TL_Signal_1` + `NudgeCalculation: check obstacle id [TL_Signal_1], type [UNKNOWN_UNMOVABLE]`
    - ⚠️ **实车在 vehicle_test 模式下，信号灯/人行道被当成静态障碍**，不是走信号灯规则！比赛红灯题需确认场景注入后感知状态是否变为真实信号灯
 2. **🚨 Crosswalk 规则触发时急刹**（8/3 15:50，crosswalk.cc:392）：`stop_deceleration 4.9→6.9 m/s²`
-   - 根因：`stop_distance=0.1` 停太近 + 接近速度高 → 需要的减速度远超苏州评分下限 **-2.0** → 双重扣分
+   - 根因：`stop_distance=0.1` 停太近 + 接近速度高 → 需要的减速度远超苏州评分下限（旧版 -2.0 / 新版 -3.0）→ 双重扣分
 3. **SceneSpeedLimit 插件已加载但未启用**：加载时 `plugin have not been loaded` 警告（配置全 false）
 4. **停车原因 100% STOP_REASON_DESTINATION**：全部日志只有终点停车，无其他停车场景（测试未注入障碍/红灯）
 
-### 8.5.3 📊 苏州（河海）备赛启示
+### 8.5.3 📊 苏州备赛启示（✅ 日志=苏州正式赛道实测）
 
 | 发现 | 对苏州影响 |
 |------|-----------|
-| 巡航 ~1.5-1.6 m/s | ✅ 苏州 road_speed ≤3.056 完全安全，超速风险低 |
-| crosswalk 急刹 4.9-6.9 | 🚨 **苏州加速度下限 -2.0（比北京 -3.0 更严）→ 急刹扣分更狠**！stop_distance 必须调大 |
+| 巡航 ~1.5-1.6 m/s | ✅ 苏州 road_speed/cruise ≤3.056 完全安全，超速风险低 |
+| crosswalk 急刹 4.9-6.9 | 🚨 急刹扣分（加速度下限 -2.0 或 -3.0）→ **stop_distance 必须调大** |
 | 信号灯感知为静态障碍 | ⚠️ 苏州红灯题（Signal_1）需确认注入后感知为真实信号灯，否则不触发红灯规则 |
-| SceneSpeedLimit 未启用 | ⚠️ 苏州减速带限速 ≤1.5 需靠插件或手动限速（地图无 speed_bump 时插件无效） |
+| SceneSpeedLimit 未启用 | ⚠️ 苏州减速带限速（≤1.0 或 ≤1.5）需靠插件或手动限速（地图无 speed_bump 时插件无效） |
 | control 用 LatPlusController(LQR) | control.conf 已确认，无需动 |
 
-> 💡 8/3 record（13M）是完整真实驾驶回放，可在容器内 `cyber_recorder play` 复现；但它是海驾赛道，非河海。
+> 💡 8/3 record（13M）是**苏州正式赛道**完整真实驾驶回放，可在容器内 `cyber_recorder play` 复现。
 
 ---
 

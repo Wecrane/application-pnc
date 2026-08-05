@@ -1,12 +1,14 @@
 # 14 苏州赛区专属资料（🚨 本队主战场，2026-08-05 确认）
 
-> **背景**：本队参加的是**苏州赛区**，场地在 **🏫 河海大学**！评分体系、赛题、地图均与北京不同，以本文档为准。
-> **来源**：实车拷贝 `maps_tools/suzhou.tar.gz`（苏州赛区完整包）+ 本地 `Xh_2026_contest` 地图交叉验证。
-> **🚨 正式比赛地图 = `hohai_contest_1`（河海大学赛道）**，见 §5——该地图**未拷贝**，是补拷最高优先！
+> **背景**：本队参加的是**苏州赛区**，场地在 **🏫 河海大学**（Hohai）！
+> **🚨 关键拼写**：`hehai` = 河海（拼音）、`hohai` = 河海大学（英文 Hohai）——**都是河海/苏州**！
+> **✅ 苏州正式比赛图 = `hehai_contest_*_3`（已拷贝！）**；`hohai_contest_1` = 河海英文名拼写的另一版（未拷，补拷次优先）。
+> **🚨 日志（8/3-8/4）就是在 hehai_contest 正式赛道上实测的（车 8/4 已在苏州）**——苏州正式赛道实车数据已有！
+> **来源**：实车拷贝 `maps_tools/suzhou.tar.gz`（7/28 旧版评分）+ `grading_console`（8/4 新版评分）+ hehai_contest 地图 + 日志。
 
 ---
 
-## 1. 🚨 苏州 4 题制评分体系（与北京 3 题制不同）
+## 1. 🚨 苏州 4 题制评分体系（旧版 suzhou.tar.gz，训练场用）
 
 > 来源：`suzhou.tar.gz` → `auto_drive_console/metric/scenes.json` + 4 个赛题指标 json。
 
@@ -30,8 +32,8 @@
 | 减速带2 | x≈423685-423691, y≈4437965-4437987 | ~47-53m |
 | 减速带3 | x≈423721-423727, y≈4437969-4437990 | ~83-89m |
 
-> ⚠️ **苏州减速带限速 1.5 m/s**（北京是 1.0）——别用错值！
-> ⚠️ 苏州加速度下限 **-2.0**（北京 cruise 是 -3.0）→ 急刹更容易扣分，停车减速要更平缓！
+> ⚠️ **旧版减速带限速 1.5 m/s**（新版正式图是 1.0）——别用错值！
+> ⚠️ **旧版加速度下限 -2.0**（新版 cruise 是 -3.0）→ 旧版急刹更容易扣分，停车减速要更平缓！
 
 ---
 
@@ -84,59 +86,64 @@
 
 ---
 
-## 4. 苏州 vs 北京（差异速查）
+## 4. 苏州两套评分体系（都是本队要面对的）
 
-| 维度 | 苏州 | 北京海驾 |
+> ⚠️ 之前误以为 hehai_contest=北京，实际 **hehai=河海=苏州**！两套评分都是苏州的：
+> - **旧版（7/28，suzhou.tar.gz）**：4 题制，用训练场"测试场星火测试2"
+> - **新版（8/4，grading_console 升级版）**：presets 4 场次，用**正式图 hehai_contest_*_3**
+
+| 维度 | 新版 8/4（正式图 hehai_contest_*_3） | 旧版 7/28（训练场 测试场星火测试2） |
 |------|------|---------|
-| 题数 | **4 题制**（road_speed/crosswalk/red_light/stop_sign） | 3 题制（cruise/crosswalk或red_light/减速带） |
-| 停止牌 | ✅ 有（StopSign_1，0-2m） | ❌ 无 |
-| 减速带限速 | **≤1.5 m/s** | ≤1.0 m/s |
-| 加速度下限 | **-2.0** | -3.0 |
-| 限速题名称 | road_speed（含 3 个减速带区域） | cruise（减速带单独成题） |
-| 地图 | 测试场星火测试2（苏州测试场） | hehai_contest_*_3 |
-| 信号灯时序 | Signal_1 绿5→红15→绿100 | Signal_1 绿3→红25→绿100 |
+| 题数 | 3 题/场次（cruise + crosswalk或red_light + 减速带） | **4 题制**（road_speed/crosswalk/red_light/stop_sign） |
+| 停止牌 | ❌ 无 | ✅ 有（StopSign_1，0-2m） |
+| 减速带限速 | **≤1.0 m/s** | **≤1.5 m/s** |
+| 加速度下限 | cruise: [-3, 2] | **[-2.0, 2.0]** |
+| 限速题 | cruise（≤3.0556，减速带单独成题） | road_speed（≤3.056 + 3 减速带区域） |
+| 地图 | **hehai_contest_*_3（河海正式图，已拷）** | 测试场星火测试2（训练场，未拷） |
+| 信号灯时序 | Signal_1 绿3→红25→绿100 | Signal_1 绿5→红15→绿100 |
+
+> 🚨 **现场确认用哪套**：若比赛用正式图 hehai_contest_*_3（新版）→ 无停止牌题、减速带 ≤1.0；若用旧版 4 题制 → 含停止牌、减速带 ≤1.5。两套都要能过！
 
 ---
 
-## 5. 🚨 苏州地图资源情况（⚠️ 实车地图未拷贝，需补拷！）
+## 5. 🚨 苏州地图资源情况（正式图已拷，其余需补）
 
-### 5.1 🚨 苏州正式比赛地图 = hohai_contest_1（河海大学）
+### 5.1 ✅ 苏州正式比赛地图 = hehai_contest_*_3（河海，已拷！）
 
-- **用户确认：苏州赛区场地在河海大学** → 正式比赛地图是 **`hohai_contest_1`**（河海赛道）
-- 证据：实车 `global_flagfile.txt` 第 60 行 `--map_dir=/apollo/modules/map/data/hohai_contest_1`，且**加载顺序在 hehai 比赛图之前** → 这辆车实测过河海赛道
-- ⚠️ `hohai`（河海）≠ `hehai`（海驾）——是两个不同地图！别混淆
-- `hohai_contest_1` **未拷贝** → **补拷最高优先**
-- 苏州评分包（suzhou.tar.gz）场景注入用 "测试场星火测试2"（训练/测试场地），正式赛道以 hohai_contest_1 为准
+- **用户确认：hehai = 河海（苏州）**；车 8/4 已在苏州，日志就在 hehai_contest 上跑 → **hehai_contest_*_3 就是苏州正式比赛图，且已拷贝！**
+- 4 张：`hehai_contest_{6_am,6_pm,7_am,7_pm}_3`（base_map/routing/sim_map 齐全）
+- `hohai_contest_1` = 河海大学英文拼写（Hohai）的地图版本，`global_flagfile` 第 60 行出现过（加载在 hehai_contest 之前，可能是更早版本/验证版）→ **未拷贝，补拷次优先**（验证是否与 hehai_contest 同赛道）
+- "测试场星火测试2"（423xxx 坐标）= 训练场/另一场地，与正式图（272xxx 坐标）不同坐标系
 
-### 5.2 确认遗漏（2026-08-05 复盘）
-- 从实车拷贝时**只打包了 `data/map_data`（hehai_contest 4 张比赛图）**，未打容器地图目录 `/apollo/modules/map/data/`！
-- 苏州/海驾/河海地图**全部遗漏**，需下次连车补拷。
+### 5.2 已拷 vs 待补（2026-08-05 复盘）
+- ✅ 已拷：hehai_contest_*_3（苏州正式图，4 张）+ demo
+- ❌ 待补：hohai_contest_1、测试场星火测试2、slame-HaiDianJiaXiao-0827 系列（海淀驾校训练场）、test_cefang 等
 
 ### 5.3 车上地图完整清单（从已拷 global_flagfile.txt 归纳）
 
 | 地图 | 路径 | 是否已拷 | 价值 |
 |------|------|---------|------|
-| **hohai_contest_1** | /apollo/modules/map/data/ | ❌ | 🚨 **苏州正式比赛图（河海大学）**，最高优先 |
-| **slame-HaiDianJiaXiao-0827** | 同上 | ❌ | 苏州场景 json 引用的地图（localization 实载） |
-| slame-HaiDianJiaXiao-0827_1~_4 | 同上 | ❌ | 海驾 0827 变体 |
-| slame-HaiDianJiaXiao-0904_Sroad_area | 同上 | ❌ | 海驾 0904 |
-| slam_tf_haijia827 | 同上 | ❌ | 海驾 tf |
-| **test_cefang** | 同上 | ❌ | 测试车坊（可能河海测试场） |
+| **hehai_contest_{6_am,6_pm,7_am,7_pm}_3** | data/map_data/ | ✅ | 🚨 **苏州正式比赛图（河海拼音），4 张已拷** |
+| **hohai_contest_1** | /apollo/modules/map/data/ | ❌ | 河海英文名版（可能旧版/同赛道），**补拷次优先** |
+| **slame-HaiDianJiaXiao-0827** | 同上 | ❌ | 海淀驾校训练场（苏州场景 json 引用） |
+| slame-HaiDianJiaXiao-0827_1~_4 | 同上 | ❌ | 海淀 0827 变体 |
+| slame-HaiDianJiaXiao-0904_Sroad_area | 同上 | ❌ | 海淀 0904 |
+| slam_tf_haijia827 | 同上 | ❌ | 海淀 tf |
+| **test_cefang** | 同上 | ❌ | 测试车坊（可能苏州测试场） |
 | 海淀大圈 | 同上 | ❌ | 中文名地图 |
 | AnnotatedMap_202607291120 | 同上 | ❌ | 标注地图 |
 | apollo_virutal_map / sunnyvale_big_loop / demo | 同上 | ❌(demo已拷) | 通用 |
-| hehai_contest_{6_am,6_pm,7_am,7_pm}_3 | data/map_data/ | ✅ | 北京比赛图（非本队） |
 
-> 💡 `global_flagfile.txt` 的 `--map_dir` 按时间顺序记录了实车加载过的地图：demo → 海驾 0904/0827 → test_cefang → 海淀大圈 → AnnotatedMap → **hohai_contest_1** → hehai_contest 比赛图。hohai 出现 1 次且在比赛图之前 → 河海赛道是实车近期实测的正式赛道。
+> 💡 `global_flagfile.txt` 的 `--map_dir` 按时间顺序：demo → 海淀 0904/0827 → test_cefang → 海淀大圈 → AnnotatedMap → **hohai_contest_1** → hehai_contest 比赛图。说明实车先加载过河海英文名版（hohai_contest_1），后切到正式比赛图（hehai_contest_*_3，8/3-8/4 日志实证）。
 
-### 5.4 补拷命令（下次连车执行，hohai_contest_1 最优先）
+### 5.4 补拷命令（下次连车执行，hohai_contest_1 次优先）
 ```bash
 # 1. 查看车上地图目录确认
 ssh car "ls /apollo/modules/map/data/ 2>/dev/null; ls /apollo_workspace/data/map_data/ 2>/dev/null"
 
-# 2. 打包河海(正式比赛)+苏州/海驾相关地图
+# 2. 打包待补地图（hohai_contest_1 + 训练场/测试场）
 ssh car "cd /apollo/modules/map/data && tar czf /tmp/car_maps_suzhou.tar.gz \
-  hohai_contest_1 slame-HaiDianJiaXiao-0827* slam_tf_haijia827 slame-HaiDianJiaXiao-0904_Sroad_area \
+  hohai_contest_1 测试场星火测试2 slame-HaiDianJiaXiao-0827* slam_tf_haijia827 slame-HaiDianJiaXiao-0904_Sroad_area \
   test_cefang 海淀大圈 AnnotatedMap_202607291120 2>/dev/null; ls -lh /tmp/car_maps_suzhou.tar.gz"
 
 # 3. 下载到本地
@@ -146,7 +153,7 @@ scp car:/tmp/car_maps_suzhou.tar.gz ~/application-pnc/shiche/car_890/
 ssh car "rm -f /tmp/car_maps_suzhou.tar.gz"
 ```
 
-> ⚠️ 拿到 hohai_contest_1 后：解析赛道几何（减速带/人行道/信号灯/停止牌位置），与苏州 4 题制评分目标（Crosswalk_5/Signal_1/StopSign_1）对照，确认正式赛道布局。
+> ✅ **hehai_contest_*_3（正式图）已拷**，可直接解析赛道几何；hohai_contest_1 补拷后验证是否同赛道。赛道几何见 **13 文档 §4**（Crosswalk_1/5、Signal_1、减速带精确位置）。
 
 ### 5.5 本地可用资源
 - 本地 `data/map_data/Xh_2026_contest/`（2026 星火大赛官方地图）**坐标系一致**（left=423223, top=4438490，覆盖苏州场景坐标），但**元素位置不同**（Signal_1/StopSign_1/Crosswalk_5 不在场景沿线）→ 仿真赛道图，非实车测试场图
@@ -180,4 +187,4 @@ ssh car "rm -f /tmp/car_maps_suzhou.tar.gz"
 - 苏州注入测试日志：同包 `records/scenario_injection.log`（⚠️ 曾报 "Traffic light not found on map" 注入失败）
 - 苏州测试场景：同包 `scenario_injection/1.json`（8 agent + Signal_1/Signal_3）
 - 改造 msg_adapter 源码：同包 `modules/perception/msg_adapter/`（场景注入核心，需编译感知）
-- 评分引擎：同包 `grading_system_py/`（与北京相同，含 stop_sign_stop_handler）
+- 评分引擎：同包 `grading_system_py/`（两套评分共用，含 stop_sign_stop_handler）

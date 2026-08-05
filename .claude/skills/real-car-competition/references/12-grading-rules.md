@@ -228,5 +228,5 @@ throttle_deadzone: 0.05
 3. **crosswalk / stop_sign 各一半 100 一半 0** —— 停车时机/距离不稳
 4. 最高 90.8 也是被 road_speed=63 拖累 → **想拿高分必须攻克限速题**
 
-> 💡 苏州 road_speed ≈ 北京 cruise；北京还多"减速带区域限速"题（全 4 场次都有）。
+> 💡 新版（正式图 hehai_contest_*_3）的 cruise ≈ 旧版 road_speed；两套都是苏州的（见 14 文档 §4）。
 > 📄 评分引擎 handler 源码级判定逻辑、赛道几何、减速带机制见 **references/13-artifacts-deep-analysis.md**。
