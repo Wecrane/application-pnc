@@ -1,0 +1,28 @@
+{
+    "_comment": "6号下午 赛道1 多场景清单。",
+    "boundary_mode": "full",
+    "map_file": "/apollo_workspace/data/map_data/hehai_contest_6_pm_3/base_map.bin",
+    "vehicle_param_file": "dkit_vehicle_param.pb.txt",
+    "scenes": [
+        {
+            "id": "red_light",
+            "config": "6号下午_1号赛道_red_light.json",
+            "scope": "red_light",
+            "scope_ids": [
+                "Signal_1"
+            ],
+            "scope_forward_distance": 80.0,
+            "scope_past_distance": 8.0
+        },
+        {
+            "id": "cruise",
+            "config": "6号下午_1号赛道_cruise.json",
+            "scope": "full"
+        },
+        {
+            "id": "traffic_road_speed",
+            "config": "6号下午_1号赛道_traffic_road_speed.json",
+            "scope": "full"
+        }
+    ]
+}

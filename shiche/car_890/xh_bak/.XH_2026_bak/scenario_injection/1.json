@@ -1,0 +1,268 @@
+{
+    "type": "worldsim",
+    "ticketId": "scenario_1784529441843",
+    "name": "海驾-ALL",
+    "mapId": "haijiaxinghuo",
+    "tags": [
+        "Straight Road",
+        "Traveling straight in a through lane",
+        "Pedestrian",
+        "Motor Vehicle"
+    ],
+    "category": "private",
+    "description_en_tokens": [
+        "海驾-ALL"
+    ],
+    "scenario": {
+        "map_dir": "modules/map/data/测试场星火测试2",
+        "start": {
+            "x": 423637.8116987011,
+            "y": 4437969.96574513,
+            "heading": 0.08550528883686781
+        },
+        "end": {
+            "x": 423813.31690301385,
+            "y": 4437985.180306605
+        },
+        "simulator_time": 120,
+        "deselect_default_metric": [
+            "Checkpoint"
+        ],
+        "base_grade_config_file": "grading_system/conf/grading_metrics_default.conf",
+        "agent": [
+            {
+                "trigger_type": 0,
+                "width": 1,
+                "length": 1,
+                "height": 1.8,
+                "motiontype": 2,
+                "start_distance": 40,
+                "type": 2,
+                "id": "1295",
+                "start_position": {
+                    "x": 423725.11502881977,
+                    "y": 4437967.625155876,
+                    "speed": 0.4
+                },
+                "tracked_point": [
+                    {
+                        "x": 423722.89395715133,
+                        "y": 4437991.281161207,
+                        "speed": 0.4
+                    }
+                ]
+            },
+            {
+                "trigger_type": 0,
+                "width": 1,
+                "length": 1,
+                "height": 1.8,
+                "motiontype": 2,
+                "start_distance": 40,
+                "type": 2,
+                "id": "1485",
+                "start_position": {
+                    "x": 423725.11502881977,
+                    "y": 4437967.625155876,
+                    "speed": 0.7
+                },
+                "tracked_point": [
+                    {
+                        "x": 423722.89395715133,
+                        "y": 4437991.281161207,
+                        "speed": 0.7
+                    }
+                ]
+            },
+            {
+                "trigger_type": 0,
+                "width": 1,
+                "length": 1,
+                "height": 1.8,
+                "motiontype": 2,
+                "start_distance": 40,
+                "type": 2,
+                "id": "1496",
+                "start_position": {
+                    "x": 423725.85165574384,
+                    "y": 4437967.230138089,
+                    "speed": 0.5
+                },
+                "tracked_point": [
+                    {
+                        "x": 423723.559068846,
+                        "y": 4437990.57293975,
+                        "speed": 0.5
+                    }
+                ]
+            },
+            {
+                "trigger_type": 0,
+                "width": 1,
+                "length": 1,
+                "height": 1.8,
+                "motiontype": 2,
+                "start_distance": 30,
+                "type": 2,
+                "id": "1497",
+                "start_position": {
+                    "x": 423725.69002381986,
+                    "y": 4437967.386866327,
+                    "speed": 0.7
+                },
+                "tracked_point": [
+                    {
+                        "x": 423724.6782738664,
+                        "y": 4437991.0090616755,
+                        "speed": 0.7
+                    }
+                ]
+            },
+            {
+                "trigger_type": 0,
+                "width": 1,
+                "length": 1,
+                "height": 1.8,
+                "motiontype": 2,
+                "start_distance": 30,
+                "type": 2,
+                "id": "2497",
+                "start_position": {
+                    "x": 423725.69002381986,
+                    "y": 4437967.386866327,
+                    "speed": 0.6
+                },
+                "tracked_point": [
+                    {
+                        "x": 423724.6782738664,
+                        "y": 4437991.0090616755,
+                        "speed": 0.6
+                    }
+                ]
+            },
+            {
+                "trigger_type": 0,
+                "width": 1,
+                "length": 1,
+                "height": 1.8,
+                "motiontype": 2,
+                "start_distance": 30,
+                "type": 2,
+                "id": "1668",
+                "start_position": {
+                    "x": 423724.43157009693,
+                    "y": 4437967.6385819595,
+                    "speed": 0.8
+                },
+                "tracked_point": [
+                    {
+                        "x": 423722.19515352475,
+                        "y": 4437990.1530285785,
+                        "speed": 0.8
+                    }
+                ]
+            },
+            {
+                "trigger_type": 0,
+                "width": 1,
+                "length": 1,
+                "height": 1.8,
+                "motiontype": 2,
+                "start_distance": 30,
+                "type": 2,
+                "id": "1668",
+                "start_position": {
+                    "x": 423724.43157009693,
+                    "y": 4437967.6385819595,
+                    "speed": 1
+                },
+                "tracked_point": [
+                    {
+                        "x": 423722.19515352475,
+                        "y": 4437990.1530285785,
+                        "speed": 1
+                    }
+                ]
+            },
+            {
+                "trigger_type": 0,
+                "width": 2,
+                "length": 5,
+                "height": 1.5,
+                "motiontype": 2,
+                "start_distance": 15,
+                "type": 0,
+                "id": "9237",
+                "start_position": {
+                    "x": 423732.4738145174,
+                    "y": 4437977.816831089,
+                    "speed": 1,
+                    "heading": 0.13457444943485983
+                },
+                "tracked_point": [
+                    {
+                        "x": 423807.9111011374,
+                        "y": 4437985.34611346,
+                        "speed": 1
+                    },
+                    {
+                        "x": 423818.5378481354,
+                        "y": 4437985.780857975,
+                        "speed": 1
+                    }
+                ]
+            }
+        ],
+        "traffic_lights": [
+            {
+                "id": "Signal_1",
+                "location": {
+                    "x": 423709.586871,
+                    "y": 4437971.739743
+                },
+                "initial_state": {
+                    "color": 3
+                },
+                "state_group": [
+                    {
+                        "color": 3,
+                        "keep_time": 5
+                    },
+                    {
+                        "color": 1,
+                        "keep_time": 15
+                    },
+                    {
+                        "color": 3,
+                        "keep_time": 100
+                    }
+                ],
+                "trigger_type": 1,
+                "trigger_value": 50
+            },
+            {
+                "id": "Signal_3",
+                "location": {
+                    "x": 423701.497871,
+                    "y": 4437977.926486
+                },
+                "initial_state": {
+                    "color": 1
+                },
+                "state_group": [
+                    {
+                        "color": 1,
+                        "keep_time": 50
+                    },
+                    {
+                        "color": 3,
+                        "keep_time": 100
+                    }
+                ],
+                "trigger_type": 1,
+                "trigger_value": 30
+            }
+        ],
+        "drive_action_config": []
+    }
+}

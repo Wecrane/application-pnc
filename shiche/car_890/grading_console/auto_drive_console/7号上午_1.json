@@ -1,0 +1,62 @@
+{
+  "type": "worldsim",
+  "ticketId": "scenario_1785661463116",
+  "name": "7号上午_1",
+  "mapId": "hehai_contest_7_am_3",
+  "tags": [
+    "Straight Road",
+    "Traveling straight in a through lane",
+    "Pedestrian",
+    "Motor Vehicle"
+  ],
+  "category": "private",
+  "descEn": "7号上午比赛",
+  "description_en_tokens": [
+    "7号上午_1"
+  ],
+  "scenario": {
+    "map_dir": "modules/map/data/hehai_contest_7_am_3",
+    "start": {
+      "x": 272589.88041370973,
+      "y": 3476108.4951679576
+    },
+    "end": {
+      "x": 272594.16429722705,
+      "y": 3476211.376412994
+    },
+    "simulator_time": 120,
+    "deselect_default_metric": [
+      "Checkpoint"
+    ],
+    "base_grade_config_file": "grading_system/conf/grading_metrics_default.conf",
+    "traffic_lights": [
+      {
+        "id": "Signal_1",
+        "location": {
+          "x": 272591.2517,
+          "y": 3476172.0711000003
+        },
+        "initial_state": {
+          "color": 3
+        },
+        "state_group": [
+          {
+            "color": 3,
+            "keep_time": 3
+          },
+          {
+            "color": 1,
+            "keep_time": 25
+          },
+          {
+            "color": 3,
+            "keep_time": 100
+          }
+        ],
+        "trigger_type": 1,
+        "trigger_value": 30
+      }
+    ],
+    "drive_action_config": []
+  }
+}

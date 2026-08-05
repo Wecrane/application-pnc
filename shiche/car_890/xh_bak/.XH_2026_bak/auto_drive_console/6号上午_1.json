@@ -1,0 +1,171 @@
+{
+  "type": "worldsim",
+  "ticketId": "scenario_1785661463116",
+  "name": "6号上午_1",
+  "mapId": "hehai_contest_6_am_3",
+  "tags": [
+    "Straight Road",
+    "Traveling straight in a through lane",
+    "Pedestrian",
+    "Motor Vehicle"
+  ],
+  "category": "private",
+  "descEn": "6号上午比赛",
+  "description_en_tokens": [
+    "6号上午_1"
+  ],
+  "scenario": {
+    "map_dir": "modules/map/data/hehai_contest_6_am_3",
+    "start": {
+      "x": 272589.88041370973,
+      "y": 3476108.4951679576
+    },
+    "end": {
+      "x": 272594.16429722705,
+      "y": 3476211.376412994
+    },
+    "simulator_time": 120,
+    "deselect_default_metric": [
+      "Checkpoint"
+    ],
+    "base_grade_config_file": "grading_system/conf/grading_metrics_default.conf",
+    "agent": [
+      {
+        "trigger_type": 0,
+        "width": 1,
+        "length": 1,
+        "height": 1.8,
+        "motiontype": 2,
+        "start_distance": 35,
+        "type": 2,
+        "id": "5844",
+        "start_position": {
+          "x": 272590.6787517878,
+          "y": 3476169.900723251,
+          "speed": 1,
+          "heading": 3.141592653589793
+        },
+        "tracked_point": [
+          {
+            "x": 272583.98043376213,
+            "y": 3476169.496700231,
+            "speed": 1
+          }
+        ]
+      },
+      {
+        "trigger_type": 0,
+        "width": 1,
+        "length": 1,
+        "height": 1.8,
+        "motiontype": 2,
+        "start_distance": 25,
+        "type": 2,
+        "id": "6840",
+        "start_position": {
+          "x": 272584.2251949002,
+          "y": 3476169.492843861,
+          "speed": 0.6,
+          "heading": 0.06710865860281577
+        },
+        "tracked_point": [
+          {
+            "x": 272591.0764086326,
+            "y": 3476169.6824794374,
+            "speed": 0.6
+          }
+        ]
+      },
+      {
+        "trigger_type": 0,
+        "width": 1,
+        "length": 1,
+        "height": 1.8,
+        "motiontype": 2,
+        "start_distance": 20,
+        "type": 2,
+        "id": "6841",
+        "start_position": {
+          "x": 272590.99082809186,
+          "y": 3476169.324494166,
+          "speed": 0.5,
+          "heading": 3.141592653589793
+        },
+        "tracked_point": [
+          {
+            "x": 272584.2638676873,
+            "y": 3476169.8664188483,
+            "speed": 0.5
+          }
+        ]
+      },
+      {
+        "trigger_type": 0,
+        "width": 1,
+        "length": 1,
+        "height": 1.8,
+        "motiontype": 2,
+        "start_distance": 15,
+        "type": 2,
+        "id": "6844",
+        "start_position": {
+          "x": 272590.80992145906,
+          "y": 3476169.1698409566,
+          "speed": 0.5,
+          "heading": 3.141592653589793
+        },
+        "tracked_point": [
+          {
+            "x": 272583.54779421265,
+            "y": 3476169.450509104,
+            "speed": 0.5
+          }
+        ]
+      },
+      {
+        "trigger_type": 0,
+        "width": 1,
+        "length": 1,
+        "height": 1.8,
+        "motiontype": 2,
+        "start_distance": 15,
+        "type": 2,
+        "id": "6845",
+        "start_position": {
+          "x": 272583.8182889125,
+          "y": 3476169.2404776695,
+          "speed": 0.5,
+          "heading": 0.011081254524092237
+        },
+        "tracked_point": [
+          {
+            "x": 272591.1035682756,
+            "y": 3476169.6361690117,
+            "speed": 0.5
+          }
+        ]
+      }
+    ],
+    "traffic_lights": [
+      {
+        "id": "Signal_1",
+        "location": {
+          "x": 272593.3043,
+          "y": 3476136.0417000004
+        },
+        "initial_state": {
+          "color": 3
+        },
+        "state_group": [
+          {
+            "color": 3,
+            "keep_time": 1000
+          }
+        ],
+        "trigger_type": 1,
+        "trigger_value": 1000
+      }
+    ],
+    "drive_action_config": []
+  }
+}

@@ -1,0 +1,14 @@
+python3_cpu_usage_latency : 9
+python3_cpu_usage_latency_80 : 9
+python3_cpu_usage_latency_90 : 9
+python3_cpu_usage_latency_99 : 9
+python3_cpu_usage_latency_999 : 9
+python3_cpu_usage_latency_9999 : 9
+python3_cpu_usage_max_latency : 9
+python3_mem_resident_usage_latency : 63724
+python3_mem_resident_usage_latency_80 : 63724
+python3_mem_resident_usage_latency_90 : 63724
+python3_mem_resident_usage_latency_99 : 63724
+python3_mem_resident_usage_latency_999 : 63724
+python3_mem_resident_usage_latency_9999 : 63724
+python3_mem_resident_usage_max_latency : 63724

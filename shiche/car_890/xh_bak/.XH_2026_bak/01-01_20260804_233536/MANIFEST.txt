@@ -1,0 +1,5 @@
+auto_drive_console	/apollo_workspace/auto_drive_console	64K
+scenario_injection	/apollo_workspace/scenario_injection	24K
+grading_system_py	/apollo_workspace/grading_system_py	120K
+modules	/apollo_workspace/modules	31M
+HQEV_BDN	/apollo_workspace/profiles/HQEV_BDN	100K

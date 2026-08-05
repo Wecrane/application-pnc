@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>自动驾驶控制台</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
+            background: #f1f5f9;
+            color: #172033;
+        }
+
+        .wrap {
+            max-width: 780px;
+            margin: 0 auto;
+            padding: 24px 16px 48px;
+        }
+
+        h1 {
+            font-size: 20px;
+            margin: 0 0 4px;
+        }
+
+        .caption {
+            color: #64748b;
+            font-size: 13px;
+            margin: 0 0 20px;
+        }
+
+        .panel {
+            background: #fff;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(15, 23, 42, .08);
+        }
+
+        .panel h2 {
+            font-size: 15px;
+            margin: 0 0 14px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .card {
+            border: 1px solid #e2e8f0;
+            border-left: 4px solid #94a3b8;
+            border-radius: 8px;
+            padding: 10px 12px;
+        }
+
+        .card.online {
+            border-left-color: #16805c;
+        }
+
+        .card.offline {
+            border-left-color: #c2413b;
+        }
+
+        .card .title {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        .badge {
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .badge.online {
+            color: #16805c;
+        }
+
+        .badge.offline {
+            color: #c2413b;
+        }
+
+        .card .detail {
+            color: #64748b;
+            font-size: 11px;
+            margin-top: 4px;
+            min-height: 14px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            border: 1px solid transparent;
+            border-radius: 8px;
+            padding: 9px 16px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            min-height: 38px;
+        }
+
+        .btn:disabled {
+            opacity: .5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: #0077b6;
+            color: #fff;
+        }
+
+        .btn-danger {
+            background: #c2413b;
+            color: #fff;
+        }
+
+        .btn-outline {
+            background: #fff;
+            color: #334155;
+            border-color: #cbd5e1;
+        }
+
+        .state-line {
+            font-size: 13px;
+            margin: 12px 0 0;
+            color: #334155;
+        }
+
+        .state-pill {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-left: 6px;
+        }
+
+        .pill-inactive {
+            background: #e2e8f0;
+            color: #475569;
+        }
+
+        .pill-running {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .pill-paused {
+            background: #fef9c3;
+            color: #854d0e;
+        }
+
+        .pill-error {
+            background: #fee2e2;
+            color: #b42318;
+        }
+
+        .msg {
+            margin-top: 12px;
+            font-size: 13px;
+            min-height: 18px;
+        }
+
+        .msg.error {
+            color: #b42318;
+        }
+
+        .msg.success {
+            color: #166534;
+        }
+
+        .score-box {
+            display: flex;
+            align-items: baseline;
+            gap: 12px;
+            margin: 8px 0;
+        }
+
+        .score-num {
+            font-size: 40px;
+            font-weight: 800;
+            color: #0077b6;
+        }
+
+        .score-pass {
+            font-size: 14px;
+            font-weight: 700;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            margin-top: 8px;
+        }
+
+        th,
+        td {
+            text-align: left;
+            padding: 7px 8px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        th {
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        .note {
+            color: #64748b;
+            font-size: 12px;
+            margin: 10px 0 0;
+        }
+
+        label {
+            font-size: 12px;
+            color: #475569;
+        }
+
+        input {
+            padding: 7px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="wrap">
+        <h1>自动驾驶控制台</h1>
+        <p class="caption">自动驾驶（自动落盘）→ 暂停/恢复 → 退出（停止落盘）→ 读取最新数据包评测出分。仅建议本机使用。</p>
+
+        <section class="panel">
+            <h2>赛段预设（场景 + 评分指标）</h2>
+            <p class="note" id="presetHint">加载中…</p>
+            <div class="actions" id="presetBtns"></div>
+            <div id="presetDetail" class="note" style="margin-top:6px;"></div>
+            <div class="actions" style="margin-top:10px;">
+                <button class="btn btn-outline" type="button" onclick="togglePresetEditor()"
+                    id="presetEditBtn">⚙ 编辑预设配置</button>
+                <button class="btn btn-outline" type="button" onclick="loadPresets()">↻ 重新加载</button>
+            </div>
+            <div id="presetEditor" style="display:none;margin-top:10px;">
+                <p class="note">直接编辑 presets.json（每个预设需 id、label，以及 scenario_file
+                    和 scene_manifest / config 路径），保存后写回文件。</p>
+                <textarea id="presetJson" spellcheck="false"
+                    style="width:100%;height:280px;font-family:ui-monospace,Consolas,monospace;font-size:12px;
+                           border:1px solid #cfd6e4;border-radius:8px;padding:10px;"></textarea>
+                <div class="actions" style="margin-top:8px;">
+                    <button class="btn btn-primary" type="button" onclick="savePresets()">💾 保存</button>
+                    <button class="btn btn-outline" type="button" onclick="fillPresetJson()">↺ 放弃修改</button>
+                </div>
+            </div>
+            <div class="msg" id="presetMsg" role="status"></div>
+        </section>
+
+        <section class="panel">
+            <h2>运行状态</h2>
+            <div class="grid">
+                <div class="card" id="cardPlanning">
+                    <div class="title"><span>Planning</span><span class="badge">检查中</span></div>
+                    <div class="detail">等待检查</div>
+                </div>
+                <div class="card" id="cardControl">
+                    <div class="title"><span>Control</span><span class="badge">检查中</span></div>
+                    <div class="detail">等待检查</div>
+                </div>
+                <div class="card" id="cardRouting">
+                    <div class="title"><span>指令通道</span><span class="badge">检查中</span></div>
+                    <div class="detail">等待检查</div>
+                </div>
+            </div>
+            <div class="actions">
+                <button class="btn btn-primary" id="autoBtn" onclick="startAuto()">▶ 自动驾驶</button>
+                <button class="btn btn-outline" id="pauseBtn" onclick="togglePause()" disabled>⏸ 暂停行驶</button>
+                <button class="btn btn-danger" id="exitBtn" onclick="exitAuto()" disabled>⏹ 退出自动驾驶</button>
+                <button class="btn btn-outline" onclick="refresh()">↻ 刷新</button>
+                <button class="btn btn-outline" id="routePanelBtn" onclick="toggleRoutePanel()">⌃ 手动路由面板（高级）</button>
+            </div>
+            <div style="margin:10px 0;padding:10px;border:1px dashed #cfd6e4;border-radius:8px;">
+                <label style="display:flex;align-items:center;gap:8px;">
+                    <input type="checkbox" id="autoWithRoute" style="width:auto;" checked
+                        onchange="onAutoWithRoute()">
+                    开自动驾驶时一键下发终点路由 + 开启场景注入
+                </label>
+                <p class="note" id="autoRouteNote">终点默认取当前赛段场景文件的 scenario.end，无需手填。</p>
+                <button class="btn btn-outline" type="button" id="autoRouteEditBtn"
+                    onclick="toggleAutoRouteFields()" style="margin-top:4px;">⚙ 手动指定终点</button>
+                <div id="autoRouteFields" style="display:none;margin-top:8px;">
+                    <div class="grid">
+                        <label>终点 X <input id="autoEndX" placeholder="留空则读当前赛段场景终点" style="width:100%;"></label>
+                        <label>终点 Y <input id="autoEndY" placeholder="留空则读当前赛段场景终点" style="width:100%;"></label>
+                        <label>朝向 heading（可选） <input id="autoHeading" placeholder="弧度，可留空" style="width:100%;"></label>
+                        <label>目标限速（可选） <input id="autoSpeed" placeholder="m/s，可留空" style="width:100%;"></label>
+                    </div>
+                    <button class="btn btn-outline" type="button" onclick="fillFromScenario()"
+                        style="margin-top:8px;">⤵ 从场景文件读取终点</button>
+                    <label style="display:flex;align-items:center;gap:8px;margin-top:8px;">
+                        <input type="checkbox" id="autoInject" style="width:auto;" checked>
+                        同步开启场景注入
+                    </label>
+                    <label style="display:block;margin-top:8px;">场景文件（可选）
+                        <input id="autoScenarioFile"
+                            placeholder="/apollo_workspace/scenario_injection/1.json"
+                            style="width:100%;max-width:420px;"></label>
+                </div>
+            </div>
+            <p class="state-line">当前状态：<span class="state-pill pill-inactive" id="statePill">未启动</span></p>
+            <p class="state-line">场景注入：<span class="state-pill pill-inactive" id="scenarioPill">未运行</span>
+                <button class="btn btn-outline" id="scenarioOnBtn" onclick="scenarioAction('on')">▶ 开启注入</button>
+                <button class="btn btn-outline" id="scenarioOffBtn" onclick="scenarioAction('off')">⏹ 关闭注入</button>
+            </p>
+            <p class="note" id="recordNote">尚未开始落盘。</p>
+            <div class="msg" id="msg" role="status"></div>
+        </section>
+
+        <section class="panel" id="routePanel" style="display:none;">
+            <h2>发送路由路线（高级）</h2>
+            <p class="note" id="routePresetNote">当前赛段：--</p>
+            <div class="grid">
+                <label>终点 X <input id="routeEndX" placeholder="留空则读当前赛段场景终点" style="width:100%;"></label>
+                <label>终点 Y <input id="routeEndY" placeholder="留空则读当前赛段场景终点" style="width:100%;"></label>
+                <label>终点朝向 heading（可选） <input id="routeHeading" placeholder="弧度，可留空" style="width:100%;"></label>
+                <label>目标限速（可选） <input id="routeSpeed" placeholder="m/s，可留空" style="width:100%;"></label>
+            </div>
+            <div style="margin:6px 0 12px;">
+                <button class="btn btn-outline" type="button" onclick="fillRouteFromScenario()"
+                    style="margin-bottom:8px;">⤵ 从当前赛段场景读取终点</button>
+                <label style="display:flex;align-items:center;gap:8px;">
+                    <input type="checkbox" id="scenarioToggle" style="width:auto;" onchange="onScenarioToggle()">
+                    发送路由时同步开启场景注入
+                </label>
+                <label style="display:block;margin-top:8px;">场景文件（注入用，留空则用当前赛段）
+                    <input id="scenarioFile"
+                        placeholder="留空 = 当前赛段的场景文件"
+                        style="width:100%;max-width:420px;"></label>
+            </div>
+            <div class="actions">
+                <button class="btn btn-primary" id="routeBtn" onclick="sendRoute()">➤ 发送路由</button>
+            </div>
+            <div class="msg" id="routeMsg" role="status"></div>
+        </section>
+
+        <section class="panel">
+            <h2>测评成绩</h2>
+            <div class="actions">
+                <button class="btn btn-primary" id="evalBtn" onclick="evaluateLatest()">▣ 读取最新数据包并测评</button>
+                <label style="align-self:center;">评分配置（可选） <input id="evalConfig"
+                        placeholder="/apollo_workspace/auto_drive_console/metric/scenes.json"
+                        style="width:260px;"></label>
+            </div>
+            <p class="state-line" id="evalState">尚未测评。</p>
+            <div id="scoreArea" style="display:none;">
+                <div class="score-box"><span class="score-num" id="scoreNum">--</span><span class="score-pass"
+                        id="scorePass"></span></div>
+                <div id="sceneList"></div>
+            </div>
+        </section>
+
+        <section class="panel">
+            <h2>历史成绩</h2>
+            <div class="actions">
+                <button class="btn btn-outline" onclick="refreshHistory()">↻ 刷新历史</button>
+                <button class="btn btn-outline" onclick="clearHistory()">🗑 清空历史</button>
+            </div>
+            <p class="state-line">最高分：<span class="state-pill pill-inactive" id="bestPill">--</span>
+                &nbsp;共测试 <span id="attemptCount">0</span> 次</p>
+            <div id="historyList"></div>
+        </section>
+    </div>
+
+    <script>
+        let evalTimer = null;
+        let presetData = { active: null, presets: [] };
+
+        function presetMsg(text, kind) {
+            const el = document.getElementById('presetMsg');
+            el.textContent = text || '';
+            el.className = 'msg' + (kind ? ' ' + kind : '');
+        }
+
+        function activePreset() {
+            return presetData.presets.find(p => p.id === presetData.active) || null;
+        }
+
+        // 当前选中预设的路径，用于补全「场景注入 / 评分配置」入参。
+        function presetPaths() {
+            const p = activePreset();
+            if (!p) return {};
+            const o = {};
+            if (p.scenario_file) o.scenario_file = p.scenario_file;
+            if (p.scene_manifest) o.scene_manifest = p.scene_manifest;
+            if (p.config) o.config = p.config;
+            return o;
+        }
+
+        function renderPresets() {
+            const box = document.getElementById('presetBtns');
+            const hint = document.getElementById('presetHint');
+            box.innerHTML = '';
+            if (!presetData.presets.length) {
+                hint.textContent = '暂无预设，点「编辑预设配置」添加。';
+                document.getElementById('presetDetail').textContent = '';
+                return;
+            }
+            hint.textContent = '点击选择本场比赛使用的场景与评分指标，选中后自动驾驶 / 路由 / 测评都会使用它。';
+            presetData.presets.forEach(p => {
+                const b = document.createElement('button');
+                const on = p.id === presetData.active;
+                b.className = 'btn ' + (on ? 'btn-primary' : 'btn-outline');
+                b.type = 'button';
+                b.textContent = (on ? '✓ ' : '') + (p.label || p.id);
+                b.onclick = () => selectPreset(p.id);
+                box.appendChild(b);
+            });
+            const p = activePreset();
+            const detail = document.getElementById('presetDetail');
+            if (!p) { detail.textContent = ''; return; }
+            const rows = [];
+            const mark = (v, ok) => v + (ok === false ? ' ⚠ 文件不存在' : '');
+            if (p.scenario_file) rows.push('场景文件：' + mark(p.scenario_file, p.scenario_file_exists));
+            if (p.scene_manifest) rows.push('场景清单：' + mark(p.scene_manifest, p.scene_manifest_exists));
+            if (p.config) rows.push('评分配置：' + mark(p.config, p.config_exists));
+            detail.innerHTML = rows.map(t => '<div>' + escapeHtml(t) + '</div>').join('');
+            // 「发送路由」面板同步显示当前赛段，避免误发上一个赛段的终点。
+            const rn = document.getElementById('routePresetNote');
+            if (rn) {
+                rn.textContent = '当前赛段：' + (p.label || p.id)
+                    + (p.scenario_file ? '（场景 ' + p.scenario_file + '）' : '')
+                    + '；终点留空则自动读该场景的 scenario.end。';
+            }
+        }
+
+        function loadPresets() {
+            return fetch('/api/presets').then(r => r.json()).then(d => {
+                if (!d || !d.ok) throw new Error((d && d.error) || '读取预设失败');
+                presetData = { active: d.active, presets: d.presets || [] };
+                renderPresets();
+                fillPresetJson();
+                if (d.warning) presetMsg(d.warning, 'error');
+            }).catch(e => presetMsg('读取预设失败：' + e.message, 'error'));
+        }
+
+        function selectPreset(id) {
+            fetch('/api/presets/active', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ preset_id: id })
+            }).then(async r => {
+                const d = await r.json();
+                if (!r.ok || !d.ok) throw new Error(d.error || '切换失败');
+                presetData = { active: d.active, presets: d.presets || [] };
+                renderPresets();
+                fillPresetJson();
+                const p = activePreset();
+                presetMsg('已切换到：' + (p ? (p.label || p.id) : id), 'success');
+                // 赛段换了，之前那一段的终点坐标必须清掉，否则会拿旧终点发路由。
+                ['routeEndX', 'routeEndY', 'routeHeading',
+                 'autoEndX', 'autoEndY', 'autoHeading'].forEach(k => {
+                    const el = document.getElementById(k);
+                    if (el) el.value = '';
+                });
+                // 场景变了终点也变，但终点是启动时由后端现读的，这里不预填，
+                // 避免把上一段的坐标写进输入框。
+            }).catch(e => presetMsg('切换失败：' + e.message, 'error'));
+        }
+
+        function togglePresetEditor() {
+            const box = document.getElementById('presetEditor');
+            const on = box.style.display === 'none';
+            box.style.display = on ? 'block' : 'none';
+            document.getElementById('presetEditBtn').textContent =
+                on ? '⚙ 收起编辑' : '⚙ 编辑预设配置';
+            if (on) fillPresetJson();
+        }
+
+        function fillPresetJson() {
+            const clean = presetData.presets.map(p => {
+                const o = { id: p.id, label: p.label || p.id };
+                if (p.scenario_file) o.scenario_file = p.scenario_file;
+                if (p.scene_manifest) o.scene_manifest = p.scene_manifest;
+                if (p.config) o.config = p.config;
+                return o;
+            });
+            document.getElementById('presetJson').value =
+                JSON.stringify({ active: presetData.active, presets: clean }, null, 4);
+        }
+
+        function savePresets() {
+            let payload;
+            try {
+                payload = JSON.parse(document.getElementById('presetJson').value);
+            } catch (e) {
+                presetMsg('JSON 格式错误：' + e.message, 'error');
+                return;
+            }
+            fetch('/api/presets', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            }).then(async r => {
+                const d = await r.json();
+                if (!r.ok || !d.ok) throw new Error(d.error || '保存失败');
+                presetData = { active: d.active, presets: d.presets || [] };
+                renderPresets();
+                fillPresetJson();
+                presetMsg('预设已保存到 ' + (d.file || 'presets.json'), 'success');
+            }).catch(e => presetMsg('保存失败：' + e.message, 'error'));
+        }
+
+        function msg(text, kind) {
+            const el = document.getElementById('msg');
+            el.textContent = text || '';
+            el.className = 'msg' + (kind ? ' ' + kind : '');
+        }
+
+        function routeMsg(text, kind) {
+            const el = document.getElementById('routeMsg');
+            el.textContent = text || '';
+            el.className = 'msg' + (kind ? ' ' + kind : '');
+        }
+
+        function onScenarioToggle() {
+            // 勾选后发路由会带上注入，这里仅作提示，无额外逻辑。
+        }
+
+        function applyScenario(running) {
+            const pill = document.getElementById('scenarioPill');
+            pill.textContent = running ? '运行中' : '未运行';
+            pill.className = 'state-pill ' + (running ? 'pill-running' : 'pill-inactive');
+            document.getElementById('scenarioOnBtn').disabled = running;
+            document.getElementById('scenarioOffBtn').disabled = !running;
+        }
+
+        function scenarioAction(action) {
+            routeMsg(action === 'on' ? '正在开启场景注入…' : '正在关闭场景注入…');
+            // 输入框留空时用当前选中预设的场景文件。
+            const sf = document.getElementById('scenarioFile').value.trim()
+                || presetPaths().scenario_file || '';
+            fetch('/api/scenario', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action, scenario_file: sf })
+            }).then(async r => {
+                const d = await r.json();
+                if (!r.ok || !d.ok) throw new Error(d.error || '操作失败');
+                routeMsg(action === 'on' ? '场景注入已开启。' : '场景注入已关闭。', 'success');
+                refreshScenario();
+            }).catch(e => routeMsg('操作失败：' + e.message, 'error'));
+        }
+
+        function sendRoute() {
+            const endX = document.getElementById('routeEndX').value.trim();
+            const endY = document.getElementById('routeEndY').value.trim();
+            const body = {};
+            // 终点留空时不报错：后端会从场景文件（当前赛段的）里读 scenario.end。
+            if (endX && endY) {
+                body.end_x = Number(endX);
+                body.end_y = Number(endY);
+            } else if (endX || endY) {
+                routeMsg('终点 X / Y 要么都填，要么都留空（留空则读当前赛段场景终点）。', 'error');
+                return;
+            }
+            const h = document.getElementById('routeHeading').value.trim();
+            if (h) body.end_heading = Number(h);
+            const sp = document.getElementById('routeSpeed').value.trim();
+            if (sp) body.target_speed = Number(sp);
+            // 场景文件始终带上：既用于注入，也用于在终点留空时反查终点。
+            const sf = document.getElementById('scenarioFile').value.trim()
+                || presetPaths().scenario_file;
+            if (sf) body.scenario_file = sf;
+            if (document.getElementById('scenarioToggle').checked) {
+                body.scenario_action = 'on';
+            }
+            document.getElementById('routeBtn').disabled = true;
+            routeMsg('正在下发路由…');
+            fetch('/api/route', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            }).then(async r => {
+                const d = await r.json();
+                if (!r.ok || !d.ok) throw new Error(d.error || '路由下发失败');
+                let extra = '';
+                if (d.scenario && d.scenario.ok) extra = '，场景注入已开启';
+                let src = '';
+                if (d.end_from_scenario) {
+                    src = '，终点取自 ' + d.end_from_scenario;
+                    // 回填到输入框，让用户看到实际下发的坐标。
+                    if (d.end_x !== undefined) document.getElementById('routeEndX').value = d.end_x;
+                    if (d.end_y !== undefined) document.getElementById('routeEndY').value = d.end_y;
+                }
+                routeMsg('路由已下发（command_id ' + (d.route && d.route.command_id) + '）'
+                    + extra + src + '。', 'success');
+                refreshScenario();
+            }).catch(e => routeMsg('路由下发失败：' + e.message, 'error'))
+                .finally(() => { document.getElementById('routeBtn').disabled = false; });
+        }
+
+        // 手动把当前赛段场景文件里的终点读到「发送路由」的输入框。
+        function fillRouteFromScenario() {
+            const sf = document.getElementById('scenarioFile').value.trim()
+                || presetPaths().scenario_file || '';
+            const url = '/api/scenario/endpoint' + (sf ? '?scenario_file=' + encodeURIComponent(sf) : '');
+            routeMsg('正在从场景文件读取终点…');
+            fetch(url).then(async r => {
+                const d = await r.json();
+                if (!d.ok) throw new Error(d.error || '读取失败');
+                document.getElementById('routeEndX').value = d.end_x;
+                document.getElementById('routeEndY').value = d.end_y;
+                if (d.end_heading !== null && d.end_heading !== undefined)
+                    document.getElementById('routeHeading').value = d.end_heading;
+                routeMsg('已填入终点：X=' + d.end_x + ' Y=' + d.end_y
+                    + '（来自 ' + d.scenario_file + '）', 'success');
+            }).catch(e => routeMsg('读取终点失败：' + e.message, 'error'));
+        }
+
+        function refreshScenario() {
+            fetch('/api/scenario/status').then(r => r.json()).then(d => {
+                if (d && d.ok) applyScenario(d.running);
+            }).catch(() => { });
+        }
+
+        function renderCard(id, online, detail) {
+            const c = document.getElementById(id);
+            c.className = 'card ' + (online ? 'online' : 'offline');
+            const b = c.querySelector('.badge');
+            b.textContent = online ? '在线' : '离线';
+            b.className = 'badge ' + (online ? 'online' : 'offline');
+            c.querySelector('.detail').textContent = detail;
+        }
+
+        function applyAuto(auto, record) {
+            const state = auto.state || 'inactive';
+            const running = state === 'running', paused = state === 'paused';
+            const active = running || paused;
+            document.getElementById('autoBtn').disabled = active;
+            document.getElementById('pauseBtn').disabled = !active;
+            document.getElementById('exitBtn').disabled = !active;
+            document.getElementById('pauseBtn').textContent = paused ? '▶ 恢复行驶' : '⏸ 暂停行驶';
+            const pill = document.getElementById('statePill');
+            const map = {
+                inactive: ['未启动', 'pill-inactive'], starting: ['启动中', 'pill-inactive'],
+                running: ['自动驾驶中', 'pill-running'], paused: ['已暂停（落盘继续）', 'pill-paused'],
+                error: ['错误', 'pill-error']
+            };
+            const info = map[state] || map.inactive;
+            pill.textContent = info[0];
+            pill.className = 'state-pill ' + info[1];
+            const note = document.getElementById('recordNote');
+            if (record && record.running) note.textContent = '落盘中：' + (record.output || '');
+            else if (state === 'inactive') note.textContent = '落盘已停止。';
+            if (state === 'error' && auto.last_error) msg('错误：' + auto.last_error, 'error');
+        }
+
+        function refresh() {
+            fetch('/api/status').then(r => r.json()).then(d => {
+                const m = d.modules || {}, rt = d.command_bridge || {};
+                renderCard('cardPlanning', (m.planning || {}).online, (m.planning || {}).online ? '进程在线' : '进程未上线');
+                renderCard('cardControl', (m.control || {}).online, (m.control || {}).online ? '进程在线' : '进程未上线');
+                renderCard('cardRouting', rt.reachable, rt.available ? (rt.reachable ? 'Cyber + external_command 就绪' : 'Cyber 可用，external_command 未上线') : 'Cyber 不可用');
+                applyAuto(d.auto || {}, d.record || {});
+            }).catch(e => msg('状态查询失败：' + e.message, 'error'));
+        }
+
+        function onAutoWithRoute() {
+            // 勾选与否只影响启动时是否带路由/注入；终点默认由后端从赛段场景文件读取，
+            // 所以这里不再自动去拉终点，也不强制展开手填输入框。
+            const on = document.getElementById('autoWithRoute').checked;
+            document.getElementById('autoRouteNote').textContent = on
+                ? '终点默认取当前赛段场景文件的 scenario.end，无需手填。'
+                : '仅切换到自动驾驶，不下发路由、不开启场景注入。';
+            document.getElementById('autoRouteEditBtn').style.display = on ? '' : 'none';
+            if (!on) {
+                document.getElementById('autoRouteFields').style.display = 'none';
+                document.getElementById('autoRouteEditBtn').textContent = '⚙ 手动指定终点';
+            }
+        }
+
+        function toggleAutoRouteFields() {
+            const box = document.getElementById('autoRouteFields');
+            const on = box.style.display === 'none';
+            box.style.display = on ? 'block' : 'none';
+            document.getElementById('autoRouteEditBtn').textContent =
+                on ? '⚙ 收起手动终点' : '⚙ 手动指定终点';
+        }
+
+        function toggleRoutePanel() {
+            const box = document.getElementById('routePanel');
+            const on = box.style.display === 'none';
+            box.style.display = on ? 'block' : 'none';
+            document.getElementById('routePanelBtn').textContent =
+                on ? '⌄ 收起手动路由面板' : '⌃ 手动路由面板（高级）';
+            if (on) box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function fillFromScenario() {
+            const sf = document.getElementById('autoScenarioFile').value.trim()
+                || presetPaths().scenario_file || '';
+            const url = '/api/scenario/endpoint' + (sf ? '?scenario_file=' + encodeURIComponent(sf) : '');
+            msg('正在从场景文件读取终点…');
+            fetch(url).then(async r => {
+                const d = await r.json();
+                if (!d.ok) throw new Error(d.error || '读取失败');
+                document.getElementById('autoEndX').value = d.end_x;
+                document.getElementById('autoEndY').value = d.end_y;
+                if (d.end_heading !== null && d.end_heading !== undefined)
+                    document.getElementById('autoHeading').value = d.end_heading;
+                msg('已填入终点：X=' + d.end_x + ' Y=' + d.end_y, 'success');
+            }).catch(e => msg('读取终点失败：' + e.message, 'error'));
+        }
+
+        function startAuto() {
+            document.getElementById('autoBtn').disabled = true;
+            const payload = { timeout: 25 };
+            let doRoute = false;
+            if (document.getElementById('autoWithRoute').checked) {
+                const ex = document.getElementById('autoEndX').value.trim();
+                const ey = document.getElementById('autoEndY').value.trim();
+                // 终点留空是正常用法：后端会读当前赛段场景文件的 scenario.end。
+                // 只填一个坐标才是手误，必须拦住。
+                if (!!ex !== !!ey) {
+                    msg('终点 X / Y 要么都填，要么都留空（留空则读当前赛段场景终点）。', 'error');
+                    document.getElementById('autoBtn').disabled = false;
+                    return;
+                }
+                if (ex) { payload.end_x = ex; payload.end_y = ey; }
+                payload.want_route = true;
+                const h = document.getElementById('autoHeading').value.trim();
+                if (h) payload.end_heading = parseFloat(h);
+                const sp = document.getElementById('autoSpeed').value.trim();
+                if (sp) payload.target_speed = parseFloat(sp);
+                // scenario_file 不只用于注入，后端还要靠它读终点，所以总是带上。
+                const sf = document.getElementById('autoScenarioFile').value.trim()
+                    || presetPaths().scenario_file;
+                if (sf) payload.scenario_file = sf;
+                if (document.getElementById('autoInject').checked) {
+                    payload.scenario_action = 'on';
+                }
+                doRoute = true;
+            }
+            msg('正在检查模块并启动自动驾驶、开始落盘…');
+            fetch('/api/auto', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+                .then(async r => {
+                    const d = await r.json();
+                    if (!r.ok || !d.ok) throw new Error(d.error || '启动失败');
+                    let extra = '';
+                    if (doRoute) {
+                        if (d.route && d.route.ok) extra += '，路由已下发';
+                        else if (d.route) extra += '，路由下发失败：' + (d.route.error || '未知');
+                        if (d.scenario && d.scenario.ok) extra += '，场景注入已开启';
+                        else if (d.scenario) extra += '，场景注入失败：' + (d.scenario.error || '未知');
+                    }
+                    msg('自动驾驶已启动，正在落盘' + extra + '。', 'success');
+                }).catch(e => msg('未启动：' + e.message, 'error'))
+                .finally(() => { refresh(); refreshScenario(); });
+        }
+
+        function togglePause() {
+            const paused = document.getElementById('pauseBtn').textContent.indexOf('恢复') === -1;
+            document.getElementById('pauseBtn').disabled = true;
+            msg(paused ? '正在暂停车辆（落盘保持）…' : '正在恢复行驶…');
+            fetch('/api/pause', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ paused }) })
+                .then(async r => {
+                    const d = await r.json();
+                    if (!r.ok || !d.ok) throw new Error(d.error || '操作失败');
+                    msg(paused ? '已暂停，落盘仍在进行。' : '已恢复行驶。', 'success');
+                }).catch(e => msg('操作失败：' + e.message, 'error')).finally(refresh);
+        }
+
+        function exitAuto() {
+            document.getElementById('exitBtn').disabled = true;
+            msg('正在退出自动驾驶并停止落盘…');
+            fetch('/api/stop', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
+                .then(async r => {
+                    const d = await r.json();
+                    if (!r.ok || !d.ok) throw new Error(d.error || '退出失败');
+                    msg('已退出自动驾驶，落盘已停止' + (d.bag_file ? '：' + d.bag_file : '') + '。可点击测评。', 'success');
+                }).catch(e => msg('退出失败：' + e.message, 'error')).finally(() => { refresh(); refreshScenario(); });
+        }
+
+        function evaluateLatest() {
+            const btn = document.getElementById('evalBtn');
+            btn.disabled = true;
+            document.getElementById('evalState').textContent = '正在读取最新数据包…';
+            document.getElementById('scoreArea').style.display = 'none';
+            fetch('/api/record/latest').then(async r => {
+                const d = await r.json();
+                if (!r.ok || !d.ok) throw new Error(d.error || '未找到数据包');
+                document.getElementById('evalState').textContent = '数据包：' + d.name + '，评测中…';
+                // 手填的评分配置优先；留空时用当前预设的 scene_manifest / config。
+                const body = { bag_file: d.bag_file };
+                const manual = document.getElementById('evalConfig').value.trim();
+                if (manual) {
+                    body.config = manual;
+                } else {
+                    const pp = presetPaths();
+                    if (pp.scene_manifest) body.scene_manifest = pp.scene_manifest;
+                    if (pp.config) body.config = pp.config;
+                }
+                return fetch('/api/evaluate', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+            }).then(async r => {
+                const d = await r.json();
+                if (!r.ok || !d.ok) throw new Error(d.error || '评测启动失败');
+                pollEval(d.job.id);
+            }).catch(e => {
+                document.getElementById('evalState').textContent = '测评失败：' + e.message;
+                btn.disabled = false;
+            });
+        }
+
+        function pollEval(id) {
+            if (evalTimer) clearInterval(evalTimer);
+            evalTimer = setInterval(() => {
+                fetch('/api/evaluate/status?id=' + id).then(r => r.json()).then(d => {
+                    if (!d.ok) return;
+                    const job = d.job;
+                    if (job.status === 'succeeded' || job.status === 'failed') {
+                        clearInterval(evalTimer);
+                        document.getElementById('evalBtn').disabled = false;
+                        renderScore(job);
+                        refreshHistory();
+                    }
+                });
+            }, 1500);
+        }
+
+        function renderScore(job) {
+            const evalState = document.getElementById('evalState');
+            const scoreArea = document.getElementById('scoreArea');
+            if (job.status === 'failed') {
+                scoreArea.style.display = 'none';
+                const detail = job.error || job.stderr || '评测器执行失败，请检查服务日志。';
+                evalState.textContent = '测评失败：' + detail;
+                return;
+            }
+            evalState.textContent = '测评完成（成功执行）';
+            if (job.no_data) {
+                scoreArea.style.display = 'none';
+                evalState.textContent +=
+                    ' — 全部题目 NO_DATA，数据包中没有可评测的自动驾驶数据。请确认落盘期间车辆进入了自动驾驶模式。';
+                return;
+            }
+            if (job.score === null || job.score === undefined) {
+                scoreArea.style.display = 'none';
+                evalState.textContent += ' — 评测器未返回分数，请检查数据包/配置。';
+                return;
+            }
+            scoreArea.style.display = 'block';
+            // 与历史成绩口径一致，显示一位小数（避免 90.8 被四舍五入成 91）。
+            document.getElementById('scoreNum').textContent = Number(job.score).toFixed(1);
+            const pass = document.getElementById('scorePass');
+            pass.textContent = (job.passed ? '全部通过' : '未全部通过') +
+                '（题目 ' + (job.scene_passed || 0) + '/' + (job.scene_total || 0) + '）';
+            pass.style.color = job.passed ? '#166534' : '#b42318';
+
+            const container = document.getElementById('sceneList');
+            container.innerHTML = '';
+            // 巡航速度门槛未过：置顶红色提示（planning.conf 配置不达标直接判 0）。
+            const gate = job.cruise_speed_gate;
+            if (gate && gate.enabled && gate.failed) {
+                const scopeText = gate.scope === 'all' ? '整次评测判 0 分' : '定速巡航题判 0 分';
+                container.innerHTML +=
+                    '<div style="margin-top:10px;padding:10px 12px;border-radius:8px;' +
+                    'background:#fef2f2;border:1px solid #fecaca;color:#b42318;">' +
+                    '⚠ 巡航速度门槛未通过（' + escapeHtml(scopeText) + '）：' +
+                    escapeHtml(gate.reason || '') + '</div>';
+            }
+            (job.scenes || []).forEach(sc => {
+                const st = sc.status || '';
+                const color = st === 'PASS' ? '#166534' : (st === 'NO_DATA' ? '#94a3b8' : '#b42318');
+                const stText = st === 'PASS' ? '通过' : (st === 'NO_DATA' ? '无数据' : '未通过');
+                // 每个场景的实际得分（评测器的 Scene Score，0-100 扣分制）。
+                const hasScore = sc.scene_score !== null && sc.scene_score !== undefined;
+                const scoreText = hasScore
+                    ? ' <span style="color:' + color + ';font-weight:700;">' +
+                      Number(sc.scene_score).toFixed(1) + ' 分</span>'
+                    : ' <span style="color:#94a3b8;">（无得分）</span>';
+                let html = '<div style="margin-top:14px;">' +
+                    '<div style="font-weight:700;">题目：' + escapeHtml(sc.name) +
+                    ' <span style="color:' + color + ';">[' + stText + ']</span>' + scoreText + '</div>' +
+                    '<table><thead><tr><th>指标</th><th>结果</th><th>失败/总帧</th><th>判定</th></tr></thead><tbody>';
+                (sc.metrics || []).forEach(m => {
+                    const noSample = !m.evaluated;
+                    const mText = noSample ? '无样本' : (m.passed ? 'PASS' : 'FAIL');
+                    const mColor = noSample ? '#94a3b8' : (m.passed ? '#166534' : '#b42318');
+                    html += '<tr><td>' + escapeHtml(m.name) + '</td><td style="color:' + mColor + '">' + mText +
+                        '</td><td>' + m.fail + '/' + m.total + '</td><td>' + renderMetricReason(m) + '</td></tr>';
+                });
+                html += '</tbody></table></div>';
+                container.innerHTML += html;
+            });
+        }
+
+        function escapeHtml(value) {
+            return String(value || '').replace(/[&<>"']/g, ch => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            }[ch]));
+        }
+
+        const reasonLabels = {
+            red_moving_too_close: '红灯没停住：进入停车距离仍在动',
+            red_overlap_stopline: '闯红灯：车体压停止线',
+            red_crossed_stopline: '闯红灯：红灯期间越过停止线',
+            red_beyond_stopline: '闯红灯后仍在线后',
+            red_stopped_too_close: '红灯停车太近',
+            red_stopped_too_far: '红灯停车太远',
+            crosswalk_moving_too_close: '人行道没停住：进入停车距离仍在动',
+            crosswalk_entered_occupied: '进入有人占用的人行道',
+            crosswalk_crossed_occupied: '穿过有人占用的人行道',
+            crosswalk_beyond_occupied: '人行道违规后仍在线后',
+            crosswalk_moved_before_clear: '人行道未清空提前起步',
+            crosswalk_stopped_too_close: '人行道停车太近',
+            crosswalk_stopped_too_far: '人行道停车太远',
+            overspeed: '超速',
+            underspeed: '速度过低'
+        };
+
+        function renderMetricReason(m) {
+            if (m.passed || !m.first_failure) return '';
+            const ff = m.first_failure || {};
+            const label = reasonLabels[ff.code] || ff.code || '未知原因';
+            const reasons = (m.failure_reasons || []).slice(0, 3).map(r => {
+                const name = reasonLabels[r.code] || r.code;
+                return name + ' ' + r.count + '帧';
+            }).join('；');
+            // 首因附带评测器原始描述（含实际速度/超出量等数值）。
+            const desc = (ff.description || '').trim();
+            const first = '首因 t=' + Number(ff.time || 0).toFixed(2) + 's：' + label +
+                (desc ? '（' + desc + '）' : '');
+            const events = (m.failure_events || []).slice(0, 3).map(e => {
+                const name = reasonLabels[e.code] || e.code;
+                return name + ' ' + Number(e.start).toFixed(2) + '-' +
+                    Number(e.end).toFixed(2) + 's';
+            }).join('；');
+            return escapeHtml(first +
+                (reasons ? '；统计：' + reasons : '') +
+                (events ? '；事件：' + events : ''));
+        }
+
+        function refreshHistory() {
+            fetch('/api/score/history').then(r => r.json()).then(d => {
+                if (!d.ok) return;
+                document.getElementById('attemptCount').textContent = d.attempts || 0;
+                const pill = document.getElementById('bestPill');
+                pill.textContent = (d.best_score !== null && d.best_score !== undefined)
+                    ? Number(d.best_score).toFixed(1) : '--';
+                pill.className = 'state-pill ' +
+                    ((d.best_score !== null && d.best_score !== undefined) ? 'pill-running' : 'pill-inactive');
+                const bestId = d.best ? d.best.id : null;
+                const rows = (d.history || []).slice().reverse().map((h, i) => {
+                    const idx = (d.history.length - i);
+                    const t = h.finished_at ? new Date(h.finished_at * 1000).toLocaleString() : '--';
+                    const sc = (h.score !== null && h.score !== undefined) ? Number(h.score).toFixed(1) : '—';
+                    const isBest = h.id && h.id === bestId;
+                    const passInfo = (h.scene_passed != null && h.scene_total != null)
+                        ? (h.scene_passed + '/' + h.scene_total) : '';
+                    const pre = h.preset ? (h.preset.label || h.preset.id) : '';
+                    return '<tr' + (isBest ? ' style="background:#eaf7ee;font-weight:700;"' : '') + '>' +
+                        '<td>#' + idx + (isBest ? ' 🏆' : '') + '</td>' +
+                        '<td>' + escapeHtml(t) + '</td>' +
+                        '<td>' + escapeHtml(pre) + '</td>' +
+                        '<td style="text-align:right;">' + sc + '</td>' +
+                        '<td style="text-align:center;">' + escapeHtml(passInfo) + '</td></tr>';
+                }).join('');
+                document.getElementById('historyList').innerHTML = rows
+                    ? '<table style="width:100%;border-collapse:collapse;"><thead><tr>' +
+                      '<th style="text-align:left;">序号</th><th style="text-align:left;">时间</th>' +
+                      '<th style="text-align:left;">赛段</th>' +
+                      '<th style="text-align:right;">总分</th><th style="text-align:center;">通过场景</th>' +
+                      '</tr></thead><tbody>' + rows + '</tbody></table>'
+                    : '<p class="note">暂无历史成绩。</p>';
+            }).catch(() => {});
+        }
+
+        function clearHistory() {
+            if (!confirm('确定清空所有历史成绩？此操作不可恢复。')) return;
+            fetch('/api/score/clear', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
+                .then(r => r.json()).then(() => refreshHistory()).catch(() => {});
+        }
+
+        onAutoWithRoute();
+        loadPresets();
+        refresh();
+        refreshScenario();
+        refreshHistory();
+        setInterval(refresh, 5000);
+        setInterval(refreshScenario, 5000);
+    </script>
+</body>
+
+</html>

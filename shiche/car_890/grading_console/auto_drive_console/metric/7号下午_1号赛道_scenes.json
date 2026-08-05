@@ -1,0 +1,28 @@
+{
+    "_comment": "7号下午 赛道1 多场景清单。",
+    "boundary_mode": "full",
+    "map_file": "/apollo_workspace/data/map_data/hehai_contest_7_pm_3/base_map.bin",
+    "vehicle_param_file": "dkit_vehicle_param.pb.txt",
+    "scenes": [
+        {
+            "id": "crosswalk",
+            "config": "7号下午_1号赛道_crosswalk.json",
+            "scope": "crosswalk",
+            "scope_ids": [
+                "Crosswalk_5"
+            ],
+            "scope_forward_distance": 80.0,
+            "scope_past_distance": 8.0
+        },
+        {
+            "id": "cruise",
+            "config": "7号下午_1号赛道_cruise.json",
+            "scope": "full"
+        },
+        {
+            "id": "crosswalk_road_speed",
+            "config": "7号下午_1号赛道_crosswalk_road_speed.json",
+            "scope": "full"
+        }
+    ]
+}

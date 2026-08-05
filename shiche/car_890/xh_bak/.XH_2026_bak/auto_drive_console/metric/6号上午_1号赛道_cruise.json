@@ -1,0 +1,38 @@
+{
+    "_comment": "全局定速巡航 ≤11km/h(3.056m/s)；含 DKIT 加减速约束。",
+    "metric": [
+        {
+            "name": "AccelerationLimit",
+            "description": "ADC acceleration limit (DKIT).",
+            "is_critical": true,
+            "require_all_time_pass": true,
+            "condition": {
+                "acceleration_condition": {
+                    "name": "acceleration",
+                    "use_score": true,
+                    "max_acceleration": 2.0,
+                    "min_acceleration": -3.0,
+                    "single_deduction": 1,
+                    "deduction_unit": 1
+                }
+            }
+        },
+        {
+            "name": "CruiseSpeedLimit",
+            "description": "Cruise speed cap 11 km/h everywhere.",
+            "is_critical": true,
+            "require_all_time_pass": true,
+            "condition": {
+                "speed_condition": {
+                    "name": "speed",
+                    "max_speed": 3.0556,
+                    "min_speed": -0.5,
+                    "use_score": true,
+                    "single_deduction": 2,
+                    "deduction_unit": 1
+                }
+            }
+        }
+    ],
+    "use_score": true
+}

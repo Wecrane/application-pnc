@@ -1,0 +1,40 @@
+{
+    "_comment": "1号赛道：4 按钮切换 6上/6下/7上/7下。",
+    "active": "day7_pm",
+    "presets": [
+        {
+            "id": "day6_am",
+            "label": "6号上午",
+            "scenario_file": "/apollo_workspace/auto_drive_console/6号上午_1.json",
+            "scene_manifest": "/apollo_workspace/auto_drive_console/metric/6号上午_1号赛道_scenes.json"
+        },
+        {
+            "id": "day6_pm",
+            "label": "6号下午",
+            "scenario_file": "/apollo_workspace/auto_drive_console/6号下午_1.json",
+            "scene_manifest": "/apollo_workspace/auto_drive_console/metric/6号下午_1号赛道_scenes.json"
+        },
+        {
+            "id": "day7_am",
+            "label": "7号上午",
+            "scenario_file": "/apollo_workspace/auto_drive_console/7号上午_1.json",
+            "scene_manifest": "/apollo_workspace/auto_drive_console/metric/7号上午_1号赛道_scenes.json"
+        },
+        {
+            "id": "day7_pm",
+            "label": "7号下午",
+            "scenario_file": "/apollo_workspace/auto_drive_console/7号下午_1.json",
+            "scene_manifest": "/apollo_workspace/auto_drive_console/metric/7号下午_1号赛道_scenes.json"
+        }
+    ],
+    "cruise_speed_check": {
+        "_comment": "读取 planning.conf 巡航速度门槛；低于下限或高于上限都判0。min_/max_ 均可省略。scope=cruise 只判定速巡航题，all 整次判0。",
+        "enabled": true,
+        "conf_file": "/apollo/modules/planning/planning_component/conf/planning.conf",
+        "min_default_cruise_speed": 1.5,
+        "max_default_cruise_speed": 5.1,
+        "min_planning_upper_speed_limit": 1.5,
+        "max_planning_upper_speed_limit": 5.1,
+        "scope": "all"
+    }
+}

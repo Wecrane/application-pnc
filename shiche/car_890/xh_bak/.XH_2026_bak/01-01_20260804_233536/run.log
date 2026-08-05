@@ -1,0 +1,139 @@
+[2026-08-04 23:35:36] 恢复源已发现: auto_drive_console -> /media/.XH_2026_bak/auto_drive_console
+[2026-08-04 23:35:36] 恢复源已发现: scenario_injection -> /media/.XH_2026_bak/scenario_injection
+[2026-08-04 23:35:36] 恢复源已发现: grading_system_py -> /media/.XH_2026_bak/grading_system_py
+[2026-08-04 23:35:36] 恢复源已发现: modules -> /media/.XH_2026_bak/modules
+[2026-08-04 23:35:36] 恢复源已发现: HQEV_BDN -> /media/.XH_2026_bak/HQEV_BDN
+[2026-08-04 23:35:36] 成功: 预检
+[2026-08-04 23:35:38] 成功: kill_all.sh
+[2026-08-04 23:35:38] 开始打包: /apollo_workspace/auto_drive_console -> /media/.XH_2026_bak/01-01_20260804_233536/auto_drive_console.tar.gz
+[2026-08-04 23:35:38] 成功: 备份-auto_drive_console
+[2026-08-04 23:35:38] 开始打包: /apollo_workspace/scenario_injection -> /media/.XH_2026_bak/01-01_20260804_233536/scenario_injection.tar.gz
+[2026-08-04 23:35:38] 成功: 备份-scenario_injection
+[2026-08-04 23:35:38] 开始打包: /apollo_workspace/grading_system_py -> /media/.XH_2026_bak/01-01_20260804_233536/grading_system_py.tar.gz
+[2026-08-04 23:35:39] 成功: 备份-grading_system_py
+[2026-08-04 23:35:39] 开始打包: /apollo_workspace/modules -> /media/.XH_2026_bak/01-01_20260804_233536/modules.tar.gz
+[2026-08-04 23:35:40] 成功: 备份-modules
+[2026-08-04 23:35:40] 开始打包: /apollo_workspace/profiles/HQEV_BDN -> /media/.XH_2026_bak/01-01_20260804_233536/HQEV_BDN.tar.gz
+[2026-08-04 23:35:40] 成功: 备份-HQEV_BDN
+[2026-08-04 23:35:40] 成功: 备份阶段
+[2026-08-04 23:35:40] 成功: aem profile use sample 已后台启动
+[INFO] 2026-08-04 23:35:40,646 [line:122] begin update conf...
+[INFO] 2026-08-04 23:35:40,655 [line:138] finish update conf.
+[INFO] 2026-08-04 23:35:40,698 [line:155] begin recover conf...
+[INFO] 2026-08-04 23:35:40,705 [line:99] begin recover file: /apollo/modules/perception/traffic_light_region_proposal/conf/traffic_light_region_proposal_config.pb.txt
+[INFO] 2026-08-04 23:35:40,710 [line:99] begin recover file: /apollo/modules/perception/data/params/hesai40_novatel_extrinsics.yaml
+[WARNING] 2026-08-04 23:35:40,710 [line:102] recover /apollo/modules/perception/data/params/hesai40_novatel_extrinsics.yaml error, recovered file not exists.
+[INFO] 2026-08-04 23:35:40,710 [line:99] begin recover file: /apollo/modules/perception/data/params/hesai40_imu_extrinsics.yaml
+[WARNING] 2026-08-04 23:35:40,710 [line:102] recover /apollo/modules/perception/data/params/hesai40_imu_extrinsics.yaml error, recovered file not exists.
+[INFO] 2026-08-04 23:35:40,710 [line:99] begin recover file: /apollo/modules/perception/data/params/camera_front_6mm_extrinsics.yaml
+[WARNING] 2026-08-04 23:35:40,710 [line:102] recover /apollo/modules/perception/data/params/camera_front_6mm_extrinsics.yaml error, recovered file not exists.
+[INFO] 2026-08-04 23:35:40,710 [line:99] begin recover file: /apollo/modules/perception/data/params/camera_front_6mm_intrinsics.yaml
+[WARNING] 2026-08-04 23:35:40,710 [line:102] recover /apollo/modules/perception/data/params/camera_front_6mm_intrinsics.yaml error, recovered file not exists.
+[INFO] 2026-08-04 23:35:40,710 [line:99] begin recover file: /apollo/modules/perception/data/params/lidar16_back_extrinsics.yaml
+[WARNING] 2026-08-04 23:35:40,710 [line:102] recover /apollo/modules/perception/data/params/lidar16_back_extrinsics.yaml error, recovered file not exists.
+[INFO] 2026-08-04 23:35:40,713 [line:99] begin recover file: /apollo/modules/drivers/camera/conf/camera_template.pb.txt
+[WARNING] 2026-08-04 23:35:40,713 [line:102] recover /apollo/modules/drivers/camera/conf/camera_template.pb.txt error, recovered file not exists.
+[INFO] 2026-08-04 23:35:40,714 [line:99] begin recover file: /apollo/modules/drivers/camera/conf/leftbackward.pb.txt
+[WARNING] 2026-08-04 23:35:40,714 [line:102] recover /apollo/modules/drivers/camera/conf/leftbackward.pb.txt error, recovered file not exists.
+[INFO] 2026-08-04 23:35:40,714 [line:99] begin recover file: /apollo/modules/drivers/camera/conf/Wide.pb.txt
+[WARNING] 2026-08-04 23:35:40,714 [line:102] recover /apollo/modules/drivers/camera/conf/Wide.pb.txt error, recovered file not exists.
+[INFO] 2026-08-04 23:35:40,714 [line:99] begin recover file: /apollo/modules/drivers/camera/conf/obstacle.pb.txt
+[WARNING] 2026-08-04 23:35:40,714 [line:102] recover /apollo/modules/drivers/camera/conf/obstacle.pb.txt error, recovered file not exists.
+[INFO] 2026-08-04 23:35:40,714 [line:99] begin recover file: /apollo/modules/drivers/camera/conf/traffic.pb.txt
+[WARNING] 2026-08-04 23:35:40,714 [line:102] recover /apollo/modules/drivers/camera/conf/traffic.pb.txt error, recovered file not exists.
+[INFO] 2026-08-04 23:35:40,714 [line:99] begin recover file: /apollo/modules/drivers/camera/conf/leftforward.pb.txt
+[WARNING] 2026-08-04 23:35:40,714 [line:102] recover /apollo/modules/drivers/camera/conf/leftforward.pb.txt error, recovered file not exists.
+[INFO] 2026-08-04 23:35:40,714 [line:99] begin recover file: /apollo/modules/drivers/camera/conf/backward.pb.txt
+[WARNING] 2026-08-04 23:35:40,714 [line:102] recover /apollo/modules/drivers/camera/conf/backward.pb.txt error, recovered file not exists.
+[INFO] 2026-08-04 23:35:40,714 [line:99] begin recover file: /apollo/modules/drivers/camera/conf/generate_cameras.sh
+[WARNING] 2026-08-04 23:35:40,714 [line:102] recover /apollo/modules/drivers/camera/conf/generate_cameras.sh error, recovered file not exists.
+[INFO] 2026-08-04 23:35:40,714 [line:99] begin recover file: /apollo/modules/drivers/camera/conf/rightforward.pb.txt
+[WARNING] 2026-08-04 23:35:40,714 [line:102] recover /apollo/modules/drivers/camera/conf/rightforward.pb.txt error, recovered file not exists.
+[INFO] 2026-08-04 23:35:40,714 [line:99] begin recover file: /apollo/modules/drivers/camera/conf/Narrow.pb.txt
+[WARNING] 2026-08-04 23:35:40,714 [line:102] recover /apollo/modules/drivers/camera/conf/Narrow.pb.txt error, recovered file not exists.
+[INFO] 2026-08-04 23:35:40,714 [line:99] begin recover file: /apollo/modules/drivers/camera/conf/rightbackward.pb.txt
+[WARNING] 2026-08-04 23:35:40,714 [line:102] recover /apollo/modules/drivers/camera/conf/rightbackward.pb.txt error, recovered file not exists.
+[INFO] 2026-08-04 23:35:40,716 [line:99] begin recover file: /apollo/modules/drivers/lidar/hesai/launch/hesai40.launch
+[INFO] 2026-08-04 23:35:40,716 [line:99] begin recover file: /apollo/modules/drivers/lidar/hesai/launch/hesai64.launch
+[INFO] 2026-08-04 23:35:40,717 [line:99] begin recover file: /apollo/modules/drivers/lidar/hesai/dag/hesai40.dag
+[INFO] 2026-08-04 23:35:40,717 [line:99] begin recover file: /apollo/modules/drivers/lidar/hesai/dag/hesai64.dag
+[INFO] 2026-08-04 23:35:40,717 [line:99] begin recover file: /apollo/modules/drivers/lidar/conf/hesai40.pb.txt
+[WARNING] 2026-08-04 23:35:40,717 [line:102] recover /apollo/modules/drivers/lidar/conf/hesai40.pb.txt error, recovered file not exists.
+[INFO] 2026-08-04 23:35:40,717 [line:99] begin recover file: /apollo/modules/drivers/lidar/conf/lidar16_back_conf.pb.txt
+[WARNING] 2026-08-04 23:35:40,717 [line:102] recover /apollo/modules/drivers/lidar/conf/lidar16_back_conf.pb.txt error, recovered file not exists.
+[INFO] 2026-08-04 23:35:40,717 [line:99] begin recover file: /apollo/modules/drivers/lidar/conf/fusion_and_compensator_conf.pb.txt
+[WARNING] 2026-08-04 23:35:40,717 [line:102] recover /apollo/modules/drivers/lidar/conf/fusion_and_compensator_conf.pb.txt error, recovered file not exists.
+[INFO] 2026-08-04 23:35:40,718 [line:99] begin recover file: /apollo/modules/localization/params/imu_localization_extrinsics.yaml
+[WARNING] 2026-08-04 23:35:40,718 [line:102] recover /apollo/modules/localization/params/imu_localization_extrinsics.yaml error, recovered file not exists.
+[INFO] 2026-08-04 23:35:40,718 [line:99] begin recover file: /apollo/modules/localization/conf/localization.conf.bak
+[WARNING] 2026-08-04 23:35:40,718 [line:102] recover /apollo/modules/localization/conf/localization.conf.bak error, recovered file not exists.
+[INFO] 2026-08-04 23:35:40,718 [line:99] begin recover file: /apollo/modules/localization/conf/msf_localization.pb.txt
+[INFO] 2026-08-04 23:35:40,718 [line:99] begin recover file: /apollo/modules/localization/dumps/bvar.cyber_monitor.data
+[WARNING] 2026-08-04 23:35:40,718 [line:102] recover /apollo/modules/localization/dumps/bvar.cyber_monitor.data error, recovered file not exists.
+[INFO] 2026-08-04 23:35:40,718 [line:99] begin recover file: /apollo/modules/localization/dumps/bvar.cyber_monitor.latency.data
+[WARNING] 2026-08-04 23:35:40,718 [line:102] recover /apollo/modules/localization/dumps/bvar.cyber_monitor.latency.data error, recovered file not exists.
+[INFO] 2026-08-04 23:35:40,718 [line:99] begin recover file: /apollo/modules/localization/dumps/bvar.cyber_monitor.system.data
+[WARNING] 2026-08-04 23:35:40,718 [line:102] recover /apollo/modules/localization/dumps/bvar.cyber_monitor.system.data error, recovered file not exists.
+[INFO] 2026-08-04 23:35:40,719 [line:99] begin recover file: /apollo/modules/localization/dag/dag_streaming_rtk_localization.dag
+[INFO] 2026-08-04 23:35:40,719 [line:99] begin recover file: /apollo/modules/localization/dag/dag_streaming_ndt_localization.dag
+[INFO] 2026-08-04 23:35:40,719 [line:99] begin recover file: /apollo/modules/localization/dag/dag_streaming_msf_localization.dag
+[INFO] 2026-08-04 23:35:40,719 [line:99] begin recover file: /apollo/modules/localization/dag/dag_streaming_msf_visualizer.dag
+[INFO] 2026-08-04 23:35:40,723 [line:99] begin recover file: /apollo/modules/planning/traffic_rules/scene_speed_limit/plugin_scene_speed_limit_description.xml
+[INFO] 2026-08-04 23:35:40,723 [line:99] begin recover file: /apollo/modules/planning/traffic_rules/scene_speed_limit/conf/default_conf.pb.txt
+[INFO] 2026-08-04 23:35:40,727 [line:99] begin recover file: /apollo/modules/control/.DS_Store
+[WARNING] 2026-08-04 23:35:40,727 [line:102] recover /apollo/modules/control/.DS_Store error, recovered file not exists.
+[INFO] 2026-08-04 23:35:40,728 [line:99] begin recover file: /apollo/modules/control/control_component/.DS_Store
+[WARNING] 2026-08-04 23:35:40,728 [line:102] recover /apollo/modules/control/control_component/.DS_Store error, recovered file not exists.
+[INFO] 2026-08-04 23:35:40,728 [line:99] begin recover file: /apollo/modules/control/control_component/conf/calibration_table.pb.txt
+[INFO] 2026-08-04 23:35:40,728 [line:99] begin recover file: /apollo/modules/control/controllers/.DS_Store
+[WARNING] 2026-08-04 23:35:40,728 [line:102] recover /apollo/modules/control/controllers/.DS_Store error, recovered file not exists.
+[INFO] 2026-08-04 23:35:40,729 [line:99] begin recover file: /apollo/modules/control/controllers/lon_based_pid_plus_controller/.DS_Store
+[WARNING] 2026-08-04 23:35:40,729 [line:102] recover /apollo/modules/control/controllers/lon_based_pid_plus_controller/.DS_Store error, recovered file not exists.
+[INFO] 2026-08-04 23:35:40,730 [line:99] begin recover file: /apollo/modules/dreamview_plus_plugins/vehicle_calibration/plugins.xml
+[INFO] 2026-08-04 23:35:40,730 [line:99] begin recover file: /apollo/modules/dreamview_plus_plugins/vehicle_calibration/conf/vehicle_calibration_conf.pb.txt
+[INFO] 2026-08-04 23:35:40,730 [line:99] begin recover file: /apollo/modules/dreamview_plus_plugins/vehicle_calibration/conf/calibration_table_conf.pb.txt
+[INFO] 2026-08-04 23:35:40,730 [line:99] begin recover file: /apollo/modules/dreamview_plus_plugins/vehicle_calibration/conf/vehicle_param.pb.txt
+[INFO] 2026-08-04 23:35:40,730 [line:99] begin recover file: /apollo/modules/dreamview_plus_plugins/calibration_tool/conf/dumps/bvar.cyber_monitor.data
+[WARNING] 2026-08-04 23:35:40,730 [line:102] recover /apollo/modules/dreamview_plus_plugins/calibration_tool/conf/dumps/bvar.cyber_monitor.data error, recovered file not exists.
+[INFO] 2026-08-04 23:35:40,731 [line:99] begin recover file: /apollo/modules/dreamview_plus_plugins/calibration_tool/conf/dumps/bvar.cyber_monitor.latency.data
+[WARNING] 2026-08-04 23:35:40,731 [line:102] recover /apollo/modules/dreamview_plus_plugins/calibration_tool/conf/dumps/bvar.cyber_monitor.latency.data error, recovered file not exists.
+[INFO] 2026-08-04 23:35:40,731 [line:99] begin recover file: /apollo/modules/dreamview_plus_plugins/calibration_tool/conf/dumps/bvar.cyber_monitor.system.data
+[WARNING] 2026-08-04 23:35:40,731 [line:102] recover /apollo/modules/dreamview_plus_plugins/calibration_tool/conf/dumps/bvar.cyber_monitor.system.data error, recovered file not exists.
+[INFO] 2026-08-04 23:35:40,735 [line:99] begin recover file: /apollo/data/log/tile_map_images_creator.INFO
+[WARNING] 2026-08-04 23:35:40,735 [line:102] recover /apollo/data/log/tile_map_images_creator.INFO error, recovered file not exists.
+[INFO] 2026-08-04 23:35:40,738 [line:99] begin recover file: /apollo/data/log/map_tool.INFO
+[WARNING] 2026-08-04 23:35:40,738 [line:102] recover /apollo/data/log/map_tool.INFO error, recovered file not exists.
+[ERROR] 2026-08-04 23:35:40,742 [line:159] recover conf failed!
+[[1;31mFATAL[0m] 2026-08-04 23:35:40 [1;5;31;43mrecover invalid conf failed.[0m
+[2026-08-04 23:35:43] 成功: 等待 3 秒
+[2026-08-04 23:35:54] 成功: 删除-auto_drive_console
+[2026-08-04 23:35:54] 成功: 删除-scenario_injection
+[2026-08-04 23:35:54] 成功: 删除-grading_system_py
+[2026-08-04 23:35:54] 成功: 删除-modules
+[2026-08-04 23:35:54] 成功: 删除-HQEV_BDN
+[2026-08-04 23:35:57] 成功: 等待 3 秒
+[2026-08-04 23:35:57] 恢复源已发现: auto_drive_console -> /media/.XH_2026_bak/auto_drive_console
+[2026-08-04 23:35:57] 恢复源已发现: scenario_injection -> /media/.XH_2026_bak/scenario_injection
+[2026-08-04 23:35:57] 恢复源已发现: grading_system_py -> /media/.XH_2026_bak/grading_system_py
+[2026-08-04 23:35:57] 恢复源已发现: modules -> /media/.XH_2026_bak/modules
+[2026-08-04 23:35:57] 恢复源已发现: HQEV_BDN -> /media/.XH_2026_bak/HQEV_BDN
+[2026-08-04 23:35:57] 成功: 恢复-auto_drive_console -> /apollo_workspace/auto_drive_console
+[2026-08-04 23:35:57] 成功: 恢复-scenario_injection -> /apollo_workspace/scenario_injection
+[2026-08-04 23:35:57] 成功: 恢复-grading_system_py -> /apollo_workspace/grading_system_py
+[2026-08-04 23:35:58] 成功: 恢复-modules -> /apollo_workspace/modules
+[2026-08-04 23:35:58] 成功: 恢复-HQEV_BDN -> /apollo_workspace/profiles/HQEV_BDN
+[2026-08-04 23:35:58] 成功: 恢复阶段
+[2026-08-04 23:37:32] 成功: buildtool build
+[2026-08-04 23:37:32] 成功: aem profile use HQEV_BDN 已后台启动
+[INFO] 2026-08-04 23:37:32,287 [line:122] begin update conf...
+[INFO] 2026-08-04 23:37:32,297 [line:138] finish update conf.
+[INFO] 2026-08-04 23:37:32,355 [line:155] begin recover conf...
+[INFO] 2026-08-04 23:37:32,388 [line:99] begin recover file: /apollo/data/log/tile_map_images_creator.INFO
+[WARNING] 2026-08-04 23:37:32,388 [line:102] recover /apollo/data/log/tile_map_images_creator.INFO error, recovered file not exists.
+[INFO] 2026-08-04 23:37:32,391 [line:99] begin recover file: /apollo/data/log/map_tool.INFO
+[WARNING] 2026-08-04 23:37:32,391 [line:102] recover /apollo/data/log/map_tool.INFO error, recovered file not exists.
+[ERROR] 2026-08-04 23:37:32,395 [line:159] recover conf failed!
+[[1;31mFATAL[0m] 2026-08-04 23:37:32 [1;5;31;43mrecover invalid conf failed.[0m
+[2026-08-04 23:37:38] 成功: aem bootstrap start --plus
+[2026-08-04 23:37:38] 成功: 8888 端口检查
+[2026-08-04 23:37:38] 成功: 备份、删除、恢复、构建和 DV 启动流程

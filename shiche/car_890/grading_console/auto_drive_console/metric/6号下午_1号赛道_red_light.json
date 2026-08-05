@@ -1,0 +1,23 @@
+{
+    "_comment": "红灯停车：停在 Signal_1（绿→红→绿）停止线前 1.0-1.5m。",
+    "metric": [
+        {
+            "name": "RedLightStop",
+            "description": "Stop 1.0-1.5m before stopline on red (Signal_1).",
+            "is_critical": true,
+            "require_all_time_pass": true,
+            "condition": {
+                "red_light_stop_condition": {
+                    "min_distance": 1.0,
+                    "max_distance": 1.5,
+                    "use_score": true,
+                    "single_deduction": 20,
+                    "target_ids": [
+                        "Signal_1"
+                    ]
+                }
+            }
+        }
+    ],
+    "use_score": true
+}

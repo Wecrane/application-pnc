@@ -1,0 +1,31 @@
+cyber_monitor_kernel_version : "Linux in-dev-docker 5.4.115-rt57 #1 SMP PREEMPT_RT Tue Jul 6 07:38:24 UTC 2021 x86_64 x86_64 x86_64 GNU/Linux
+"
+cyber_monitor_process_cmdline : "cyber_monitor
+"
+cyber_monitor_process_context_switches_involuntary_second : 454
+cyber_monitor_process_context_switches_voluntary_second : 10095
+cyber_monitor_process_cpu_usage : 0.169
+cyber_monitor_process_cpu_usage_system : 0.084
+cyber_monitor_process_cpu_usage_user : 0.085
+cyber_monitor_process_disk_read_bytes_second : 0
+cyber_monitor_process_disk_write_bytes_second : 11877
+cyber_monitor_process_faults_major : 0
+cyber_monitor_process_faults_minor_second : 638
+cyber_monitor_process_fd_count : 27
+cyber_monitor_process_inblocks_second : 0
+cyber_monitor_process_io_read_bytes_second : 570
+cyber_monitor_process_io_read_second : 5
+cyber_monitor_process_io_write_bytes_second : 16333
+cyber_monitor_process_io_write_second : 292
+cyber_monitor_process_memory_data_and_stack : 557969408
+cyber_monitor_process_memory_resident : 150687744
+cyber_monitor_process_memory_shared : 113954816
+cyber_monitor_process_memory_text : 942080
+cyber_monitor_process_memory_virtual : 3177472000
+cyber_monitor_process_nice : 0
+cyber_monitor_process_outblocks_second : 23
+cyber_monitor_process_priority : 20
+cyber_monitor_process_thread_count : 32
+cyber_monitor_process_uptime : 220.193338
+cyber_monitor_process_username : "unknown (No such device or address)"
+cyber_monitor_process_work_dir : "/apollo_workspace/profiles/HQEV/modules/localization"

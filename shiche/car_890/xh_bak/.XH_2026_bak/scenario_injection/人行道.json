@@ -1,0 +1,232 @@
+{
+    "type": "worldsim",
+    "ticketId": "scenario_merged_haidian_complex",
+    "name": "海驾-综合复杂场景",
+    "mapId": "6ae5b07e23dc50f4ca758aaa",
+    "tags": [
+        "Straight Road",
+        "Traveling straight in a through lane",
+        "Pedestrian",
+        "Motor Vehicle",
+        "Traffic Light",
+        "Complex Scenario"
+    ],
+    "category": "private",
+    "description_en_tokens": [
+        "海驾-综合复杂场景"
+    ],
+    "scenario": {
+        "map_dir": "modules/map/data/slame-HaiDianJiaXiao-0827",
+        "start": {
+            "x": 423630.1630352871,
+            "y": 4437969.2147062905,
+            "heading": 0.10487693498587877
+        },
+        "end": {
+            "x": 423756.8820824091,
+            "y": 4437979.589063594
+        },
+        "simulator_time": 45,
+        "deselect_default_metric": [
+            "Checkpoint"
+        ],
+        "base_grade_config_file": "grading_system/conf/grading_metrics_default.conf",
+        "agent": [
+            {
+                "trigger_type": 0,
+                "width": 1,
+                "length": 1,
+                "height": 1.8,
+                "motiontype": 2,
+                "start_distance": 40,
+                "type": 2,
+                "id": "9000",
+                "start_position": {
+                    "x": 423689.7120778516,
+                    "y": 4437963.219633768,
+                    "speed": 1.0
+                },
+                "tracked_point": [
+                    {
+                        "x": 423689.4755212512,
+                        "y": 4437967.793061387,
+                        "speed": 1.1
+                    },
+                    {
+                        "x": 423688.9235558489,
+                        "y": 4437970.997306607,
+                        "speed": 1.1
+                    },
+                    {
+                        "x": 423688.2927382479,
+                        "y": 4437979.620891417,
+                        "speed": 0.3
+                    },
+                    {
+                        "x": 423687.346511845,
+                        "y": 4437987.663815841,
+                        "speed": 1.1
+                    },
+                    {
+                        "x": 423687.346511845,
+                        "y": 4437990.344790634,
+                        "speed": 1.1
+                    }
+                ]
+            },
+            {
+                "id": "9001",
+                "type": 0,
+                "width": 2,
+                "height": 1.5,
+                "length": 5,
+                "motiontype": 0,
+                "start_position": {
+                    "x": 423735.71923286875,
+                    "y": 4438017.266241107,
+                    "speed": 0,
+                    "heading": 0.07878395960661176
+                },
+                "tracked_point": []
+            },
+            {
+                "id": "9002",
+                "type": 0,
+                "width": 2,
+                "height": 1.5,
+                "length": 5,
+                "motiontype": 0,
+                "start_position": {
+                    "x": 423735.2237877287,
+                    "y": 4438017.093224479,
+                    "speed": 0,
+                    "heading": 0.07878395960661176
+                },
+                "tracked_point": []
+            },
+            {
+                "id": "9003",
+                "type": 0,
+                "width": 2,
+                "height": 1.5,
+                "length": 5,
+                "motiontype": 0,
+                "start_position": {
+                    "x": 423736.2995718672,
+                    "y": 4438009.99798608,
+                    "speed": 0,
+                    "heading": 0.07878396275307699
+                },
+                "tracked_point": []
+            },
+            {
+                "trigger_type": 0,
+                "width": 1,
+                "length": 1,
+                "height": 1.8,
+                "motiontype": 2,
+                "start_distance": 40,
+                "type": 2,
+                "id": "9004",
+                "start_position": {
+                    "x": 423690.9120778516,
+                    "y": 4437962.4196337685,
+                    "speed": 1.0
+                },
+                "tracked_point": [
+                    {
+                        "x": 423690.6755212512,
+                        "y": 4437966.993061387,
+                        "speed": 0.7
+                    },
+                    {
+                        "x": 423690.1235558489,
+                        "y": 4437970.197306607,
+                        "speed": 1.1
+                    },
+                    {
+                        "x": 423689.4927382479,
+                        "y": 4437978.820891418,
+                        "speed": 0.2
+                    },
+                    {
+                        "x": 423688.546511845,
+                        "y": 4437986.863815841,
+                        "speed": 1.1
+                    },
+                    {
+                        "x": 423688.546511845,
+                        "y": 4437989.544790634,
+                        "speed": 1.1
+                    }
+                ]
+            },
+            {
+                "id": "9005",
+                "type": 0,
+                "width": 2,
+                "height": 1.5,
+                "length": 5,
+                "motiontype": 0,
+                "start_position": {
+                    "x": 423741.71923286875,
+                    "y": 4438017.766241107,
+                    "speed": 1.2,
+                    "heading": 0.07878395960661176
+                },
+                "tracked_point": [],
+                "start_distance": 26
+            }
+        ],
+        "traffic_lights": [
+            {
+                "id": "Signal_1",
+                "location": {
+                    "x": 423709.586871,
+                    "y": 4437971.739743
+                },
+                "initial_state": {
+                    "color": 3
+                },
+                "state_group": [
+                    {
+                        "color": 3,
+                        "keep_time": 10
+                    },
+                    {
+                        "color": 3,
+                        "keep_time": 100
+                    }
+                ],
+                "trigger_type": 1,
+                "trigger_value": 100
+            },
+            {
+                "id": "Signal_3",
+                "location": {
+                    "x": 423701.497871,
+                    "y": 4437977.926486
+                },
+                "initial_state": {
+                    "color": 1
+                },
+                "state_group": [
+                    {
+                        "color": 3,
+                        "keep_time": 30
+                    },
+                    {
+                        "color": 3,
+                        "keep_time": 100
+                    }
+                ],
+                "trigger_type": 1,
+                "trigger_value": 30
+            }
+        ],
+        "drive_action_config": {
+            "speed_limit": 4
+        }
+    },
+    "descEn": "Merged HaiDianJiaXiao complex scenario with pedestrian crossing, traffic lights, and obstacles."
+}

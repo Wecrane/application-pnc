@@ -1,0 +1,38 @@
+{
+    "_comment": "人行道让行：停在 Crosswalk_5 前 1.0-1.5m。",
+    "metric": [
+        {
+            "name": "Collision",
+            "description": "Collision check.",
+            "is_critical": true,
+            "require_all_time_pass": true,
+            "condition": {
+                "object_overlap_condition": {
+                    "source_object_ids": "",
+                    "target_object_ids": "*",
+                    "direction": "INCLUDE_BACK",
+                    "distance": 0.1,
+                    "use_score": true
+                }
+            }
+        },
+        {
+            "name": "CrosswalkStop",
+            "description": "Stop 1.0-1.5m before Crosswalk_5.",
+            "is_critical": true,
+            "require_all_time_pass": true,
+            "condition": {
+                "crosswalk_stop_condition": {
+                    "min_distance": 1.0,
+                    "max_distance": 1.5,
+                    "use_score": true,
+                    "single_deduction": 20,
+                    "target_ids": [
+                        "Crosswalk_5"
+                    ]
+                }
+            }
+        }
+    ],
+    "use_score": true
+}

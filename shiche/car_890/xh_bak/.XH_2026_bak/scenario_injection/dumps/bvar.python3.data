@@ -1,0 +1,12 @@
+python3_bvar_dump_interval : 10
+python3_bvar_sampler_collector_usage : 0.000371696
+python3_cpu_usage_count : 122
+python3_gcc_version : "7.5.0"
+python3_mem_resident_usage_count : 121
+python3_pgrp : 27444
+python3_pid : 27444
+python3_ppid : 19125
+python3_system_core_count : 24
+python3_system_loadavg_15m : 21.180
+python3_system_loadavg_1m : 23.300
+python3_system_loadavg_5m : 22.040

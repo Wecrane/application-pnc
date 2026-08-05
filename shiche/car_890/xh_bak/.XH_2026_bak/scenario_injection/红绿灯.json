@@ -1,0 +1,89 @@
+{
+    "type": "worldsim",
+    "ticketId": "scenario_merged_haidian_complex",
+    "name": "海驾-综合复杂场景",
+    "mapId": "6ae5b07e23dc50f4ca758aaa",
+    "tags": [
+        "Straight Road",
+        "Traveling straight in a through lane",
+        "Pedestrian",
+        "Motor Vehicle",
+        "Traffic Light",
+        "Complex Scenario"
+    ],
+    "category": "private",
+    "description_en_tokens": [
+        "海驾-综合复杂场景"
+    ],
+    "scenario": {
+        "map_dir": "modules/map/data/slame-HaiDianJiaXiao-0827",
+        "start": {
+            "x": 423630.1630352871,
+            "y": 4437969.2147062905,
+            "heading": 0.10487693498587877
+        },
+        "end": {
+            "x": 423756.8820824091,
+            "y": 4437979.589063594
+        },
+        "simulator_time": 45,
+        "deselect_default_metric": [
+            "Checkpoint"
+        ],
+        "base_grade_config_file": "grading_system/conf/grading_metrics_default.conf",
+        "traffic_lights": [
+            {
+                "id": "Signal_1",
+                "location": {
+                    "x": 423709.586871,
+                    "y": 4437971.739743
+                },
+                "initial_state": {
+                    "color": 3
+                },
+                "state_group": [
+                    {
+                        "color": 3,
+                        "keep_time": 5
+                    },
+                    {
+                        "color": 1,
+                        "keep_time": 30
+                    },
+                    {
+                        "color": 3,
+                        "keep_time": 100
+                    }
+                ],
+                "trigger_type": 1,
+                "trigger_value": 50
+            },
+            {
+                "id": "Signal_3",
+                "location": {
+                    "x": 423701.497871,
+                    "y": 4437977.926486
+                },
+                "initial_state": {
+                    "color": 1
+                },
+                "state_group": [
+                    {
+                        "color": 1,
+                        "keep_time": 50
+                    },
+                    {
+                        "color": 3,
+                        "keep_time": 100
+                    }
+                ],
+                "trigger_type": 1,
+                "trigger_value": 30
+            }
+        ],
+        "drive_action_config": {
+            "speed_limit": 4
+        }
+    },
+    "descEn": "Merged HaiDianJiaXiao complex scenario with pedestrian crossing, traffic lights, and obstacles."
+}

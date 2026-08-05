@@ -1,0 +1,48 @@
+{
+    "_comment": "减速带区域限速 ≤1.0m/s（仅多边形区域内生效）。",
+    "metric": [
+        {
+            "name": "RoadSpeedLimit",
+            "description": "Speed limit 1.0 m/s inside marked region.",
+            "is_critical": true,
+            "require_all_time_pass": true,
+            "condition": {
+                "speed_condition": {
+                    "name": "speed",
+                    "max_speed": 1000.0,
+                    "min_speed": -0.5,
+                    "use_score": true,
+                    "single_deduction": 2,
+                    "deduction_unit": 1,
+                    "speed_limit_regions": [
+                        {
+                            "limit_min_speed": -0.5,
+                            "limit_max_speed": 1.0,
+                            "limit_region": {
+                                "point": [
+                                    {
+                                        "x": 272585.3432524772,
+                                        "y": 3476137.4008715637
+                                    },
+                                    {
+                                        "x": 272585.68642772624,
+                                        "y": 3476131.452519015
+                                    },
+                                    {
+                                        "x": 272592.66430108144,
+                                        "y": 3476131.452519015
+                                    },
+                                    {
+                                        "x": 272592.66430097754,
+                                        "y": 3476137.2864801525
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    ],
+    "use_score": true
+}

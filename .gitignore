@@ -1,109 +1,17 @@
-# Bazel
-bazel-*
-
-# Temporary files
-*.pyc
-*.swp
-*.swo
-
-# Linked files
-/tools
-
-# aem data
-.aem
-
-# aem 运行时 profile 软链接（指向 profiles/default，由 aem profile use 生成）
-/profiles/current
-
-# Generated files
-*.result
-py_proto
-
-# Eclipse IDE files
-.project
-.cproject
-.settings
-.classpath
-
-# IntelliJ files
-.idea
-
-# VS Code files
-# .vscode
-
-# Atom IDE files
-*.gch
-
 # Logs
-nohup.out
-*.bak
-*.stderr
-*.stdout
-
-# Editor configs
-.ycm_extra_conf.py
-
-# Data
-/data
-
-# Localization
 modules/localization/msf/local_map/test_data/ndt_map/map_data
-
-# Doxygen
-cyber/doxy-docs/build
-
-# User preserved content (2026-08-01)
-.oldcode/
-backup/
-submit/
-*.tar.gz
-.git_official_backup/
-.bash_history
-
-# Runtime data
-dumps/
-cyber/doxy-docs/xml
-
-# Esd can lib
-third_party/can_card_library/esd_can/include
-third_party/can_card_library/esd_can/lib
-
 # Map data files
 modules/map/data
-
-# python proto
-*_pb2.py
-
-# calibration files
-modules/calibration/data
-
-# Data bag
-docs/demo_guide/*.bag
 docs/demo_guide/*.record
-
-# Bash Environment
-.dev_bash_hist
-
-# buildtool cache and others
-dev/
-
-# bazel cache and others
-.cache/
-.apollo.bazelrc
-.bazelrc
 .errors.log
 
-# Directory for binary distribution
-output
-
-# Flamegraph files
-tools/FlameGraph
-
-# jetbrain profiler
-.DS_Store
-
-#WORKSPACE
-third_party/
-CPPLINT.cfg
-modules/common_msgs
-modules/BUILD
+# 实车备份：只保留 tar.gz + 小配置（评分系统源码/脚本），解压大目录不入库
+shiche/car_890/extracted/modules/
+shiche/car_890/replay_logs/
+shiche/car_890/selected_logs/
+shiche/car_890/maps_tools/
+shiche/car_890/scripts_biglogs/data/
+shiche/car_890/xh_bak/.XH_2026_bak/hehai_contest_*/
+shiche/car_890/xh_bak/.XH_2026_bak/modules/
+shiche/car_890/xh_bak/.XH_2026_bak/HQEV_BDN/
+shiche/car_890/xh_bak/.XH_2026_bak/0001_20260805_092032/
