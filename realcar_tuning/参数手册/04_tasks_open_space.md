@@ -123,9 +123,11 @@
 
 | 参数 | 实车值 | 含义 | 备注 |
 |------|--------|------|------|
-| pull_over_destination_to_adc_buffer | 4.0 | 靠边点距自车缓冲 | ○ 靠边停车用 |
+| pull_over_destination_to_adc_buffer | 25.0 | 靠边点距自车缓冲（实车 25.0=官方默认） | ○ 靠边停车用 |
 | pull_over_destination_to_pathend_buffer | 4.0 | 终点到路径末端缓冲（官方默认 10.0，实车改 4.0） | ○ |
+| pull_over_road_edge_buffer | 0.15 | 靠边路缘缓冲 | ○ |
 | pull_over_approach_lon_distance_adjust_factor | 1.6 | 靠边接近纵向距离调整系数（官方默认 1.5，实车改 1.6） | ○ |
+| pull_over_weight | 10 | 靠边路径权重 | ○ |
 
 ## 13. reverse_path / reverse_speed（倒车路径/速度）△
 
