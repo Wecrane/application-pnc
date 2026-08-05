@@ -8,6 +8,7 @@
 ```
 realcar_tuning/
 ├── README.md                          # 本说明
+├── 参数改动清单.md                     # 🚨 逐参数改动清单（原值/新值/注释/依据/审查结论）
 ├── ORIGINAL/                          # ✅ 实车原始配置（未改动，基准/对照）
 │   └── modules/
 │       ├── planning/                  # planning 全量配置（137 文件）
