@@ -1,0 +1,753 @@
+{
+ "id": "6a699aefabf06e2936590839",
+ "authorName": "apollo_3103917591",
+ "scenario": {
+  "roadNetwork": {
+   "logicFile": {
+    "filepath": "modules/map/data/Xh_2026_contest"
+   }
+  },
+  "entities": {
+   "scenarioObjects": [
+    {
+     "name": "3098",
+     "id": 3098,
+     "entityObject": {
+      "unknownUnmovableObject": {
+       "boundingBox": {
+        "dimensions": {
+         "length": 30,
+         "width": 0.3,
+         "height": 2
+        }
+       }
+      }
+     }
+    },
+    {
+     "name": "4717",
+     "id": 4717,
+     "entityObject": {
+      "unknownUnmovableObject": {
+       "boundingBox": {
+        "dimensions": {
+         "length": 15,
+         "width": 0.3,
+         "height": 2
+        }
+       }
+      }
+     }
+    },
+    {
+     "name": "4857",
+     "id": 4857,
+     "entityObject": {
+      "unknownUnmovableObject": {
+       "boundingBox": {
+        "dimensions": {
+         "length": 30,
+         "width": 0.3,
+         "height": 2
+        }
+       }
+      }
+     }
+    },
+    {
+     "name": "5530",
+     "id": 5530,
+     "entityObject": {
+      "unknownUnmovableObject": {
+       "boundingBox": {
+        "dimensions": {
+         "length": 30,
+         "width": 0.3,
+         "height": 2
+        }
+       }
+      }
+     }
+    },
+    {
+     "name": "6324",
+     "id": 6324,
+     "entityObject": {
+      "unknownUnmovableObject": {
+       "boundingBox": {
+        "dimensions": {
+         "length": 30,
+         "width": 0.3,
+         "height": 2
+        }
+       }
+      }
+     }
+    },
+    {
+     "name": "6503",
+     "id": 6503,
+     "entityObject": {
+      "unknownUnmovableObject": {
+       "boundingBox": {
+        "dimensions": {
+         "length": 30,
+         "width": 0.3,
+         "height": 2
+        }
+       }
+      }
+     }
+    },
+    {
+     "name": "7673",
+     "id": 7673,
+     "entityObject": {
+      "pedestrian": {
+       "pedestrianCategory": "pedestrian",
+       "boundingBox": {
+        "dimensions": {
+         "length": 5,
+         "width": 2,
+         "height": 1.8
+        }
+       }
+      }
+     }
+    }
+   ]
+  },
+  "storyboard": {
+   "init": {
+    "actions": {
+     "privates": [
+      {
+       "entityRef": {
+        "entityRef": "3098"
+       },
+       "privateActions": [
+        {
+         "teleportAction": {
+          "position": {
+           "worldPosition": {
+            "x": 423395.2505164961,
+            "y": 4437613.01141641,
+            "h": 1.3473163789190833e-05
+           }
+          }
+         }
+        },
+        {
+         "longitudinalAction": {
+          "speedAction": {
+           "speedActionDynamics": {
+            "dynamicsDimension": "distance",
+            "dynamicsShape": "linear",
+            "value": 0
+           },
+           "speedActionTarget": {
+            "absoluteTargetSpeed": {
+             "value": 0
+            }
+           }
+          }
+         }
+        },
+        {
+         "routingAction": {
+          "followTrajectoryAction": {
+           "trajectoryRef": {
+            "trajectory": {
+             "shape": {
+              "polyline": {
+               "vertices": [
+                {
+                 "position": {
+                  "worldPosition": {
+                   "x": 423395.2505164961,
+                   "y": 4437613.01141641,
+                   "h": 1.3473163789190833e-05
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            }
+           }
+          }
+         }
+        }
+       ]
+      },
+      {
+       "entityRef": {
+        "entityRef": "4717"
+       },
+       "privateActions": [
+        {
+         "teleportAction": {
+          "position": {
+           "worldPosition": {
+            "x": 423416.1211917925,
+            "y": 4437613.348046626,
+            "h": -0.007702149080089782
+           }
+          }
+         }
+        },
+        {
+         "longitudinalAction": {
+          "speedAction": {
+           "speedActionDynamics": {
+            "dynamicsDimension": "distance",
+            "dynamicsShape": "linear",
+            "value": 0
+           },
+           "speedActionTarget": {
+            "absoluteTargetSpeed": {
+             "value": 0
+            }
+           }
+          }
+         }
+        },
+        {
+         "routingAction": {
+          "followTrajectoryAction": {
+           "trajectoryRef": {
+            "trajectory": {
+             "shape": {
+              "polyline": {
+               "vertices": [
+                {
+                 "position": {
+                  "worldPosition": {
+                   "x": 423416.1211917925,
+                   "y": 4437613.348046626,
+                   "h": -0.007702149080089782
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            }
+           }
+          }
+         }
+        }
+       ]
+      },
+      {
+       "entityRef": {
+        "entityRef": "4857"
+       },
+       "privateActions": [
+        {
+         "teleportAction": {
+          "position": {
+           "worldPosition": {
+            "x": 423298.30388844607,
+            "y": 4437613.231436771,
+            "h": -0.005846247842466074
+           }
+          }
+         }
+        },
+        {
+         "longitudinalAction": {
+          "speedAction": {
+           "speedActionDynamics": {
+            "dynamicsDimension": "distance",
+            "dynamicsShape": "linear",
+            "value": 0
+           },
+           "speedActionTarget": {
+            "absoluteTargetSpeed": {
+             "value": 0
+            }
+           }
+          }
+         }
+        },
+        {
+         "routingAction": {
+          "followTrajectoryAction": {
+           "trajectoryRef": {
+            "trajectory": {
+             "shape": {
+              "polyline": {
+               "vertices": [
+                {
+                 "position": {
+                  "worldPosition": {
+                   "x": 423298.30388844607,
+                   "y": 4437613.231436771,
+                   "h": -0.005846247842466074
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            }
+           }
+          }
+         }
+        }
+       ]
+      },
+      {
+       "entityRef": {
+        "entityRef": "5530"
+       },
+       "privateActions": [
+        {
+         "teleportAction": {
+          "position": {
+           "worldPosition": {
+            "x": 423438.4330286651,
+            "y": 4437612.878770446,
+            "h": -1.5242303112052435e-10
+           }
+          }
+         }
+        },
+        {
+         "longitudinalAction": {
+          "speedAction": {
+           "speedActionDynamics": {
+            "dynamicsDimension": "distance",
+            "dynamicsShape": "linear",
+            "value": 0
+           },
+           "speedActionTarget": {
+            "absoluteTargetSpeed": {
+             "value": 0
+            }
+           }
+          }
+         }
+        },
+        {
+         "routingAction": {
+          "followTrajectoryAction": {
+           "trajectoryRef": {
+            "trajectory": {
+             "shape": {
+              "polyline": {
+               "vertices": [
+                {
+                 "position": {
+                  "worldPosition": {
+                   "x": 423438.4330286651,
+                   "y": 4437612.878770446,
+                   "h": -1.5242303112052435e-10
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            }
+           }
+          }
+         }
+        }
+       ]
+      },
+      {
+       "entityRef": {
+        "entityRef": "6324"
+       },
+       "privateActions": [
+        {
+         "teleportAction": {
+          "position": {
+           "worldPosition": {
+            "x": 423329.6721221407,
+            "y": 4437613.136311449,
+            "h": -0.003639768937625505
+           }
+          }
+         }
+        },
+        {
+         "longitudinalAction": {
+          "speedAction": {
+           "speedActionDynamics": {
+            "dynamicsDimension": "distance",
+            "dynamicsShape": "linear",
+            "value": 0
+           },
+           "speedActionTarget": {
+            "absoluteTargetSpeed": {
+             "value": 0
+            }
+           }
+          }
+         }
+        },
+        {
+         "routingAction": {
+          "followTrajectoryAction": {
+           "trajectoryRef": {
+            "trajectory": {
+             "shape": {
+              "polyline": {
+               "vertices": [
+                {
+                 "position": {
+                  "worldPosition": {
+                   "x": 423329.6721221407,
+                   "y": 4437613.136311449,
+                   "h": -0.003639768937625505
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            }
+           }
+          }
+         }
+        }
+       ]
+      },
+      {
+       "entityRef": {
+        "entityRef": "6503"
+       },
+       "privateActions": [
+        {
+         "teleportAction": {
+          "position": {
+           "worldPosition": {
+            "x": 423362.1692299976,
+            "y": 4437613.025052393,
+            "h": 0.002039370349563765
+           }
+          }
+         }
+        },
+        {
+         "longitudinalAction": {
+          "speedAction": {
+           "speedActionDynamics": {
+            "dynamicsDimension": "distance",
+            "dynamicsShape": "linear",
+            "value": 0
+           },
+           "speedActionTarget": {
+            "absoluteTargetSpeed": {
+             "value": 0
+            }
+           }
+          }
+         }
+        },
+        {
+         "routingAction": {
+          "followTrajectoryAction": {
+           "trajectoryRef": {
+            "trajectory": {
+             "shape": {
+              "polyline": {
+               "vertices": [
+                {
+                 "position": {
+                  "worldPosition": {
+                   "x": 423362.1692299976,
+                   "y": 4437613.025052393,
+                   "h": 0.002039370349563765
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            }
+           }
+          }
+         }
+        }
+       ]
+      },
+      {
+       "entityRef": {
+        "entityRef": "7673"
+       },
+       "privateActions": [
+        {
+         "teleportAction": {
+          "position": {
+           "worldPosition": {
+            "x": 423446.6661009572,
+            "y": 4437610.949332887,
+            "h": -0.04542327851144682
+           }
+          }
+         }
+        },
+        {
+         "longitudinalAction": {
+          "speedAction": {
+           "speedActionDynamics": {
+            "dynamicsDimension": "distance",
+            "dynamicsShape": "linear",
+            "value": 0
+           },
+           "speedActionTarget": {
+            "absoluteTargetSpeed": {
+             "value": 0
+            }
+           }
+          }
+         }
+        },
+        {
+         "routingAction": {
+          "followTrajectoryAction": {
+           "trajectoryRef": {
+            "trajectory": {
+             "shape": {
+              "polyline": {
+               "vertices": [
+                {
+                 "position": {
+                  "worldPosition": {
+                   "x": 423446.6661009572,
+                   "y": 4437610.949332887,
+                   "h": -0.04542327851144682
+                  }
+                 }
+                },
+                {
+                 "position": {
+                  "worldPosition": {
+                   "x": 423475.7509954833,
+                   "y": 4437599.76165848
+                  }
+                 }
+                }
+               ]
+              }
+             }
+            }
+           }
+          }
+         }
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "stories": [
+    {
+     "acts": [
+      {
+       "maneuverGroups": [
+        {
+         "actors": {
+          "entityRefs": [
+           {
+            "entityRef": "3098"
+           }
+          ]
+         },
+         "maneuvers": [
+          {}
+         ]
+        },
+        {
+         "actors": {
+          "entityRefs": [
+           {
+            "entityRef": "4717"
+           }
+          ]
+         },
+         "maneuvers": [
+          {}
+         ]
+        },
+        {
+         "actors": {
+          "entityRefs": [
+           {
+            "entityRef": "4857"
+           }
+          ]
+         },
+         "maneuvers": [
+          {}
+         ]
+        },
+        {
+         "actors": {
+          "entityRefs": [
+           {
+            "entityRef": "5530"
+           }
+          ]
+         },
+         "maneuvers": [
+          {}
+         ]
+        },
+        {
+         "actors": {
+          "entityRefs": [
+           {
+            "entityRef": "6324"
+           }
+          ]
+         },
+         "maneuvers": [
+          {}
+         ]
+        },
+        {
+         "actors": {
+          "entityRefs": [
+           {
+            "entityRef": "6503"
+           }
+          ]
+         },
+         "maneuvers": [
+          {}
+         ]
+        },
+        {
+         "actors": {
+          "entityRefs": [
+           {
+            "entityRef": "7673"
+           }
+          ]
+         },
+         "maneuvers": [
+          {
+           "events": [
+            {
+             "name": "1c667f36-c0f2-4830-b970-52e41f3f9364",
+             "actions": [
+              {
+               "name": "0fca812e-0e2a-4a46-b5f0-3b1420ffb612",
+               "privateAction": {
+                "longitudinalAction": {
+                 "speedAction": {
+                  "speedActionDynamics": {
+                   "dynamicsDimension": "distance",
+                   "dynamicsShape": "linear",
+                   "value": 20
+                  },
+                  "speedActionTarget": {
+                   "absoluteTargetSpeed": {
+                    "value": 3
+                   }
+                  }
+                 }
+                }
+               }
+              }
+             ],
+             "startTrigger": {
+              "conditionGroups": [
+               {
+                "conditions": [
+                 {
+                  "conditionEdge": "none",
+                  "byValueCondition": {
+                   "simulationTimeCondition": {
+                    "rule": "greaterOrEqual",
+                    "value": 50
+                   }
+                  }
+                 }
+                ]
+               }
+              ]
+             }
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "stopTrigger": {
+    "conditionGroups": [
+     {
+      "conditions": [
+       {
+        "conditionEdge": "none",
+        "name": "end",
+        "byValueCondition": {
+         "simulationTimeCondition": {
+          "rule": "greaterOrEqual",
+          "value": 100
+         }
+        }
+       }
+      ]
+     }
+    ]
+   }
+  },
+  "autoCarInfo": {
+   "start": {
+    "x": 423278.1921700501,
+    "y": 4437610.951445828,
+    "heading": -0.0030717789872249197
+   },
+   "end": {
+    "x": 423491.1058530354,
+    "y": 4437610.338116104
+   },
+   "routingRequest": {
+    "waypoint": [
+     {
+      "pose": {
+       "x": 423278.1921700501,
+       "y": 4437610.951445828
+      }
+     },
+     {
+      "pose": {
+       "x": 423491.1058530354,
+       "y": 4437610.338116104
+      }
+     }
+    ]
+   }
+  },
+  "gradingConfigInfo": {
+   "baseGradeConfigFile": "grading_system/conf/grading_metrics_default.conf",
+   "deselectDefaultMetric": [
+    "Checkpoint"
+   ]
+  }
+ },
+ "type": "worldsim",
+ "mapId": "69d51ffd0e41e1217f2fda19",
+ "tags": [
+  "Straight Road",
+  "Traveling straight in a through lane",
+  "Static obstacle",
+  "Pedestrian"
+ ],
+ "time": "Fri Jul 31 2026 15:43:57 GMT+0000 (Coordinated Universal Time)",
+ "createTime": "Wed Jul 29 2026 06:17:19 GMT+0000 (Coordinated Universal Time)",
+ "descriptionEn": "障碍物停车避让场景",
+ "descriptionEnTokens": [
+  "xh_2026_gsxx_障碍物停车避让场景"
+ ]
+}

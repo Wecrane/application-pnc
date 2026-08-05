@@ -1,0 +1,985 @@
++ [[ ! 1 == 1 ]]
++ execute -- 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/dump_frame_obstacles.py /home/skye/.apollo/resources/records/202608011757_MkzExample_Xh2025Contest.00000.20260801175651.record 20.0 45.0 2>&1'
++ [[ -f /home/skye/application-pnc/.env ]]
++ set -a
++ source /home/skye/application-pnc/.env
+++ APOLLO_ENV_NAME=edu
+++ APOLLO_ENV_WORKLOCAL=1
+++ APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
+++ APOLLO_ENV_CONTAINER_TAG=9.0-latest
++ set +a
++ parse_arguments -- 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/dump_frame_obstacles.py /home/skye/.apollo/resources/records/202608011757_MkzExample_Xh2025Contest.00000.20260801175651.record 20.0 45.0 2>&1'
++ args=()
++ [[ 2 -gt 0 ]]
++ local opt=--
++ shift
++ case "${opt}" in
++ args+=("$@")
++ break
++ APOLLO_ENV_EXEC_ARGS=('cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/dump_frame_obstacles.py /home/skye/.apollo/resources/records/202608011757_MkzExample_Xh2025Contest.00000.20260801175651.record 20.0 45.0 2>&1')
++ export APOLLO_ENV_EXEC_ARGS
++ apollo_env_exists edu
++ local env_name=edu
++ apollo_envhome_exists edu
++ local env_name=edu
++ [[ -d /home/skye/.aem/envs/edu ]]
++ return 0
++ [[ -e /home/skye/.aem/envs/edu/env.config ]]
++ declare backend
+++ source /home/skye/.aem/envs/edu/env.config
++++ export AEM_FLAG_FORCE_RECREATE=0
++++ AEM_FLAG_FORCE_RECREATE=0
++++ export AEM_FLAG_FORCE_RECREATE_VOLUMES=0
++++ AEM_FLAG_FORCE_RECREATE_VOLUMES=0
++++ export AEM_FLAG_SHM_SIZE=4G
++++ AEM_FLAG_SHM_SIZE=4G
++++ export AEM_FLAG_USE_GPU=1
++++ AEM_FLAG_USE_GPU=1
++++ export AEM_FLAG_USE_LOCAL_IMAGE=0
++++ AEM_FLAG_USE_LOCAL_IMAGE=0
++++ export AEM_GEO=
++++ AEM_GEO=
++++ export AEM_HOME=/opt/apollo/aem
++++ AEM_HOME=/opt/apollo/aem
++++ export AEM_INITED=1
++++ AEM_INITED=1
++++ export AEM_SYS_SHARE=/opt/apollo/aem/share/aem
++++ AEM_SYS_SHARE=/opt/apollo/aem/share/aem
++++ export AEM_VERSION=10.0.0-rc1-r4
++++ AEM_VERSION=10.0.0-rc1-r4
++++ export APOLLO_ENVS_ROOT=/home/skye/.aem/envs
++++ APOLLO_ENVS_ROOT=/home/skye/.aem/envs
++++ APOLLO_ENV_ARGS=()
++++ export APOLLO_ENV_ARGS
++++ export APOLLO_ENV_BACKEND=docker
++++ APOLLO_ENV_BACKEND=docker
++++ export APOLLO_ENV_CONTAINER_GID=1000
++++ APOLLO_ENV_CONTAINER_GID=1000
++++ export APOLLO_ENV_CONTAINER_GROUP=skye
++++ APOLLO_ENV_CONTAINER_GROUP=skye
++++ export APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu
++++ APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu
++++ export APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_
++++ APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_
++++ export APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
++++ APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
++++ export APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm
++++ APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm
++++ export APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu
++++ APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu
++++ export APOLLO_ENV_CONTAINER_SHELL=/bin/bash
++++ APOLLO_ENV_CONTAINER_SHELL=/bin/bash
++++ export APOLLO_ENV_CONTAINER_TAG=9.0-latest
++++ APOLLO_ENV_CONTAINER_TAG=9.0-latest
++++ export APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20
++++ APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20
++++ export APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22
++++ APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22
++++ export APOLLO_ENV_CONTAINER_UID=1000
++++ APOLLO_ENV_CONTAINER_UID=1000
++++ export APOLLO_ENV_CONTAINER_USER=skye
++++ APOLLO_ENV_CONTAINER_USER=skye
++++ export APOLLO_ENV_CROSS_PLATFORM=
++++ APOLLO_ENV_CROSS_PLATFORM=
++++ export APOLLO_ENV_NAME=edu
++++ APOLLO_ENV_NAME=edu
++++ export APOLLO_ENV_USE_GPU_HOST=1
++++ APOLLO_ENV_USE_GPU_HOST=1
++++ export APOLLO_ENV_WORKLOCAL=1
++++ APOLLO_ENV_WORKLOCAL=1
++++ export APOLLO_ENV_WORKROOT=/apollo_workspace
++++ APOLLO_ENV_WORKROOT=/apollo_workspace
++++ export APOLLO_ENV_WORKSPACE=/home/skye/application-pnc
++++ APOLLO_ENV_WORKSPACE=/home/skye/application-pnc
+++ echo docker
++ backend=docker
++ [[ docker == \h\o\s\t ]]
++ [[ docker == \d\o\c\k\e\r ]]
++ local container_name=apollo_neo_dev_edu
++ docker_container_exists apollo_neo_dev_edu
++ local container=apollo_neo_dev_edu
+++ docker ps -a '--format={{.Names}}' -f name=apollo_neo_dev_edu
+++ grep '^apollo_neo_dev_edu$'
++ local query=apollo_neo_dev_edu
++ [[ apollo_neo_dev_edu == \a\p\o\l\l\o\_\n\e\o\_\d\e\v\_\e\d\u ]]
++ return 0
++ return 0
++ set -a
++ source /home/skye/.aem/envs/edu/env.config
+++ export AEM_FLAG_FORCE_RECREATE=0
+++ AEM_FLAG_FORCE_RECREATE=0
+++ export AEM_FLAG_FORCE_RECREATE_VOLUMES=0
+++ AEM_FLAG_FORCE_RECREATE_VOLUMES=0
+++ export AEM_FLAG_SHM_SIZE=4G
+++ AEM_FLAG_SHM_SIZE=4G
+++ export AEM_FLAG_USE_GPU=1
+++ AEM_FLAG_USE_GPU=1
+++ export AEM_FLAG_USE_LOCAL_IMAGE=0
+++ AEM_FLAG_USE_LOCAL_IMAGE=0
+++ export AEM_GEO=
+++ AEM_GEO=
+++ export AEM_HOME=/opt/apollo/aem
+++ AEM_HOME=/opt/apollo/aem
+++ export AEM_INITED=1
+++ AEM_INITED=1
+++ export AEM_SYS_SHARE=/opt/apollo/aem/share/aem
+++ AEM_SYS_SHARE=/opt/apollo/aem/share/aem
+++ export AEM_VERSION=10.0.0-rc1-r4
+++ AEM_VERSION=10.0.0-rc1-r4
+++ export APOLLO_ENVS_ROOT=/home/skye/.aem/envs
+++ APOLLO_ENVS_ROOT=/home/skye/.aem/envs
+++ APOLLO_ENV_ARGS=()
+++ export APOLLO_ENV_ARGS
+++ export APOLLO_ENV_BACKEND=docker
+++ APOLLO_ENV_BACKEND=docker
+++ export APOLLO_ENV_CONTAINER_GID=1000
+++ APOLLO_ENV_CONTAINER_GID=1000
+++ export APOLLO_ENV_CONTAINER_GROUP=skye
+++ APOLLO_ENV_CONTAINER_GROUP=skye
+++ export APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu
+++ APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu
+++ export APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_
+++ APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_
+++ export APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
+++ APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
+++ export APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm
+++ APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm
+++ export APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu
+++ APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu
+++ export APOLLO_ENV_CONTAINER_SHELL=/bin/bash
+++ APOLLO_ENV_CONTAINER_SHELL=/bin/bash
+++ export APOLLO_ENV_CONTAINER_TAG=9.0-latest
+++ APOLLO_ENV_CONTAINER_TAG=9.0-latest
+++ export APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20
+++ APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20
+++ export APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22
+++ APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22
+++ export APOLLO_ENV_CONTAINER_UID=1000
+++ APOLLO_ENV_CONTAINER_UID=1000
+++ export APOLLO_ENV_CONTAINER_USER=skye
+++ APOLLO_ENV_CONTAINER_USER=skye
+++ export APOLLO_ENV_CROSS_PLATFORM=
+++ APOLLO_ENV_CROSS_PLATFORM=
+++ export APOLLO_ENV_NAME=edu
+++ APOLLO_ENV_NAME=edu
+++ export APOLLO_ENV_USE_GPU_HOST=1
+++ APOLLO_ENV_USE_GPU_HOST=1
+++ export APOLLO_ENV_WORKLOCAL=1
+++ APOLLO_ENV_WORKLOCAL=1
+++ export APOLLO_ENV_WORKROOT=/apollo_workspace
+++ APOLLO_ENV_WORKROOT=/apollo_workspace
+++ export APOLLO_ENV_WORKSPACE=/home/skye/application-pnc
+++ APOLLO_ENV_WORKSPACE=/home/skye/application-pnc
++ set +a
++ apollo_exec_env 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/dump_frame_obstacles.py /home/skye/.apollo/resources/records/202608011757_MkzExample_Xh2025Contest.00000.20260801175651.record 20.0 45.0 2>&1'
++ [[ docker == \d\o\c\k\e\r ]]
++ apollo_exec_container 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/dump_frame_obstacles.py /home/skye/.apollo/resources/records/202608011757_MkzExample_Xh2025Contest.00000.20260801175651.record 20.0 45.0 2>&1'
++ local 'cmd=cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/dump_frame_obstacles.py /home/skye/.apollo/resources/records/202608011757_MkzExample_Xh2025Contest.00000.20260801175651.record 20.0 45.0 2>&1'
++ shift
++ [[ -z cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/dump_frame_obstacles.py /home/skye/.apollo/resources/records/202608011757_MkzExample_Xh2025Contest.00000.20260801175651.record 20.0 45.0 2>&1 ]]
++ envs=()
++ local envs
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ envs+=('-e' "HISTFILE=${APOLLO_ENV_WORKROOT}/.cache/.bash_history")
++ envs+=('-e' 'HISTSIZE=200000')
++ envs+=('-e' 'HISTFILESIZE=200000')
++ envs+=('-e' 'HISTCONTROL=ignorespace:erasedups')
++ envs+=('-e' "DOCKER_USER=${APOLLO_ENV_CONTAINER_USER}")
++ xhost +local:root
++ docker exec -u skye -e APOLLO_ENV_ARGS= -e APOLLO_ENV_BACKEND=docker -e APOLLO_ENV_CONTAINER_GID=1000 -e APOLLO_ENV_CONTAINER_GROUP=skye -e APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu -e APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_ -e APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu -e APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm -e APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu -e APOLLO_ENV_CONTAINER_SHELL=/bin/bash -e APOLLO_ENV_CONTAINER_TAG=9.0-latest -e APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20 -e APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22 -e APOLLO_ENV_CONTAINER_UID=1000 -e APOLLO_ENV_CONTAINER_USER=skye -e APOLLO_ENV_CROSS_PLATFORM= -e 'APOLLO_ENV_EXEC_ARGS=cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/dump_frame_obstacles.py /home/skye/.apollo/resources/records/202608011757_MkzExample_Xh2025Contest.00000.20260801175651.record 20.0 45.0 2>&1' -e APOLLO_ENV_NAME=edu -e APOLLO_ENV_USE_GPU_HOST=1 -e APOLLO_ENV_WORKLOCAL=1 -e APOLLO_ENV_WORKROOT=/apollo_workspace -e APOLLO_ENV_WORKSPACE=/home/skye/application-pnc -e HISTFILE=/apollo_workspace/.cache/.bash_history -e HISTSIZE=200000 -e HISTFILESIZE=200000 -e HISTCONTROL=ignorespace:erasedups -e DOCKER_USER=skye -w /apollo_workspace -it apollo_neo_dev_edu /bin/bash -c 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/dump_frame_obstacles.py /home/skye/.apollo/resources/records/202608011757_MkzExample_Xh2025Contest.00000.20260801175651.record 20.0 45.0 2>&1 '
+WARNING: Logging before InitGoogleLogging() is written to STDERR
+I0801 18:22:32.836663 533695 py_record.cc:574] []init _cyber_record_wrapper
+  [plan frame 200] 3060_0:stop, CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 201 ---
+  obs3060 type=PED pos=(423662.18,4437629.60) vel=(-0.01,0.50) speed=0.50
+  [plan frame 201] 3060_0:stop, CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 202 ---
+  obs3060 type=PED pos=(423662.18,4437629.65) vel=(-0.01,0.50) speed=0.50
+  [plan frame 202] 3060_0:stop, CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 203 ---
+  obs3060 type=PED pos=(423662.18,4437629.70) vel=(-0.01,0.50) speed=0.50
+  [plan frame 203] 3060_0:stop, CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 204 ---
+  obs3060 type=PED pos=(423662.18,4437629.75) vel=(-0.01,0.50) speed=0.50
+  [plan frame 204] 3060_0:stop, CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 205 ---
+  obs3060 type=PED pos=(423662.18,4437629.80) vel=(-0.01,0.50) speed=0.50
+  [plan frame 205] 3060_0:stop, CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 206 ---
+  obs3060 type=PED pos=(423662.18,4437629.85) vel=(-0.01,0.50) speed=0.50
+  [plan frame 206] 3060_0:stop, CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 207 ---
+  obs3060 type=PED pos=(423662.18,4437629.90) vel=(-0.01,0.50) speed=0.50
+  [plan frame 207] 3060_0:stop, CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 208 ---
+  obs3060 type=PED pos=(423662.18,4437629.95) vel=(-0.01,0.50) speed=0.50
+  [plan frame 208] 3060_0:stop, CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 209 ---
+  obs3060 type=PED pos=(423662.18,4437630.00) vel=(-0.01,0.50) speed=0.50
+  [plan frame 209] 3060_0:stop, CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 210 ---
+  obs3060 type=PED pos=(423662.18,4437630.05) vel=(-0.01,0.50) speed=0.50
+  [plan frame 210] 3060_0:stop, CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 211 ---
+  obs3060 type=PED pos=(423662.17,4437630.10) vel=(-0.01,0.50) speed=0.50
+  [plan frame 211] 3060_0:stop, CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 212 ---
+  obs3060 type=PED pos=(423662.17,4437630.15) vel=(-0.01,0.50) speed=0.50
+  [plan frame 212] 3060_0:stop, CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 213 ---
+  obs3060 type=PED pos=(423662.17,4437630.20) vel=(-0.01,0.50) speed=0.50
+  [plan frame 213] 3060_0:stop, CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 214 ---
+  obs3060 type=PED pos=(423662.17,4437630.25) vel=(-0.01,0.50) speed=0.50
+  [plan frame 214] 3060_0:stop, CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 215 ---
+  obs3060 type=PED pos=(423662.17,4437630.30) vel=(-0.01,0.50) speed=0.50
+  [plan frame 215] 3060_0:stop, CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 216 ---
+  obs3060 type=PED pos=(423662.17,4437630.35) vel=(-0.01,0.50) speed=0.50
+  [plan frame 216] 3060_0:stop, CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 217 ---
+  obs3060 type=PED pos=(423662.17,4437630.40) vel=(-0.01,0.50) speed=0.50
+  [plan frame 217] 3060_0:follow, CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 218 ---
+  obs3060 type=PED pos=(423662.17,4437630.45) vel=(-0.01,0.50) speed=0.50
+  [plan frame 218] 3060_0:follow, CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 219 ---
+  obs3060 type=PED pos=(423662.17,4437630.50) vel=(-0.01,0.50) speed=0.50
+  [plan frame 219] 3060_0:follow, CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 220 ---
+  obs3060 type=PED pos=(423662.17,4437630.55) vel=(-0.01,0.50) speed=0.50
+  [plan frame 220] 3060_0:follow, CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 221 ---
+  obs3060 type=PED pos=(423662.17,4437630.60) vel=(-0.01,0.50) speed=0.50
+  [plan frame 221] 3060_0:follow, CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 222 ---
+  obs3060 type=PED pos=(423662.16,4437630.65) vel=(-0.01,0.50) speed=0.50
+  [plan frame 222] 3060_0:follow, CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 223 ---
+  obs3060 type=PED pos=(423662.16,4437630.70) vel=(-0.01,0.50) speed=0.50
+  [plan frame 223] 3060_0:follow, CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 224 ---
+  obs3060 type=PED pos=(423662.16,4437630.75) vel=(-0.01,0.50) speed=0.50
+  [plan frame 224] 3060_0:follow, CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 225 ---
+  obs3060 type=PED pos=(423662.16,4437630.80) vel=(-0.01,0.50) speed=0.50
+  [plan frame 225] 3060_0:follow, CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 226 ---
+  obs3060 type=PED pos=(423662.16,4437630.85) vel=(-0.01,0.50) speed=0.50
+  [plan frame 226] 3060_0:follow, CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 227 ---
+  obs3060 type=PED pos=(423662.16,4437630.90) vel=(-0.01,0.50) speed=0.50
+  [plan frame 227] 3060_0:follow, CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 228 ---
+  obs3060 type=PED pos=(423662.16,4437630.95) vel=(-0.01,0.50) speed=0.50
+  [plan frame 228] 3060_0:follow, CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 229 ---
+  obs3060 type=PED pos=(423662.16,4437631.00) vel=(-0.01,0.50) speed=0.50
+  [plan frame 229] 3060_0:follow, CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 230 ---
+  obs3060 type=PED pos=(423662.16,4437631.05) vel=(-0.01,0.50) speed=0.50
+  [plan frame 230] 3060_0:follow, CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 231 ---
+  obs3060 type=PED pos=(423662.16,4437631.10) vel=(-0.01,0.50) speed=0.50
+  [plan frame 231] 3060_0:follow, CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 232 ---
+  obs3060 type=PED pos=(423662.16,4437631.15) vel=(-0.01,0.50) speed=0.50
+  [plan frame 232] 3060_0:follow, CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 233 ---
+  obs3060 type=PED pos=(423662.15,4437631.20) vel=(-0.01,0.50) speed=0.50
+  [plan frame 233] 3060_0:follow, CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 234 ---
+  obs3060 type=PED pos=(423662.15,4437631.25) vel=(-0.01,0.50) speed=0.50
+  [plan frame 234] 3060_0:follow, CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 235 ---
+  obs3060 type=PED pos=(423662.15,4437631.30) vel=(-0.01,0.50) speed=0.50
+  [plan frame 235] 3060_0:follow, CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 236 ---
+  obs3060 type=PED pos=(423662.15,4437631.35) vel=(-0.01,0.50) speed=0.50
+  [plan frame 236] 3060_0:follow, CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 237 ---
+  obs3060 type=PED pos=(423662.15,4437631.40) vel=(-0.01,0.50) speed=0.50
+  [plan frame 237] 3060_0:follow, CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 238 ---
+  obs3060 type=PED pos=(423662.15,4437631.45) vel=(-0.01,0.50) speed=0.50
+  [plan frame 238] 3060_0:follow, CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 239 ---
+  obs3060 type=PED pos=(423662.15,4437631.50) vel=(-0.01,0.50) speed=0.50
+  [plan frame 239] 3060_0:follow, CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 240 ---
+  obs3060 type=PED pos=(423662.15,4437631.55) vel=(-0.01,0.50) speed=0.50
+  [plan frame 240] 3060_0:follow, CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 241 ---
+  obs3060 type=PED pos=(423662.15,4437631.60) vel=(-0.01,0.50) speed=0.50
+  [plan frame 241] 3060_0:follow, CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 242 ---
+  obs3060 type=PED pos=(423662.15,4437631.65) vel=(-0.01,0.50) speed=0.50
+  [plan frame 242] 3060_0:follow, CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 243 ---
+  obs3060 type=PED pos=(423662.15,4437631.70) vel=(-0.01,0.50) speed=0.50
+  [plan frame 243] 3060_0:follow, CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 244 ---
+  obs3060 type=PED pos=(423662.14,4437631.75) vel=(-0.01,0.50) speed=0.50
+  [plan frame 244] 3060_0:follow, CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 245 ---
+  obs3060 type=PED pos=(423662.14,4437631.80) vel=(-0.01,0.50) speed=0.50
+  [plan frame 245] 3060_0:yield, CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 246 ---
+  obs3060 type=PED pos=(423662.14,4437631.85) vel=(-0.01,0.50) speed=0.50
+  [plan frame 246] 3060_0:yield, CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 247 ---
+  obs3060 type=PED pos=(423662.14,4437631.90) vel=(-0.01,0.50) speed=0.50
+  [plan frame 247] 3060_0:yield, CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 248 ---
+  obs3060 type=PED pos=(423662.14,4437631.95) vel=(-0.01,0.50) speed=0.50
+  [plan frame 248] 3060_0:yield, CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 249 ---
+  obs3060 type=PED pos=(423662.14,4437632.00) vel=(-0.01,0.50) speed=0.50
+  [plan frame 249] 3060_0:yield, CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 250 ---
+  obs3060 type=PED pos=(423662.14,4437632.05) vel=(-0.01,0.50) speed=0.50
+  [plan frame 250] 3060_0:yield, CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 251 ---
+  obs3060 type=PED pos=(423662.14,4437632.10) vel=(-0.01,0.50) speed=0.50
+  [plan frame 251] 3060_0:yield, CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 252 ---
+  obs3060 type=PED pos=(423662.14,4437632.15) vel=(-0.01,0.50) speed=0.50
+  [plan frame 252] 3060_0:yield, CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 253 ---
+  obs3060 type=PED pos=(423662.14,4437632.20) vel=(-0.01,0.50) speed=0.50
+  [plan frame 253] 3060_0:yield, CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 254 ---
+  obs3060 type=PED pos=(423662.14,4437632.25) vel=(-0.01,0.50) speed=0.50
+  [plan frame 254] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 255 ---
+  obs3060 type=PED pos=(423662.13,4437632.30) vel=(-0.01,0.50) speed=0.50
+  [plan frame 255] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 256 ---
+  obs3060 type=PED pos=(423662.13,4437632.35) vel=(-0.01,0.50) speed=0.50
+  [plan frame 256] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 257 ---
+  obs3060 type=PED pos=(423662.13,4437632.40) vel=(-0.01,0.50) speed=0.50
+  [plan frame 257] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 258 ---
+  obs3060 type=PED pos=(423662.13,4437632.45) vel=(-0.01,0.50) speed=0.50
+  [plan frame 258] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 259 ---
+  obs3060 type=PED pos=(423662.13,4437632.50) vel=(-0.01,0.50) speed=0.50
+  [plan frame 259] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 260 ---
+  obs3060 type=PED pos=(423662.13,4437632.55) vel=(-0.01,0.50) speed=0.50
+  [plan frame 260] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 261 ---
+  obs3060 type=PED pos=(423662.13,4437632.60) vel=(-0.01,0.50) speed=0.50
+  [plan frame 261] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 262 ---
+  obs3060 type=PED pos=(423662.13,4437632.65) vel=(-0.01,0.50) speed=0.50
+  [plan frame 262] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 263 ---
+  obs3060 type=PED pos=(423662.13,4437632.70) vel=(-0.01,0.50) speed=0.50
+  [plan frame 263] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 264 ---
+  obs3060 type=PED pos=(423662.13,4437632.75) vel=(-0.01,0.50) speed=0.50
+  [plan frame 264] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 265 ---
+  obs3060 type=PED pos=(423662.13,4437632.80) vel=(-0.01,0.50) speed=0.50
+  [plan frame 265] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 266 ---
+  obs3060 type=PED pos=(423662.12,4437632.85) vel=(-0.01,0.50) speed=0.50
+  [plan frame 266] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 267 ---
+  obs3060 type=PED pos=(423662.12,4437632.90) vel=(-0.01,0.50) speed=0.50
+  [plan frame 267] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 268 ---
+  obs3060 type=PED pos=(423662.12,4437632.95) vel=(-0.01,0.50) speed=0.50
+  [plan frame 268] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 269 ---
+  obs3060 type=PED pos=(423662.12,4437633.00) vel=(-0.01,0.50) speed=0.50
+  [plan frame 269] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 270 ---
+  obs3060 type=PED pos=(423662.12,4437633.05) vel=(-0.01,0.50) speed=0.50
+  [plan frame 270] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 271 ---
+  obs3060 type=PED pos=(423662.12,4437633.10) vel=(-0.01,0.50) speed=0.50
+  [plan frame 271] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 272 ---
+  obs3060 type=PED pos=(423662.12,4437633.15) vel=(-0.01,0.50) speed=0.50
+  [plan frame 272] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 273 ---
+  obs3060 type=PED pos=(423662.12,4437633.20) vel=(-0.01,0.50) speed=0.50
+  [plan frame 273] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 274 ---
+  obs3060 type=PED pos=(423662.12,4437633.25) vel=(-0.01,0.50) speed=0.50
+  [plan frame 274] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 275 ---
+  obs3060 type=PED pos=(423662.12,4437633.30) vel=(-0.01,0.50) speed=0.50
+  [plan frame 275] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 276 ---
+  obs3060 type=PED pos=(423662.12,4437633.35) vel=(-0.01,0.50) speed=0.50
+  [plan frame 276] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 277 ---
+  obs3060 type=PED pos=(423662.11,4437633.40) vel=(-0.01,0.50) speed=0.50
+  [plan frame 277] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 278 ---
+  obs3060 type=PED pos=(423662.11,4437633.45) vel=(-0.01,0.50) speed=0.50
+  [plan frame 278] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 279 ---
+  obs3060 type=PED pos=(423662.11,4437633.50) vel=(-0.01,0.50) speed=0.50
+  [plan frame 279] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 280 ---
+  obs3060 type=PED pos=(423662.11,4437633.55) vel=(-0.01,0.50) speed=0.50
+  [plan frame 280] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 281 ---
+  obs3060 type=PED pos=(423662.11,4437633.60) vel=(-0.01,0.50) speed=0.50
+  [plan frame 281] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 282 ---
+  obs3060 type=PED pos=(423662.11,4437633.65) vel=(-0.01,0.50) speed=0.50
+  [plan frame 282] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 283 ---
+  obs3060 type=PED pos=(423662.11,4437633.70) vel=(-0.01,0.50) speed=0.50
+  [plan frame 283] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 284 ---
+  obs3060 type=PED pos=(423662.11,4437633.75) vel=(-0.01,0.50) speed=0.50
+  [plan frame 284] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 285 ---
+  obs3060 type=PED pos=(423662.11,4437633.80) vel=(-0.01,0.50) speed=0.50
+  [plan frame 285] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 286 ---
+  obs3060 type=PED pos=(423662.11,4437633.85) vel=(-0.01,0.50) speed=0.50
+  [plan frame 286] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 287 ---
+  obs3060 type=PED pos=(423662.11,4437633.90) vel=(-0.01,0.50) speed=0.50
+  [plan frame 287] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 288 ---
+  obs3060 type=PED pos=(423662.10,4437633.95) vel=(-0.01,0.50) speed=0.50
+  [plan frame 288] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 289 ---
+  obs3060 type=PED pos=(423662.10,4437634.00) vel=(-0.01,0.50) speed=0.50
+  [plan frame 289] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 290 ---
+  obs3060 type=PED pos=(423662.10,4437634.05) vel=(-0.01,0.50) speed=0.50
+  [plan frame 290] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 291 ---
+  obs3060 type=PED pos=(423662.10,4437634.10) vel=(-0.01,0.50) speed=0.50
+  [plan frame 291] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 292 ---
+  obs3060 type=PED pos=(423662.10,4437634.15) vel=(-0.01,0.50) speed=0.50
+  [plan frame 292] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 293 ---
+  obs3060 type=PED pos=(423662.10,4437634.20) vel=(-0.01,0.50) speed=0.50
+  [plan frame 293] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 294 ---
+  obs3060 type=PED pos=(423662.10,4437634.25) vel=(-0.01,0.50) speed=0.50
+  [plan frame 294] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 295 ---
+  obs3060 type=PED pos=(423662.10,4437634.30) vel=(-0.01,0.50) speed=0.50
+  [plan frame 295] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 296 ---
+  obs3060 type=PED pos=(423662.10,4437634.35) vel=(-0.01,0.50) speed=0.50
+  [plan frame 296] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 297 ---
+  obs3060 type=PED pos=(423662.10,4437634.40) vel=(-0.01,0.50) speed=0.50
+  [plan frame 297] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 298 ---
+  obs3060 type=PED pos=(423662.10,4437634.45) vel=(-0.01,0.50) speed=0.50
+  [plan frame 298] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 299 ---
+  obs3060 type=PED pos=(423662.09,4437634.50) vel=(-0.01,0.50) speed=0.50
+  [plan frame 299] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 300 ---
+  obs3060 type=PED pos=(423662.09,4437634.55) vel=(-0.01,0.50) speed=0.50
+  [plan frame 300] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 301 ---
+  obs3060 type=PED pos=(423662.09,4437634.60) vel=(-0.01,0.50) speed=0.50
+  [plan frame 301] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 302 ---
+  obs3060 type=PED pos=(423662.09,4437634.65) vel=(-0.01,0.50) speed=0.50
+  [plan frame 302] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 303 ---
+  obs3060 type=PED pos=(423662.09,4437634.70) vel=(-0.01,0.50) speed=0.50
+  [plan frame 303] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 304 ---
+  obs3060 type=PED pos=(423662.09,4437634.75) vel=(-0.01,0.50) speed=0.50
+  [plan frame 304] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 305 ---
+  obs3060 type=PED pos=(423662.09,4437634.80) vel=(-0.01,0.50) speed=0.50
+  [plan frame 305] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 306 ---
+  obs3060 type=PED pos=(423662.09,4437634.85) vel=(-0.01,0.50) speed=0.50
+  [plan frame 306] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 307 ---
+  obs3060 type=PED pos=(423662.09,4437634.90) vel=(-0.01,0.50) speed=0.50
+  [plan frame 307] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 308 ---
+  obs3060 type=PED pos=(423662.09,4437634.95) vel=(-0.01,0.50) speed=0.50
+  [plan frame 308] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 309 ---
+  obs3060 type=PED pos=(423662.09,4437635.00) vel=(-0.01,0.50) speed=0.50
+  [plan frame 309] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 310 ---
+  obs3060 type=PED pos=(423662.08,4437635.05) vel=(-0.01,0.50) speed=0.50
+  [plan frame 310] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 311 ---
+  obs3060 type=PED pos=(423662.08,4437635.10) vel=(-0.01,0.50) speed=0.50
+  [plan frame 311] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 312 ---
+  obs3060 type=PED pos=(423662.08,4437635.15) vel=(-0.01,0.50) speed=0.50
+  [plan frame 312] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 313 ---
+  obs3060 type=PED pos=(423662.08,4437635.20) vel=(-0.01,0.50) speed=0.50
+  [plan frame 313] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 314 ---
+  obs3060 type=PED pos=(423662.08,4437635.25) vel=(-0.01,0.50) speed=0.50
+  [plan frame 314] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 315 ---
+  obs3060 type=PED pos=(423662.08,4437635.30) vel=(-0.01,0.50) speed=0.50
+  [plan frame 315] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 316 ---
+  obs3060 type=PED pos=(423662.08,4437635.35) vel=(-0.01,0.50) speed=0.50
+  [plan frame 316] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 317 ---
+  obs3060 type=PED pos=(423662.08,4437635.40) vel=(-0.01,0.50) speed=0.50
+  [plan frame 317] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 318 ---
+  obs3060 type=PED pos=(423662.08,4437635.45) vel=(-0.01,0.50) speed=0.50
+  [plan frame 318] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 319 ---
+  obs3060 type=PED pos=(423662.08,4437635.50) vel=(-0.01,0.50) speed=0.50
+  [plan frame 319] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 320 ---
+  obs3060 type=PED pos=(423662.08,4437635.55) vel=(-0.01,0.50) speed=0.50
+  [plan frame 320] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 321 ---
+  obs3060 type=PED pos=(423662.07,4437635.60) vel=(-0.01,0.50) speed=0.50
+  [plan frame 321] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 322 ---
+  obs3060 type=PED pos=(423662.07,4437635.65) vel=(-0.01,0.50) speed=0.50
+  [plan frame 322] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 323 ---
+  obs3060 type=PED pos=(423662.07,4437635.70) vel=(-0.01,0.50) speed=0.50
+  [plan frame 323] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 324 ---
+  obs3060 type=PED pos=(423662.07,4437635.75) vel=(-0.01,0.50) speed=0.50
+  [plan frame 324] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 325 ---
+  obs3060 type=PED pos=(423662.07,4437635.80) vel=(-0.01,0.50) speed=0.50
+  [plan frame 325] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 326 ---
+  obs3060 type=PED pos=(423662.07,4437635.85) vel=(-0.01,0.50) speed=0.50
+  [plan frame 326] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 327 ---
+  obs3060 type=PED pos=(423662.07,4437635.90) vel=(-0.01,0.50) speed=0.50
+  [plan frame 327] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 328 ---
+  obs3060 type=PED pos=(423662.07,4437635.95) vel=(-0.01,0.50) speed=0.50
+  [plan frame 328] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 329 ---
+  obs3060 type=PED pos=(423662.07,4437636.00) vel=(-0.01,0.50) speed=0.50
+  [plan frame 329] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 330 ---
+  obs3060 type=PED pos=(423662.07,4437636.05) vel=(-0.01,0.50) speed=0.50
+  [plan frame 330] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 331 ---
+  obs3060 type=PED pos=(423662.07,4437636.10) vel=(-0.01,0.50) speed=0.50
+  [plan frame 331] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 332 ---
+  obs3060 type=PED pos=(423662.06,4437636.15) vel=(-0.01,0.50) speed=0.50
+  [plan frame 332] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 333 ---
+  obs3060 type=PED pos=(423662.06,4437636.20) vel=(-0.01,0.50) speed=0.50
+  [plan frame 333] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 334 ---
+  obs3060 type=PED pos=(423662.06,4437636.25) vel=(-0.01,0.50) speed=0.50
+  [plan frame 334] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 335 ---
+  obs3060 type=PED pos=(423662.06,4437636.30) vel=(-0.01,0.50) speed=0.50
+  [plan frame 335] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 336 ---
+  obs3060 type=PED pos=(423662.06,4437636.35) vel=(-0.01,0.50) speed=0.50
+  [plan frame 336] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 337 ---
+  obs3060 type=PED pos=(423662.06,4437636.40) vel=(-0.01,0.50) speed=0.50
+  [plan frame 337] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 338 ---
+  obs3060 type=PED pos=(423662.06,4437636.45) vel=(-0.01,0.50) speed=0.50
+  [plan frame 338] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 339 ---
+  obs3060 type=PED pos=(423662.06,4437636.50) vel=(-0.01,0.50) speed=0.50
+  [plan frame 339] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 340 ---
+  obs3060 type=PED pos=(423662.06,4437636.55) vel=(-0.01,0.50) speed=0.50
+  [plan frame 340] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 341 ---
+  obs3060 type=PED pos=(423662.06,4437636.60) vel=(-0.01,0.50) speed=0.50
+  [plan frame 341] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 342 ---
+  obs3060 type=PED pos=(423662.06,4437636.65) vel=(-0.01,0.50) speed=0.50
+  [plan frame 342] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 343 ---
+  obs3060 type=PED pos=(423662.05,4437636.70) vel=(-0.01,0.50) speed=0.50
+  [plan frame 343] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 344 ---
+  obs3060 type=PED pos=(423662.05,4437636.75) vel=(-0.01,0.50) speed=0.50
+  [plan frame 344] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 345 ---
+  obs3060 type=PED pos=(423662.05,4437636.80) vel=(-0.01,0.50) speed=0.50
+  [plan frame 345] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 346 ---
+  obs3060 type=PED pos=(423662.05,4437636.85) vel=(-0.01,0.50) speed=0.50
+  [plan frame 346] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 347 ---
+  obs3060 type=PED pos=(423662.05,4437636.90) vel=(-0.01,0.50) speed=0.50
+  [plan frame 347] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 348 ---
+  obs3060 type=PED pos=(423662.05,4437636.95) vel=(-0.01,0.50) speed=0.50
+  [plan frame 348] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 349 ---
+  obs3060 type=PED pos=(423662.05,4437637.00) vel=(-0.01,0.50) speed=0.50
+  [plan frame 349] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 350 ---
+  obs3060 type=PED pos=(423662.05,4437637.05) vel=(-0.01,0.50) speed=0.50
+  [plan frame 350] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 351 ---
+  obs3060 type=PED pos=(423662.05,4437637.10) vel=(-0.01,0.50) speed=0.50
+  [plan frame 351] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 352 ---
+  obs3060 type=PED pos=(423662.05,4437637.15) vel=(-0.01,0.50) speed=0.50
+  [plan frame 352] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 353 ---
+  obs3060 type=PED pos=(423662.05,4437637.20) vel=(-0.01,0.50) speed=0.50
+  [plan frame 353] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 354 ---
+  obs3060 type=PED pos=(423662.04,4437637.25) vel=(-0.01,0.50) speed=0.50
+  [plan frame 354] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 355 ---
+  obs3060 type=PED pos=(423662.04,4437637.30) vel=(-0.01,0.50) speed=0.50
+  [plan frame 355] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 356 ---
+  obs3060 type=PED pos=(423662.04,4437637.35) vel=(-0.01,0.50) speed=0.50
+  [plan frame 356] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 357 ---
+  obs3060 type=PED pos=(423662.04,4437637.40) vel=(-0.01,0.50) speed=0.50
+  [plan frame 357] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 358 ---
+  obs3060 type=PED pos=(423662.04,4437637.45) vel=(-0.01,0.50) speed=0.50
+  [plan frame 358] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 359 ---
+  obs3060 type=PED pos=(423662.04,4437637.50) vel=(-0.01,0.50) speed=0.50
+  [plan frame 359] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 360 ---
+  obs3060 type=PED pos=(423662.04,4437637.55) vel=(-0.01,0.50) speed=0.50
+  [plan frame 360] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 361 ---
+  obs3060 type=PED pos=(423662.04,4437637.60) vel=(-0.01,0.50) speed=0.50
+  [plan frame 361] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 362 ---
+  obs3060 type=PED pos=(423662.04,4437637.65) vel=(-0.01,0.50) speed=0.50
+  [plan frame 362] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 363 ---
+  obs3060 type=PED pos=(423662.04,4437637.70) vel=(-0.01,0.50) speed=0.50
+  [plan frame 363] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 364 ---
+  obs3060 type=PED pos=(423662.04,4437637.75) vel=(-0.01,0.50) speed=0.50
+  [plan frame 364] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 365 ---
+  obs3060 type=PED pos=(423662.03,4437637.80) vel=(-0.01,0.50) speed=0.50
+  [plan frame 365] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 366 ---
+  obs3060 type=PED pos=(423662.03,4437637.85) vel=(-0.01,0.50) speed=0.50
+  [plan frame 366] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 367 ---
+  obs3060 type=PED pos=(423662.03,4437637.90) vel=(-0.01,0.50) speed=0.50
+  [plan frame 367] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 368 ---
+  obs3060 type=PED pos=(423662.03,4437637.95) vel=(-0.01,0.50) speed=0.50
+  [plan frame 368] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 369 ---
+  obs3060 type=PED pos=(423662.03,4437638.00) vel=(-0.01,0.50) speed=0.50
+  [plan frame 369] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 370 ---
+  obs3060 type=PED pos=(423662.03,4437638.05) vel=(-0.01,0.50) speed=0.50
+  [plan frame 370] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 371 ---
+  obs3060 type=PED pos=(423662.03,4437638.10) vel=(-0.01,0.50) speed=0.50
+  [plan frame 371] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 372 ---
+  obs3060 type=PED pos=(423662.03,4437638.15) vel=(-0.01,0.50) speed=0.50
+  [plan frame 372] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 373 ---
+  obs3060 type=PED pos=(423662.03,4437638.20) vel=(-0.01,0.50) speed=0.50
+  [plan frame 373] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 374 ---
+  obs3060 type=PED pos=(423662.03,4437638.25) vel=(-0.01,0.50) speed=0.50
+  [plan frame 374] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 375 ---
+  obs3060 type=PED pos=(423662.03,4437638.30) vel=(-0.01,0.50) speed=0.50
+  [plan frame 375] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 376 ---
+  obs3060 type=PED pos=(423662.02,4437638.35) vel=(-0.01,0.50) speed=0.50
+  [plan frame 376] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 377 ---
+  obs3060 type=PED pos=(423662.02,4437638.40) vel=(-0.01,0.50) speed=0.50
+  [plan frame 377] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 378 ---
+  obs3060 type=PED pos=(423662.02,4437638.45) vel=(-0.01,0.50) speed=0.50
+  [plan frame 378] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 379 ---
+  obs3060 type=PED pos=(423662.02,4437638.50) vel=(-0.01,0.50) speed=0.50
+  [plan frame 379] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 380 ---
+  obs3060 type=PED pos=(423662.02,4437638.55) vel=(-0.01,0.50) speed=0.50
+  [plan frame 380] CW_Crosswalk_62:stop, DEST:stop
+--- perception frame 381 ---
+  obs3060 type=PED pos=(423662.02,4437638.60) vel=(-0.01,0.50) speed=0.50
+  [plan frame 381] DEST:stop
+--- perception frame 382 ---
+  obs3060 type=PED pos=(423662.02,4437638.65) vel=(-0.01,0.50) speed=0.50
+  [plan frame 382] DEST:stop
+--- perception frame 383 ---
+  obs3060 type=PED pos=(423662.02,4437638.70) vel=(-0.01,0.50) speed=0.50
+  [plan frame 383] DEST:stop
+--- perception frame 384 ---
+  obs3060 type=PED pos=(423662.02,4437638.75) vel=(-0.01,0.50) speed=0.50
+  [plan frame 384] DEST:stop
+--- perception frame 385 ---
+  obs3060 type=PED pos=(423662.02,4437638.80) vel=(-0.01,0.50) speed=0.50
+  [plan frame 385] DEST:stop
+--- perception frame 386 ---
+  obs3060 type=PED pos=(423662.02,4437638.85) vel=(-0.01,0.50) speed=0.50
+  [plan frame 386] DEST:stop
+--- perception frame 387 ---
+  obs3060 type=PED pos=(423662.01,4437638.90) vel=(-0.01,0.50) speed=0.50
+  [plan frame 387] DEST:stop
+--- perception frame 388 ---
+  obs3060 type=PED pos=(423662.01,4437638.95) vel=(-0.01,0.50) speed=0.50
+  [plan frame 388] DEST:stop
+--- perception frame 389 ---
+  obs3060 type=PED pos=(423662.01,4437639.00) vel=(-0.01,0.50) speed=0.50
+  [plan frame 389] DEST:stop
+--- perception frame 390 ---
+  obs3060 type=PED pos=(423662.01,4437639.05) vel=(-0.01,0.50) speed=0.50
+  [plan frame 390] DEST:stop
+--- perception frame 391 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 391] DEST:stop
+--- perception frame 392 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 392] DEST:stop
+--- perception frame 393 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 393] DEST:stop
+--- perception frame 394 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 394] DEST:stop
+--- perception frame 395 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 395] DEST:stop
+--- perception frame 396 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 396] DEST:stop
+--- perception frame 397 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 397] DEST:stop
+--- perception frame 398 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 398] DEST:stop
+--- perception frame 399 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 399] DEST:stop
+--- perception frame 400 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 400] DEST:stop
+--- perception frame 401 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 401] DEST:stop
+--- perception frame 402 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 402] DEST:stop
+--- perception frame 403 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 403] DEST:stop
+--- perception frame 404 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 404] DEST:stop
+--- perception frame 405 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 405] DEST:stop
+--- perception frame 406 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 406] DEST:stop
+--- perception frame 407 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 407] DEST:stop
+--- perception frame 408 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 408] DEST:stop
+--- perception frame 409 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 409] DEST:stop
+--- perception frame 410 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 410] DEST:stop
+--- perception frame 411 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 411] DEST:stop
+--- perception frame 412 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 412] DEST:stop
+--- perception frame 413 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 413] DEST:stop
+--- perception frame 414 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 414] DEST:stop
+--- perception frame 415 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 415] DEST:stop
+--- perception frame 416 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 416] DEST:stop
+--- perception frame 417 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 417] DEST:stop
+--- perception frame 418 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 418] DEST:stop
+--- perception frame 419 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 419] DEST:stop
+--- perception frame 420 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 420] DEST:stop
+--- perception frame 421 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 421] DEST:stop
+--- perception frame 422 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 422] DEST:stop
+--- perception frame 423 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 423] DEST:stop
+--- perception frame 424 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 424] DEST:stop
+--- perception frame 425 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 425] DEST:stop
+--- perception frame 426 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 426] DEST:stop
+--- perception frame 427 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 427] DEST:stop
+--- perception frame 428 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 428] DEST:stop
+--- perception frame 429 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 429] DEST:stop
+--- perception frame 430 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 430] DEST:stop
+--- perception frame 431 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 431] DEST:stop
+--- perception frame 432 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 432] DEST:stop
+--- perception frame 433 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 433] DEST:stop
+--- perception frame 434 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 434] DEST:stop
+--- perception frame 435 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 435] DEST:stop
+--- perception frame 436 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 436] DEST:stop
+--- perception frame 437 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 437] DEST:stop
+--- perception frame 438 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 438] DEST:stop
+--- perception frame 439 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 439] DEST:stop
+--- perception frame 440 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 440] DEST:stop
+--- perception frame 441 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 441] DEST:stop
+--- perception frame 442 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 442] DEST:stop
+--- perception frame 443 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 443] DEST:stop
+--- perception frame 444 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 444] DEST:stop
+--- perception frame 445 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 445] DEST:stop
+--- perception frame 446 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 446] DEST:stop
+--- perception frame 447 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 447] DEST:stop
+--- perception frame 448 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 448] DEST:stop
+--- perception frame 449 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
+  [plan frame 449] DEST:stop
+--- perception frame 450 ---
+  obs3060 type=PED pos=(423662.01,4437639.07) vel=(-0.00,0.00) speed=0.00
++ xhost -local:root

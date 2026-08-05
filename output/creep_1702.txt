@@ -1,0 +1,843 @@
++ [[ ! 1 == 1 ]]
++ execute -- 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/analyze_crosswalk_creep.py /home/skye/.apollo/resources/records/202608011702_MkzExample_Xh2025Contest.00000.20260801170203.record 2>&1'
++ [[ -f /home/skye/application-pnc/.env ]]
++ set -a
++ source /home/skye/application-pnc/.env
+++ APOLLO_ENV_NAME=edu
+++ APOLLO_ENV_WORKLOCAL=1
+++ APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
+++ APOLLO_ENV_CONTAINER_TAG=9.0-latest
++ set +a
++ parse_arguments -- 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/analyze_crosswalk_creep.py /home/skye/.apollo/resources/records/202608011702_MkzExample_Xh2025Contest.00000.20260801170203.record 2>&1'
++ args=()
++ [[ 2 -gt 0 ]]
++ local opt=--
++ shift
++ case "${opt}" in
++ args+=("$@")
++ break
++ APOLLO_ENV_EXEC_ARGS=('cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/analyze_crosswalk_creep.py /home/skye/.apollo/resources/records/202608011702_MkzExample_Xh2025Contest.00000.20260801170203.record 2>&1')
++ export APOLLO_ENV_EXEC_ARGS
++ apollo_env_exists edu
++ local env_name=edu
++ apollo_envhome_exists edu
++ local env_name=edu
++ [[ -d /home/skye/.aem/envs/edu ]]
++ return 0
++ [[ -e /home/skye/.aem/envs/edu/env.config ]]
++ declare backend
+++ source /home/skye/.aem/envs/edu/env.config
++++ export AEM_FLAG_FORCE_RECREATE=0
++++ AEM_FLAG_FORCE_RECREATE=0
++++ export AEM_FLAG_FORCE_RECREATE_VOLUMES=0
++++ AEM_FLAG_FORCE_RECREATE_VOLUMES=0
++++ export AEM_FLAG_SHM_SIZE=4G
++++ AEM_FLAG_SHM_SIZE=4G
++++ export AEM_FLAG_USE_GPU=1
++++ AEM_FLAG_USE_GPU=1
++++ export AEM_FLAG_USE_LOCAL_IMAGE=0
++++ AEM_FLAG_USE_LOCAL_IMAGE=0
++++ export AEM_GEO=
++++ AEM_GEO=
++++ export AEM_HOME=/opt/apollo/aem
++++ AEM_HOME=/opt/apollo/aem
++++ export AEM_INITED=1
++++ AEM_INITED=1
++++ export AEM_SYS_SHARE=/opt/apollo/aem/share/aem
++++ AEM_SYS_SHARE=/opt/apollo/aem/share/aem
++++ export AEM_VERSION=10.0.0-rc1-r4
++++ AEM_VERSION=10.0.0-rc1-r4
++++ export APOLLO_ENVS_ROOT=/home/skye/.aem/envs
++++ APOLLO_ENVS_ROOT=/home/skye/.aem/envs
++++ APOLLO_ENV_ARGS=()
++++ export APOLLO_ENV_ARGS
++++ export APOLLO_ENV_BACKEND=docker
++++ APOLLO_ENV_BACKEND=docker
++++ export APOLLO_ENV_CONTAINER_GID=1000
++++ APOLLO_ENV_CONTAINER_GID=1000
++++ export APOLLO_ENV_CONTAINER_GROUP=skye
++++ APOLLO_ENV_CONTAINER_GROUP=skye
++++ export APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu
++++ APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu
++++ export APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_
++++ APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_
++++ export APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
++++ APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
++++ export APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm
++++ APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm
++++ export APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu
++++ APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu
++++ export APOLLO_ENV_CONTAINER_SHELL=/bin/bash
++++ APOLLO_ENV_CONTAINER_SHELL=/bin/bash
++++ export APOLLO_ENV_CONTAINER_TAG=9.0-latest
++++ APOLLO_ENV_CONTAINER_TAG=9.0-latest
++++ export APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20
++++ APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20
++++ export APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22
++++ APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22
++++ export APOLLO_ENV_CONTAINER_UID=1000
++++ APOLLO_ENV_CONTAINER_UID=1000
++++ export APOLLO_ENV_CONTAINER_USER=skye
++++ APOLLO_ENV_CONTAINER_USER=skye
++++ export APOLLO_ENV_CROSS_PLATFORM=
++++ APOLLO_ENV_CROSS_PLATFORM=
++++ export APOLLO_ENV_NAME=edu
++++ APOLLO_ENV_NAME=edu
++++ export APOLLO_ENV_USE_GPU_HOST=1
++++ APOLLO_ENV_USE_GPU_HOST=1
++++ export APOLLO_ENV_WORKLOCAL=1
++++ APOLLO_ENV_WORKLOCAL=1
++++ export APOLLO_ENV_WORKROOT=/apollo_workspace
++++ APOLLO_ENV_WORKROOT=/apollo_workspace
++++ export APOLLO_ENV_WORKSPACE=/home/skye/application-pnc
++++ APOLLO_ENV_WORKSPACE=/home/skye/application-pnc
+++ echo docker
++ backend=docker
++ [[ docker == \h\o\s\t ]]
++ [[ docker == \d\o\c\k\e\r ]]
++ local container_name=apollo_neo_dev_edu
++ docker_container_exists apollo_neo_dev_edu
++ local container=apollo_neo_dev_edu
+++ docker ps -a '--format={{.Names}}' -f name=apollo_neo_dev_edu
+++ grep '^apollo_neo_dev_edu$'
++ local query=apollo_neo_dev_edu
++ [[ apollo_neo_dev_edu == \a\p\o\l\l\o\_\n\e\o\_\d\e\v\_\e\d\u ]]
++ return 0
++ return 0
++ set -a
++ source /home/skye/.aem/envs/edu/env.config
+++ export AEM_FLAG_FORCE_RECREATE=0
+++ AEM_FLAG_FORCE_RECREATE=0
+++ export AEM_FLAG_FORCE_RECREATE_VOLUMES=0
+++ AEM_FLAG_FORCE_RECREATE_VOLUMES=0
+++ export AEM_FLAG_SHM_SIZE=4G
+++ AEM_FLAG_SHM_SIZE=4G
+++ export AEM_FLAG_USE_GPU=1
+++ AEM_FLAG_USE_GPU=1
+++ export AEM_FLAG_USE_LOCAL_IMAGE=0
+++ AEM_FLAG_USE_LOCAL_IMAGE=0
+++ export AEM_GEO=
+++ AEM_GEO=
+++ export AEM_HOME=/opt/apollo/aem
+++ AEM_HOME=/opt/apollo/aem
+++ export AEM_INITED=1
+++ AEM_INITED=1
+++ export AEM_SYS_SHARE=/opt/apollo/aem/share/aem
+++ AEM_SYS_SHARE=/opt/apollo/aem/share/aem
+++ export AEM_VERSION=10.0.0-rc1-r4
+++ AEM_VERSION=10.0.0-rc1-r4
+++ export APOLLO_ENVS_ROOT=/home/skye/.aem/envs
+++ APOLLO_ENVS_ROOT=/home/skye/.aem/envs
+++ APOLLO_ENV_ARGS=()
+++ export APOLLO_ENV_ARGS
+++ export APOLLO_ENV_BACKEND=docker
+++ APOLLO_ENV_BACKEND=docker
+++ export APOLLO_ENV_CONTAINER_GID=1000
+++ APOLLO_ENV_CONTAINER_GID=1000
+++ export APOLLO_ENV_CONTAINER_GROUP=skye
+++ APOLLO_ENV_CONTAINER_GROUP=skye
+++ export APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu
+++ APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu
+++ export APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_
+++ APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_
+++ export APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
+++ APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
+++ export APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm
+++ APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm
+++ export APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu
+++ APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu
+++ export APOLLO_ENV_CONTAINER_SHELL=/bin/bash
+++ APOLLO_ENV_CONTAINER_SHELL=/bin/bash
+++ export APOLLO_ENV_CONTAINER_TAG=9.0-latest
+++ APOLLO_ENV_CONTAINER_TAG=9.0-latest
+++ export APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20
+++ APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20
+++ export APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22
+++ APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22
+++ export APOLLO_ENV_CONTAINER_UID=1000
+++ APOLLO_ENV_CONTAINER_UID=1000
+++ export APOLLO_ENV_CONTAINER_USER=skye
+++ APOLLO_ENV_CONTAINER_USER=skye
+++ export APOLLO_ENV_CROSS_PLATFORM=
+++ APOLLO_ENV_CROSS_PLATFORM=
+++ export APOLLO_ENV_NAME=edu
+++ APOLLO_ENV_NAME=edu
+++ export APOLLO_ENV_USE_GPU_HOST=1
+++ APOLLO_ENV_USE_GPU_HOST=1
+++ export APOLLO_ENV_WORKLOCAL=1
+++ APOLLO_ENV_WORKLOCAL=1
+++ export APOLLO_ENV_WORKROOT=/apollo_workspace
+++ APOLLO_ENV_WORKROOT=/apollo_workspace
+++ export APOLLO_ENV_WORKSPACE=/home/skye/application-pnc
+++ APOLLO_ENV_WORKSPACE=/home/skye/application-pnc
++ set +a
++ apollo_exec_env 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/analyze_crosswalk_creep.py /home/skye/.apollo/resources/records/202608011702_MkzExample_Xh2025Contest.00000.20260801170203.record 2>&1'
++ [[ docker == \d\o\c\k\e\r ]]
++ apollo_exec_container 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/analyze_crosswalk_creep.py /home/skye/.apollo/resources/records/202608011702_MkzExample_Xh2025Contest.00000.20260801170203.record 2>&1'
++ local 'cmd=cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/analyze_crosswalk_creep.py /home/skye/.apollo/resources/records/202608011702_MkzExample_Xh2025Contest.00000.20260801170203.record 2>&1'
++ shift
++ [[ -z cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/analyze_crosswalk_creep.py /home/skye/.apollo/resources/records/202608011702_MkzExample_Xh2025Contest.00000.20260801170203.record 2>&1 ]]
++ envs=()
++ local envs
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ envs+=('-e' "HISTFILE=${APOLLO_ENV_WORKROOT}/.cache/.bash_history")
++ envs+=('-e' 'HISTSIZE=200000')
++ envs+=('-e' 'HISTFILESIZE=200000')
++ envs+=('-e' 'HISTCONTROL=ignorespace:erasedups')
++ envs+=('-e' "DOCKER_USER=${APOLLO_ENV_CONTAINER_USER}")
++ xhost +local:root
++ docker exec -u skye -e APOLLO_ENV_ARGS= -e APOLLO_ENV_BACKEND=docker -e APOLLO_ENV_CONTAINER_GID=1000 -e APOLLO_ENV_CONTAINER_GROUP=skye -e APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu -e APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_ -e APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu -e APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm -e APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu -e APOLLO_ENV_CONTAINER_SHELL=/bin/bash -e APOLLO_ENV_CONTAINER_TAG=9.0-latest -e APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20 -e APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22 -e APOLLO_ENV_CONTAINER_UID=1000 -e APOLLO_ENV_CONTAINER_USER=skye -e APOLLO_ENV_CROSS_PLATFORM= -e 'APOLLO_ENV_EXEC_ARGS=cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/analyze_crosswalk_creep.py /home/skye/.apollo/resources/records/202608011702_MkzExample_Xh2025Contest.00000.20260801170203.record 2>&1' -e APOLLO_ENV_NAME=edu -e APOLLO_ENV_USE_GPU_HOST=1 -e APOLLO_ENV_WORKLOCAL=1 -e APOLLO_ENV_WORKROOT=/apollo_workspace -e APOLLO_ENV_WORKSPACE=/home/skye/application-pnc -e HISTFILE=/apollo_workspace/.cache/.bash_history -e HISTSIZE=200000 -e HISTFILESIZE=200000 -e HISTCONTROL=ignorespace:erasedups -e DOCKER_USER=skye -w /apollo_workspace -it apollo_neo_dev_edu /bin/bash -c 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/analyze_crosswalk_creep.py /home/skye/.apollo/resources/records/202608011702_MkzExample_Xh2025Contest.00000.20260801170203.record 2>&1 '
+WARNING: Logging before InitGoogleLogging() is written to STDERR
+I0801 17:04:28.097198 404914 py_record.cc:574] []init _cyber_record_wrapper
+=== 停车段高分辨率 (v<0.3 每帧) ===
+--- 停车段 t=24.95~36.95s, 1201帧 ---
+  t= 24.95 x=423670.680 v=0.299
+  t= 24.99 x=423670.668 v=0.296
+  t= 25.03 x=423670.656 v=0.293
+  t= 25.07 x=423670.644 v=0.290
+  t= 25.11 x=423670.633 v=0.287
+  t= 25.15 x=423670.621 v=0.285
+  t= 25.19 x=423670.610 v=0.282
+  t= 25.23 x=423670.599 v=0.277
+  t= 25.27 x=423670.588 v=0.268
+  t= 25.31 x=423670.578 v=0.258
+  t= 25.35 x=423670.567 v=0.248
+  t= 25.39 x=423670.558 v=0.240
+  t= 25.43 x=423670.548 v=0.232
+  t= 25.47 x=423670.539 v=0.225
+  t= 25.51 x=423670.530 v=0.219
+  t= 25.55 x=423670.522 v=0.213
+  t= 25.59 x=423670.513 v=0.208
+  t= 25.63 x=423670.505 v=0.203
+  t= 25.67 x=423670.497 v=0.198
+  t= 25.71 x=423670.489 v=0.194
+  t= 25.75 x=423670.481 v=0.190
+  t= 25.79 x=423670.474 v=0.187
+  t= 25.83 x=423670.466 v=0.183
+  t= 25.87 x=423670.459 v=0.180
+  t= 25.91 x=423670.452 v=0.177
+  t= 25.95 x=423670.445 v=0.174
+  t= 25.99 x=423670.438 v=0.171
+  t= 26.03 x=423670.431 v=0.169
+  t= 26.07 x=423670.425 v=0.166
+  t= 26.11 x=423670.418 v=0.163
+  t= 26.15 x=423670.412 v=0.161
+  t= 26.19 x=423670.405 v=0.159
+  t= 26.23 x=423670.399 v=0.158
+  t= 26.27 x=423670.393 v=0.158
+  t= 26.31 x=423670.386 v=0.157
+  t= 26.35 x=423670.380 v=0.157
+  t= 26.39 x=423670.374 v=0.156
+  t= 26.43 x=423670.367 v=0.155
+  t= 26.47 x=423670.361 v=0.153
+  t= 26.51 x=423670.355 v=0.152
+  t= 26.55 x=423670.349 v=0.150
+  t= 26.59 x=423670.343 v=0.148
+  t= 26.63 x=423670.337 v=0.148
+  t= 26.67 x=423670.331 v=0.148
+  t= 26.71 x=423670.325 v=0.147
+  t= 26.75 x=423670.320 v=0.147
+  t= 26.79 x=423670.314 v=0.146
+  t= 26.83 x=423670.308 v=0.144
+  t= 26.87 x=423670.302 v=0.143
+  t= 26.91 x=423670.297 v=0.141
+  t= 26.95 x=423670.291 v=0.139
+  t= 26.99 x=423670.285 v=0.139
+  t= 27.03 x=423670.280 v=0.139
+  t= 27.07 x=423670.274 v=0.138
+  t= 27.11 x=423670.269 v=0.137
+  t= 27.15 x=423670.263 v=0.135
+  t= 27.19 x=423670.258 v=0.133
+  t= 27.23 x=423670.253 v=0.134
+  t= 27.27 x=423670.247 v=0.133
+  t= 27.31 x=423670.242 v=0.132
+  t= 27.35 x=423670.237 v=0.131
+  t= 27.39 x=423670.231 v=0.129
+  t= 27.43 x=423670.226 v=0.128
+  t= 27.47 x=423670.221 v=0.128
+  t= 27.51 x=423670.216 v=0.128
+  t= 27.55 x=423670.211 v=0.127
+  t= 27.59 x=423670.206 v=0.126
+  t= 27.63 x=423670.201 v=0.124
+  t= 27.67 x=423670.196 v=0.123
+  t= 27.71 x=423670.191 v=0.123
+  t= 27.75 x=423670.186 v=0.122
+  t= 27.79 x=423670.181 v=0.121
+  t= 27.83 x=423670.176 v=0.120
+  t= 27.87 x=423670.172 v=0.118
+  t= 27.91 x=423670.167 v=0.119
+  t= 27.95 x=423670.162 v=0.118
+  t= 27.99 x=423670.158 v=0.117
+  t= 28.03 x=423670.153 v=0.116
+  t= 28.07 x=423670.148 v=0.114
+  t= 28.11 x=423670.144 v=0.115
+  t= 28.15 x=423670.139 v=0.114
+  t= 28.19 x=423670.135 v=0.113
+  t= 28.23 x=423670.130 v=0.111
+  t= 28.27 x=423670.126 v=0.110
+  t= 28.31 x=423670.121 v=0.110
+  t= 28.35 x=423670.117 v=0.109
+  t= 28.39 x=423670.113 v=0.107
+  t= 28.43 x=423670.108 v=0.107
+  t= 28.47 x=423670.104 v=0.106
+  t= 28.51 x=423670.100 v=0.105
+  t= 28.55 x=423670.096 v=0.104
+  t= 28.59 x=423670.091 v=0.104
+  t= 28.63 x=423670.087 v=0.103
+  t= 28.67 x=423670.083 v=0.102
+  t= 28.71 x=423670.079 v=0.101
+  t= 28.75 x=423670.075 v=0.101
+  t= 28.79 x=423670.071 v=0.100
+  t= 28.83 x=423670.067 v=0.099
+  t= 28.87 x=423670.063 v=0.098
+  t= 28.91 x=423670.059 v=0.098
+  t= 28.95 x=423670.055 v=0.097
+  t= 28.99 x=423670.052 v=0.095
+  t= 29.03 x=423670.048 v=0.096
+  t= 29.07 x=423670.044 v=0.095
+  t= 29.11 x=423670.040 v=0.094
+  t= 29.15 x=423670.036 v=0.092
+  t= 29.19 x=423670.033 v=0.093
+  t= 29.23 x=423670.029 v=0.092
+  t= 29.27 x=423670.025 v=0.091
+  t= 29.31 x=423670.022 v=0.089
+  t= 29.35 x=423670.018 v=0.089
+  t= 29.39 x=423670.015 v=0.088
+  t= 29.43 x=423670.011 v=0.087
+  t= 29.47 x=423670.008 v=0.086
+  t= 29.51 x=423670.004 v=0.086
+  t= 29.55 x=423670.001 v=0.085
+  t= 29.59 x=423669.997 v=0.084
+  t= 29.63 x=423669.994 v=0.084
+  t= 29.67 x=423669.991 v=0.084
+  t= 29.71 x=423669.987 v=0.082
+  t= 29.75 x=423669.984 v=0.081
+  t= 29.79 x=423669.981 v=0.082
+  t= 29.83 x=423669.978 v=0.081
+  t= 29.87 x=423669.974 v=0.080
+  t= 29.91 x=423669.971 v=0.079
+  t= 29.95 x=423669.968 v=0.079
+  t= 29.99 x=423669.965 v=0.078
+  t= 30.03 x=423669.962 v=0.076
+  t= 30.07 x=423669.959 v=0.077
+  t= 30.11 x=423669.956 v=0.076
+  t= 30.15 x=423669.953 v=0.075
+  t= 30.19 x=423669.950 v=0.074
+  t= 30.23 x=423669.947 v=0.074
+  t= 30.27 x=423669.944 v=0.073
+  t= 30.31 x=423669.941 v=0.072
+  t= 30.35 x=423669.938 v=0.072
+  t= 30.39 x=423669.935 v=0.072
+  t= 30.43 x=423669.932 v=0.071
+  t= 30.47 x=423669.930 v=0.069
+  t= 30.51 x=423669.927 v=0.069
+  t= 30.55 x=423669.924 v=0.068
+  t= 30.59 x=423669.921 v=0.068
+  t= 30.63 x=423669.919 v=0.067
+  t= 30.67 x=423669.916 v=0.066
+  t= 30.71 x=423669.913 v=0.066
+  t= 30.75 x=423669.911 v=0.066
+  t= 30.79 x=423669.908 v=0.064
+  t= 30.83 x=423669.906 v=0.064
+  t= 30.87 x=423669.903 v=0.064
+  t= 30.91 x=423669.900 v=0.062
+  t= 30.95 x=423669.898 v=0.063
+  t= 30.99 x=423669.895 v=0.062
+  t= 31.03 x=423669.893 v=0.061
+  t= 31.07 x=423669.891 v=0.061
+  t= 31.11 x=423669.888 v=0.060
+  t= 31.15 x=423669.886 v=0.059
+  t= 31.19 x=423669.883 v=0.060
+  t= 31.23 x=423669.881 v=0.059
+  t= 31.27 x=423669.879 v=0.057
+  t= 31.31 x=423669.876 v=0.058
+  t= 31.35 x=423669.874 v=0.057
+  t= 31.39 x=423669.872 v=0.055
+  t= 31.43 x=423669.870 v=0.056
+  t= 31.47 x=423669.867 v=0.055
+  t= 31.51 x=423669.865 v=0.054
+  t= 31.55 x=423669.863 v=0.054
+  t= 31.59 x=423669.861 v=0.053
+  t= 31.63 x=423669.859 v=0.053
+  t= 31.67 x=423669.857 v=0.053
+  t= 31.71 x=423669.855 v=0.052
+  t= 31.75 x=423669.853 v=0.051
+  t= 31.79 x=423669.850 v=0.052
+  t= 31.83 x=423669.848 v=0.051
+  t= 31.87 x=423669.846 v=0.050
+  t= 31.91 x=423669.844 v=0.050
+  t= 31.95 x=423669.842 v=0.049
+  t= 31.99 x=423669.840 v=0.049
+  t= 32.03 x=423669.839 v=0.048
+  t= 32.07 x=423669.837 v=0.047
+  t= 32.11 x=423669.835 v=0.048
+  t= 32.15 x=423669.833 v=0.047
+  t= 32.19 x=423669.831 v=0.045
+  t= 32.23 x=423669.829 v=0.046
+  t= 32.27 x=423669.827 v=0.046
+  t= 32.31 x=423669.826 v=0.044
+  t= 32.35 x=423669.824 v=0.044
+  t= 32.39 x=423669.822 v=0.044
+  t= 32.43 x=423669.820 v=0.043
+  t= 32.47 x=423669.819 v=0.043
+  t= 32.51 x=423669.817 v=0.042
+  t= 32.55 x=423669.815 v=0.041
+  t= 32.59 x=423669.814 v=0.038
+  t= 32.63 x=423669.812 v=0.034
+  t= 32.67 x=423669.811 v=0.027
+  t= 32.71 x=423669.810 v=0.014
+  t= 32.75 x=423669.810 v=0.000
+  t= 32.79 x=423669.810 v=0.000
+  t= 32.83 x=423669.810 v=0.000
+  t= 32.87 x=423669.810 v=0.000
+  t= 32.91 x=423669.810 v=0.000
+  t= 32.95 x=423669.810 v=0.000
+  t= 32.99 x=423669.810 v=0.000
+  t= 33.03 x=423669.811 v=0.000
+  t= 33.07 x=423669.811 v=0.000
+  t= 33.11 x=423669.811 v=0.000
+  t= 33.15 x=423669.811 v=0.000
+  t= 33.19 x=423669.811 v=0.000
+  t= 33.23 x=423669.811 v=0.000
+  t= 33.27 x=423669.811 v=0.000
+  t= 33.31 x=423669.811 v=0.000
+  t= 33.35 x=423669.811 v=0.000
+  t= 33.39 x=423669.811 v=0.000
+  t= 33.43 x=423669.812 v=0.000
+  t= 33.47 x=423669.812 v=0.000
+  t= 33.51 x=423669.812 v=0.000
+  t= 33.55 x=423669.812 v=0.000
+  t= 33.59 x=423669.812 v=0.000
+  t= 33.63 x=423669.812 v=0.000
+  t= 33.67 x=423669.812 v=0.000
+  t= 33.71 x=423669.812 v=0.000
+  t= 33.75 x=423669.812 v=0.000
+  t= 33.79 x=423669.812 v=0.000
+  t= 33.83 x=423669.813 v=0.000
+  t= 33.87 x=423669.813 v=0.000
+  t= 33.91 x=423669.813 v=0.000
+  t= 33.95 x=423669.813 v=0.000
+  t= 33.99 x=423669.813 v=0.000
+  t= 34.03 x=423669.813 v=0.000
+  t= 34.07 x=423669.813 v=0.000
+  t= 34.11 x=423669.813 v=0.000
+  t= 34.15 x=423669.813 v=0.000
+  t= 34.19 x=423669.813 v=0.000
+  t= 34.23 x=423669.814 v=0.000
+  t= 34.27 x=423669.814 v=0.000
+  t= 34.31 x=423669.814 v=0.000
+  t= 34.35 x=423669.814 v=0.000
+  t= 34.39 x=423669.814 v=0.000
+  t= 34.43 x=423669.814 v=0.000
+  t= 34.47 x=423669.814 v=0.000
+  t= 34.51 x=423669.814 v=0.000
+  t= 34.55 x=423669.814 v=0.000
+  t= 34.59 x=423669.814 v=0.000
+  t= 34.63 x=423669.815 v=0.000
+  t= 34.67 x=423669.815 v=0.000
+  t= 34.71 x=423669.815 v=0.000
+  t= 34.75 x=423669.815 v=0.000
+  t= 34.79 x=423669.815 v=0.000
+  t= 34.83 x=423669.815 v=0.000
+  t= 34.87 x=423669.815 v=0.000
+  t= 34.91 x=423669.815 v=0.000
+  t= 34.95 x=423669.815 v=0.000
+  t= 34.99 x=423669.815 v=0.000
+  t= 35.03 x=423669.816 v=0.000
+  t= 35.07 x=423669.816 v=0.000
+  t= 35.11 x=423669.816 v=0.000
+  t= 35.15 x=423669.816 v=0.000
+  t= 35.19 x=423669.816 v=0.000
+  t= 35.23 x=423669.816 v=0.000
+  t= 35.27 x=423669.816 v=0.000
+  t= 35.31 x=423669.816 v=0.000
+  t= 35.35 x=423669.816 v=0.000
+  t= 35.39 x=423669.816 v=0.000
+  t= 35.43 x=423669.817 v=0.000
+  t= 35.47 x=423669.817 v=0.000
+  t= 35.51 x=423669.817 v=0.000
+  t= 35.55 x=423669.817 v=0.000
+  t= 35.59 x=423669.817 v=0.000
+  t= 35.63 x=423669.817 v=0.000
+  t= 35.67 x=423669.817 v=0.000
+  t= 35.71 x=423669.817 v=0.000
+  t= 35.75 x=423669.817 v=0.000
+  t= 35.79 x=423669.817 v=0.000
+  t= 35.83 x=423669.818 v=0.000
+  t= 35.87 x=423669.818 v=0.000
+  t= 35.91 x=423669.818 v=0.001
+  t= 35.95 x=423669.818 v=0.003
+  t= 35.99 x=423669.818 v=0.001
+  t= 36.03 x=423669.818 v=0.000
+  t= 36.07 x=423669.818 v=0.000
+  t= 36.11 x=423669.818 v=0.000
+  t= 36.15 x=423669.818 v=0.000
+  t= 36.19 x=423669.818 v=0.001
+  t= 36.23 x=423669.818 v=0.000
+  t= 36.27 x=423669.818 v=0.000
+  t= 36.31 x=423669.818 v=0.000
+  t= 36.35 x=423669.818 v=0.001
+  t= 36.39 x=423669.818 v=0.001
+  t= 36.43 x=423669.818 v=0.000
+  t= 36.47 x=423669.818 v=0.000
+  t= 36.51 x=423669.818 v=0.000
+  t= 36.55 x=423669.818 v=0.001
+  t= 36.59 x=423669.818 v=0.001
+  t= 36.63 x=423669.818 v=0.000
+  t= 36.67 x=423669.818 v=0.000
+  t= 36.71 x=423669.818 v=0.000
+  t= 36.75 x=423669.818 v=0.001
+  t= 36.79 x=423669.818 v=0.002
+  t= 36.83 x=423669.818 v=0.000
+  t= 36.87 x=423669.818 v=0.000
+  t= 36.91 x=423669.818 v=0.000
+  t= 36.95 x=423669.818 v=0.000
+--- 停车段 t=36.96~39.34s, 239帧 ---
+  t= 36.96 x=423669.818 v=0.001
+  t= 37.00 x=423669.818 v=0.002
+  t= 37.04 x=423669.818 v=0.000
+  t= 37.08 x=423669.818 v=0.000
+  t= 37.12 x=423669.818 v=0.000
+  t= 37.16 x=423669.818 v=0.000
+  t= 37.20 x=423669.818 v=0.002
+  t= 37.24 x=423669.818 v=0.000
+  t= 37.28 x=423669.818 v=0.000
+  t= 37.32 x=423669.818 v=0.000
+  t= 37.36 x=423669.818 v=0.000
+  t= 37.40 x=423669.818 v=0.001
+  t= 37.44 x=423669.818 v=0.000
+  t= 37.48 x=423669.818 v=0.000
+  t= 37.52 x=423669.818 v=0.000
+  t= 37.56 x=423669.818 v=0.001
+  t= 37.60 x=423669.818 v=0.000
+  t= 37.64 x=423669.818 v=0.000
+  t= 37.68 x=423669.818 v=0.000
+  t= 37.72 x=423669.818 v=0.001
+  t= 37.76 x=423669.818 v=0.000
+  t= 37.80 x=423669.818 v=0.000
+  t= 37.84 x=423669.818 v=0.000
+  t= 37.88 x=423669.818 v=0.001
+  t= 37.92 x=423669.818 v=0.000
+  t= 37.96 x=423669.818 v=0.000
+  t= 38.00 x=423669.818 v=0.000
+  t= 38.04 x=423669.818 v=0.001
+  t= 38.08 x=423669.818 v=0.000
+  t= 38.12 x=423669.818 v=0.000
+  t= 38.16 x=423669.818 v=0.000
+  t= 38.20 x=423669.818 v=0.001
+  t= 38.24 x=423669.818 v=0.002
+  t= 38.28 x=423669.818 v=0.000
+  t= 38.32 x=423669.818 v=0.000
+  t= 38.36 x=423669.818 v=0.000
+  t= 38.40 x=423669.818 v=0.000
+  t= 38.44 x=423669.818 v=0.002
+  t= 38.48 x=423669.818 v=0.000
+  t= 38.52 x=423669.818 v=0.000
+  t= 38.56 x=423669.818 v=0.000
+  t= 38.60 x=423669.818 v=0.000
+  t= 38.64 x=423669.818 v=0.001
+  t= 38.68 x=423669.817 v=0.004
+  t= 38.72 x=423669.817 v=0.008
+  t= 38.76 x=423669.817 v=0.013
+  t= 38.80 x=423669.816 v=0.019
+  t= 38.84 x=423669.815 v=0.026
+  t= 38.88 x=423669.814 v=0.034
+  t= 38.92 x=423669.813 v=0.043
+  t= 38.96 x=423669.811 v=0.056
+  t= 39.00 x=423669.808 v=0.070
+  t= 39.04 x=423669.805 v=0.087
+  t= 39.08 x=423669.801 v=0.107
+  t= 39.12 x=423669.796 v=0.129
+  t= 39.16 x=423669.791 v=0.155
+  t= 39.20 x=423669.784 v=0.183
+  t= 39.24 x=423669.776 v=0.215
+  t= 39.28 x=423669.767 v=0.249
+  t= 39.32 x=423669.756 v=0.286
+
+=== STOP 栅栏变化 (t, x, y, reason) 采样 ===
+  t=  6.02 stop_point=(423568.319,2.000) reason=4437630.482
+  t=  9.32 stop_point=(423665.728,104.000) reason=4437630.342
+  t= 38.62 stop_point=(423568.319,2.000) reason=4437630.482
+
+=== 行人3060 每2秒 ===
+  t=  0.0 x=423662.30 y=4437623.30 v=0.053
+  t=  0.1 x=423662.30 y=4437623.30 v=0.055
+  t=  0.2 x=423662.30 y=4437623.31 v=0.058
+  t=  0.3 x=423662.30 y=4437623.31 v=0.060
+  t=  0.4 x=423662.30 y=4437623.32 v=0.063
+  t=  0.5 x=423662.30 y=4437623.33 v=0.065
+  t=  0.6 x=423662.30 y=4437623.33 v=0.068
+  t=  0.7 x=423662.30 y=4437623.34 v=0.070
+  t=  0.8 x=423662.30 y=4437623.35 v=0.073
+  t=  0.9 x=423662.30 y=4437623.35 v=0.075
+  t=  2.0 x=423662.29 y=4437623.45 v=0.103
+  t=  2.1 x=423662.29 y=4437623.46 v=0.105
+  t=  2.2 x=423662.29 y=4437623.47 v=0.108
+  t=  2.3 x=423662.29 y=4437623.48 v=0.110
+  t=  2.4 x=423662.29 y=4437623.49 v=0.113
+  t=  2.5 x=423662.29 y=4437623.51 v=0.115
+  t=  2.6 x=423662.29 y=4437623.52 v=0.118
+  t=  2.7 x=423662.29 y=4437623.53 v=0.120
+  t=  2.8 x=423662.29 y=4437623.54 v=0.123
+  t=  2.9 x=423662.29 y=4437623.55 v=0.125
+  t=  4.0 x=423662.29 y=4437623.71 v=0.153
+  t=  4.1 x=423662.29 y=4437623.72 v=0.155
+  t=  4.2 x=423662.29 y=4437623.74 v=0.158
+  t=  4.3 x=423662.29 y=4437623.75 v=0.160
+  t=  4.4 x=423662.29 y=4437623.77 v=0.163
+  t=  4.5 x=423662.29 y=4437623.79 v=0.165
+  t=  4.6 x=423662.29 y=4437623.80 v=0.168
+  t=  4.7 x=423662.29 y=4437623.82 v=0.170
+  t=  4.8 x=423662.29 y=4437623.84 v=0.173
+  t=  4.9 x=423662.29 y=4437623.85 v=0.175
+  t=  6.0 x=423662.28 y=4437624.06 v=0.203
+  t=  6.1 x=423662.28 y=4437624.08 v=0.205
+  t=  6.2 x=423662.28 y=4437624.10 v=0.208
+  t=  6.3 x=423662.28 y=4437624.12 v=0.210
+  t=  6.4 x=423662.28 y=4437624.14 v=0.213
+  t=  6.5 x=423662.28 y=4437624.17 v=0.215
+  t=  6.6 x=423662.28 y=4437624.19 v=0.218
+  t=  6.7 x=423662.28 y=4437624.21 v=0.220
+  t=  6.8 x=423662.28 y=4437624.23 v=0.223
+  t=  6.9 x=423662.28 y=4437624.25 v=0.225
+  t=  8.0 x=423662.28 y=4437624.52 v=0.253
+  t=  8.1 x=423662.27 y=4437624.54 v=0.255
+  t=  8.2 x=423662.27 y=4437624.57 v=0.258
+  t=  8.3 x=423662.27 y=4437624.59 v=0.260
+  t=  8.4 x=423662.27 y=4437624.62 v=0.263
+  t=  8.5 x=423662.27 y=4437624.65 v=0.265
+  t=  8.6 x=423662.27 y=4437624.67 v=0.268
+  t=  8.7 x=423662.27 y=4437624.70 v=0.270
+  t=  8.8 x=423662.27 y=4437624.73 v=0.273
+  t=  8.9 x=423662.27 y=4437624.75 v=0.275
+  t= 10.0 x=423662.27 y=4437625.07 v=0.303
+  t= 10.1 x=423662.26 y=4437625.10 v=0.305
+  t= 10.2 x=423662.26 y=4437625.13 v=0.308
+  t= 10.3 x=423662.26 y=4437625.16 v=0.310
+  t= 10.4 x=423662.26 y=4437625.19 v=0.313
+  t= 10.5 x=423662.26 y=4437625.23 v=0.315
+  t= 10.6 x=423662.26 y=4437625.26 v=0.318
+  t= 10.7 x=423662.26 y=4437625.29 v=0.320
+  t= 10.8 x=423662.26 y=4437625.32 v=0.323
+  t= 10.9 x=423662.26 y=4437625.35 v=0.325
+  t= 12.0 x=423662.25 y=4437625.73 v=0.353
+  t= 12.1 x=423662.25 y=4437625.76 v=0.355
+  t= 12.2 x=423662.25 y=4437625.80 v=0.358
+  t= 12.3 x=423662.25 y=4437625.83 v=0.360
+  t= 12.4 x=423662.25 y=4437625.87 v=0.363
+  t= 12.5 x=423662.25 y=4437625.91 v=0.365
+  t= 12.6 x=423662.25 y=4437625.94 v=0.368
+  t= 12.7 x=423662.25 y=4437625.98 v=0.370
+  t= 12.8 x=423662.25 y=4437626.02 v=0.373
+  t= 12.9 x=423662.25 y=4437626.05 v=0.375
+  t= 14.0 x=423662.24 y=4437626.48 v=0.403
+  t= 14.1 x=423662.24 y=4437626.52 v=0.405
+  t= 14.2 x=423662.24 y=4437626.56 v=0.408
+  t= 14.3 x=423662.24 y=4437626.60 v=0.410
+  t= 14.4 x=423662.24 y=4437626.64 v=0.413
+  t= 14.5 x=423662.24 y=4437626.68 v=0.415
+  t= 14.6 x=423662.24 y=4437626.73 v=0.418
+  t= 14.7 x=423662.23 y=4437626.77 v=0.420
+  t= 14.8 x=423662.23 y=4437626.81 v=0.423
+  t= 14.9 x=423662.23 y=4437626.85 v=0.425
+  t= 16.0 x=423662.22 y=4437627.34 v=0.453
+  t= 16.1 x=423662.22 y=4437627.38 v=0.455
+  t= 16.2 x=423662.22 y=4437627.43 v=0.458
+  t= 16.3 x=423662.22 y=4437627.47 v=0.460
+  t= 16.4 x=423662.22 y=4437627.52 v=0.463
+  t= 16.5 x=423662.22 y=4437627.56 v=0.465
+  t= 16.6 x=423662.22 y=4437627.61 v=0.468
+  t= 16.7 x=423662.22 y=4437627.66 v=0.470
+  t= 16.8 x=423662.22 y=4437627.71 v=0.473
+  t= 16.9 x=423662.22 y=4437627.75 v=0.475
+  t= 18.0 x=423662.21 y=4437628.30 v=0.500
+  t= 18.1 x=423662.21 y=4437628.35 v=0.500
+  t= 18.2 x=423662.20 y=4437628.40 v=0.500
+  t= 18.3 x=423662.20 y=4437628.45 v=0.500
+  t= 18.4 x=423662.20 y=4437628.50 v=0.500
+  t= 18.5 x=423662.20 y=4437628.55 v=0.500
+  t= 18.6 x=423662.20 y=4437628.60 v=0.500
+  t= 18.7 x=423662.20 y=4437628.65 v=0.500
+  t= 18.8 x=423662.20 y=4437628.70 v=0.500
+  t= 18.9 x=423662.20 y=4437628.75 v=0.500
+  t= 20.0 x=423662.19 y=4437629.30 v=0.500
+  t= 20.1 x=423662.19 y=4437629.35 v=0.500
+  t= 20.2 x=423662.19 y=4437629.40 v=0.500
+  t= 20.3 x=423662.19 y=4437629.45 v=0.500
+  t= 20.4 x=423662.19 y=4437629.50 v=0.500
+  t= 20.5 x=423662.18 y=4437629.55 v=0.500
+  t= 20.6 x=423662.18 y=4437629.60 v=0.500
+  t= 20.7 x=423662.18 y=4437629.65 v=0.500
+  t= 20.8 x=423662.18 y=4437629.70 v=0.500
+  t= 20.9 x=423662.18 y=4437629.75 v=0.500
+  t= 22.0 x=423662.17 y=4437630.30 v=0.500
+  t= 22.1 x=423662.17 y=4437630.35 v=0.500
+  t= 22.2 x=423662.17 y=4437630.40 v=0.500
+  t= 22.3 x=423662.17 y=4437630.45 v=0.500
+  t= 22.4 x=423662.17 y=4437630.50 v=0.500
+  t= 22.5 x=423662.17 y=4437630.55 v=0.500
+  t= 22.6 x=423662.17 y=4437630.60 v=0.500
+  t= 22.7 x=423662.16 y=4437630.65 v=0.500
+  t= 22.8 x=423662.16 y=4437630.70 v=0.500
+  t= 22.9 x=423662.16 y=4437630.75 v=0.500
+  t= 24.0 x=423662.15 y=4437631.30 v=0.500
+  t= 24.1 x=423662.15 y=4437631.35 v=0.500
+  t= 24.2 x=423662.15 y=4437631.40 v=0.500
+  t= 24.3 x=423662.15 y=4437631.45 v=0.500
+  t= 24.4 x=423662.15 y=4437631.50 v=0.500
+  t= 24.5 x=423662.15 y=4437631.55 v=0.500
+  t= 24.6 x=423662.15 y=4437631.60 v=0.500
+  t= 24.7 x=423662.15 y=4437631.65 v=0.500
+  t= 24.8 x=423662.15 y=4437631.70 v=0.500
+  t= 24.9 x=423662.14 y=4437631.75 v=0.500
+  t= 26.0 x=423662.13 y=4437632.30 v=0.500
+  t= 26.1 x=423662.13 y=4437632.35 v=0.500
+  t= 26.2 x=423662.13 y=4437632.40 v=0.500
+  t= 26.3 x=423662.13 y=4437632.45 v=0.500
+  t= 26.4 x=423662.13 y=4437632.50 v=0.500
+  t= 26.5 x=423662.13 y=4437632.55 v=0.500
+  t= 26.6 x=423662.13 y=4437632.60 v=0.500
+  t= 26.7 x=423662.13 y=4437632.65 v=0.500
+  t= 26.8 x=423662.13 y=4437632.70 v=0.500
+  t= 26.9 x=423662.13 y=4437632.75 v=0.500
+  t= 28.0 x=423662.12 y=4437633.30 v=0.500
+  t= 28.1 x=423662.12 y=4437633.35 v=0.500
+  t= 28.2 x=423662.11 y=4437633.40 v=0.500
+  t= 28.3 x=423662.11 y=4437633.45 v=0.500
+  t= 28.4 x=423662.11 y=4437633.50 v=0.500
+  t= 28.5 x=423662.11 y=4437633.55 v=0.500
+  t= 28.6 x=423662.11 y=4437633.60 v=0.500
+  t= 28.7 x=423662.11 y=4437633.65 v=0.500
+  t= 28.8 x=423662.11 y=4437633.70 v=0.500
+  t= 28.9 x=423662.11 y=4437633.75 v=0.500
+  t= 30.0 x=423662.10 y=4437634.30 v=0.500
+  t= 30.1 x=423662.10 y=4437634.35 v=0.500
+  t= 30.2 x=423662.10 y=4437634.40 v=0.500
+  t= 30.3 x=423662.10 y=4437634.45 v=0.500
+  t= 30.4 x=423662.09 y=4437634.50 v=0.500
+  t= 30.5 x=423662.09 y=4437634.55 v=0.500
+  t= 30.6 x=423662.09 y=4437634.60 v=0.500
+  t= 30.7 x=423662.09 y=4437634.65 v=0.500
+  t= 30.8 x=423662.09 y=4437634.70 v=0.500
+  t= 30.9 x=423662.09 y=4437634.75 v=0.500
+  t= 32.0 x=423662.08 y=4437635.30 v=0.500
+  t= 32.1 x=423662.08 y=4437635.35 v=0.500
+  t= 32.2 x=423662.08 y=4437635.40 v=0.500
+  t= 32.3 x=423662.08 y=4437635.45 v=0.500
+  t= 32.4 x=423662.08 y=4437635.50 v=0.500
+  t= 32.5 x=423662.08 y=4437635.55 v=0.500
+  t= 32.6 x=423662.07 y=4437635.60 v=0.500
+  t= 32.7 x=423662.07 y=4437635.65 v=0.500
+  t= 32.8 x=423662.07 y=4437635.70 v=0.500
+  t= 32.9 x=423662.07 y=4437635.75 v=0.500
+  t= 34.0 x=423662.06 y=4437636.30 v=0.500
+  t= 34.1 x=423662.06 y=4437636.35 v=0.500
+  t= 34.2 x=423662.06 y=4437636.40 v=0.500
+  t= 34.3 x=423662.06 y=4437636.45 v=0.500
+  t= 34.4 x=423662.06 y=4437636.50 v=0.500
+  t= 34.5 x=423662.06 y=4437636.55 v=0.500
+  t= 34.6 x=423662.06 y=4437636.60 v=0.500
+  t= 34.7 x=423662.06 y=4437636.65 v=0.500
+  t= 34.8 x=423662.05 y=4437636.70 v=0.500
+  t= 34.9 x=423662.05 y=4437636.75 v=0.500
+  t= 36.0 x=423662.04 y=4437637.30 v=0.500
+  t= 36.1 x=423662.04 y=4437637.35 v=0.500
+  t= 36.2 x=423662.04 y=4437637.40 v=0.500
+  t= 36.3 x=423662.04 y=4437637.45 v=0.500
+  t= 36.4 x=423662.04 y=4437637.50 v=0.500
+  t= 36.5 x=423662.04 y=4437637.55 v=0.500
+  t= 36.6 x=423662.04 y=4437637.60 v=0.500
+  t= 36.7 x=423662.04 y=4437637.65 v=0.500
+  t= 36.8 x=423662.04 y=4437637.70 v=0.500
+  t= 36.9 x=423662.04 y=4437637.75 v=0.500
+  t= 38.0 x=423662.03 y=4437638.30 v=0.500
+  t= 38.1 x=423662.02 y=4437638.35 v=0.500
+  t= 38.2 x=423662.02 y=4437638.40 v=0.500
+  t= 38.3 x=423662.02 y=4437638.45 v=0.500
+  t= 38.4 x=423662.02 y=4437638.50 v=0.500
+  t= 38.5 x=423662.02 y=4437638.55 v=0.500
+  t= 38.6 x=423662.02 y=4437638.60 v=0.500
+  t= 38.7 x=423662.02 y=4437638.65 v=0.500
+  t= 38.8 x=423662.02 y=4437638.70 v=0.500
+  t= 38.9 x=423662.02 y=4437638.75 v=0.500
+  t= 40.0 x=423662.01 y=4437639.07 v=0.000
+  t= 40.1 x=423662.01 y=4437639.07 v=0.000
+  t= 40.2 x=423662.01 y=4437639.07 v=0.000
+  t= 40.3 x=423662.01 y=4437639.07 v=0.000
+  t= 40.4 x=423662.01 y=4437639.07 v=0.000
+  t= 40.5 x=423662.01 y=4437639.07 v=0.000
+  t= 40.6 x=423662.01 y=4437639.07 v=0.000
+  t= 40.7 x=423662.01 y=4437639.07 v=0.000
+  t= 40.8 x=423662.01 y=4437639.07 v=0.000
+  t= 40.9 x=423662.01 y=4437639.07 v=0.000
+  t= 42.0 x=423662.01 y=4437639.07 v=0.000
+  t= 42.1 x=423662.01 y=4437639.07 v=0.000
+  t= 42.2 x=423662.01 y=4437639.07 v=0.000
+  t= 42.3 x=423662.01 y=4437639.07 v=0.000
+  t= 42.4 x=423662.01 y=4437639.07 v=0.000
+  t= 42.5 x=423662.01 y=4437639.07 v=0.000
+  t= 42.6 x=423662.01 y=4437639.07 v=0.000
+  t= 42.7 x=423662.01 y=4437639.07 v=0.000
+  t= 42.8 x=423662.01 y=4437639.07 v=0.000
+  t= 42.9 x=423662.01 y=4437639.07 v=0.000
+  t= 44.0 x=423662.01 y=4437639.07 v=0.000
+  t= 44.1 x=423662.01 y=4437639.07 v=0.000
+  t= 44.2 x=423662.01 y=4437639.07 v=0.000
+  t= 44.3 x=423662.01 y=4437639.07 v=0.000
+  t= 44.4 x=423662.01 y=4437639.07 v=0.000
+  t= 44.5 x=423662.01 y=4437639.07 v=0.000
+  t= 44.6 x=423662.01 y=4437639.07 v=0.000
+  t= 44.7 x=423662.01 y=4437639.07 v=0.000
+  t= 44.8 x=423662.01 y=4437639.07 v=0.000
+  t= 44.9 x=423662.01 y=4437639.07 v=0.000
+  t= 46.0 x=423662.01 y=4437639.07 v=0.000
+  t= 46.1 x=423662.01 y=4437639.07 v=0.000
+  t= 46.2 x=423662.01 y=4437639.07 v=0.000
+  t= 46.3 x=423662.01 y=4437639.07 v=0.000
+  t= 46.4 x=423662.01 y=4437639.07 v=0.000
+  t= 46.5 x=423662.01 y=4437639.07 v=0.000
+  t= 46.6 x=423662.01 y=4437639.07 v=0.000
++ xhost -local:root

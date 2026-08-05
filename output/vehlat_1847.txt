@@ -1,0 +1,329 @@
++ [[ ! 1 == 1 ]]
++ execute -- 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/lane_lateral_offset.py /home/skye/.apollo/resources/records/202608011847_MkzExample_Xh2025Contest.00000.20260801184640.record data/map_data/xh_2025_contest/base_map.bin 3500 4400 2>&1'
++ [[ -f /home/skye/application-pnc/.env ]]
++ set -a
++ source /home/skye/application-pnc/.env
+++ APOLLO_ENV_NAME=edu
+++ APOLLO_ENV_WORKLOCAL=1
+++ APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
+++ APOLLO_ENV_CONTAINER_TAG=9.0-latest
++ set +a
++ parse_arguments -- 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/lane_lateral_offset.py /home/skye/.apollo/resources/records/202608011847_MkzExample_Xh2025Contest.00000.20260801184640.record data/map_data/xh_2025_contest/base_map.bin 3500 4400 2>&1'
++ args=()
++ [[ 2 -gt 0 ]]
++ local opt=--
++ shift
++ case "${opt}" in
++ args+=("$@")
++ break
++ APOLLO_ENV_EXEC_ARGS=('cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/lane_lateral_offset.py /home/skye/.apollo/resources/records/202608011847_MkzExample_Xh2025Contest.00000.20260801184640.record data/map_data/xh_2025_contest/base_map.bin 3500 4400 2>&1')
++ export APOLLO_ENV_EXEC_ARGS
++ apollo_env_exists edu
++ local env_name=edu
++ apollo_envhome_exists edu
++ local env_name=edu
++ [[ -d /home/skye/.aem/envs/edu ]]
++ return 0
++ [[ -e /home/skye/.aem/envs/edu/env.config ]]
++ declare backend
+++ source /home/skye/.aem/envs/edu/env.config
++++ export AEM_FLAG_FORCE_RECREATE=0
++++ AEM_FLAG_FORCE_RECREATE=0
++++ export AEM_FLAG_FORCE_RECREATE_VOLUMES=0
++++ AEM_FLAG_FORCE_RECREATE_VOLUMES=0
++++ export AEM_FLAG_SHM_SIZE=4G
++++ AEM_FLAG_SHM_SIZE=4G
++++ export AEM_FLAG_USE_GPU=1
++++ AEM_FLAG_USE_GPU=1
++++ export AEM_FLAG_USE_LOCAL_IMAGE=0
++++ AEM_FLAG_USE_LOCAL_IMAGE=0
++++ export AEM_GEO=
++++ AEM_GEO=
++++ export AEM_HOME=/opt/apollo/aem
++++ AEM_HOME=/opt/apollo/aem
++++ export AEM_INITED=1
++++ AEM_INITED=1
++++ export AEM_SYS_SHARE=/opt/apollo/aem/share/aem
++++ AEM_SYS_SHARE=/opt/apollo/aem/share/aem
++++ export AEM_VERSION=10.0.0-rc1-r4
++++ AEM_VERSION=10.0.0-rc1-r4
++++ export APOLLO_ENVS_ROOT=/home/skye/.aem/envs
++++ APOLLO_ENVS_ROOT=/home/skye/.aem/envs
++++ APOLLO_ENV_ARGS=()
++++ export APOLLO_ENV_ARGS
++++ export APOLLO_ENV_BACKEND=docker
++++ APOLLO_ENV_BACKEND=docker
++++ export APOLLO_ENV_CONTAINER_GID=1000
++++ APOLLO_ENV_CONTAINER_GID=1000
++++ export APOLLO_ENV_CONTAINER_GROUP=skye
++++ APOLLO_ENV_CONTAINER_GROUP=skye
++++ export APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu
++++ APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu
++++ export APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_
++++ APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_
++++ export APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
++++ APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
++++ export APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm
++++ APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm
++++ export APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu
++++ APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu
++++ export APOLLO_ENV_CONTAINER_SHELL=/bin/bash
++++ APOLLO_ENV_CONTAINER_SHELL=/bin/bash
++++ export APOLLO_ENV_CONTAINER_TAG=9.0-latest
++++ APOLLO_ENV_CONTAINER_TAG=9.0-latest
++++ export APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20
++++ APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20
++++ export APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22
++++ APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22
++++ export APOLLO_ENV_CONTAINER_UID=1000
++++ APOLLO_ENV_CONTAINER_UID=1000
++++ export APOLLO_ENV_CONTAINER_USER=skye
++++ APOLLO_ENV_CONTAINER_USER=skye
++++ export APOLLO_ENV_CROSS_PLATFORM=
++++ APOLLO_ENV_CROSS_PLATFORM=
++++ export APOLLO_ENV_NAME=edu
++++ APOLLO_ENV_NAME=edu
++++ export APOLLO_ENV_USE_GPU_HOST=1
++++ APOLLO_ENV_USE_GPU_HOST=1
++++ export APOLLO_ENV_WORKLOCAL=1
++++ APOLLO_ENV_WORKLOCAL=1
++++ export APOLLO_ENV_WORKROOT=/apollo_workspace
++++ APOLLO_ENV_WORKROOT=/apollo_workspace
++++ export APOLLO_ENV_WORKSPACE=/home/skye/application-pnc
++++ APOLLO_ENV_WORKSPACE=/home/skye/application-pnc
+++ echo docker
++ backend=docker
++ [[ docker == \h\o\s\t ]]
++ [[ docker == \d\o\c\k\e\r ]]
++ local container_name=apollo_neo_dev_edu
++ docker_container_exists apollo_neo_dev_edu
++ local container=apollo_neo_dev_edu
+++ docker ps -a '--format={{.Names}}' -f name=apollo_neo_dev_edu
+++ grep '^apollo_neo_dev_edu$'
++ local query=apollo_neo_dev_edu
++ [[ apollo_neo_dev_edu == \a\p\o\l\l\o\_\n\e\o\_\d\e\v\_\e\d\u ]]
++ return 0
++ return 0
++ set -a
++ source /home/skye/.aem/envs/edu/env.config
+++ export AEM_FLAG_FORCE_RECREATE=0
+++ AEM_FLAG_FORCE_RECREATE=0
+++ export AEM_FLAG_FORCE_RECREATE_VOLUMES=0
+++ AEM_FLAG_FORCE_RECREATE_VOLUMES=0
+++ export AEM_FLAG_SHM_SIZE=4G
+++ AEM_FLAG_SHM_SIZE=4G
+++ export AEM_FLAG_USE_GPU=1
+++ AEM_FLAG_USE_GPU=1
+++ export AEM_FLAG_USE_LOCAL_IMAGE=0
+++ AEM_FLAG_USE_LOCAL_IMAGE=0
+++ export AEM_GEO=
+++ AEM_GEO=
+++ export AEM_HOME=/opt/apollo/aem
+++ AEM_HOME=/opt/apollo/aem
+++ export AEM_INITED=1
+++ AEM_INITED=1
+++ export AEM_SYS_SHARE=/opt/apollo/aem/share/aem
+++ AEM_SYS_SHARE=/opt/apollo/aem/share/aem
+++ export AEM_VERSION=10.0.0-rc1-r4
+++ AEM_VERSION=10.0.0-rc1-r4
+++ export APOLLO_ENVS_ROOT=/home/skye/.aem/envs
+++ APOLLO_ENVS_ROOT=/home/skye/.aem/envs
+++ APOLLO_ENV_ARGS=()
+++ export APOLLO_ENV_ARGS
+++ export APOLLO_ENV_BACKEND=docker
+++ APOLLO_ENV_BACKEND=docker
+++ export APOLLO_ENV_CONTAINER_GID=1000
+++ APOLLO_ENV_CONTAINER_GID=1000
+++ export APOLLO_ENV_CONTAINER_GROUP=skye
+++ APOLLO_ENV_CONTAINER_GROUP=skye
+++ export APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu
+++ APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu
+++ export APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_
+++ APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_
+++ export APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
+++ APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
+++ export APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm
+++ APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm
+++ export APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu
+++ APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu
+++ export APOLLO_ENV_CONTAINER_SHELL=/bin/bash
+++ APOLLO_ENV_CONTAINER_SHELL=/bin/bash
+++ export APOLLO_ENV_CONTAINER_TAG=9.0-latest
+++ APOLLO_ENV_CONTAINER_TAG=9.0-latest
+++ export APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20
+++ APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20
+++ export APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22
+++ APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22
+++ export APOLLO_ENV_CONTAINER_UID=1000
+++ APOLLO_ENV_CONTAINER_UID=1000
+++ export APOLLO_ENV_CONTAINER_USER=skye
+++ APOLLO_ENV_CONTAINER_USER=skye
+++ export APOLLO_ENV_CROSS_PLATFORM=
+++ APOLLO_ENV_CROSS_PLATFORM=
+++ export APOLLO_ENV_NAME=edu
+++ APOLLO_ENV_NAME=edu
+++ export APOLLO_ENV_USE_GPU_HOST=1
+++ APOLLO_ENV_USE_GPU_HOST=1
+++ export APOLLO_ENV_WORKLOCAL=1
+++ APOLLO_ENV_WORKLOCAL=1
+++ export APOLLO_ENV_WORKROOT=/apollo_workspace
+++ APOLLO_ENV_WORKROOT=/apollo_workspace
+++ export APOLLO_ENV_WORKSPACE=/home/skye/application-pnc
+++ APOLLO_ENV_WORKSPACE=/home/skye/application-pnc
++ set +a
++ apollo_exec_env 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/lane_lateral_offset.py /home/skye/.apollo/resources/records/202608011847_MkzExample_Xh2025Contest.00000.20260801184640.record data/map_data/xh_2025_contest/base_map.bin 3500 4400 2>&1'
++ [[ docker == \d\o\c\k\e\r ]]
++ apollo_exec_container 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/lane_lateral_offset.py /home/skye/.apollo/resources/records/202608011847_MkzExample_Xh2025Contest.00000.20260801184640.record data/map_data/xh_2025_contest/base_map.bin 3500 4400 2>&1'
++ local 'cmd=cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/lane_lateral_offset.py /home/skye/.apollo/resources/records/202608011847_MkzExample_Xh2025Contest.00000.20260801184640.record data/map_data/xh_2025_contest/base_map.bin 3500 4400 2>&1'
++ shift
++ [[ -z cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/lane_lateral_offset.py /home/skye/.apollo/resources/records/202608011847_MkzExample_Xh2025Contest.00000.20260801184640.record data/map_data/xh_2025_contest/base_map.bin 3500 4400 2>&1 ]]
++ envs=()
++ local envs
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ envs+=('-e' "HISTFILE=${APOLLO_ENV_WORKROOT}/.cache/.bash_history")
++ envs+=('-e' 'HISTSIZE=200000')
++ envs+=('-e' 'HISTFILESIZE=200000')
++ envs+=('-e' 'HISTCONTROL=ignorespace:erasedups')
++ envs+=('-e' "DOCKER_USER=${APOLLO_ENV_CONTAINER_USER}")
++ xhost +local:root
++ docker exec -u skye -e APOLLO_ENV_ARGS= -e APOLLO_ENV_BACKEND=docker -e APOLLO_ENV_CONTAINER_GID=1000 -e APOLLO_ENV_CONTAINER_GROUP=skye -e APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu -e APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_ -e APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu -e APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm -e APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu -e APOLLO_ENV_CONTAINER_SHELL=/bin/bash -e APOLLO_ENV_CONTAINER_TAG=9.0-latest -e APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20 -e APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22 -e APOLLO_ENV_CONTAINER_UID=1000 -e APOLLO_ENV_CONTAINER_USER=skye -e APOLLO_ENV_CROSS_PLATFORM= -e 'APOLLO_ENV_EXEC_ARGS=cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/lane_lateral_offset.py /home/skye/.apollo/resources/records/202608011847_MkzExample_Xh2025Contest.00000.20260801184640.record data/map_data/xh_2025_contest/base_map.bin 3500 4400 2>&1' -e APOLLO_ENV_NAME=edu -e APOLLO_ENV_USE_GPU_HOST=1 -e APOLLO_ENV_WORKLOCAL=1 -e APOLLO_ENV_WORKROOT=/apollo_workspace -e APOLLO_ENV_WORKSPACE=/home/skye/application-pnc -e HISTFILE=/apollo_workspace/.cache/.bash_history -e HISTSIZE=200000 -e HISTFILESIZE=200000 -e HISTCONTROL=ignorespace:erasedups -e DOCKER_USER=skye -w /apollo_workspace -it apollo_neo_dev_edu /bin/bash -c 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/lane_lateral_offset.py /home/skye/.apollo/resources/records/202608011847_MkzExample_Xh2025Contest.00000.20260801184640.record data/map_data/xh_2025_contest/base_map.bin 3500 4400 2>&1 '
+WARNING: Logging before InitGoogleLogging() is written to STDERR
+I0801 18:52:59.839845 593201 py_record.cc:574] []init _cyber_record_wrapper
+loaded lanes: ['Lane_697', 'Lane_817', 'Lane_1353', 'Lane_1697']
+lane widths: {'Lane_697': 1.93, 'Lane_817': 2.25, 'Lane_1353': 2.3, 'Lane_1697': 1.98}
+
+frame  车x       车y      v     最近lane  横向偏移(有符号)  车道半宽
+ 3500 424424.40 4437637.84  1.90  Lane_1353     0.49m  1.15m !!!
+ 3510 424424.32 4437637.66  1.95  Lane_1353     0.53m  1.15m !!!
+ 3520 424424.24 4437637.48  1.99  Lane_1353     0.57m  1.15m !!!
+ 3530 424424.15 4437637.30  2.04  Lane_1353     0.60m  1.15m !!!
+ 3540 424424.05 4437637.12  2.09  Lane_1353     0.64m  1.15m !!!
+ 3550 424423.95 4437636.94  2.14  Lane_1353     0.67m  1.15m !!!
+ 3560 424423.84 4437636.75  2.18  Lane_1353     0.71m  1.15m !!!
+ 3570 424423.72 4437636.56  2.20  Lane_1353     0.75m  1.15m !!!
+ 3580 424423.59 4437636.38  2.23  Lane_1353     0.78m  1.15m !!!
+ 3590 424423.46 4437636.20  2.27  Lane_1353     0.81m  1.15m !!!
+ 3600 424423.32 4437636.02  2.31  Lane_1353     0.84m  1.15m !!!
+ 3610 424423.17 4437635.84  2.31  Lane_1353     0.87m  1.15m !!!
+ 3620 424423.02 4437635.67  2.29  Lane_1353     0.89m  1.15m !!!
+ 3630 424422.86 4437635.50  2.27  Lane_1353     0.91m  1.15m !!!
+ 3640 424422.70 4437635.34  2.25  Lane_1353     0.92m  1.15m !!!
+ 3650 424422.54 4437635.19  2.23  Lane_1353     0.94m  1.15m !!!
+ 3660 424422.37 4437635.05  2.22  Lane_1353     0.95m  1.15m !!!
+ 3670 424422.20 4437634.91  2.20  Lane_1353     0.95m  1.15m !!!
+ 3680 424422.02 4437634.77  2.23  Lane_1353     0.96m  1.15m !!!
+ 3690 424421.84 4437634.64  2.29  Lane_1353     0.96m  1.15m !!!
+ 3700 424421.65 4437634.51  2.36  Lane_1353     0.95m  1.15m !!!
+ 3710 424421.45 4437634.38  2.43  Lane_1353     0.95m  1.15m !!!
+ 3720 424421.24 4437634.25  2.51  Lane_1353     0.94m  1.15m !!!
+ 3730 424421.01 4437634.12  2.59  Lane_1353     0.93m  1.15m !!!
+ 3740 424420.78 4437634.00  2.67  Lane_1353     0.92m  1.15m !!!
+ 3750 424420.54 4437633.88  2.76  Lane_1353     0.90m  1.15m !!!
+ 3760 424420.29 4437633.76  2.81  Lane_1353     0.88m  1.15m !!!
+ 3770 424420.03 4437633.64  2.86  Lane_1353     0.86m  1.15m !!!
+ 3780 424419.76 4437633.53  2.92  Lane_1353     0.84m  1.15m !!!
+ 3790 424419.48 4437633.43  2.99  Lane_1353     0.82m  1.15m !!!
+ 3800 424419.20 4437633.32  3.07  Lane_1353     0.79m  1.15m !!!
+ 3810 424418.90 4437633.22  3.15  Lane_1353     0.77m  1.15m !!!
+ 3820 424418.60 4437633.13  3.24  Lane_1353     0.74m  1.15m !!!
+ 3830 424418.28 4437633.04  3.32  Lane_1353     0.71m  1.15m !!!
+ 3840 424417.96 4437632.95  3.40  Lane_1353     0.68m  1.15m !!!
+ 3850 424417.62 4437632.86  3.48  Lane_1353     0.65m  1.15m !!!
+ 3860 424417.28 4437632.78  3.57  Lane_1353     0.61m  1.15m !!!
+ 3870 424416.92 4437632.71  3.65  Lane_1353     0.58m  1.15m !!!
+ 3880 424416.56 4437632.63  3.74  Lane_1353     0.55m  1.15m !!!
+ 3890 424416.19 4437632.57  3.82  Lane_1353     0.51m  1.15m !!!
+ 3900 424415.81 4437632.50  3.91  Lane_1353     0.47m  1.15m !!!
+ 3910 424415.42 4437632.44  3.99  Lane_1353     0.44m  1.15m !!!
+ 3920 424415.02 4437632.39  4.08  Lane_1353     0.40m  1.15m !!!
+ 3930 424414.61 4437632.34  4.17  Lane_1353     0.36m  1.15m !!!
+ 3940 424414.19 4437632.29  4.26  Lane_1353     0.33m  1.15m !!!
+ 3950 424413.76 4437632.25  4.35  Lane_1353     0.29m  1.15m !!!
+ 3960 424413.32 4437632.21  4.45  Lane_697      0.00m  0.97m !!!
+ 3970 424412.87 4437632.18  4.54  Lane_697      0.22m  0.97m !!!
+ 3980 424412.41 4437632.15  4.64  Lane_697      0.19m  0.97m !!!
+ 3990 424411.94 4437632.12  4.74  Lane_697      0.16m  0.97m !!!
+ 4000 424411.47 4437632.10  4.84  Lane_697      0.14m  0.97m !!!
+ 4010 424410.98 4437632.08  4.95  Lane_697      0.12m  0.97m !!!
+ 4020 424410.47 4437632.06  5.06  Lane_697      0.10m  0.97m !!!
+ 4030 424409.96 4437632.04  5.17  Lane_697      0.08m  0.97m !!!
+ 4040 424409.44 4437632.03  5.28  Lane_697      0.06m  0.97m !!!
+ 4050 424408.91 4437632.01  5.40  Lane_697      0.04m  0.97m !!!
+ 4060 424408.36 4437632.00  5.51  Lane_697      0.03m  0.97m !!!
+ 4070 424407.80 4437631.98  5.63  Lane_697      0.01m  0.97m !!!
+ 4080 424407.23 4437631.97  5.75  Lane_697     -0.01m  0.97m !!!
+ 4090 424406.65 4437631.95  5.87  Lane_697     -0.02m  0.97m !!!
+ 4100 424406.06 4437631.94  5.99  Lane_697     -0.04m  0.97m !!!
+ 4110 424405.45 4437631.93  6.11  Lane_697     -0.05m  0.97m !!!
+ 4120 424404.83 4437631.91  6.23  Lane_697     -0.06m  0.97m !!!
+ 4130 424404.20 4437631.90  6.36  Lane_697     -0.08m  0.97m !!!
+ 4140 424403.56 4437631.89  6.48  Lane_697     -0.09m  0.97m !!!
+ 4150 424402.91 4437631.88  6.61  Lane_697     -0.10m  0.97m !!!
+ 4160 424402.24 4437631.87  6.73  Lane_697     -0.11m  0.97m !!!
+ 4170 424401.56 4437631.86  6.85  Lane_697     -0.12m  0.97m !!!
+ 4180 424400.87 4437631.85  6.97  Lane_697     -0.13m  0.97m !!!
+ 4190 424400.16 4437631.85  7.10  Lane_697     -0.14m  0.97m !!!
+ 4200 424399.45 4437631.84  7.22  Lane_697     -0.14m  0.97m !!!
+ 4210 424398.72 4437631.84  7.34  Lane_697     -0.15m  0.97m !!!
+ 4220 424397.98 4437631.83  7.46  Lane_697     -0.16m  0.97m !!!
+ 4230 424397.23 4437631.83  7.59  Lane_697     -0.16m  0.97m !!!
+ 4240 424396.46 4437631.83  7.70  Lane_697     -0.16m  0.97m !!!
+ 4250 424395.68 4437631.83  7.82  Lane_697     -0.17m  0.97m !!!
+ 4260 424394.90 4437631.83  7.94  Lane_697     -0.17m  0.97m !!!
+ 4270 424394.10 4437631.83  8.05  Lane_697     -0.17m  0.97m !!!
+ 4280 424393.28 4437631.83  8.17  Lane_697     -0.17m  0.97m !!!
+ 4290 424392.46 4437631.83  8.29  Lane_697     -0.17m  0.97m !!!
+ 4300 424391.62 4437631.83  8.40  Lane_697     -0.17m  0.97m !!!
+ 4310 424390.78 4437631.83  8.51  Lane_697     -0.17m  0.97m !!!
+ 4320 424389.92 4437631.84  8.62  Lane_697     -0.17m  0.97m !!!
+ 4330 424389.05 4437631.84  8.73  Lane_697     -0.16m  0.97m !!!
+ 4340 424388.17 4437631.85  8.84  Lane_697     -0.16m  0.97m !!!
+ 4350 424387.28 4437631.85  8.95  Lane_697     -0.15m  0.97m !!!
+ 4360 424386.38 4437631.86  9.06  Lane_697     -0.15m  0.97m !!!
+ 4370 424385.47 4437631.87  9.16  Lane_697     -0.14m  0.97m !!!
+ 4380 424384.55 4437631.87  9.26  Lane_697     -0.14m  0.97m !!!
+ 4390 424383.62 4437631.88  9.36  Lane_697     -0.13m  0.97m !!!
++ xhost -local:root

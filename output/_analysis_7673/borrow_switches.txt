@@ -1,0 +1,4 @@
+22:08:08.362037 lane_borrow_path.cc:422] Switch from SELF-LANE path to LANE-BORROW path.
+22:08:41.093281 lane_borrow_path.cc:370] Switch from LANE-BORROW path to SELF-LANE path.
+22:08:41.185878 lane_borrow_path.cc:422] Switch from SELF-LANE path to LANE-BORROW path.
+22:08:41.784526 lane_borrow_path.cc:370] Switch from LANE-BORROW path to SELF-LANE path.

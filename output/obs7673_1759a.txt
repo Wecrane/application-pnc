@@ -1,0 +1,1098 @@
++ [[ ! 1 == 1 ]]
++ execute -- 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/find_obs_stop.py /home/skye/.apollo/resources/records/202608011759_MkzExample_Xh2026Contest.00000.20260801175807.record 7673 2>&1'
++ [[ -f /home/skye/application-pnc/.env ]]
++ set -a
++ source /home/skye/application-pnc/.env
+++ APOLLO_ENV_NAME=edu
+++ APOLLO_ENV_WORKLOCAL=1
+++ APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
+++ APOLLO_ENV_CONTAINER_TAG=9.0-latest
++ set +a
++ parse_arguments -- 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/find_obs_stop.py /home/skye/.apollo/resources/records/202608011759_MkzExample_Xh2026Contest.00000.20260801175807.record 7673 2>&1'
++ args=()
++ [[ 2 -gt 0 ]]
++ local opt=--
++ shift
++ case "${opt}" in
++ args+=("$@")
++ break
++ APOLLO_ENV_EXEC_ARGS=('cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/find_obs_stop.py /home/skye/.apollo/resources/records/202608011759_MkzExample_Xh2026Contest.00000.20260801175807.record 7673 2>&1')
++ export APOLLO_ENV_EXEC_ARGS
++ apollo_env_exists edu
++ local env_name=edu
++ apollo_envhome_exists edu
++ local env_name=edu
++ [[ -d /home/skye/.aem/envs/edu ]]
++ return 0
++ [[ -e /home/skye/.aem/envs/edu/env.config ]]
++ declare backend
+++ source /home/skye/.aem/envs/edu/env.config
++++ export AEM_FLAG_FORCE_RECREATE=0
++++ AEM_FLAG_FORCE_RECREATE=0
++++ export AEM_FLAG_FORCE_RECREATE_VOLUMES=0
++++ AEM_FLAG_FORCE_RECREATE_VOLUMES=0
++++ export AEM_FLAG_SHM_SIZE=4G
++++ AEM_FLAG_SHM_SIZE=4G
++++ export AEM_FLAG_USE_GPU=1
++++ AEM_FLAG_USE_GPU=1
++++ export AEM_FLAG_USE_LOCAL_IMAGE=0
++++ AEM_FLAG_USE_LOCAL_IMAGE=0
++++ export AEM_GEO=
++++ AEM_GEO=
++++ export AEM_HOME=/opt/apollo/aem
++++ AEM_HOME=/opt/apollo/aem
++++ export AEM_INITED=1
++++ AEM_INITED=1
++++ export AEM_SYS_SHARE=/opt/apollo/aem/share/aem
++++ AEM_SYS_SHARE=/opt/apollo/aem/share/aem
++++ export AEM_VERSION=10.0.0-rc1-r4
++++ AEM_VERSION=10.0.0-rc1-r4
++++ export APOLLO_ENVS_ROOT=/home/skye/.aem/envs
++++ APOLLO_ENVS_ROOT=/home/skye/.aem/envs
++++ APOLLO_ENV_ARGS=()
++++ export APOLLO_ENV_ARGS
++++ export APOLLO_ENV_BACKEND=docker
++++ APOLLO_ENV_BACKEND=docker
++++ export APOLLO_ENV_CONTAINER_GID=1000
++++ APOLLO_ENV_CONTAINER_GID=1000
++++ export APOLLO_ENV_CONTAINER_GROUP=skye
++++ APOLLO_ENV_CONTAINER_GROUP=skye
++++ export APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu
++++ APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu
++++ export APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_
++++ APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_
++++ export APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
++++ APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
++++ export APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm
++++ APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm
++++ export APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu
++++ APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu
++++ export APOLLO_ENV_CONTAINER_SHELL=/bin/bash
++++ APOLLO_ENV_CONTAINER_SHELL=/bin/bash
++++ export APOLLO_ENV_CONTAINER_TAG=9.0-latest
++++ APOLLO_ENV_CONTAINER_TAG=9.0-latest
++++ export APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20
++++ APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20
++++ export APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22
++++ APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22
++++ export APOLLO_ENV_CONTAINER_UID=1000
++++ APOLLO_ENV_CONTAINER_UID=1000
++++ export APOLLO_ENV_CONTAINER_USER=skye
++++ APOLLO_ENV_CONTAINER_USER=skye
++++ export APOLLO_ENV_CROSS_PLATFORM=
++++ APOLLO_ENV_CROSS_PLATFORM=
++++ export APOLLO_ENV_NAME=edu
++++ APOLLO_ENV_NAME=edu
++++ export APOLLO_ENV_USE_GPU_HOST=1
++++ APOLLO_ENV_USE_GPU_HOST=1
++++ export APOLLO_ENV_WORKLOCAL=1
++++ APOLLO_ENV_WORKLOCAL=1
++++ export APOLLO_ENV_WORKROOT=/apollo_workspace
++++ APOLLO_ENV_WORKROOT=/apollo_workspace
++++ export APOLLO_ENV_WORKSPACE=/home/skye/application-pnc
++++ APOLLO_ENV_WORKSPACE=/home/skye/application-pnc
+++ echo docker
++ backend=docker
++ [[ docker == \h\o\s\t ]]
++ [[ docker == \d\o\c\k\e\r ]]
++ local container_name=apollo_neo_dev_edu
++ docker_container_exists apollo_neo_dev_edu
++ local container=apollo_neo_dev_edu
+++ docker ps -a '--format={{.Names}}' -f name=apollo_neo_dev_edu
+++ grep '^apollo_neo_dev_edu$'
++ local query=apollo_neo_dev_edu
++ [[ apollo_neo_dev_edu == \a\p\o\l\l\o\_\n\e\o\_\d\e\v\_\e\d\u ]]
++ return 0
++ return 0
++ set -a
++ source /home/skye/.aem/envs/edu/env.config
+++ export AEM_FLAG_FORCE_RECREATE=0
+++ AEM_FLAG_FORCE_RECREATE=0
+++ export AEM_FLAG_FORCE_RECREATE_VOLUMES=0
+++ AEM_FLAG_FORCE_RECREATE_VOLUMES=0
+++ export AEM_FLAG_SHM_SIZE=4G
+++ AEM_FLAG_SHM_SIZE=4G
+++ export AEM_FLAG_USE_GPU=1
+++ AEM_FLAG_USE_GPU=1
+++ export AEM_FLAG_USE_LOCAL_IMAGE=0
+++ AEM_FLAG_USE_LOCAL_IMAGE=0
+++ export AEM_GEO=
+++ AEM_GEO=
+++ export AEM_HOME=/opt/apollo/aem
+++ AEM_HOME=/opt/apollo/aem
+++ export AEM_INITED=1
+++ AEM_INITED=1
+++ export AEM_SYS_SHARE=/opt/apollo/aem/share/aem
+++ AEM_SYS_SHARE=/opt/apollo/aem/share/aem
+++ export AEM_VERSION=10.0.0-rc1-r4
+++ AEM_VERSION=10.0.0-rc1-r4
+++ export APOLLO_ENVS_ROOT=/home/skye/.aem/envs
+++ APOLLO_ENVS_ROOT=/home/skye/.aem/envs
+++ APOLLO_ENV_ARGS=()
+++ export APOLLO_ENV_ARGS
+++ export APOLLO_ENV_BACKEND=docker
+++ APOLLO_ENV_BACKEND=docker
+++ export APOLLO_ENV_CONTAINER_GID=1000
+++ APOLLO_ENV_CONTAINER_GID=1000
+++ export APOLLO_ENV_CONTAINER_GROUP=skye
+++ APOLLO_ENV_CONTAINER_GROUP=skye
+++ export APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu
+++ APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu
+++ export APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_
+++ APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_
+++ export APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
+++ APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
+++ export APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm
+++ APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm
+++ export APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu
+++ APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu
+++ export APOLLO_ENV_CONTAINER_SHELL=/bin/bash
+++ APOLLO_ENV_CONTAINER_SHELL=/bin/bash
+++ export APOLLO_ENV_CONTAINER_TAG=9.0-latest
+++ APOLLO_ENV_CONTAINER_TAG=9.0-latest
+++ export APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20
+++ APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20
+++ export APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22
+++ APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22
+++ export APOLLO_ENV_CONTAINER_UID=1000
+++ APOLLO_ENV_CONTAINER_UID=1000
+++ export APOLLO_ENV_CONTAINER_USER=skye
+++ APOLLO_ENV_CONTAINER_USER=skye
+++ export APOLLO_ENV_CROSS_PLATFORM=
+++ APOLLO_ENV_CROSS_PLATFORM=
+++ export APOLLO_ENV_NAME=edu
+++ APOLLO_ENV_NAME=edu
+++ export APOLLO_ENV_USE_GPU_HOST=1
+++ APOLLO_ENV_USE_GPU_HOST=1
+++ export APOLLO_ENV_WORKLOCAL=1
+++ APOLLO_ENV_WORKLOCAL=1
+++ export APOLLO_ENV_WORKROOT=/apollo_workspace
+++ APOLLO_ENV_WORKROOT=/apollo_workspace
+++ export APOLLO_ENV_WORKSPACE=/home/skye/application-pnc
+++ APOLLO_ENV_WORKSPACE=/home/skye/application-pnc
++ set +a
++ apollo_exec_env 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/find_obs_stop.py /home/skye/.apollo/resources/records/202608011759_MkzExample_Xh2026Contest.00000.20260801175807.record 7673 2>&1'
++ [[ docker == \d\o\c\k\e\r ]]
++ apollo_exec_container 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/find_obs_stop.py /home/skye/.apollo/resources/records/202608011759_MkzExample_Xh2026Contest.00000.20260801175807.record 7673 2>&1'
++ local 'cmd=cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/find_obs_stop.py /home/skye/.apollo/resources/records/202608011759_MkzExample_Xh2026Contest.00000.20260801175807.record 7673 2>&1'
++ shift
++ [[ -z cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/find_obs_stop.py /home/skye/.apollo/resources/records/202608011759_MkzExample_Xh2026Contest.00000.20260801175807.record 7673 2>&1 ]]
++ envs=()
++ local envs
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ envs+=('-e' "HISTFILE=${APOLLO_ENV_WORKROOT}/.cache/.bash_history")
++ envs+=('-e' 'HISTSIZE=200000')
++ envs+=('-e' 'HISTFILESIZE=200000')
++ envs+=('-e' 'HISTCONTROL=ignorespace:erasedups')
++ envs+=('-e' "DOCKER_USER=${APOLLO_ENV_CONTAINER_USER}")
++ xhost +local:root
++ docker exec -u skye -e APOLLO_ENV_ARGS= -e APOLLO_ENV_BACKEND=docker -e APOLLO_ENV_CONTAINER_GID=1000 -e APOLLO_ENV_CONTAINER_GROUP=skye -e APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu -e APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_ -e APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu -e APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm -e APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu -e APOLLO_ENV_CONTAINER_SHELL=/bin/bash -e APOLLO_ENV_CONTAINER_TAG=9.0-latest -e APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20 -e APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22 -e APOLLO_ENV_CONTAINER_UID=1000 -e APOLLO_ENV_CONTAINER_USER=skye -e APOLLO_ENV_CROSS_PLATFORM= -e 'APOLLO_ENV_EXEC_ARGS=cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/find_obs_stop.py /home/skye/.apollo/resources/records/202608011759_MkzExample_Xh2026Contest.00000.20260801175807.record 7673 2>&1' -e APOLLO_ENV_NAME=edu -e APOLLO_ENV_USE_GPU_HOST=1 -e APOLLO_ENV_WORKLOCAL=1 -e APOLLO_ENV_WORKROOT=/apollo_workspace -e APOLLO_ENV_WORKSPACE=/home/skye/application-pnc -e HISTFILE=/apollo_workspace/.cache/.bash_history -e HISTSIZE=200000 -e HISTFILESIZE=200000 -e HISTCONTROL=ignorespace:erasedups -e DOCKER_USER=skye -w /apollo_workspace -it apollo_neo_dev_edu /bin/bash -c 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/find_obs_stop.py /home/skye/.apollo/resources/records/202608011759_MkzExample_Xh2026Contest.00000.20260801175807.record 7673 2>&1 '
+WARNING: Logging before InitGoogleLogging() is written to STDERR
+I0801 18:13:46.713953 519969 py_record.cc:574] []init _cyber_record_wrapper
+=== obs7673 决策 + 非终点主STOP (t, 决策, 车辆速度) ===
+  t=  0.46                 stop 
+  t=  0.46      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  0.57                 stop 
+  t=  0.57      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  0.66                 stop 
+  t=  0.66      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  0.76                 stop 
+  t=  0.76      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  0.86                 stop 
+  t=  0.86      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  0.96                 stop 
+  t=  0.96      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  1.06                 stop 
+  t=  1.06      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  1.16                 stop 
+  t=  1.16      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  1.26                 stop 
+  t=  1.26      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  1.36                 stop 
+  t=  1.36      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  1.46                 stop veh_v=9.94
+  t=  1.46      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  1.57                 stop veh_v=10.02
+  t=  1.57      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  1.67                 stop veh_v=10.10
+  t=  1.67      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  1.76                 stop veh_v=10.17
+  t=  1.76      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  1.86                 stop veh_v=10.24
+  t=  1.86      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  1.96                 stop veh_v=10.32
+  t=  1.96      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  2.06                 stop veh_v=10.40
+  t=  2.06      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  2.16                 stop veh_v=10.48
+  t=  2.16      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  2.26                 stop veh_v=10.54
+  t=  2.26      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  2.37                 stop veh_v=10.62
+  t=  2.37      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  2.46                 stop veh_v=10.68
+  t=  2.46      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  2.56                 stop veh_v=10.75
+  t=  2.56      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  2.66                 stop veh_v=10.82
+  t=  2.66      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  2.76                 stop veh_v=10.88
+  t=  2.76      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  2.86                 stop veh_v=10.94
+  t=  2.86      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  2.96                 stop veh_v=11.00
+  t=  2.96      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  3.06                 stop veh_v=11.06
+  t=  3.06      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  3.16                 stop veh_v=11.12
+  t=  3.16      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  3.26                 stop veh_v=11.18
+  t=  3.26      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  3.36                 stop veh_v=11.24
+  t=  3.36      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  3.46                 stop veh_v=11.29
+  t=  3.46      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  3.56                 stop veh_v=11.35
+  t=  3.56      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  3.66                 stop veh_v=11.41
+  t=  3.66      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  3.76                 stop veh_v=11.45
+  t=  3.76      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  3.86                 stop veh_v=11.50
+  t=  3.86      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  3.96                 stop veh_v=11.55
+  t=  3.96      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  4.06                 stop veh_v=11.58
+  t=  4.06      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  4.16                 stop veh_v=11.61
+  t=  4.16      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  4.26                 stop veh_v=11.62
+  t=  4.26      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  4.36                 stop veh_v=11.63
+  t=  4.36      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  4.46                 stop veh_v=11.63
+  t=  4.46      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  4.56                 stop veh_v=11.62
+  t=  4.56      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  4.66                 stop veh_v=11.61
+  t=  4.66      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  4.76                 stop veh_v=11.60
+  t=  4.76      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  4.86                 stop veh_v=11.59
+  t=  4.86      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  4.96                 stop veh_v=11.57
+  t=  4.96      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  5.06                 stop veh_v=11.56
+  t=  5.06      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  5.16                 stop veh_v=11.54
+  t=  5.16      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  5.26                 stop veh_v=11.52
+  t=  5.26      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  5.36                 stop veh_v=11.50
+  t=  5.36      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  5.46                 stop veh_v=11.46
+  t=  5.46      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  5.55                 stop veh_v=11.41
+  t=  5.55      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  5.66                 stop veh_v=11.36
+  t=  5.66      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  5.76                 stop veh_v=11.30
+  t=  5.76      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  5.86                 stop veh_v=11.25
+  t=  5.86      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  5.96                 stop veh_v=11.19
+  t=  5.96      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  6.06                 stop veh_v=11.12
+  t=  6.06      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  6.16                 stop veh_v=11.05
+  t=  6.16      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  6.26                 stop veh_v=10.97
+  t=  6.26      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  6.36                 stop veh_v=10.87
+  t=  6.36      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  6.46                 stop veh_v=10.77
+  t=  6.46      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  6.56                 stop veh_v=10.68
+  t=  6.56      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  6.66                 stop veh_v=10.58
+  t=  6.66      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  6.76                 stop veh_v=10.47
+  t=  6.76      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  6.86                 stop veh_v=10.37
+  t=  6.86      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  6.96                 stop veh_v=10.26
+  t=  6.96      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  7.06                 stop veh_v=10.14
+  t=  7.06      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  7.16                 stop veh_v=10.03
+  t=  7.16      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  7.25                 stop veh_v=9.92
+  t=  7.25      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  7.35                 stop veh_v=9.81
+  t=  7.35      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  7.46                 stop veh_v=9.68
+  t=  7.46      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  7.55                 stop veh_v=9.57
+  t=  7.55      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  7.66                 stop veh_v=9.45
+  t=  7.66      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  7.76                 stop veh_v=9.33
+  t=  7.76      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  7.86                 stop veh_v=9.21
+  t=  7.86      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  7.96                 stop veh_v=9.08
+  t=  7.96      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  8.06                 stop veh_v=8.96
+  t=  8.06      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  8.16                 stop veh_v=8.84
+  t=  8.16      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  8.26                 stop veh_v=8.70
+  t=  8.26      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  8.36                 stop veh_v=8.59
+  t=  8.36      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  8.46                 stop veh_v=8.46
+  t=  8.46      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  8.56                 stop veh_v=8.34
+  t=  8.56      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  8.66                 stop veh_v=8.22
+  t=  8.66      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  8.77                 stop veh_v=8.09
+  t=  8.77      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  8.86                 stop veh_v=7.98
+  t=  8.86      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  8.96                 stop veh_v=7.86
+  t=  8.96      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  9.06                 stop veh_v=7.75
+  t=  9.06      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  9.16                 stop veh_v=7.63
+  t=  9.16      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  9.26                 stop veh_v=7.51
+  t=  9.26      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  9.36                 stop veh_v=7.40
+  t=  9.36      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  9.46                 stop veh_v=7.28
+  t=  9.46      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  9.55                 stop veh_v=7.16
+  t=  9.55      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  9.66                 stop veh_v=7.04
+  t=  9.66      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  9.76                 stop veh_v=6.94
+  t=  9.76      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  9.85                 stop veh_v=6.82
+  t=  9.85      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t=  9.96                 stop veh_v=6.71
+  t=  9.96      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t= 10.06                 stop veh_v=6.60
+  t= 10.06      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t= 10.15                 stop veh_v=6.48
+  t= 10.15      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t= 10.26                 stop veh_v=6.38
+  t= 10.26      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t= 10.36                 stop veh_v=6.27
+  t= 10.36      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t= 10.46                 stop veh_v=6.16
+  t= 10.46      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t= 10.56                 stop veh_v=6.05
+  t= 10.56      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t= 10.66                 stop veh_v=5.95
+  t= 10.66      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t= 10.75                 stop veh_v=5.84
+  t= 10.75      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t= 10.85                 stop veh_v=5.74
+  t= 10.85      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t= 10.96                 stop veh_v=5.64
+  t= 10.96      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t= 11.06                 stop veh_v=5.54
+  t= 11.06      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t= 11.16                 stop veh_v=5.44
+  t= 11.16      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t= 11.26                 stop veh_v=5.34
+  t= 11.26      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t= 11.36                 stop veh_v=5.24
+  t= 11.36      MAIN_STOP(rc=4) pt=(423438.12,4437610.77)
+  t= 11.46                 stop veh_v=5.14
+  t= 11.46      MAIN_STOP(rc=1) pt=(423439.42,4437610.77)
+  t= 11.56                 stop veh_v=5.03
+  t= 11.56      MAIN_STOP(rc=1) pt=(423438.91,4437610.77)
+  t= 11.66                 stop veh_v=4.94
+  t= 11.66      MAIN_STOP(rc=1) pt=(423439.40,4437610.77)
+  t= 11.76                 stop veh_v=4.84
+  t= 11.76      MAIN_STOP(rc=1) pt=(423438.87,4437610.77)
+  t= 11.86                 stop veh_v=4.75
+  t= 11.86      MAIN_STOP(rc=1) pt=(423439.33,4437610.77)
+  t= 11.96                 stop veh_v=4.64
+  t= 11.96      MAIN_STOP(rc=1) pt=(423438.78,4437610.77)
+  t= 12.06                 stop veh_v=4.54
+  t= 12.06      MAIN_STOP(rc=1) pt=(423439.22,4437610.77)
+  t= 12.16                 stop veh_v=4.46
+  t= 12.16      MAIN_STOP(rc=1) pt=(423438.65,4437610.77)
+  t= 12.26                 stop veh_v=4.36
+  t= 12.26      MAIN_STOP(rc=1) pt=(423439.08,4437610.77)
+  t= 12.37                 stop veh_v=4.26
+  t= 12.37      MAIN_STOP(rc=1) pt=(423438.49,4437610.77)
+  t= 12.46                 stop veh_v=4.18
+  t= 12.46      MAIN_STOP(rc=1) pt=(423438.90,4437610.77)
+  t= 12.56                 stop veh_v=4.09
+  t= 12.56      MAIN_STOP(rc=1) pt=(423439.29,4437610.77)
+  t= 12.66                 stop veh_v=4.00
+  t= 12.66      MAIN_STOP(rc=1) pt=(423438.68,4437610.77)
+  t= 12.76                 stop veh_v=3.92
+  t= 12.76      MAIN_STOP(rc=1) pt=(423439.06,4437610.77)
+  t= 12.86                 stop veh_v=3.84
+  t= 12.86      MAIN_STOP(rc=1) pt=(423439.43,4437610.77)
+  t= 12.96                 stop veh_v=3.76
+  t= 12.96      MAIN_STOP(rc=1) pt=(423438.79,4437610.77)
+  t= 13.06                 stop veh_v=3.68
+  t= 13.06      MAIN_STOP(rc=1) pt=(423439.15,4437610.77)
+  t= 13.16                 stop veh_v=3.60
+  t= 13.16      MAIN_STOP(rc=1) pt=(423438.49,4437610.77)
+  t= 13.26                 stop veh_v=3.51
+  t= 13.26      MAIN_STOP(rc=1) pt=(423438.90,4437610.77)
+  t= 13.36                 stop veh_v=3.43
+  t= 13.36      MAIN_STOP(rc=1) pt=(423439.16,4437610.77)
+  t= 13.45                 stop veh_v=3.35
+  t= 13.45      MAIN_STOP(rc=1) pt=(423439.48,4437610.77)
+  t= 13.56                 stop veh_v=3.28
+  t= 13.56      MAIN_STOP(rc=1) pt=(423438.80,4437610.77)
+  t= 13.66                 stop veh_v=3.20
+  t= 13.66      MAIN_STOP(rc=1) pt=(423439.11,4437610.77)
+  t= 13.76                 stop veh_v=3.13
+  t= 13.76      MAIN_STOP(rc=1) pt=(423439.41,4437610.77)
+  t= 13.86                 stop veh_v=3.05
+  t= 13.86      MAIN_STOP(rc=1) pt=(423438.71,4437610.77)
+  t= 13.96                 stop veh_v=2.98
+  t= 13.96      MAIN_STOP(rc=1) pt=(423439.00,4437610.77)
+  t= 14.06                 stop veh_v=2.89
+  t= 14.06      MAIN_STOP(rc=1) pt=(423439.28,4437610.77)
+  t= 14.16                 stop veh_v=2.82
+  t= 14.16      MAIN_STOP(rc=1) pt=(423438.55,4437610.77)
+  t= 14.26                 stop veh_v=2.74
+  t= 14.26      MAIN_STOP(rc=1) pt=(423438.82,4437610.77)
+  t= 14.36                 stop veh_v=2.67
+  t= 14.36      MAIN_STOP(rc=1) pt=(423439.08,4437610.77)
+  t= 14.46                 stop veh_v=2.60
+  t= 14.46      MAIN_STOP(rc=1) pt=(423439.34,4437610.77)
+  t= 14.56                 stop veh_v=2.53
+  t= 14.56      MAIN_STOP(rc=1) pt=(423438.59,4437610.77)
+  t= 14.66                 stop veh_v=2.46
+  t= 14.66      MAIN_STOP(rc=1) pt=(423438.83,4437610.77)
+  t= 14.76                 stop veh_v=2.39
+  t= 14.76      MAIN_STOP(rc=1) pt=(423439.07,4437610.77)
+  t= 14.86                 stop veh_v=2.33
+  t= 14.86      MAIN_STOP(rc=1) pt=(423439.30,4437610.77)
+  t= 14.96                 stop veh_v=2.28
+  t= 14.96      MAIN_STOP(rc=1) pt=(423438.58,4437610.77)
+  t= 15.06                 stop veh_v=2.22
+  t= 15.06      MAIN_STOP(rc=1) pt=(423438.75,4437610.77)
+  t= 15.16                 stop veh_v=2.17
+  t= 15.16      MAIN_STOP(rc=1) pt=(423438.97,4437610.77)
+  t= 15.25                 stop veh_v=2.11
+  t= 15.25      MAIN_STOP(rc=1) pt=(423439.18,4437610.77)
+  t= 15.36                 stop veh_v=2.06
+  t= 15.36      MAIN_STOP(rc=1) pt=(423439.38,4437610.77)
+  t= 15.46                 stop veh_v=2.01
+  t= 15.46      MAIN_STOP(rc=1) pt=(423438.58,4437610.77)
+  t= 15.56                 stop veh_v=1.95
+  t= 15.56      MAIN_STOP(rc=1) pt=(423438.78,4437610.77)
+  t= 15.66                 stop veh_v=1.89
+  t= 15.66      MAIN_STOP(rc=1) pt=(423438.97,4437610.77)
+  t= 15.75                 stop veh_v=1.83
+  t= 15.75      MAIN_STOP(rc=1) pt=(423439.15,4437610.77)
+  t= 15.86                 stop veh_v=1.78
+  t= 15.86      MAIN_STOP(rc=1) pt=(423439.33,4437610.77)
+  t= 15.96                 stop veh_v=1.74
+  t= 15.96      MAIN_STOP(rc=1) pt=(423438.51,4437610.77)
+  t= 16.05                 stop veh_v=1.69
+  t= 16.05      MAIN_STOP(rc=1) pt=(423438.68,4437610.77)
+  t= 16.16                 stop veh_v=1.64
+  t= 16.16      MAIN_STOP(rc=1) pt=(423438.85,4437610.77)
+  t= 16.26                 stop veh_v=1.60
+  t= 16.26      MAIN_STOP(rc=1) pt=(423439.01,4437610.77)
+  t= 16.36                 stop veh_v=1.55
+  t= 16.36      MAIN_STOP(rc=1) pt=(423439.17,4437610.77)
+  t= 16.46                 stop veh_v=1.51
+  t= 16.46      MAIN_STOP(rc=1) pt=(423439.33,4437610.77)
+  t= 16.56                 stop veh_v=1.46
+  t= 16.56      MAIN_STOP(rc=1) pt=(423438.51,4437610.77)
+  t= 16.66                 stop veh_v=1.42
+  t= 16.66      MAIN_STOP(rc=1) pt=(423438.62,4437610.77)
+  t= 16.76                 stop veh_v=1.37
+  t= 16.76      MAIN_STOP(rc=1) pt=(423438.77,4437610.77)
+  t= 16.85                 stop veh_v=1.33
+  t= 16.85      MAIN_STOP(rc=1) pt=(423438.90,4437610.77)
+  t= 16.96                 stop veh_v=1.29
+  t= 16.96      MAIN_STOP(rc=1) pt=(423439.04,4437610.77)
+  t= 17.06                 stop veh_v=1.25
+  t= 17.06      MAIN_STOP(rc=1) pt=(423439.17,4437610.77)
+  t= 17.16                 stop veh_v=1.21
+  t= 17.16      MAIN_STOP(rc=1) pt=(423439.30,4437610.77)
+  t= 17.26                 stop veh_v=1.17
+  t= 17.26      MAIN_STOP(rc=1) pt=(423439.42,4437610.77)
+  t= 17.36                 stop veh_v=1.13
+  t= 17.36      MAIN_STOP(rc=1) pt=(423438.55,4437610.77)
+  t= 17.46                 stop veh_v=1.08
+  t= 17.46      MAIN_STOP(rc=1) pt=(423438.66,4437610.77)
+  t= 17.56                 stop veh_v=1.05
+  t= 17.56      MAIN_STOP(rc=1) pt=(423438.78,4437610.77)
+  t= 17.66                 stop veh_v=1.01
+  t= 17.66      MAIN_STOP(rc=1) pt=(423438.89,4437610.77)
+  t= 17.76                 stop veh_v=0.97
+  t= 17.76      MAIN_STOP(rc=1) pt=(423439.00,4437610.77)
+  t= 17.86                 stop veh_v=0.94
+  t= 17.86      MAIN_STOP(rc=1) pt=(423439.11,4437610.77)
+  t= 17.96                 stop veh_v=0.90
+  t= 17.96      MAIN_STOP(rc=1) pt=(423439.21,4437610.77)
+  t= 18.06                 stop veh_v=0.87
+  t= 18.06      MAIN_STOP(rc=1) pt=(423439.33,4437610.77)
+  t= 18.16                 stop veh_v=0.86
+  t= 18.16      MAIN_STOP(rc=1) pt=(423439.41,4437610.77)
+  t= 18.26                 stop veh_v=0.84
+  t= 18.26      MAIN_STOP(rc=1) pt=(423438.50,4437610.77)
+  t= 18.36                 stop veh_v=0.81
+  t= 18.36      MAIN_STOP(rc=1) pt=(423438.59,4437610.77)
+  t= 18.46                 stop veh_v=0.78
+  t= 18.46      MAIN_STOP(rc=1) pt=(423438.68,4437610.77)
+  t= 18.56                 stop veh_v=0.76
+  t= 18.56      MAIN_STOP(rc=1) pt=(423438.77,4437610.77)
+  t= 18.66                 stop veh_v=0.74
+  t= 18.66      MAIN_STOP(rc=1) pt=(423438.85,4437610.77)
+  t= 18.76                 stop veh_v=0.73
+  t= 18.76      MAIN_STOP(rc=1) pt=(423438.94,4437610.77)
+  t= 18.86                 stop veh_v=0.71
+  t= 18.86      MAIN_STOP(rc=1) pt=(423439.02,4437610.77)
+  t= 18.96                 stop veh_v=0.69
+  t= 18.96      MAIN_STOP(rc=1) pt=(423439.09,4437610.77)
+  t= 19.06                 stop veh_v=0.68
+  t= 19.06      MAIN_STOP(rc=1) pt=(423439.17,4437610.77)
+  t= 19.16                 stop veh_v=0.67
+  t= 19.16      MAIN_STOP(rc=1) pt=(423439.24,4437610.77)
+  t= 19.26                 stop veh_v=0.65
+  t= 19.26      MAIN_STOP(rc=1) pt=(423439.31,4437610.77)
+  t= 19.36                 stop veh_v=0.64
+  t= 19.36      MAIN_STOP(rc=1) pt=(423439.38,4437610.77)
+  t= 19.45                 stop veh_v=0.63
+  t= 19.45      MAIN_STOP(rc=1) pt=(423439.45,4437610.77)
+  t= 19.57                 stop veh_v=0.62
+  t= 19.57      MAIN_STOP(rc=1) pt=(423438.51,4437610.77)
+  t= 19.66                 stop veh_v=0.59
+  t= 19.66      MAIN_STOP(rc=1) pt=(423438.58,4437610.77)
+  t= 19.77                 stop veh_v=0.56
+  t= 19.77      MAIN_STOP(rc=1) pt=(423438.65,4437610.77)
+  t= 19.86                 stop veh_v=0.55
+  t= 19.86      MAIN_STOP(rc=1) pt=(423438.70,4437610.77)
+  t= 19.96                 stop veh_v=0.54
+  t= 19.96      MAIN_STOP(rc=1) pt=(423438.76,4437610.77)
+  t= 20.06                 stop veh_v=0.52
+  t= 20.06      MAIN_STOP(rc=1) pt=(423438.81,4437610.77)
+  t= 20.16                 stop veh_v=0.51
+  t= 20.16      MAIN_STOP(rc=1) pt=(423438.87,4437610.77)
+  t= 20.26                 stop veh_v=0.50
+  t= 20.26      MAIN_STOP(rc=1) pt=(423438.92,4437610.77)
+  t= 20.37                 stop veh_v=0.49
+  t= 20.37      MAIN_STOP(rc=1) pt=(423438.97,4437610.77)
+  t= 20.46                 stop veh_v=0.47
+  t= 20.46      MAIN_STOP(rc=1) pt=(423439.02,4437610.77)
+  t= 20.56                 stop veh_v=0.46
+  t= 20.56      MAIN_STOP(rc=1) pt=(423439.06,4437610.77)
+  t= 20.66                 stop veh_v=0.45
+  t= 20.66      MAIN_STOP(rc=1) pt=(423439.11,4437610.77)
+  t= 20.76                 stop veh_v=0.44
+  t= 20.76      MAIN_STOP(rc=1) pt=(423439.16,4437610.77)
+  t= 20.86                 stop veh_v=0.43
+  t= 20.86      MAIN_STOP(rc=1) pt=(423439.20,4437610.77)
+  t= 20.96                 stop veh_v=0.43
+  t= 20.96      MAIN_STOP(rc=1) pt=(423439.24,4437610.77)
+  t= 21.06                 stop veh_v=0.42
+  t= 21.06      MAIN_STOP(rc=1) pt=(423439.28,4437610.77)
+  t= 21.16                 stop veh_v=0.41
+  t= 21.16      MAIN_STOP(rc=1) pt=(423439.32,4437610.77)
+  t= 21.26                 stop veh_v=0.40
+  t= 21.26      MAIN_STOP(rc=1) pt=(423439.36,4437610.77)
+  t= 21.36                 stop veh_v=0.39
+  t= 21.36      MAIN_STOP(rc=1) pt=(423439.40,4437610.77)
+  t= 21.46                 stop veh_v=0.38
+  t= 21.46      MAIN_STOP(rc=1) pt=(423439.44,4437610.77)
+  t= 21.56                 stop veh_v=0.37
+  t= 21.56      MAIN_STOP(rc=1) pt=(423439.47,4437610.77)
+  t= 21.68                 stop veh_v=0.37
+  t= 21.68      MAIN_STOP(rc=1) pt=(423438.51,4437610.77)
+  t= 21.77                 stop veh_v=0.34
+  t= 21.77      MAIN_STOP(rc=1) pt=(423438.54,4437610.77)
+  t= 21.87                 stop veh_v=0.31
+  t= 21.87      MAIN_STOP(rc=1) pt=(423438.57,4437610.77)
+  t= 21.99                 stop veh_v=0.28
+  t= 21.99      MAIN_STOP(rc=1) pt=(423438.60,4437610.77)
+  t= 22.08                 stop veh_v=0.27
+  t= 22.08      MAIN_STOP(rc=1) pt=(423438.63,4437610.77)
+  t= 22.19                 stop veh_v=0.26
+  t= 22.19      MAIN_STOP(rc=1) pt=(423438.66,4437610.77)
+  t= 22.28                 stop veh_v=0.26
+  t= 22.28      MAIN_STOP(rc=1) pt=(423438.68,4437610.77)
+  t= 22.37                 stop veh_v=0.25
+  t= 22.37      MAIN_STOP(rc=1) pt=(423438.71,4437610.77)
+  t= 22.47                 stop veh_v=0.24
+  t= 22.47      MAIN_STOP(rc=1) pt=(423438.73,4437610.77)
+  t= 22.56                 stop veh_v=0.24
+  t= 22.56      MAIN_STOP(rc=1) pt=(423438.75,4437610.77)
+  t= 22.66                 stop veh_v=0.23
+  t= 22.66      MAIN_STOP(rc=1) pt=(423438.77,4437610.77)
+  t= 22.76                 stop veh_v=0.22
+  t= 22.76      MAIN_STOP(rc=1) pt=(423438.79,4437610.77)
+  t= 22.86                 stop veh_v=0.22
+  t= 22.86      MAIN_STOP(rc=1) pt=(423438.81,4437610.77)
+  t= 22.96                 stop veh_v=0.21
+  t= 22.96      MAIN_STOP(rc=1) pt=(423438.83,4437610.77)
+  t= 23.06                 stop veh_v=0.20
+  t= 23.06      MAIN_STOP(rc=1) pt=(423438.85,4437610.77)
+  t= 23.16                 stop veh_v=0.20
+  t= 23.16      MAIN_STOP(rc=1) pt=(423438.87,4437610.77)
+  t= 23.26                 stop veh_v=0.19
+  t= 23.26      MAIN_STOP(rc=1) pt=(423438.88,4437610.77)
+  t= 23.36                 stop veh_v=0.19
+  t= 23.36      MAIN_STOP(rc=1) pt=(423438.90,4437610.77)
+  t= 23.46                 stop veh_v=0.18
+  t= 23.46      MAIN_STOP(rc=1) pt=(423438.91,4437610.77)
+  t= 23.56                 stop veh_v=0.18
+  t= 23.56      MAIN_STOP(rc=1) pt=(423438.93,4437610.77)
+  t= 23.66                 stop veh_v=0.17
+  t= 23.66      MAIN_STOP(rc=1) pt=(423438.94,4437610.77)
+  t= 23.76                 stop veh_v=0.17
+  t= 23.76      MAIN_STOP(rc=1) pt=(423438.96,4437610.77)
+  t= 23.86                 stop veh_v=0.16
+  t= 23.86      MAIN_STOP(rc=1) pt=(423438.97,4437610.77)
+  t= 23.96                 stop veh_v=0.16
+  t= 23.96      MAIN_STOP(rc=1) pt=(423438.98,4437610.77)
+  t= 24.06                 stop veh_v=0.15
+  t= 24.06      MAIN_STOP(rc=1) pt=(423438.99,4437610.77)
+  t= 24.16                 stop veh_v=0.15
+  t= 24.16      MAIN_STOP(rc=1) pt=(423439.01,4437610.77)
+  t= 24.26                 stop veh_v=0.14
+  t= 24.26      MAIN_STOP(rc=1) pt=(423439.02,4437610.77)
+  t= 24.36                 stop veh_v=0.14
+  t= 24.36      MAIN_STOP(rc=1) pt=(423439.03,4437610.77)
+  t= 24.46                 stop veh_v=0.14
+  t= 24.46      MAIN_STOP(rc=1) pt=(423439.04,4437610.77)
+  t= 24.56                 stop veh_v=0.13
+  t= 24.56      MAIN_STOP(rc=1) pt=(423439.05,4437610.77)
+  t= 24.66                 stop veh_v=0.13
+  t= 24.66      MAIN_STOP(rc=1) pt=(423439.06,4437610.77)
+  t= 24.76                 stop veh_v=0.13
+  t= 24.76      MAIN_STOP(rc=1) pt=(423439.07,4437610.77)
+  t= 24.86                 stop veh_v=0.13
+  t= 24.86      MAIN_STOP(rc=1) pt=(423439.08,4437610.77)
+  t= 24.96                 stop veh_v=0.12
+  t= 24.96      MAIN_STOP(rc=1) pt=(423439.09,4437610.77)
+  t= 25.06                 stop veh_v=0.12
+  t= 25.06      MAIN_STOP(rc=1) pt=(423439.10,4437610.77)
+  t= 25.16                 stop veh_v=0.11
+  t= 25.16      MAIN_STOP(rc=1) pt=(423439.11,4437610.77)
+  t= 25.25                 stop veh_v=0.11
+  t= 25.25      MAIN_STOP(rc=1) pt=(423439.12,4437610.77)
+  t= 25.36                 stop veh_v=0.11
+  t= 25.36      MAIN_STOP(rc=1) pt=(423439.12,4437610.77)
+  t= 25.46                 stop veh_v=0.11
+  t= 25.46      MAIN_STOP(rc=1) pt=(423439.13,4437610.77)
+  t= 25.56                 stop veh_v=0.10
+  t= 25.56      MAIN_STOP(rc=1) pt=(423439.14,4437610.77)
+  t= 25.66                 stop veh_v=0.10
+  t= 25.66      MAIN_STOP(rc=1) pt=(423439.15,4437610.77)
+  t= 25.76                 stop veh_v=0.10
+  t= 25.76      MAIN_STOP(rc=1) pt=(423439.16,4437610.77)
+  t= 25.86                 stop veh_v=0.10
+  t= 25.86      MAIN_STOP(rc=1) pt=(423439.16,4437610.77)
+  t= 25.96                 stop veh_v=0.09
+  t= 25.96      MAIN_STOP(rc=1) pt=(423439.17,4437610.77)
+  t= 26.06                 stop veh_v=0.09
+  t= 26.06      MAIN_STOP(rc=1) pt=(423439.18,4437610.77)
+  t= 26.16                 stop veh_v=0.09
+  t= 26.16      MAIN_STOP(rc=1) pt=(423439.18,4437610.77)
+  t= 26.26                 stop veh_v=0.09
+  t= 26.26      MAIN_STOP(rc=1) pt=(423439.19,4437610.77)
+  t= 26.36                 stop veh_v=0.09
+  t= 26.36      MAIN_STOP(rc=1) pt=(423439.20,4437610.77)
+  t= 26.46                 stop veh_v=0.08
+  t= 26.46      MAIN_STOP(rc=1) pt=(423439.20,4437610.77)
+  t= 26.56                 stop veh_v=0.08
+  t= 26.56      MAIN_STOP(rc=1) pt=(423439.21,4437610.77)
+  t= 26.66                 stop veh_v=0.08
+  t= 26.66      MAIN_STOP(rc=1) pt=(423439.22,4437610.77)
+  t= 26.76                 stop veh_v=0.08
+  t= 26.76      MAIN_STOP(rc=1) pt=(423439.22,4437610.77)
+  t= 26.86                 stop veh_v=0.08
+  t= 26.86      MAIN_STOP(rc=1) pt=(423439.23,4437610.77)
+  t= 26.96                 stop veh_v=0.08
+  t= 26.96      MAIN_STOP(rc=1) pt=(423439.23,4437610.77)
+  t= 27.06                 stop veh_v=0.08
+  t= 27.06      MAIN_STOP(rc=1) pt=(423439.24,4437610.77)
+  t= 27.16                 stop veh_v=0.08
+  t= 27.16      MAIN_STOP(rc=1) pt=(423439.24,4437610.77)
+  t= 27.26                 stop veh_v=0.05
+  t= 27.26      MAIN_STOP(rc=1) pt=(423439.25,4437610.77)
+  t= 27.36                 stop veh_v=0.00
+  t= 27.36      MAIN_STOP(rc=1) pt=(423439.25,4437610.77)
+  t= 27.46                 stop veh_v=0.00
+  t= 27.46      MAIN_STOP(rc=1) pt=(423439.26,4437610.77)
+  t= 27.56                 stop veh_v=0.00
+  t= 27.56      MAIN_STOP(rc=1) pt=(423439.27,4437610.77)
+  t= 27.66                 stop veh_v=0.00
+  t= 27.66      MAIN_STOP(rc=1) pt=(423439.27,4437610.77)
+  t= 27.76                 stop veh_v=0.00
+  t= 27.76      MAIN_STOP(rc=1) pt=(423439.28,4437610.77)
+  t= 27.86                 stop veh_v=0.00
+  t= 27.86      MAIN_STOP(rc=1) pt=(423439.28,4437610.77)
+  t= 27.96                 stop veh_v=0.00
+  t= 27.96      MAIN_STOP(rc=1) pt=(423439.28,4437610.77)
+  t= 28.06                 stop veh_v=0.00
+  t= 28.06      MAIN_STOP(rc=1) pt=(423439.29,4437610.77)
+  t= 28.16                 stop veh_v=0.00
+  t= 28.16      MAIN_STOP(rc=1) pt=(423439.29,4437610.77)
+  t= 28.26                 stop veh_v=0.00
+  t= 28.26      MAIN_STOP(rc=1) pt=(423439.30,4437610.77)
+  t= 28.36                 stop veh_v=0.00
+  t= 28.36      MAIN_STOP(rc=1) pt=(423439.30,4437610.77)
+  t= 28.46                 stop veh_v=0.00
+  t= 28.46      MAIN_STOP(rc=1) pt=(423439.31,4437610.77)
+  t= 28.56                 stop veh_v=0.00
+  t= 28.56      MAIN_STOP(rc=1) pt=(423439.31,4437610.77)
+  t= 28.66                 stop veh_v=0.00
+  t= 28.66      MAIN_STOP(rc=1) pt=(423439.32,4437610.77)
+  t= 28.76                 stop veh_v=0.00
+  t= 28.76      MAIN_STOP(rc=1) pt=(423439.32,4437610.77)
+  t= 28.87                 stop veh_v=0.00
+  t= 28.87      MAIN_STOP(rc=1) pt=(423439.33,4437610.77)
+  t= 28.96                 stop veh_v=0.00
+  t= 28.96      MAIN_STOP(rc=1) pt=(423439.33,4437610.77)
+  t= 29.06                 stop veh_v=0.00
+  t= 29.06      MAIN_STOP(rc=1) pt=(423439.33,4437610.77)
+  t= 29.16                 stop veh_v=0.00
+  t= 29.16      MAIN_STOP(rc=1) pt=(423439.34,4437610.77)
+  t= 29.26                 stop veh_v=0.00
+  t= 29.26      MAIN_STOP(rc=1) pt=(423439.34,4437610.77)
+  t= 29.37                 stop veh_v=0.00
+  t= 29.37      MAIN_STOP(rc=1) pt=(423439.35,4437610.77)
+  t= 29.46                 stop veh_v=0.00
+  t= 29.46      MAIN_STOP(rc=1) pt=(423439.35,4437610.77)
+  t= 29.57                 stop veh_v=0.00
+  t= 29.57      MAIN_STOP(rc=1) pt=(423439.36,4437610.77)
+  t= 29.67                 stop veh_v=0.00
+  t= 29.67      MAIN_STOP(rc=1) pt=(423439.36,4437610.77)
+  t= 29.76                 stop veh_v=0.00
+  t= 29.76      MAIN_STOP(rc=1) pt=(423439.36,4437610.77)
+  t= 29.86                 stop veh_v=0.00
+  t= 29.86      MAIN_STOP(rc=1) pt=(423439.37,4437610.77)
+  t= 29.96                 stop veh_v=0.00
+  t= 29.96      MAIN_STOP(rc=1) pt=(423439.37,4437610.77)
+  t= 30.06                 stop veh_v=0.00
+  t= 30.06      MAIN_STOP(rc=1) pt=(423439.38,4437610.77)
+  t= 30.16                 stop veh_v=0.00
+  t= 30.16      MAIN_STOP(rc=1) pt=(423439.38,4437610.77)
+  t= 30.26                 stop veh_v=0.00
+  t= 30.26      MAIN_STOP(rc=1) pt=(423439.38,4437610.77)
+  t= 30.36                 stop veh_v=0.00
+  t= 30.36      MAIN_STOP(rc=1) pt=(423439.39,4437610.77)
+  t= 30.46                 stop veh_v=0.00
+  t= 30.46      MAIN_STOP(rc=1) pt=(423439.39,4437610.77)
+  t= 30.56                 stop veh_v=0.00
+  t= 30.56      MAIN_STOP(rc=1) pt=(423439.40,4437610.77)
+  t= 30.66                 stop veh_v=0.00
+  t= 30.66      MAIN_STOP(rc=1) pt=(423439.40,4437610.77)
+  t= 30.76                 stop veh_v=0.00
+  t= 30.76      MAIN_STOP(rc=1) pt=(423439.40,4437610.77)
+  t= 30.86                 stop veh_v=0.00
+  t= 30.86      MAIN_STOP(rc=1) pt=(423439.41,4437610.77)
+  t= 30.96                 stop veh_v=0.00
+  t= 30.96      MAIN_STOP(rc=1) pt=(423439.41,4437610.77)
+  t= 31.06                 stop veh_v=0.00
+  t= 31.06      MAIN_STOP(rc=1) pt=(423439.41,4437610.77)
+  t= 31.16                 stop veh_v=0.00
+  t= 31.16      MAIN_STOP(rc=1) pt=(423439.42,4437610.77)
+  t= 31.26                 stop veh_v=0.00
+  t= 31.26      MAIN_STOP(rc=1) pt=(423439.42,4437610.77)
+  t= 31.36                 stop veh_v=0.00
+  t= 31.36      MAIN_STOP(rc=1) pt=(423439.43,4437610.77)
+  t= 31.46                 stop veh_v=0.00
+  t= 31.46      MAIN_STOP(rc=1) pt=(423439.43,4437610.77)
+  t= 31.56                 stop veh_v=0.00
+  t= 31.56      MAIN_STOP(rc=1) pt=(423439.43,4437610.77)
+  t= 31.67                 stop veh_v=0.00
+  t= 31.67      MAIN_STOP(rc=1) pt=(423439.44,4437610.77)
+  t= 31.76                 stop veh_v=0.00
+  t= 31.76      MAIN_STOP(rc=1) pt=(423439.44,4437610.77)
+  t= 31.86                 stop veh_v=0.00
+  t= 31.86      MAIN_STOP(rc=1) pt=(423439.44,4437610.77)
+  t= 31.96                 stop veh_v=0.00
+  t= 31.96      MAIN_STOP(rc=1) pt=(423439.45,4437610.77)
+  t= 32.06                 stop veh_v=0.00
+  t= 32.06      MAIN_STOP(rc=1) pt=(423439.45,4437610.77)
+  t= 32.16                 stop veh_v=0.00
+  t= 32.16      MAIN_STOP(rc=1) pt=(423439.45,4437610.77)
+  t= 32.26                 stop veh_v=0.00
+  t= 32.26      MAIN_STOP(rc=1) pt=(423439.46,4437610.77)
+  t= 32.36                 stop veh_v=0.00
+  t= 32.36      MAIN_STOP(rc=1) pt=(423439.46,4437610.77)
+  t= 32.46                 stop veh_v=0.00
+  t= 32.46      MAIN_STOP(rc=1) pt=(423439.47,4437610.77)
+  t= 32.56                 stop veh_v=0.00
+  t= 32.56      MAIN_STOP(rc=1) pt=(423439.47,4437610.77)
+  t= 32.66                 stop veh_v=0.00
+  t= 32.66      MAIN_STOP(rc=1) pt=(423439.47,4437610.77)
+  t= 32.76                 stop veh_v=0.00
+  t= 32.76      MAIN_STOP(rc=1) pt=(423439.48,4437610.77)
+  t= 32.86                 stop veh_v=0.00
+  t= 32.86      MAIN_STOP(rc=1) pt=(423439.48,4437610.77)
+  t= 32.96                 stop veh_v=0.00
+  t= 32.96      MAIN_STOP(rc=1) pt=(423439.48,4437610.77)
+  t= 33.09                 stop veh_v=0.00
+  t= 33.09      MAIN_STOP(rc=1) pt=(423438.49,4437610.77)
+  t= 33.17                 stop veh_v=0.00
+  t= 33.17      MAIN_STOP(rc=1) pt=(423438.49,4437610.77)
+  t= 33.27                 stop veh_v=0.00
+  t= 33.27      MAIN_STOP(rc=1) pt=(423438.49,4437610.77)
+  t= 33.36                 stop veh_v=0.00
+  t= 33.36      MAIN_STOP(rc=1) pt=(423438.49,4437610.77)
+  t= 33.46                 stop veh_v=0.00
+  t= 33.46      MAIN_STOP(rc=1) pt=(423438.50,4437610.77)
+  t= 33.57                 stop veh_v=0.00
+  t= 33.57      MAIN_STOP(rc=1) pt=(423438.50,4437610.77)
+  t= 33.66                 stop veh_v=0.00
+  t= 33.66      MAIN_STOP(rc=1) pt=(423438.50,4437610.77)
+  t= 33.76                 stop veh_v=0.00
+  t= 33.76      MAIN_STOP(rc=1) pt=(423438.50,4437610.77)
+  t= 33.86                 stop veh_v=0.00
+  t= 33.86      MAIN_STOP(rc=1) pt=(423438.50,4437610.77)
+  t= 33.96                 stop veh_v=0.00
+  t= 33.96      MAIN_STOP(rc=1) pt=(423438.50,4437610.77)
+  t= 34.06                 stop veh_v=0.00
+  t= 34.06      MAIN_STOP(rc=1) pt=(423438.50,4437610.77)
+  t= 34.16                 stop veh_v=0.00
+  t= 34.16      MAIN_STOP(rc=1) pt=(423438.50,4437610.77)
+  t= 34.26                 stop veh_v=0.00
+  t= 34.26      MAIN_STOP(rc=1) pt=(423438.50,4437610.77)
+  t= 34.36                 stop veh_v=0.00
+  t= 34.36      MAIN_STOP(rc=1) pt=(423438.50,4437610.77)
+  t= 34.46                 stop veh_v=0.00
+  t= 34.46      MAIN_STOP(rc=1) pt=(423438.51,4437610.77)
+  t= 34.56                 stop veh_v=0.00
+  t= 34.56      MAIN_STOP(rc=1) pt=(423438.51,4437610.77)
+  t= 34.66                 stop veh_v=0.00
+  t= 34.66      MAIN_STOP(rc=1) pt=(423438.51,4437610.77)
+  t= 34.76                 stop veh_v=0.00
+  t= 34.76      MAIN_STOP(rc=1) pt=(423438.51,4437610.77)
+  t= 34.87                 stop veh_v=0.00
+  t= 34.87      MAIN_STOP(rc=1) pt=(423438.51,4437610.77)
+  t= 34.97                 stop veh_v=0.00
+  t= 34.97      MAIN_STOP(rc=1) pt=(423438.51,4437610.77)
+  t= 35.06                 stop veh_v=0.00
+  t= 35.06      MAIN_STOP(rc=1) pt=(423439.36,4437610.77)
+  t= 35.16                 stop veh_v=0.00
+  t= 35.16      MAIN_STOP(rc=1) pt=(423439.36,4437610.77)
+  t= 35.26                 stop veh_v=0.00
+  t= 35.26      MAIN_STOP(rc=1) pt=(423439.36,4437610.77)
+  t= 35.36                 stop veh_v=0.00
+  t= 35.36      MAIN_STOP(rc=1) pt=(423439.36,4437610.77)
+  t= 35.46                 stop veh_v=0.00
+  t= 35.46      MAIN_STOP(rc=1) pt=(423439.36,4437610.77)
+  t= 35.56                 stop veh_v=0.00
+  t= 35.56      MAIN_STOP(rc=1) pt=(423439.36,4437610.77)
+  t= 35.66                 stop veh_v=0.00
+  t= 35.66      MAIN_STOP(rc=1) pt=(423439.36,4437610.77)
+  t= 35.76                 stop veh_v=0.00
+  t= 35.76      MAIN_STOP(rc=1) pt=(423439.36,4437610.77)
+  t= 35.86                 stop veh_v=0.00
+  t= 35.86      MAIN_STOP(rc=1) pt=(423439.37,4437610.77)
+  t= 35.96                 stop veh_v=0.00
+  t= 35.96      MAIN_STOP(rc=1) pt=(423439.37,4437610.77)
+  t= 36.06                 stop veh_v=0.00
+  t= 36.06      MAIN_STOP(rc=1) pt=(423439.37,4437610.77)
+  t= 36.16                 stop veh_v=0.00
+  t= 36.16      MAIN_STOP(rc=1) pt=(423439.37,4437610.77)
+  t= 36.26                 stop veh_v=0.00
+  t= 36.26      MAIN_STOP(rc=1) pt=(423439.37,4437610.77)
+  t= 36.36                 stop veh_v=0.00
+  t= 36.36      MAIN_STOP(rc=1) pt=(423439.37,4437610.77)
+  t= 36.46                 stop veh_v=0.00
+  t= 36.46      MAIN_STOP(rc=1) pt=(423439.38,4437610.77)
+  t= 36.56                 stop veh_v=0.00
+  t= 36.56      MAIN_STOP(rc=1) pt=(423439.38,4437610.77)
+  t= 36.66                 stop veh_v=0.00
+  t= 36.66      MAIN_STOP(rc=1) pt=(423439.38,4437610.77)
+  t= 36.76                 stop veh_v=0.00
+  t= 36.76      MAIN_STOP(rc=1) pt=(423439.38,4437610.77)
+  t= 36.86                 stop veh_v=0.00
+  t= 36.86      MAIN_STOP(rc=1) pt=(423439.39,4437610.77)
+  t= 36.96                 stop veh_v=0.00
+  t= 36.96      MAIN_STOP(rc=1) pt=(423439.39,4437610.77)
+  t= 37.06                 stop veh_v=0.00
+  t= 37.06      MAIN_STOP(rc=1) pt=(423439.39,4437610.77)
+  t= 37.16                 stop veh_v=0.00
+  t= 37.16      MAIN_STOP(rc=1) pt=(423439.39,4437610.77)
+  t= 37.26                 stop veh_v=0.00
+  t= 37.26      MAIN_STOP(rc=1) pt=(423439.40,4437610.77)
+  t= 37.36                 stop veh_v=0.00
+  t= 37.36      MAIN_STOP(rc=1) pt=(423439.40,4437610.77)
+  t= 37.46                 stop veh_v=0.00
+  t= 37.46      MAIN_STOP(rc=1) pt=(423439.40,4437610.77)
+  t= 37.56                 stop veh_v=0.00
+  t= 37.56      MAIN_STOP(rc=1) pt=(423439.41,4437610.77)
+  t= 37.66                 stop veh_v=0.00
+  t= 37.66      MAIN_STOP(rc=1) pt=(423439.41,4437610.77)
+  t= 37.76                 stop veh_v=0.00
+  t= 37.76      MAIN_STOP(rc=1) pt=(423439.41,4437610.77)
+  t= 37.86                 stop veh_v=0.00
+  t= 37.86      MAIN_STOP(rc=1) pt=(423439.41,4437610.77)
+  t= 37.96                 stop veh_v=0.00
+  t= 37.96      MAIN_STOP(rc=1) pt=(423439.42,4437610.77)
+  t= 38.06                 stop veh_v=0.00
+  t= 38.06      MAIN_STOP(rc=1) pt=(423439.42,4437610.77)
+  t= 38.16                 stop veh_v=0.00
+  t= 38.16      MAIN_STOP(rc=1) pt=(423439.42,4437610.77)
+  t= 38.26                 stop veh_v=0.00
+  t= 38.26      MAIN_STOP(rc=1) pt=(423439.43,4437610.77)
+  t= 38.36                 stop veh_v=0.00
+  t= 38.36      MAIN_STOP(rc=1) pt=(423439.43,4437610.77)
+  t= 38.46                 stop veh_v=0.00
+  t= 38.46      MAIN_STOP(rc=1) pt=(423439.44,4437610.77)
+  t= 38.56                 stop veh_v=0.00
+  t= 38.56      MAIN_STOP(rc=1) pt=(423439.44,4437610.77)
+  t= 38.66                 stop veh_v=0.00
+  t= 38.66      MAIN_STOP(rc=1) pt=(423439.44,4437610.77)
+  t= 38.76                 stop veh_v=0.00
+  t= 38.76      MAIN_STOP(rc=1) pt=(423439.45,4437610.77)
+  t= 38.86                 stop veh_v=0.00
+  t= 38.86      MAIN_STOP(rc=1) pt=(423439.45,4437610.77)
+  t= 38.96                 stop veh_v=0.00
+  t= 38.96      MAIN_STOP(rc=1) pt=(423439.45,4437610.77)
+  t= 39.06                 stop veh_v=0.00
+  t= 39.06      MAIN_STOP(rc=1) pt=(423439.46,4437610.77)
+  t= 39.16                 stop veh_v=0.00
+  t= 39.16      MAIN_STOP(rc=1) pt=(423439.46,4437610.77)
+  t= 39.26                 stop veh_v=0.00
+  t= 39.26      MAIN_STOP(rc=1) pt=(423439.46,4437610.77)
+  t= 39.36                 stop veh_v=0.00
+  t= 39.36      MAIN_STOP(rc=1) pt=(423439.47,4437610.77)
+  t= 39.46                 stop veh_v=0.00
+  t= 39.46      MAIN_STOP(rc=1) pt=(423439.47,4437610.77)
+  t= 39.56                 stop veh_v=0.00
+  t= 39.56      MAIN_STOP(rc=1) pt=(423439.48,4437610.77)
+  t= 39.66                 stop veh_v=0.00
+  t= 39.66      MAIN_STOP(rc=1) pt=(423439.48,4437610.77)
+  t= 39.76                 stop veh_v=0.00
+  t= 39.76      MAIN_STOP(rc=1) pt=(423439.48,4437610.77)
+  t= 39.86                 stop veh_v=0.00
+  t= 39.86      MAIN_STOP(rc=1) pt=(423439.49,4437610.77)
+  t= 39.96                 stop veh_v=0.00
+  t= 39.96      MAIN_STOP(rc=1) pt=(423439.49,4437610.77)
+  t= 40.06                 stop veh_v=0.00
+  t= 40.06      MAIN_STOP(rc=1) pt=(423439.50,4437610.77)
+  t= 40.16                 stop veh_v=0.00
+  t= 40.16      MAIN_STOP(rc=1) pt=(423439.50,4437610.77)
+  t= 40.26                 stop veh_v=0.00
+  t= 40.26      MAIN_STOP(rc=1) pt=(423439.50,4437610.77)
+  t= 40.36                 stop veh_v=0.00
+  t= 40.36      MAIN_STOP(rc=1) pt=(423439.51,4437610.77)
+  t= 40.46                 stop veh_v=0.00
+  t= 40.46      MAIN_STOP(rc=1) pt=(423439.51,4437610.77)
+  t= 40.57                 stop veh_v=0.00
+  t= 40.57      MAIN_STOP(rc=1) pt=(423439.52,4437610.77)
+  t= 40.66                 stop veh_v=0.00
+  t= 40.66      MAIN_STOP(rc=1) pt=(423439.52,4437610.77)
+  t= 40.76                 stop veh_v=0.00
+  t= 40.76      MAIN_STOP(rc=1) pt=(423439.52,4437610.77)
+  t= 40.86                 stop veh_v=0.00
+  t= 40.86      MAIN_STOP(rc=1) pt=(423439.53,4437610.77)
+  t= 40.96                 stop veh_v=0.00
+  t= 40.96      MAIN_STOP(rc=1) pt=(423439.53,4437610.77)
+  t= 41.06                 stop veh_v=0.00
+  t= 41.06      MAIN_STOP(rc=1) pt=(423439.54,4437610.77)
+  t= 41.16                 stop veh_v=0.00
+  t= 41.16      MAIN_STOP(rc=1) pt=(423439.54,4437610.77)
+  t= 41.26                 stop veh_v=0.00
+  t= 41.26      MAIN_STOP(rc=1) pt=(423439.55,4437610.77)
+  t= 41.36                 stop veh_v=0.00
+  t= 41.36      MAIN_STOP(rc=1) pt=(423439.55,4437610.77)
+  t= 41.46                 stop veh_v=0.00
+  t= 41.46      MAIN_STOP(rc=1) pt=(423439.55,4437610.77)
+  t= 41.56                 stop veh_v=0.00
+  t= 41.56      MAIN_STOP(rc=1) pt=(423439.56,4437610.77)
+  t= 41.66                 stop veh_v=0.00
+  t= 41.66      MAIN_STOP(rc=1) pt=(423439.56,4437610.77)
+  t= 41.76                 stop veh_v=0.00
+  t= 41.76      MAIN_STOP(rc=1) pt=(423439.57,4437610.77)
+  t= 41.87                 stop veh_v=0.00
+  t= 41.87      MAIN_STOP(rc=1) pt=(423438.57,4437610.77)
+  t= 41.97                 stop veh_v=0.00
+  t= 41.97      MAIN_STOP(rc=1) pt=(423438.57,4437610.77)
+  t= 42.08                 stop veh_v=0.00
+  t= 42.08      MAIN_STOP(rc=1) pt=(423438.58,4437610.77)
+  t= 42.17                 stop veh_v=0.00
+  t= 42.17      MAIN_STOP(rc=1) pt=(423438.58,4437610.77)
+  t= 42.27                 stop veh_v=0.00
+  t= 42.27      MAIN_STOP(rc=1) pt=(423438.58,4437610.77)
+  t= 42.37                 stop veh_v=0.00
+  t= 42.37      MAIN_STOP(rc=1) pt=(423438.58,4437610.77)
+  t= 42.46                 stop veh_v=0.00
+  t= 42.46      MAIN_STOP(rc=1) pt=(423438.58,4437610.77)
+  t= 42.56                 stop veh_v=0.00
+  t= 42.56      MAIN_STOP(rc=1) pt=(423438.59,4437610.77)
+  t= 42.66                 stop veh_v=0.00
+  t= 42.66      MAIN_STOP(rc=1) pt=(423438.59,4437610.77)
+  t= 42.76                 stop veh_v=0.00
+  t= 42.76      MAIN_STOP(rc=1) pt=(423439.36,4437610.77)
+  t= 42.86                 stop veh_v=0.00
+  t= 42.86      MAIN_STOP(rc=1) pt=(423439.36,4437610.77)
+  t= 42.95                 stop veh_v=0.00
+  t= 42.95      MAIN_STOP(rc=1) pt=(423439.36,4437610.77)
+  t= 43.06                 stop veh_v=0.00
+  t= 43.06      MAIN_STOP(rc=1) pt=(423439.36,4437610.77)
+  t= 43.16                 stop veh_v=0.00
+  t= 43.16      MAIN_STOP(rc=1) pt=(423439.36,4437610.77)
+  t= 43.26                 stop veh_v=0.00
+  t= 43.26      MAIN_STOP(rc=1) pt=(423439.36,4437610.77)
+  t= 43.36                 stop veh_v=0.00
+  t= 43.36      MAIN_STOP(rc=1) pt=(423439.36,4437610.77)
+  t= 43.52               follow veh_v=0.00
+  t= 52.18                yield veh_v=2.35
++ xhost -local:root

@@ -1,0 +1,305 @@
++ [[ ! 1 == 1 ]]
++ execute -- 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/dump_y_precise.py /home/skye/.apollo/resources/records/202608012054_MkzExample_Xh2026Contest.00000.20260801205249.record 53 66 2>&1'
++ [[ -f /home/skye/application-pnc/.env ]]
++ set -a
++ source /home/skye/application-pnc/.env
+++ APOLLO_ENV_NAME=edu
+++ APOLLO_ENV_WORKLOCAL=1
+++ APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
+++ APOLLO_ENV_CONTAINER_TAG=9.0-latest
++ set +a
++ parse_arguments -- 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/dump_y_precise.py /home/skye/.apollo/resources/records/202608012054_MkzExample_Xh2026Contest.00000.20260801205249.record 53 66 2>&1'
++ args=()
++ [[ 2 -gt 0 ]]
++ local opt=--
++ shift
++ case "${opt}" in
++ args+=("$@")
++ break
++ APOLLO_ENV_EXEC_ARGS=('cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/dump_y_precise.py /home/skye/.apollo/resources/records/202608012054_MkzExample_Xh2026Contest.00000.20260801205249.record 53 66 2>&1')
++ export APOLLO_ENV_EXEC_ARGS
++ apollo_env_exists edu
++ local env_name=edu
++ apollo_envhome_exists edu
++ local env_name=edu
++ [[ -d /home/skye/.aem/envs/edu ]]
++ return 0
++ [[ -e /home/skye/.aem/envs/edu/env.config ]]
++ declare backend
+++ source /home/skye/.aem/envs/edu/env.config
++++ export AEM_FLAG_FORCE_RECREATE=0
++++ AEM_FLAG_FORCE_RECREATE=0
++++ export AEM_FLAG_FORCE_RECREATE_VOLUMES=0
++++ AEM_FLAG_FORCE_RECREATE_VOLUMES=0
++++ export AEM_FLAG_SHM_SIZE=4G
++++ AEM_FLAG_SHM_SIZE=4G
++++ export AEM_FLAG_USE_GPU=1
++++ AEM_FLAG_USE_GPU=1
++++ export AEM_FLAG_USE_LOCAL_IMAGE=0
++++ AEM_FLAG_USE_LOCAL_IMAGE=0
++++ export AEM_GEO=
++++ AEM_GEO=
++++ export AEM_HOME=/opt/apollo/aem
++++ AEM_HOME=/opt/apollo/aem
++++ export AEM_INITED=1
++++ AEM_INITED=1
++++ export AEM_SYS_SHARE=/opt/apollo/aem/share/aem
++++ AEM_SYS_SHARE=/opt/apollo/aem/share/aem
++++ export AEM_VERSION=10.0.0-rc1-r4
++++ AEM_VERSION=10.0.0-rc1-r4
++++ export APOLLO_ENVS_ROOT=/home/skye/.aem/envs
++++ APOLLO_ENVS_ROOT=/home/skye/.aem/envs
++++ APOLLO_ENV_ARGS=()
++++ export APOLLO_ENV_ARGS
++++ export APOLLO_ENV_BACKEND=docker
++++ APOLLO_ENV_BACKEND=docker
++++ export APOLLO_ENV_CONTAINER_GID=1000
++++ APOLLO_ENV_CONTAINER_GID=1000
++++ export APOLLO_ENV_CONTAINER_GROUP=skye
++++ APOLLO_ENV_CONTAINER_GROUP=skye
++++ export APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu
++++ APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu
++++ export APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_
++++ APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_
++++ export APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
++++ APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
++++ export APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm
++++ APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm
++++ export APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu
++++ APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu
++++ export APOLLO_ENV_CONTAINER_SHELL=/bin/bash
++++ APOLLO_ENV_CONTAINER_SHELL=/bin/bash
++++ export APOLLO_ENV_CONTAINER_TAG=9.0-latest
++++ APOLLO_ENV_CONTAINER_TAG=9.0-latest
++++ export APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20
++++ APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20
++++ export APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22
++++ APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22
++++ export APOLLO_ENV_CONTAINER_UID=1000
++++ APOLLO_ENV_CONTAINER_UID=1000
++++ export APOLLO_ENV_CONTAINER_USER=skye
++++ APOLLO_ENV_CONTAINER_USER=skye
++++ export APOLLO_ENV_CROSS_PLATFORM=
++++ APOLLO_ENV_CROSS_PLATFORM=
++++ export APOLLO_ENV_NAME=edu
++++ APOLLO_ENV_NAME=edu
++++ export APOLLO_ENV_USE_GPU_HOST=1
++++ APOLLO_ENV_USE_GPU_HOST=1
++++ export APOLLO_ENV_WORKLOCAL=1
++++ APOLLO_ENV_WORKLOCAL=1
++++ export APOLLO_ENV_WORKROOT=/apollo_workspace
++++ APOLLO_ENV_WORKROOT=/apollo_workspace
++++ export APOLLO_ENV_WORKSPACE=/home/skye/application-pnc
++++ APOLLO_ENV_WORKSPACE=/home/skye/application-pnc
+++ echo docker
++ backend=docker
++ [[ docker == \h\o\s\t ]]
++ [[ docker == \d\o\c\k\e\r ]]
++ local container_name=apollo_neo_dev_edu
++ docker_container_exists apollo_neo_dev_edu
++ local container=apollo_neo_dev_edu
+++ docker ps -a '--format={{.Names}}' -f name=apollo_neo_dev_edu
+++ grep '^apollo_neo_dev_edu$'
++ local query=apollo_neo_dev_edu
++ [[ apollo_neo_dev_edu == \a\p\o\l\l\o\_\n\e\o\_\d\e\v\_\e\d\u ]]
++ return 0
++ return 0
++ set -a
++ source /home/skye/.aem/envs/edu/env.config
+++ export AEM_FLAG_FORCE_RECREATE=0
+++ AEM_FLAG_FORCE_RECREATE=0
+++ export AEM_FLAG_FORCE_RECREATE_VOLUMES=0
+++ AEM_FLAG_FORCE_RECREATE_VOLUMES=0
+++ export AEM_FLAG_SHM_SIZE=4G
+++ AEM_FLAG_SHM_SIZE=4G
+++ export AEM_FLAG_USE_GPU=1
+++ AEM_FLAG_USE_GPU=1
+++ export AEM_FLAG_USE_LOCAL_IMAGE=0
+++ AEM_FLAG_USE_LOCAL_IMAGE=0
+++ export AEM_GEO=
+++ AEM_GEO=
+++ export AEM_HOME=/opt/apollo/aem
+++ AEM_HOME=/opt/apollo/aem
+++ export AEM_INITED=1
+++ AEM_INITED=1
+++ export AEM_SYS_SHARE=/opt/apollo/aem/share/aem
+++ AEM_SYS_SHARE=/opt/apollo/aem/share/aem
+++ export AEM_VERSION=10.0.0-rc1-r4
+++ AEM_VERSION=10.0.0-rc1-r4
+++ export APOLLO_ENVS_ROOT=/home/skye/.aem/envs
+++ APOLLO_ENVS_ROOT=/home/skye/.aem/envs
+++ APOLLO_ENV_ARGS=()
+++ export APOLLO_ENV_ARGS
+++ export APOLLO_ENV_BACKEND=docker
+++ APOLLO_ENV_BACKEND=docker
+++ export APOLLO_ENV_CONTAINER_GID=1000
+++ APOLLO_ENV_CONTAINER_GID=1000
+++ export APOLLO_ENV_CONTAINER_GROUP=skye
+++ APOLLO_ENV_CONTAINER_GROUP=skye
+++ export APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu
+++ APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu
+++ export APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_
+++ APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_
+++ export APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
+++ APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
+++ export APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm
+++ APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm
+++ export APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu
+++ APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu
+++ export APOLLO_ENV_CONTAINER_SHELL=/bin/bash
+++ APOLLO_ENV_CONTAINER_SHELL=/bin/bash
+++ export APOLLO_ENV_CONTAINER_TAG=9.0-latest
+++ APOLLO_ENV_CONTAINER_TAG=9.0-latest
+++ export APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20
+++ APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20
+++ export APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22
+++ APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22
+++ export APOLLO_ENV_CONTAINER_UID=1000
+++ APOLLO_ENV_CONTAINER_UID=1000
+++ export APOLLO_ENV_CONTAINER_USER=skye
+++ APOLLO_ENV_CONTAINER_USER=skye
+++ export APOLLO_ENV_CROSS_PLATFORM=
+++ APOLLO_ENV_CROSS_PLATFORM=
+++ export APOLLO_ENV_NAME=edu
+++ APOLLO_ENV_NAME=edu
+++ export APOLLO_ENV_USE_GPU_HOST=1
+++ APOLLO_ENV_USE_GPU_HOST=1
+++ export APOLLO_ENV_WORKLOCAL=1
+++ APOLLO_ENV_WORKLOCAL=1
+++ export APOLLO_ENV_WORKROOT=/apollo_workspace
+++ APOLLO_ENV_WORKROOT=/apollo_workspace
+++ export APOLLO_ENV_WORKSPACE=/home/skye/application-pnc
+++ APOLLO_ENV_WORKSPACE=/home/skye/application-pnc
++ set +a
++ apollo_exec_env 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/dump_y_precise.py /home/skye/.apollo/resources/records/202608012054_MkzExample_Xh2026Contest.00000.20260801205249.record 53 66 2>&1'
++ [[ docker == \d\o\c\k\e\r ]]
++ apollo_exec_container 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/dump_y_precise.py /home/skye/.apollo/resources/records/202608012054_MkzExample_Xh2026Contest.00000.20260801205249.record 53 66 2>&1'
++ local 'cmd=cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/dump_y_precise.py /home/skye/.apollo/resources/records/202608012054_MkzExample_Xh2026Contest.00000.20260801205249.record 53 66 2>&1'
++ shift
++ [[ -z cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/dump_y_precise.py /home/skye/.apollo/resources/records/202608012054_MkzExample_Xh2026Contest.00000.20260801205249.record 53 66 2>&1 ]]
++ envs=()
++ local envs
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ envs+=('-e' "HISTFILE=${APOLLO_ENV_WORKROOT}/.cache/.bash_history")
++ envs+=('-e' 'HISTSIZE=200000')
++ envs+=('-e' 'HISTFILESIZE=200000')
++ envs+=('-e' 'HISTCONTROL=ignorespace:erasedups')
++ envs+=('-e' "DOCKER_USER=${APOLLO_ENV_CONTAINER_USER}")
++ xhost +local:root
++ docker exec -u skye -e APOLLO_ENV_ARGS= -e APOLLO_ENV_BACKEND=docker -e APOLLO_ENV_CONTAINER_GID=1000 -e APOLLO_ENV_CONTAINER_GROUP=skye -e APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu -e APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_ -e APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu -e APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm -e APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu -e APOLLO_ENV_CONTAINER_SHELL=/bin/bash -e APOLLO_ENV_CONTAINER_TAG=9.0-latest -e APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20 -e APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22 -e APOLLO_ENV_CONTAINER_UID=1000 -e APOLLO_ENV_CONTAINER_USER=skye -e APOLLO_ENV_CROSS_PLATFORM= -e 'APOLLO_ENV_EXEC_ARGS=cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/dump_y_precise.py /home/skye/.apollo/resources/records/202608012054_MkzExample_Xh2026Contest.00000.20260801205249.record 53 66 2>&1' -e APOLLO_ENV_NAME=edu -e APOLLO_ENV_USE_GPU_HOST=1 -e APOLLO_ENV_WORKLOCAL=1 -e APOLLO_ENV_WORKROOT=/apollo_workspace -e APOLLO_ENV_WORKSPACE=/home/skye/application-pnc -e HISTFILE=/apollo_workspace/.cache/.bash_history -e HISTSIZE=200000 -e HISTFILESIZE=200000 -e HISTCONTROL=ignorespace:erasedups -e DOCKER_USER=skye -w /apollo_workspace -it apollo_neo_dev_edu /bin/bash -c 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/dump_y_precise.py /home/skye/.apollo/resources/records/202608012054_MkzExample_Xh2026Contest.00000.20260801205249.record 53 66 2>&1 '
+WARNING: Logging before InitGoogleLogging() is written to STDERR
+I0801 21:01:03.195370 815042 py_record.cc:574] []init _cyber_record_wrapper
+t=53.01 veh_y=4437610.765 traj_yoff=+0.067,+0.066,+0.066 dec=stop
+t=53.11 veh_y=4437610.765 traj_yoff=+0.066,+0.066,+0.066 dec=stop
+t=53.21 veh_y=4437610.764 traj_yoff=+0.066,+0.066,+0.066 dec=stop
+t=53.31 veh_y=4437610.764 traj_yoff=+0.065,+0.065,+0.065 dec=stop
+t=53.41 veh_y=4437610.763 traj_yoff=+0.065,+0.065,+0.065 dec=stop
+t=53.51 veh_y=4437610.763 traj_yoff=+0.065,+0.065,+0.064 dec=stop
+t=53.61 veh_y=4437610.762 traj_yoff=+0.064,+0.064,+0.064 dec=stop
+t=53.71 veh_y=4437610.762 traj_yoff=+0.064,+0.064,+0.063 dec=stop
+t=53.81 veh_y=4437610.761 traj_yoff=+0.063,+0.063,+0.063 dec=stop
+t=53.91 veh_y=4437610.761 traj_yoff=+0.063,+0.063,+0.063 dec=stop
+t=54.01 veh_y=4437610.760 traj_yoff=+0.062,+0.062,+0.062 dec=stop
+t=54.11 veh_y=4437610.760 traj_yoff=+0.062,+0.062,+0.062 dec=stop
+t=54.21 veh_y=4437610.759 traj_yoff=+0.061,+0.061,+0.061 dec=stop
+t=54.31 veh_y=4437610.759 traj_yoff=+0.061,+0.061,+0.061 dec=stop
+t=54.41 veh_y=4437610.758 traj_yoff=+0.060,+0.060,+0.060 dec=yield
+t=54.51 veh_y=4437610.758 traj_yoff=+0.060,+0.060,+0.060 dec=-
+t=54.61 veh_y=4437610.758 traj_yoff=+0.059,+0.059,+0.059 dec=-
+t=54.71 veh_y=4437610.757 traj_yoff=+0.059,+0.059,+0.059 dec=-
+t=54.81 veh_y=4437610.757 traj_yoff=+0.058,+0.058,+0.058 dec=-
+t=54.91 veh_y=4437610.756 traj_yoff=+0.058,+0.058,+0.058 dec=-
+t=55.01 veh_y=4437610.756 traj_yoff=+0.057,+0.057,+0.057 dec=-
+t=55.11 veh_y=4437610.755 traj_yoff=+0.057,+0.057,+0.057 dec=-
+t=55.21 veh_y=4437610.754 traj_yoff=+0.056,+0.056,+0.056 dec=-
+t=55.31 veh_y=4437610.754 traj_yoff=+0.056,+0.056,+0.056 dec=-
+t=55.41 veh_y=4437610.753 traj_yoff=+0.056,+0.055,+0.055 dec=-
+t=55.51 veh_y=4437610.753 traj_yoff=+0.055,+0.055,+0.055 dec=-
+t=55.61 veh_y=4437610.752 traj_yoff=+0.054,+0.054,+0.054 dec=-
+t=55.71 veh_y=4437610.752 traj_yoff=+0.054,+0.054,+0.054 dec=-
+t=55.81 veh_y=4437610.751 traj_yoff=+0.053,+0.053,+0.053 dec=-
+t=55.91 veh_y=4437610.750 traj_yoff=+0.053,+0.053,+0.053 dec=-
+t=56.01 veh_y=4437610.750 traj_yoff=+0.052,+0.052,+0.052 dec=-
+t=56.11 veh_y=4437610.749 traj_yoff=+0.052,+0.051,+0.051 dec=-
+t=56.21 veh_y=4437610.749 traj_yoff=+0.051,+0.051,+0.051 dec=-
+t=56.31 veh_y=4437610.748 traj_yoff=+0.050,+0.050,+0.050 dec=-
+t=56.41 veh_y=4437610.747 traj_yoff=+0.050,+0.050,+0.050 dec=-
+t=56.51 veh_y=4437610.747 traj_yoff=+0.049,+0.049,+0.049 dec=-
+t=56.61 veh_y=4437610.746 traj_yoff=+0.049,+0.048,+0.048 dec=-
+t=56.71 veh_y=4437610.746 traj_yoff=+0.048,+0.048,+0.048 dec=-
+t=56.81 veh_y=4437610.745 traj_yoff=+0.047,+0.047,+0.047 dec=-
+t=56.91 veh_y=4437610.744 traj_yoff=+0.047,+0.047,+0.047 dec=-
+t=57.01 veh_y=4437610.744 traj_yoff=+0.046,+0.046,+0.046 dec=-
+t=57.11 veh_y=4437610.743 traj_yoff=+0.045,+0.045,+0.045 dec=-
+t=57.21 veh_y=4437610.742 traj_yoff=+0.045,+0.045,+0.045 dec=-
+t=57.31 veh_y=4437610.742 traj_yoff=+0.044,+0.044,+0.044 dec=-
+t=57.41 veh_y=4437610.741 traj_yoff=+0.044,+0.043,+0.043 dec=-
+t=57.51 veh_y=4437610.741 traj_yoff=+0.043,+0.043,+0.043 dec=-
+t=57.61 veh_y=4437610.740 traj_yoff=+0.042,+0.042,+0.042 dec=-
+t=57.71 veh_y=4437610.739 traj_yoff=+0.042,+0.042,+0.041 dec=-
+t=57.81 veh_y=4437610.739 traj_yoff=+0.041,+0.041,+0.041 dec=-
+t=57.91 veh_y=4437610.738 traj_yoff=+0.040,+0.040,+0.040 dec=-
+t=58.01 veh_y=4437610.737 traj_yoff=+0.040,+0.040,+0.040 dec=-
+t=58.11 veh_y=4437610.737 traj_yoff=+0.039,+0.039,+0.039 dec=-
+t=58.21 veh_y=4437610.736 traj_yoff=+0.039,+0.039,+0.038 dec=-
+t=58.31 veh_y=4437610.736 traj_yoff=+0.038,+0.038,+0.038 dec=-
+t=58.41 veh_y=4437610.735 traj_yoff=+0.037,+0.037,+0.037 dec=-
+t=58.51 veh_y=4437610.734 traj_yoff=+0.037,+0.037,+0.036 dec=-
+t=58.61 veh_y=4437610.734 traj_yoff=+0.036,+0.036,+0.036 dec=-
+t=58.71 veh_y=4437610.733 traj_yoff=+0.036,+0.035,+0.035 dec=-
+t=58.81 veh_y=4437610.733 traj_yoff=+0.035,+0.035,+0.035 dec=-
+t=58.91 veh_y=4437610.732 traj_yoff=+0.034,+0.034,+0.034 dec=-
+t=59.01 veh_y=4437610.731 traj_yoff=+0.034,+0.034,+0.033 dec=-
+t=59.11 veh_y=4437610.731 traj_yoff=+0.033,+0.033,+0.033 dec=-
+t=59.21 veh_y=4437610.730 traj_yoff=+0.033,+0.032,+0.032 dec=-
+t=59.31 veh_y=4437610.730 traj_yoff=+0.032,+0.032,+0.032 dec=-
+t=59.41 veh_y=4437610.729 traj_yoff=+0.031,+0.031,+0.031 dec=-
+t=59.51 veh_y=4437610.728 traj_yoff=+0.031,+0.031,+0.031 dec=-
+t=59.61 veh_y=4437610.728 traj_yoff=+0.030,+0.030,+0.030 dec=-
+t=59.71 veh_y=4437610.727 traj_yoff=+0.030,+0.030,+0.030 dec=-
+t=59.81 veh_y=4437610.727 traj_yoff=+0.029,+0.029,+0.029 dec=-
+t=59.91 veh_y=4437610.726 traj_yoff=+0.029,+0.028,+0.028 dec=-
++ xhost -local:root

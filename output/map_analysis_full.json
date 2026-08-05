@@ -1,0 +1,8379 @@
+{
+  "map_info": {
+    "version": "xh_2026_contest-6",
+    "date": "1773813250553",
+    "district": "",
+    "vendor": "",
+    "left": null,
+    "top": null,
+    "right": null,
+    "bottom": null
+  },
+  "summary": {
+    "num_lanes": 560,
+    "num_roads": 439,
+    "num_junctions": 9,
+    "num_signals": 24,
+    "num_stop_signs": 1,
+    "num_crosswalks": 34,
+    "num_speed_bumps": 6,
+    "num_yield_signs": 1,
+    "num_parking_spaces": 43,
+    "num_clear_areas": 0,
+    "num_pnc_junctions": 0,
+    "num_overlaps": 618
+  },
+  "turn_analysis": {
+    "NO_TURN": 550,
+    "LEFT_TURN": 8,
+    "U_TURN": 2
+  },
+  "speed_analysis": {
+    "min": 2.7777777777777777,
+    "max": 19.444444444444443,
+    "avg": 18.640873015873094,
+    "unique": [
+      2.7777777777777777,
+      19.444444444444443
+    ]
+  },
+  "lane_connectivity": {
+    "total": 560,
+    "with_predecessors": 534,
+    "with_successors": 531,
+    "with_neighbors": 233,
+    "start_lanes": [
+      "Lane_277",
+      "Lane_452",
+      "Lane_592",
+      "Lane_593",
+      "Lane_635",
+      "Lane_656",
+      "Lane_657",
+      "Lane_662",
+      "Lane_663",
+      "Lane_721",
+      "Lane_895",
+      "Lane_932",
+      "Lane_936",
+      "Lane_937",
+      "Lane_1323",
+      "Lane_1351",
+      "Lane_1439",
+      "Lane_1490",
+      "Lane_1491",
+      "Lane_1503",
+      "Lane_1504",
+      "Lane_1538",
+      "Lane_1567",
+      "Lane_1634",
+      "Lane_1635"
+    ],
+    "end_lanes": [
+      "Lane_594",
+      "Lane_595",
+      "Lane_604",
+      "Lane_616",
+      "Lane_653",
+      "Lane_654",
+      "Lane_661",
+      "Lane_712",
+      "Lane_722",
+      "Lane_723",
+      "Lane_904",
+      "Lane_929",
+      "Lane_930",
+      "Lane_934",
+      "Lane_935",
+      "Lane_1348",
+      "Lane_1349",
+      "Lane_1459",
+      "Lane_1464",
+      "Lane_1501",
+      "Lane_1510",
+      "Lane_1569",
+      "Lane_1570",
+      "Lane_1619",
+      "Lane_1625",
+      "Lane_1641",
+      "Lane_1642",
+      "Lane_1643"
+    ],
+    "isolated_lanes": [
+      "Lane_902"
+    ],
+    "uturn_lanes": [
+      "Lane_1559",
+      "Lane_1583"
+    ]
+  },
+  "overlap_mappings_summary": {
+    "num_signal_lane_pairs": 69,
+    "num_stop_sign_lane_pairs": 2,
+    "num_crosswalk_lane_pairs": 248
+  },
+  "junction_ids": [
+    "Junction_4",
+    "Junction_5",
+    "Junction_6",
+    "Junction_7",
+    "Junction_9",
+    "Junction_10",
+    "Junction_11",
+    "Junction_12",
+    "Junction_14"
+  ],
+  "signal_ids": [
+    "Signal_1",
+    "Signal_2",
+    "Signal_3",
+    "Signal_4",
+    "Signal_5",
+    "Signal_6",
+    "Signal_7",
+    "Signal_8",
+    "Signal_9",
+    "Signal_10",
+    "Signal_11",
+    "Signal_12",
+    "Signal_13",
+    "Signal_14",
+    "Signal_15",
+    "Signal_16",
+    "Signal_17",
+    "Signal_18",
+    "Signal_19",
+    "Signal_20",
+    "Signal_21",
+    "Signal_22",
+    "Signal_25",
+    "Signal_26"
+  ],
+  "stop_sign_ids": [
+    "StopSign_1"
+  ],
+  "crosswalk_ids": [
+    "Crosswalk_2",
+    "Crosswalk_10",
+    "Crosswalk_11",
+    "Crosswalk_12",
+    "Crosswalk_13",
+    "Crosswalk_14",
+    "Crosswalk_15",
+    "Crosswalk_16",
+    "Crosswalk_18",
+    "Crosswalk_19",
+    "Crosswalk_20",
+    "Crosswalk_21",
+    "Crosswalk_24",
+    "Crosswalk_28",
+    "Crosswalk_29",
+    "Crosswalk_30",
+    "Crosswalk_31",
+    "Crosswalk_37",
+    "Crosswalk_38",
+    "Crosswalk_39",
+    "Crosswalk_40",
+    "Crosswalk_43",
+    "Crosswalk_44",
+    "Crosswalk_45",
+    "Crosswalk_52",
+    "Crosswalk_54",
+    "Crosswalk_55",
+    "Crosswalk_56",
+    "Crosswalk_57",
+    "Crosswalk_58",
+    "Crosswalk_59",
+    "Crosswalk_60",
+    "Crosswalk_61",
+    "Crosswalk_62"
+  ],
+  "speed_bump_ids": [
+    "SpeedBump_1",
+    "SpeedBump_2",
+    "SpeedBump_3",
+    "SpeedBump_4",
+    "SpeedBump_5",
+    "SpeedBump_6"
+  ],
+  "yield_sign_ids": [
+    "YieldSign_2"
+  ],
+  "parking_space_ids": [
+    "ParkingSpace_4",
+    "ParkingSpace_5",
+    "ParkingSpace_40",
+    "ParkingSpace_41",
+    "ParkingSpace_42",
+    "ParkingSpace_43",
+    "ParkingSpace_44",
+    "ParkingSpace_45",
+    "ParkingSpace_46",
+    "ParkingSpace_47",
+    "ParkingSpace_48",
+    "ParkingSpace_49",
+    "ParkingSpace_50",
+    "ParkingSpace_51",
+    "ParkingSpace_52",
+    "ParkingSpace_53",
+    "ParkingSpace_54",
+    "ParkingSpace_55",
+    "ParkingSpace_56",
+    "ParkingSpace_57",
+    "ParkingSpace_58",
+    "ParkingSpace_60",
+    "ParkingSpace_64",
+    "ParkingSpace_65",
+    "ParkingSpace_66",
+    "ParkingSpace_67",
+    "ParkingSpace_68",
+    "ParkingSpace_71",
+    "ParkingSpace_73",
+    "ParkingSpace_76",
+    "ParkingSpace_78",
+    "ParkingSpace_79",
+    "ParkingSpace_83",
+    "ParkingSpace_84",
+    "ParkingSpace_85",
+    "ParkingSpace_86",
+    "ParkingSpace_87",
+    "ParkingSpace_88",
+    "ParkingSpace_89",
+    "ParkingSpace_90",
+    "ParkingSpace_91",
+    "ParkingSpace_92",
+    "ParkingSpace_93"
+  ],
+  "lane_details": [
+    {
+      "id": "Lane_277",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 0,
+      "num_successors": 3,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_294",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_318",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_322",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 4,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_366",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_452",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 0,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_459",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_461",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_463",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_464",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_466",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_467",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_468",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_483",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_484",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_486",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_487",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 2,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_491",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_493",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_495",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_501",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 2,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_503",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 2,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_505",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_528",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_530",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_531",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_532",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_537",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_564",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_592",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 0,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_593",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 0,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_594",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 0,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_595",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 0,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_596",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_598",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_602",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 2,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_604",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 0,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_616",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 0,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_635",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 0,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_653",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 0,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_654",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 0,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_656",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 0,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_657",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 0,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_658",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 4,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_661",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 0,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_662",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 0,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_663",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 0,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_664",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_665",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_673",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_674",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_675",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_680",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_681",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_697",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 2,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_698",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_699",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_702",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_705",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_706",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_709",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 3,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_710",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 2,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_711",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_712",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 0,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_714",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 2,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_721",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 0,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_722",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 0,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_723",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 0,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_731",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_732",
+      "turn": "LEFT_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 3,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_733",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_734",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_735",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_736",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_737",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_760",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_761",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_766",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 2,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_771",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_772",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_773",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_775",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 3,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_803",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 3,
+      "num_successors": 3,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_807",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 2,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_817",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 3,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_822",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_823",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_824",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_826",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_827",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 3,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_836",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 2,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_841",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_843",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_849",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 2,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_851",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 4,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_858",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 2,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_859",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 2,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_861",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_862",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_865",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 3,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_885",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 3,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_891",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_892",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_894",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_895",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 0,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_897",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_898",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_899",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_900",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_902",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 0,
+      "num_successors": 0,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_904",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 0,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_929",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 0,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_930",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 0,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_932",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 0,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_934",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 0,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_935",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 0,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_936",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 0,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_937",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 0,
+      "num_successors": 2,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_942",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_943",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_983",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_987",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1001",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1002",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1003",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1005",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1006",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1014",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1016",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1017",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1018",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1019",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1023",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1026",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1028",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1090",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 2,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1095",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 3,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1102",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 3,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1108",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1109",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1111",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 2,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1113",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1115",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1116",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1319",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1322",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1323",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 0,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1324",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 2,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1326",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1327",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1328",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1329",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1331",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1336",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1348",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 0,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1349",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 0,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1351",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 0,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1353",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1354",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1355",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1356",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1358",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1423",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1428",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1432",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 2,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1433",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1435",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1436",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1438",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1439",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 0,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1440",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1442",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1443",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1446",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1447",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1448",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1451",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1452",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1453",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 3,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1455",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1456",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1457",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1459",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 0,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1460",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1461",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 3,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1462",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 2,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1463",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1464",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 0,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1465",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1466",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1467",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 3,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1468",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1469",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1470",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1471",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1472",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1473",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1474",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1477",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 2,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1478",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1479",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1480",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1482",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1483",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1484",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1487",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1488",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1489",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1490",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 0,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1491",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 0,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1492",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1493",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1495",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1496",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1497",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1498",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1501",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 0,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1503",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 0,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1504",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 0,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1505",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1506",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1509",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1510",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 0,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1513",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 2,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1514",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1515",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1516",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1517",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1518",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1519",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1520",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1521",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1522",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1523",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1524",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1525",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1526",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1527",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1528",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1529",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1530",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1531",
+      "turn": "LEFT_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1532",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1533",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1534",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1535",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1536",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1537",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1538",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 0,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1539",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1540",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1541",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1542",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1543",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1544",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1553",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1556",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 4,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1557",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1559",
+      "turn": "U_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1560",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1563",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 3,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1564",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 2,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1565",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1566",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1567",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 0,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1568",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1569",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 0,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1570",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 0,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1572",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1573",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1574",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1577",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 3,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1578",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1579",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1583",
+      "turn": "U_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1585",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1588",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1590",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 2,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1595",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1598",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1600",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1602",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1604",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1605",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1606",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1607",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1608",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1609",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1610",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1611",
+      "turn": "LEFT_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1612",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1613",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1614",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1615",
+      "turn": "LEFT_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1616",
+      "turn": "LEFT_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 3,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1617",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1618",
+      "turn": "LEFT_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1619",
+      "turn": "LEFT_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 0,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1622",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1623",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1624",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1625",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 0,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1627",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1628",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1629",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1630",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1631",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1632",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1633",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1634",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 0,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1635",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 0,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1636",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1637",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1638",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1639",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1640",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1641",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 0,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1642",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 0,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1643",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 0,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1644",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1647",
+      "turn": "LEFT_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1648",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 5,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1649",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1650",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1659",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1662",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1666",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1667",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 3,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1668",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 2,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1669",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1670",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1671",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 2,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1672",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1673",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 2,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1674",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1675",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1676",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1677",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1678",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1679",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1680",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1681",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1682",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1683",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1684",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1685",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 3,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1687",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1688",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1689",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1690",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1691",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1692",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1693",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 2,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1694",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1695",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1696",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1697",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1698",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 2,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1701",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1702",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1703",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1704",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 2,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1706",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1707",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1709",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 3,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1710",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1711",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1712",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1713",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1714",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1715",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1716",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1717",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1722",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1723",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1724",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1725",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1726",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1727",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1728",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1729",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1730",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1731",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1737",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1739",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1740",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1743",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1744",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1745",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1747",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1748",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1749",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 2,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1750",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1751",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1752",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1753",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1754",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1755",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1757",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 2,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1758",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1759",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1760",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1761",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1765",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1767",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1769",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1771",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1772",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1773",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1774",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1775",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1776",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1777",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1778",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1779",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1780",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 2,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1781",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1782",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1783",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1792",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1793",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1799",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1800",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 2,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1808",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1809",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1812",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1813",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1815",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1816",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 2,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1821",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1822",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1826",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1827",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1829",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1839",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1840",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1845",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1846",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 2,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1848",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1849",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1851",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1852",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1857",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1858",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1860",
+      "turn": "NO_TURN",
+      "speed_limit": 2.7777777777777777,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1866",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1870",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1871",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1874",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1876",
+      "turn": "NO_TURN",
+      "speed_limit": 2.7777777777777777,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1877",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1878",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1880",
+      "turn": "NO_TURN",
+      "speed_limit": 2.7777777777777777,
+      "num_predecessors": 1,
+      "num_successors": 2,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1881",
+      "turn": "NO_TURN",
+      "speed_limit": 2.7777777777777777,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1883",
+      "turn": "NO_TURN",
+      "speed_limit": 2.7777777777777777,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1884",
+      "turn": "NO_TURN",
+      "speed_limit": 2.7777777777777777,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1885",
+      "turn": "NO_TURN",
+      "speed_limit": 2.7777777777777777,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1886",
+      "turn": "NO_TURN",
+      "speed_limit": 2.7777777777777777,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1887",
+      "turn": "NO_TURN",
+      "speed_limit": 2.7777777777777777,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1888",
+      "turn": "NO_TURN",
+      "speed_limit": 2.7777777777777777,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1889",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1890",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1891",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1892",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1893",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1894",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1895",
+      "turn": "NO_TURN",
+      "speed_limit": 2.7777777777777777,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1902",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1903",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 3,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1904",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 2,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1905",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 2,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1906",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1907",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1908",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1909",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1910",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1911",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1912",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1913",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1914",
+      "turn": "NO_TURN",
+      "speed_limit": 2.7777777777777777,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1915",
+      "turn": "NO_TURN",
+      "speed_limit": 2.7777777777777777,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1916",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1917",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1918",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1921",
+      "turn": "NO_TURN",
+      "speed_limit": 2.7777777777777777,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1922",
+      "turn": "NO_TURN",
+      "speed_limit": 2.7777777777777777,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1923",
+      "turn": "NO_TURN",
+      "speed_limit": 2.7777777777777777,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1924",
+      "turn": "NO_TURN",
+      "speed_limit": 2.7777777777777777,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1925",
+      "turn": "NO_TURN",
+      "speed_limit": 2.7777777777777777,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1931",
+      "turn": "NO_TURN",
+      "speed_limit": 2.7777777777777777,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1933",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 2,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1934",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1935",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1936",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1937",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1938",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1939",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 2,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1940",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1941",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1942",
+      "turn": "NO_TURN",
+      "speed_limit": 2.7777777777777777,
+      "num_predecessors": 1,
+      "num_successors": 2,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1943",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1944",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 2,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1945",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 2,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1946",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1947",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1948",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1949",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1950",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1951",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 2,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1952",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1953",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1954",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1955",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1956",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1959",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1960",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1961",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1962",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1963",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1964",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1965",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1967",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 2,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1968",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1969",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1970",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1971",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1972",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 2,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1973",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1974",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1975",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1976",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1977",
+      "turn": "NO_TURN",
+      "speed_limit": 2.7777777777777777,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1978",
+      "turn": "NO_TURN",
+      "speed_limit": 2.7777777777777777,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1979",
+      "turn": "NO_TURN",
+      "speed_limit": 2.7777777777777777,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1980",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1981",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_1982",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1984",
+      "turn": "NO_TURN",
+      "speed_limit": 2.7777777777777777,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1985",
+      "turn": "NO_TURN",
+      "speed_limit": 2.7777777777777777,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1986",
+      "turn": "NO_TURN",
+      "speed_limit": 2.7777777777777777,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1987",
+      "turn": "NO_TURN",
+      "speed_limit": 2.7777777777777777,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1988",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1989",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1990",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1991",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1992",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1993",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1994",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1995",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1998",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_1999",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_2000",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_2001",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 2,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_2002",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_2003",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_2004",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    },
+    {
+      "id": "Lane_2005",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_2006",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_2007",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": true
+    },
+    {
+      "id": "Lane_2008",
+      "turn": "NO_TURN",
+      "speed_limit": 19.444444444444443,
+      "num_predecessors": 1,
+      "num_successors": 1,
+      "has_neighbors": false
+    }
+  ],
+  "road_details": [
+    {
+      "id": "Road_277",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_294",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_318",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_322",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_366",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_452",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_459",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_461",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_463",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_466",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_467",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_468",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_483",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_484",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_486",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_487",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_491",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_493",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_495",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_501",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_503",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_505",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_528",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_530",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_531",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_564",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_592",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_594",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_596",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_598",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_602",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_604",
+      "num_lanes": 3,
+      "junction_id": null
+    },
+    {
+      "id": "Road_616",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_635",
+      "num_lanes": 3,
+      "junction_id": null
+    },
+    {
+      "id": "Road_656",
+      "num_lanes": 3,
+      "junction_id": null
+    },
+    {
+      "id": "Road_662",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_664",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_673",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_674",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_675",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_680",
+      "num_lanes": 3,
+      "junction_id": null
+    },
+    {
+      "id": "Road_697",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_698",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_699",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_702",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_705",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_709",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_711",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_714",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_722",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_732",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_734",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_736",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_760",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_766",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_771",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_772",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_773",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_775",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_803",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_807",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_817",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_822",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_823",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_826",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_827",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_836",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_841",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_851",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_858",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_859",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_861",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_862",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_865",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_885",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_891",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_892",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_894",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_895",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_897",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_898",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_899",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_900",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_902",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_904",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_929",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_932",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_934",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_936",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_942",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_943",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_983",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_987",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1001",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1002",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1003",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1005",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1006",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1014",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1016",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1017",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1018",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1019",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1023",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1026",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1028",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1090",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1095",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1102",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1108",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1111",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1113",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1115",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1319",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1322",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1323",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1324",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1326",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1327",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1328",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1329",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1331",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1336",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1348",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1351",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1353",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1354",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1355",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1358",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1423",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1428",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1432",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1433",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1435",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1436",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1438",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1440",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1443",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1446",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1447",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1448",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1451",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1452",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1453",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1455",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1456",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1457",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1459",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1460",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1461",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1462",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1463",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1464",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1465",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1466",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1467",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1468",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1469",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1470",
+      "num_lanes": 3,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1471",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1472",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1473",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1474",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1477",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1478",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1479",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1480",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1482",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1483",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1484",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1489",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1491",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1492",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1493",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1495",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1497",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1501",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1503",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1505",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1506",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1513",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1514",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1515",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1516",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1517",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1518",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1519",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1520",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1521",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1522",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1523",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1524",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1525",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1526",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1527",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1528",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1529",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1530",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1531",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1532",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1533",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1535",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1540",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1541",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1542",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1544",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1553",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1556",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1557",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1559",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1560",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1563",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1564",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1565",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1566",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1568",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1569",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1572",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1573",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1574",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1577",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1578",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1579",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1583",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1585",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1588",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1590",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1595",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1598",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1600",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1604",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1605",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1606",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1607",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1608",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1609",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1610",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1611",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1612",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1613",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1614",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1615",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1616",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1617",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1618",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1619",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1622",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1623",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1624",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1625",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1627",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1628",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1629",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1630",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1631",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1632",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1633",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1636",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1637",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1638",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1639",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1640",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1641",
+      "num_lanes": 3,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1644",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1647",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1648",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1649",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1650",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1659",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1662",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1667",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1671",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1672",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1673",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1676",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1678",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1679",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1680",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1681",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1682",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1684",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1685",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1687",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1689",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1690",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1691",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1695",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1697",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1698",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1701",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1702",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1703",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1704",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1706",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1707",
+      "num_lanes": 3,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1709",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1712",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1714",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1715",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1716",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1717",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1722",
+      "num_lanes": 3,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1725",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1726",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1727",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1728",
+      "num_lanes": 3,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1731",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1737",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1739",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1740",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1743",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1744",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1745",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1747",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1748",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1749",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1750",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1751",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1752",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1753",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1754",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1755",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1757",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1758",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1759",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1760",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1761",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1765",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1767",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1769",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1771",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1772",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1773",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1774",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1775",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1792",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1799",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1808",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1812",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1815",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1821",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1826",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1829",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1839",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1845",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1848",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1851",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1857",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1860",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1866",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1870",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1874",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1876",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1877",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1878",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1880",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1881",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1883",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1884",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1885",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1886",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1887",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1888",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1889",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1891",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1892",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1894",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1895",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1902",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1904",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1905",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1906",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1907",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1908",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1909",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1911",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1912",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1913",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1914",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1915",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1916",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1917",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1921",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1922",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1923",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1924",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1925",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1931",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1933",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1935",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1936",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1939",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1940",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1942",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1944",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1945",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1947",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1949",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1951",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1952",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1953",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1955",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1956",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1959",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1962",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1964",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1967",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1968",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1969",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1971",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1973",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1975",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1976",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1977",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1978",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1979",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1980",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1982",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1984",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1985",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1986",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1987",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1988",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1989",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1990",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1991",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1992",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1993",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1994",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1995",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1998",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_1999",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_2000",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_2001",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_2002",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_2003",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_2004",
+      "num_lanes": 1,
+      "junction_id": null
+    },
+    {
+      "id": "Road_2006",
+      "num_lanes": 2,
+      "junction_id": null
+    },
+    {
+      "id": "Road_2008",
+      "num_lanes": 1,
+      "junction_id": null
+    }
+  ],
+  "junction_details": [
+    {
+      "id": "Junction_4",
+      "type": "CROSS_ROAD",
+      "num_overlaps": 31
+    },
+    {
+      "id": "Junction_5",
+      "type": "CROSS_ROAD",
+      "num_overlaps": 18
+    },
+    {
+      "id": "Junction_6",
+      "type": "CROSS_ROAD",
+      "num_overlaps": 18
+    },
+    {
+      "id": "Junction_7",
+      "type": "CROSS_ROAD",
+      "num_overlaps": 28
+    },
+    {
+      "id": "Junction_9",
+      "type": "CROSS_ROAD",
+      "num_overlaps": 16
+    },
+    {
+      "id": "Junction_10",
+      "type": "CROSS_ROAD",
+      "num_overlaps": 25
+    },
+    {
+      "id": "Junction_11",
+      "type": "CROSS_ROAD",
+      "num_overlaps": 29
+    },
+    {
+      "id": "Junction_12",
+      "type": "CROSS_ROAD",
+      "num_overlaps": 24
+    },
+    {
+      "id": "Junction_14",
+      "type": "CROSS_ROAD",
+      "num_overlaps": 3
+    }
+  ],
+  "signal_details": [
+    {
+      "id": "Signal_1",
+      "type": 5,
+      "num_subsignals": 3
+    },
+    {
+      "id": "Signal_2",
+      "type": 4,
+      "num_subsignals": 3
+    },
+    {
+      "id": "Signal_3",
+      "type": 5,
+      "num_subsignals": 3
+    },
+    {
+      "id": "Signal_4",
+      "type": 5,
+      "num_subsignals": 3
+    },
+    {
+      "id": "Signal_5",
+      "type": 4,
+      "num_subsignals": 3
+    },
+    {
+      "id": "Signal_6",
+      "type": 5,
+      "num_subsignals": 3
+    },
+    {
+      "id": "Signal_7",
+      "type": 5,
+      "num_subsignals": 3
+    },
+    {
+      "id": "Signal_8",
+      "type": 2,
+      "num_subsignals": 2
+    },
+    {
+      "id": "Signal_9",
+      "type": 4,
+      "num_subsignals": 3
+    },
+    {
+      "id": "Signal_10",
+      "type": 4,
+      "num_subsignals": 3
+    },
+    {
+      "id": "Signal_11",
+      "type": 4,
+      "num_subsignals": 3
+    },
+    {
+      "id": "Signal_12",
+      "type": 5,
+      "num_subsignals": 3
+    },
+    {
+      "id": "Signal_13",
+      "type": 4,
+      "num_subsignals": 3
+    },
+    {
+      "id": "Signal_14",
+      "type": 4,
+      "num_subsignals": 3
+    },
+    {
+      "id": "Signal_15",
+      "type": 4,
+      "num_subsignals": 3
+    },
+    {
+      "id": "Signal_16",
+      "type": 4,
+      "num_subsignals": 3
+    },
+    {
+      "id": "Signal_17",
+      "type": 3,
+      "num_subsignals": 2
+    },
+    {
+      "id": "Signal_18",
+      "type": 5,
+      "num_subsignals": 3
+    },
+    {
+      "id": "Signal_19",
+      "type": 5,
+      "num_subsignals": 3
+    },
+    {
+      "id": "Signal_20",
+      "type": 5,
+      "num_subsignals": 3
+    },
+    {
+      "id": "Signal_21",
+      "type": 3,
+      "num_subsignals": 2
+    },
+    {
+      "id": "Signal_22",
+      "type": 4,
+      "num_subsignals": 3
+    },
+    {
+      "id": "Signal_25",
+      "type": 4,
+      "num_subsignals": 3
+    },
+    {
+      "id": "Signal_26",
+      "type": 4,
+      "num_subsignals": 3
+    }
+  ],
+  "overlap_mappings": {
+    "signal_lane_pairs": [
+      [
+        "Signal_1",
+        "Lane_1513"
+      ],
+      [
+        "Signal_1",
+        "Lane_803"
+      ],
+      [
+        "Signal_10",
+        "Lane_858"
+      ],
+      [
+        "Signal_10",
+        "Lane_859"
+      ],
+      [
+        "Signal_11",
+        "Lane_1016"
+      ],
+      [
+        "Signal_11",
+        "Lane_1023"
+      ],
+      [
+        "Signal_11",
+        "Lane_1536"
+      ],
+      [
+        "Signal_12",
+        "Lane_1553"
+      ],
+      [
+        "Signal_13",
+        "Lane_1514"
+      ],
+      [
+        "Signal_13",
+        "Lane_1520"
+      ],
+      [
+        "Signal_13",
+        "Lane_1521"
+      ],
+      [
+        "Signal_13",
+        "Lane_1530"
+      ],
+      [
+        "Signal_14",
+        "Lane_1462"
+      ],
+      [
+        "Signal_14",
+        "Lane_1474"
+      ],
+      [
+        "Signal_14",
+        "Lane_530"
+      ],
+      [
+        "Signal_14",
+        "Lane_532"
+      ],
+      [
+        "Signal_15",
+        "Lane_1443"
+      ],
+      [
+        "Signal_15",
+        "Lane_1451"
+      ],
+      [
+        "Signal_15",
+        "Lane_1453"
+      ],
+      [
+        "Signal_16",
+        "Lane_1005"
+      ],
+      [
+        "Signal_16",
+        "Lane_772"
+      ],
+      [
+        "Signal_16",
+        "Lane_773"
+      ],
+      [
+        "Signal_17",
+        "Lane_1497"
+      ],
+      [
+        "Signal_17",
+        "Lane_1644"
+      ],
+      [
+        "Signal_18",
+        "Lane_1014"
+      ],
+      [
+        "Signal_18",
+        "Lane_1495"
+      ],
+      [
+        "Signal_18",
+        "Lane_1564"
+      ],
+      [
+        "Signal_19",
+        "Lane_1471"
+      ],
+      [
+        "Signal_19",
+        "Lane_1622"
+      ],
+      [
+        "Signal_19",
+        "Lane_1624"
+      ],
+      [
+        "Signal_19",
+        "Lane_664"
+      ],
+      [
+        "Signal_19",
+        "Lane_665"
+      ],
+      [
+        "Signal_2",
+        "Lane_1556"
+      ],
+      [
+        "Signal_2",
+        "Lane_1590"
+      ],
+      [
+        "Signal_20",
+        "Lane_1471"
+      ],
+      [
+        "Signal_20",
+        "Lane_1622"
+      ],
+      [
+        "Signal_20",
+        "Lane_1624"
+      ],
+      [
+        "Signal_21",
+        "Lane_1630"
+      ],
+      [
+        "Signal_21",
+        "Lane_1631"
+      ],
+      [
+        "Signal_21",
+        "Lane_1633"
+      ],
+      [
+        "Signal_21",
+        "Lane_1649"
+      ],
+      [
+        "Signal_21",
+        "Lane_1650"
+      ],
+      [
+        "Signal_22",
+        "Lane_322"
+      ],
+      [
+        "Signal_25",
+        "Lane_1671"
+      ],
+      [
+        "Signal_25",
+        "Lane_1672"
+      ],
+      [
+        "Signal_25",
+        "Lane_1673"
+      ],
+      [
+        "Signal_26",
+        "Lane_1534"
+      ],
+      [
+        "Signal_26",
+        "Lane_851"
+      ],
+      [
+        "Signal_3",
+        "Lane_1522"
+      ],
+      [
+        "Signal_3",
+        "Lane_1523"
+      ],
+      [
+        "Signal_3",
+        "Lane_1611"
+      ],
+      [
+        "Signal_3",
+        "Lane_1615"
+      ],
+      [
+        "Signal_3",
+        "Lane_987"
+      ],
+      [
+        "Signal_4",
+        "Lane_1611"
+      ],
+      [
+        "Signal_5",
+        "Lane_1003"
+      ],
+      [
+        "Signal_5",
+        "Lane_1006"
+      ],
+      [
+        "Signal_5",
+        "Lane_1731"
+      ],
+      [
+        "Signal_5",
+        "Lane_736"
+      ],
+      [
+        "Signal_5",
+        "Lane_737"
+      ],
+      [
+        "Signal_6",
+        "Lane_732"
+      ],
+      [
+        "Signal_6",
+        "Lane_733"
+      ],
+      [
+        "Signal_7",
+        "Lane_1618"
+      ],
+      [
+        "Signal_8",
+        "Lane_1669"
+      ],
+      [
+        "Signal_8",
+        "Lane_1894"
+      ],
+      [
+        "Signal_8",
+        "Lane_1895"
+      ],
+      [
+        "Signal_8",
+        "Lane_775"
+      ],
+      [
+        "Signal_9",
+        "Lane_1889"
+      ],
+      [
+        "Signal_9",
+        "Lane_1890"
+      ],
+      [
+        "Signal_9",
+        "Lane_1891"
+      ]
+    ],
+    "stop_sign_lane_pairs": [
+      [
+        "StopSign_1",
+        "Lane_817"
+      ],
+      [
+        "StopSign_1",
+        "Lane_849"
+      ]
+    ],
+    "crosswalk_lane_pairs": [
+      [
+        "Crosswalk_10",
+        "Lane_1471"
+      ],
+      [
+        "Crosswalk_10",
+        "Lane_1622"
+      ],
+      [
+        "Crosswalk_10",
+        "Lane_1624"
+      ],
+      [
+        "Crosswalk_10",
+        "Lane_664"
+      ],
+      [
+        "Crosswalk_10",
+        "Lane_665"
+      ],
+      [
+        "Crosswalk_10",
+        "Lane_705"
+      ],
+      [
+        "Crosswalk_10",
+        "Lane_706"
+      ],
+      [
+        "Crosswalk_11",
+        "Lane_1618"
+      ],
+      [
+        "Crosswalk_11",
+        "Lane_1619"
+      ],
+      [
+        "Crosswalk_11",
+        "Lane_731"
+      ],
+      [
+        "Crosswalk_11",
+        "Lane_735"
+      ],
+      [
+        "Crosswalk_11",
+        "Lane_736"
+      ],
+      [
+        "Crosswalk_12",
+        "Lane_1001"
+      ],
+      [
+        "Crosswalk_12",
+        "Lane_1002"
+      ],
+      [
+        "Crosswalk_12",
+        "Lane_1003"
+      ],
+      [
+        "Crosswalk_12",
+        "Lane_1006"
+      ],
+      [
+        "Crosswalk_12",
+        "Lane_1731"
+      ],
+      [
+        "Crosswalk_12",
+        "Lane_734"
+      ],
+      [
+        "Crosswalk_12",
+        "Lane_735"
+      ],
+      [
+        "Crosswalk_12",
+        "Lane_736"
+      ],
+      [
+        "Crosswalk_12",
+        "Lane_737"
+      ],
+      [
+        "Crosswalk_13",
+        "Lane_616"
+      ],
+      [
+        "Crosswalk_13",
+        "Lane_661"
+      ],
+      [
+        "Crosswalk_13",
+        "Lane_662"
+      ],
+      [
+        "Crosswalk_13",
+        "Lane_663"
+      ],
+      [
+        "Crosswalk_14",
+        "Lane_1019"
+      ],
+      [
+        "Crosswalk_14",
+        "Lane_1028"
+      ],
+      [
+        "Crosswalk_14",
+        "Lane_1496"
+      ],
+      [
+        "Crosswalk_14",
+        "Lane_1537"
+      ],
+      [
+        "Crosswalk_14",
+        "Lane_1544"
+      ],
+      [
+        "Crosswalk_14",
+        "Lane_859"
+      ],
+      [
+        "Crosswalk_14",
+        "Lane_861"
+      ],
+      [
+        "Crosswalk_14",
+        "Lane_865"
+      ],
+      [
+        "Crosswalk_15",
+        "Lane_1090"
+      ],
+      [
+        "Crosswalk_15",
+        "Lane_1102"
+      ],
+      [
+        "Crosswalk_15",
+        "Lane_1505"
+      ],
+      [
+        "Crosswalk_15",
+        "Lane_1506"
+      ],
+      [
+        "Crosswalk_15",
+        "Lane_1513"
+      ],
+      [
+        "Crosswalk_15",
+        "Lane_1524"
+      ],
+      [
+        "Crosswalk_15",
+        "Lane_1525"
+      ],
+      [
+        "Crosswalk_15",
+        "Lane_1526"
+      ],
+      [
+        "Crosswalk_15",
+        "Lane_1527"
+      ],
+      [
+        "Crosswalk_15",
+        "Lane_1528"
+      ],
+      [
+        "Crosswalk_15",
+        "Lane_1553"
+      ],
+      [
+        "Crosswalk_15",
+        "Lane_1583"
+      ],
+      [
+        "Crosswalk_15",
+        "Lane_803"
+      ],
+      [
+        "Crosswalk_16",
+        "Lane_1534"
+      ],
+      [
+        "Crosswalk_16",
+        "Lane_843"
+      ],
+      [
+        "Crosswalk_16",
+        "Lane_851"
+      ],
+      [
+        "Crosswalk_18",
+        "Lane_322"
+      ],
+      [
+        "Crosswalk_18",
+        "Lane_760"
+      ],
+      [
+        "Crosswalk_19",
+        "Lane_1492"
+      ],
+      [
+        "Crosswalk_19",
+        "Lane_1568"
+      ],
+      [
+        "Crosswalk_19",
+        "Lane_1570"
+      ],
+      [
+        "Crosswalk_19",
+        "Lane_1628"
+      ],
+      [
+        "Crosswalk_2",
+        "Lane_1669"
+      ],
+      [
+        "Crosswalk_2",
+        "Lane_1889"
+      ],
+      [
+        "Crosswalk_2",
+        "Lane_1890"
+      ],
+      [
+        "Crosswalk_2",
+        "Lane_1891"
+      ],
+      [
+        "Crosswalk_2",
+        "Lane_1894"
+      ],
+      [
+        "Crosswalk_2",
+        "Lane_1895"
+      ],
+      [
+        "Crosswalk_2",
+        "Lane_775"
+      ],
+      [
+        "Crosswalk_20",
+        "Lane_1516"
+      ],
+      [
+        "Crosswalk_20",
+        "Lane_1518"
+      ],
+      [
+        "Crosswalk_20",
+        "Lane_1522"
+      ],
+      [
+        "Crosswalk_20",
+        "Lane_1523"
+      ],
+      [
+        "Crosswalk_20",
+        "Lane_1530"
+      ],
+      [
+        "Crosswalk_20",
+        "Lane_1611"
+      ],
+      [
+        "Crosswalk_20",
+        "Lane_1612"
+      ],
+      [
+        "Crosswalk_20",
+        "Lane_1615"
+      ],
+      [
+        "Crosswalk_20",
+        "Lane_987"
+      ],
+      [
+        "Crosswalk_21",
+        "Lane_1492"
+      ],
+      [
+        "Crosswalk_21",
+        "Lane_1497"
+      ],
+      [
+        "Crosswalk_21",
+        "Lane_1574"
+      ],
+      [
+        "Crosswalk_21",
+        "Lane_1647"
+      ],
+      [
+        "Crosswalk_21",
+        "Lane_943"
+      ],
+      [
+        "Crosswalk_24",
+        "Lane_1506"
+      ],
+      [
+        "Crosswalk_24",
+        "Lane_1524"
+      ],
+      [
+        "Crosswalk_24",
+        "Lane_1525"
+      ],
+      [
+        "Crosswalk_24",
+        "Lane_1529"
+      ],
+      [
+        "Crosswalk_28",
+        "Lane_1448"
+      ],
+      [
+        "Crosswalk_28",
+        "Lane_1459"
+      ],
+      [
+        "Crosswalk_28",
+        "Lane_1464"
+      ],
+      [
+        "Crosswalk_28",
+        "Lane_1465"
+      ],
+      [
+        "Crosswalk_28",
+        "Lane_1473"
+      ],
+      [
+        "Crosswalk_28",
+        "Lane_1474"
+      ],
+      [
+        "Crosswalk_28",
+        "Lane_503"
+      ],
+      [
+        "Crosswalk_28",
+        "Lane_505"
+      ],
+      [
+        "Crosswalk_28",
+        "Lane_596"
+      ],
+      [
+        "Crosswalk_28",
+        "Lane_598"
+      ],
+      [
+        "Crosswalk_29",
+        "Lane_1448"
+      ],
+      [
+        "Crosswalk_29",
+        "Lane_1464"
+      ],
+      [
+        "Crosswalk_29",
+        "Lane_592"
+      ],
+      [
+        "Crosswalk_29",
+        "Lane_593"
+      ],
+      [
+        "Crosswalk_29",
+        "Lane_594"
+      ],
+      [
+        "Crosswalk_29",
+        "Lane_595"
+      ],
+      [
+        "Crosswalk_29",
+        "Lane_596"
+      ],
+      [
+        "Crosswalk_29",
+        "Lane_598"
+      ],
+      [
+        "Crosswalk_30",
+        "Lane_1353"
+      ],
+      [
+        "Crosswalk_30",
+        "Lane_1354"
+      ],
+      [
+        "Crosswalk_30",
+        "Lane_1355"
+      ],
+      [
+        "Crosswalk_30",
+        "Lane_1356"
+      ],
+      [
+        "Crosswalk_30",
+        "Lane_1358"
+      ],
+      [
+        "Crosswalk_30",
+        "Lane_1533"
+      ],
+      [
+        "Crosswalk_30",
+        "Lane_1539"
+      ],
+      [
+        "Crosswalk_30",
+        "Lane_1540"
+      ],
+      [
+        "Crosswalk_30",
+        "Lane_1577"
+      ],
+      [
+        "Crosswalk_30",
+        "Lane_1579"
+      ],
+      [
+        "Crosswalk_30",
+        "Lane_817"
+      ],
+      [
+        "Crosswalk_30",
+        "Lane_849"
+      ],
+      [
+        "Crosswalk_31",
+        "Lane_1356"
+      ],
+      [
+        "Crosswalk_37",
+        "Lane_1109"
+      ],
+      [
+        "Crosswalk_37",
+        "Lane_1111"
+      ],
+      [
+        "Crosswalk_37",
+        "Lane_1113"
+      ],
+      [
+        "Crosswalk_37",
+        "Lane_1115"
+      ],
+      [
+        "Crosswalk_37",
+        "Lane_1116"
+      ],
+      [
+        "Crosswalk_37",
+        "Lane_1488"
+      ],
+      [
+        "Crosswalk_37",
+        "Lane_1509"
+      ],
+      [
+        "Crosswalk_37",
+        "Lane_1528"
+      ],
+      [
+        "Crosswalk_38",
+        "Lane_1095"
+      ],
+      [
+        "Crosswalk_38",
+        "Lane_1113"
+      ],
+      [
+        "Crosswalk_38",
+        "Lane_1115"
+      ],
+      [
+        "Crosswalk_38",
+        "Lane_1116"
+      ],
+      [
+        "Crosswalk_38",
+        "Lane_1487"
+      ],
+      [
+        "Crosswalk_38",
+        "Lane_1509"
+      ],
+      [
+        "Crosswalk_38",
+        "Lane_1527"
+      ],
+      [
+        "Crosswalk_38",
+        "Lane_1529"
+      ],
+      [
+        "Crosswalk_38",
+        "Lane_1553"
+      ],
+      [
+        "Crosswalk_38",
+        "Lane_1556"
+      ],
+      [
+        "Crosswalk_38",
+        "Lane_1557"
+      ],
+      [
+        "Crosswalk_38",
+        "Lane_1590"
+      ],
+      [
+        "Crosswalk_38",
+        "Lane_1617"
+      ],
+      [
+        "Crosswalk_39",
+        "Lane_1016"
+      ],
+      [
+        "Crosswalk_39",
+        "Lane_1023"
+      ],
+      [
+        "Crosswalk_39",
+        "Lane_1536"
+      ],
+      [
+        "Crosswalk_39",
+        "Lane_1542"
+      ],
+      [
+        "Crosswalk_39",
+        "Lane_1543"
+      ],
+      [
+        "Crosswalk_40",
+        "Lane_1493"
+      ],
+      [
+        "Crosswalk_40",
+        "Lane_1563"
+      ],
+      [
+        "Crosswalk_40",
+        "Lane_1564"
+      ],
+      [
+        "Crosswalk_40",
+        "Lane_1565"
+      ],
+      [
+        "Crosswalk_40",
+        "Lane_1572"
+      ],
+      [
+        "Crosswalk_40",
+        "Lane_1573"
+      ],
+      [
+        "Crosswalk_40",
+        "Lane_1649"
+      ],
+      [
+        "Crosswalk_40",
+        "Lane_1650"
+      ],
+      [
+        "Crosswalk_43",
+        "Lane_1493"
+      ],
+      [
+        "Crosswalk_43",
+        "Lane_1495"
+      ],
+      [
+        "Crosswalk_43",
+        "Lane_1572"
+      ],
+      [
+        "Crosswalk_43",
+        "Lane_1573"
+      ],
+      [
+        "Crosswalk_43",
+        "Lane_929"
+      ],
+      [
+        "Crosswalk_43",
+        "Lane_930"
+      ],
+      [
+        "Crosswalk_43",
+        "Lane_932"
+      ],
+      [
+        "Crosswalk_44",
+        "Lane_1515"
+      ],
+      [
+        "Crosswalk_44",
+        "Lane_1516"
+      ],
+      [
+        "Crosswalk_44",
+        "Lane_1517"
+      ],
+      [
+        "Crosswalk_44",
+        "Lane_1519"
+      ],
+      [
+        "Crosswalk_44",
+        "Lane_1612"
+      ],
+      [
+        "Crosswalk_44",
+        "Lane_826"
+      ],
+      [
+        "Crosswalk_44",
+        "Lane_983"
+      ],
+      [
+        "Crosswalk_45",
+        "Lane_1019"
+      ],
+      [
+        "Crosswalk_45",
+        "Lane_1026"
+      ],
+      [
+        "Crosswalk_45",
+        "Lane_1536"
+      ],
+      [
+        "Crosswalk_45",
+        "Lane_1543"
+      ],
+      [
+        "Crosswalk_45",
+        "Lane_935"
+      ],
+      [
+        "Crosswalk_45",
+        "Lane_936"
+      ],
+      [
+        "Crosswalk_45",
+        "Lane_937"
+      ],
+      [
+        "Crosswalk_52",
+        "Lane_1006"
+      ],
+      [
+        "Crosswalk_52",
+        "Lane_771"
+      ],
+      [
+        "Crosswalk_52",
+        "Lane_772"
+      ],
+      [
+        "Crosswalk_52",
+        "Lane_773"
+      ],
+      [
+        "Crosswalk_54",
+        "Lane_1003"
+      ],
+      [
+        "Crosswalk_54",
+        "Lane_1618"
+      ],
+      [
+        "Crosswalk_54",
+        "Lane_1619"
+      ],
+      [
+        "Crosswalk_54",
+        "Lane_1670"
+      ],
+      [
+        "Crosswalk_54",
+        "Lane_1731"
+      ],
+      [
+        "Crosswalk_54",
+        "Lane_771"
+      ],
+      [
+        "Crosswalk_54",
+        "Lane_772"
+      ],
+      [
+        "Crosswalk_54",
+        "Lane_773"
+      ],
+      [
+        "Crosswalk_55",
+        "Lane_1514"
+      ],
+      [
+        "Crosswalk_55",
+        "Lane_1519"
+      ],
+      [
+        "Crosswalk_55",
+        "Lane_1520"
+      ],
+      [
+        "Crosswalk_55",
+        "Lane_1521"
+      ],
+      [
+        "Crosswalk_55",
+        "Lane_1530"
+      ],
+      [
+        "Crosswalk_55",
+        "Lane_1531"
+      ],
+      [
+        "Crosswalk_56",
+        "Lane_1443"
+      ],
+      [
+        "Crosswalk_56",
+        "Lane_1451"
+      ],
+      [
+        "Crosswalk_56",
+        "Lane_1452"
+      ],
+      [
+        "Crosswalk_56",
+        "Lane_1453"
+      ],
+      [
+        "Crosswalk_56",
+        "Lane_1455"
+      ],
+      [
+        "Crosswalk_56",
+        "Lane_1456"
+      ],
+      [
+        "Crosswalk_56",
+        "Lane_1457"
+      ],
+      [
+        "Crosswalk_56",
+        "Lane_1459"
+      ],
+      [
+        "Crosswalk_56",
+        "Lane_1460"
+      ],
+      [
+        "Crosswalk_56",
+        "Lane_537"
+      ],
+      [
+        "Crosswalk_57",
+        "Lane_1440"
+      ],
+      [
+        "Crosswalk_57",
+        "Lane_1466"
+      ],
+      [
+        "Crosswalk_57",
+        "Lane_1467"
+      ],
+      [
+        "Crosswalk_57",
+        "Lane_1468"
+      ],
+      [
+        "Crosswalk_57",
+        "Lane_1469"
+      ],
+      [
+        "Crosswalk_57",
+        "Lane_1471"
+      ],
+      [
+        "Crosswalk_57",
+        "Lane_1472"
+      ],
+      [
+        "Crosswalk_57",
+        "Lane_1622"
+      ],
+      [
+        "Crosswalk_57",
+        "Lane_1624"
+      ],
+      [
+        "Crosswalk_57",
+        "Lane_1671"
+      ],
+      [
+        "Crosswalk_57",
+        "Lane_1672"
+      ],
+      [
+        "Crosswalk_57",
+        "Lane_1673"
+      ],
+      [
+        "Crosswalk_57",
+        "Lane_528"
+      ],
+      [
+        "Crosswalk_57",
+        "Lane_673"
+      ],
+      [
+        "Crosswalk_57",
+        "Lane_674"
+      ],
+      [
+        "Crosswalk_57",
+        "Lane_675"
+      ],
+      [
+        "Crosswalk_58",
+        "Lane_1443"
+      ],
+      [
+        "Crosswalk_58",
+        "Lane_1452"
+      ],
+      [
+        "Crosswalk_58",
+        "Lane_1456"
+      ],
+      [
+        "Crosswalk_58",
+        "Lane_1460"
+      ],
+      [
+        "Crosswalk_58",
+        "Lane_1461"
+      ],
+      [
+        "Crosswalk_58",
+        "Lane_1462"
+      ],
+      [
+        "Crosswalk_58",
+        "Lane_1463"
+      ],
+      [
+        "Crosswalk_58",
+        "Lane_1465"
+      ],
+      [
+        "Crosswalk_58",
+        "Lane_1474"
+      ],
+      [
+        "Crosswalk_58",
+        "Lane_530"
+      ],
+      [
+        "Crosswalk_58",
+        "Lane_531"
+      ],
+      [
+        "Crosswalk_58",
+        "Lane_532"
+      ],
+      [
+        "Crosswalk_58",
+        "Lane_537"
+      ],
+      [
+        "Crosswalk_59",
+        "Lane_1354"
+      ],
+      [
+        "Crosswalk_59",
+        "Lane_1446"
+      ],
+      [
+        "Crosswalk_59",
+        "Lane_1447"
+      ],
+      [
+        "Crosswalk_59",
+        "Lane_1540"
+      ],
+      [
+        "Crosswalk_59",
+        "Lane_1637"
+      ],
+      [
+        "Crosswalk_59",
+        "Lane_1640"
+      ],
+      [
+        "Crosswalk_59",
+        "Lane_1706"
+      ],
+      [
+        "Crosswalk_59",
+        "Lane_1709"
+      ],
+      [
+        "Crosswalk_59",
+        "Lane_699"
+      ],
+      [
+        "Crosswalk_59",
+        "Lane_702"
+      ],
+      [
+        "Crosswalk_60",
+        "Lane_1440"
+      ],
+      [
+        "Crosswalk_60",
+        "Lane_1466"
+      ],
+      [
+        "Crosswalk_60",
+        "Lane_1468"
+      ],
+      [
+        "Crosswalk_60",
+        "Lane_673"
+      ],
+      [
+        "Crosswalk_60",
+        "Lane_674"
+      ],
+      [
+        "Crosswalk_60",
+        "Lane_675"
+      ],
+      [
+        "Crosswalk_61",
+        "Lane_1636"
+      ],
+      [
+        "Crosswalk_61",
+        "Lane_1637"
+      ],
+      [
+        "Crosswalk_61",
+        "Lane_1638"
+      ],
+      [
+        "Crosswalk_61",
+        "Lane_1640"
+      ],
+      [
+        "Crosswalk_61",
+        "Lane_680"
+      ],
+      [
+        "Crosswalk_61",
+        "Lane_681"
+      ],
+      [
+        "Crosswalk_62",
+        "Lane_1470"
+      ],
+      [
+        "Crosswalk_62",
+        "Lane_1674"
+      ],
+      [
+        "Crosswalk_62",
+        "Lane_1675"
+      ]
+    ]
+  }
+}

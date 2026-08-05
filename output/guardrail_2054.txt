@@ -1,0 +1,415 @@
++ [[ ! 1 == 1 ]]
++ execute -- 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 -c "
+import sys
+sys.path.insert(0,'\''/apollo_workspace/bazel-out/k8-opt/bin/external/apollo_src'\'')
+sys.path.insert(0,'\''/apollo_workspace/bazel-out/k8-opt/bin'\'')
+from cyber.python.cyber_py3 import record
+from modules.common_msgs.perception_msgs import perception_obstacle_pb2
+r=record.RecordReader('\''/home/skye/.apollo/resources/records/202608012054_MkzExample_Xh2026Contest.00000.20260801205249.record'\'')
+base=None; n=0; shown={}
+for m in r.read_messages():
+    ts=m.timestamp/1e9
+    if base is None: base=ts
+    t=ts-base
+    if m.topic=='\''/apollo/perception/obstacles'\'':
+        o=perception_obstacle_pb2.PerceptionObstacles(); o.ParseFromString(m.message)
+        for ob in o.perception_obstacle:
+            if ob.type==2 and 423440<=ob.position.x<=423495:
+                key=round(ob.position.x/3)*3
+                if key not in shown:
+                    shown[key]=1
+                    print(f'\''t={t:.1f} guardrail id={ob.id} pos=({ob.position.x:.1f},{ob.position.y:.1f}) len={ob.length:.1f} w={ob.width:.1f}'\'')
+" 2>&1'
++ [[ -f /home/skye/application-pnc/.env ]]
++ set -a
++ source /home/skye/application-pnc/.env
+++ APOLLO_ENV_NAME=edu
+++ APOLLO_ENV_WORKLOCAL=1
+++ APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
+++ APOLLO_ENV_CONTAINER_TAG=9.0-latest
++ set +a
++ parse_arguments -- 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 -c "
+import sys
+sys.path.insert(0,'\''/apollo_workspace/bazel-out/k8-opt/bin/external/apollo_src'\'')
+sys.path.insert(0,'\''/apollo_workspace/bazel-out/k8-opt/bin'\'')
+from cyber.python.cyber_py3 import record
+from modules.common_msgs.perception_msgs import perception_obstacle_pb2
+r=record.RecordReader('\''/home/skye/.apollo/resources/records/202608012054_MkzExample_Xh2026Contest.00000.20260801205249.record'\'')
+base=None; n=0; shown={}
+for m in r.read_messages():
+    ts=m.timestamp/1e9
+    if base is None: base=ts
+    t=ts-base
+    if m.topic=='\''/apollo/perception/obstacles'\'':
+        o=perception_obstacle_pb2.PerceptionObstacles(); o.ParseFromString(m.message)
+        for ob in o.perception_obstacle:
+            if ob.type==2 and 423440<=ob.position.x<=423495:
+                key=round(ob.position.x/3)*3
+                if key not in shown:
+                    shown[key]=1
+                    print(f'\''t={t:.1f} guardrail id={ob.id} pos=({ob.position.x:.1f},{ob.position.y:.1f}) len={ob.length:.1f} w={ob.width:.1f}'\'')
+" 2>&1'
++ args=()
++ [[ 2 -gt 0 ]]
++ local opt=--
++ shift
++ case "${opt}" in
++ args+=("$@")
++ break
++ APOLLO_ENV_EXEC_ARGS=('cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 -c "
+import sys
+sys.path.insert(0,'\''/apollo_workspace/bazel-out/k8-opt/bin/external/apollo_src'\'')
+sys.path.insert(0,'\''/apollo_workspace/bazel-out/k8-opt/bin'\'')
+from cyber.python.cyber_py3 import record
+from modules.common_msgs.perception_msgs import perception_obstacle_pb2
+r=record.RecordReader('\''/home/skye/.apollo/resources/records/202608012054_MkzExample_Xh2026Contest.00000.20260801205249.record'\'')
+base=None; n=0; shown={}
+for m in r.read_messages():
+    ts=m.timestamp/1e9
+    if base is None: base=ts
+    t=ts-base
+    if m.topic=='\''/apollo/perception/obstacles'\'':
+        o=perception_obstacle_pb2.PerceptionObstacles(); o.ParseFromString(m.message)
+        for ob in o.perception_obstacle:
+            if ob.type==2 and 423440<=ob.position.x<=423495:
+                key=round(ob.position.x/3)*3
+                if key not in shown:
+                    shown[key]=1
+                    print(f'\''t={t:.1f} guardrail id={ob.id} pos=({ob.position.x:.1f},{ob.position.y:.1f}) len={ob.length:.1f} w={ob.width:.1f}'\'')
+" 2>&1')
++ export APOLLO_ENV_EXEC_ARGS
++ apollo_env_exists edu
++ local env_name=edu
++ apollo_envhome_exists edu
++ local env_name=edu
++ [[ -d /home/skye/.aem/envs/edu ]]
++ return 0
++ [[ -e /home/skye/.aem/envs/edu/env.config ]]
++ declare backend
+++ source /home/skye/.aem/envs/edu/env.config
++++ export AEM_FLAG_FORCE_RECREATE=0
++++ AEM_FLAG_FORCE_RECREATE=0
++++ export AEM_FLAG_FORCE_RECREATE_VOLUMES=0
++++ AEM_FLAG_FORCE_RECREATE_VOLUMES=0
++++ export AEM_FLAG_SHM_SIZE=4G
++++ AEM_FLAG_SHM_SIZE=4G
++++ export AEM_FLAG_USE_GPU=1
++++ AEM_FLAG_USE_GPU=1
++++ export AEM_FLAG_USE_LOCAL_IMAGE=0
++++ AEM_FLAG_USE_LOCAL_IMAGE=0
++++ export AEM_GEO=
++++ AEM_GEO=
++++ export AEM_HOME=/opt/apollo/aem
++++ AEM_HOME=/opt/apollo/aem
++++ export AEM_INITED=1
++++ AEM_INITED=1
++++ export AEM_SYS_SHARE=/opt/apollo/aem/share/aem
++++ AEM_SYS_SHARE=/opt/apollo/aem/share/aem
++++ export AEM_VERSION=10.0.0-rc1-r4
++++ AEM_VERSION=10.0.0-rc1-r4
++++ export APOLLO_ENVS_ROOT=/home/skye/.aem/envs
++++ APOLLO_ENVS_ROOT=/home/skye/.aem/envs
++++ APOLLO_ENV_ARGS=()
++++ export APOLLO_ENV_ARGS
++++ export APOLLO_ENV_BACKEND=docker
++++ APOLLO_ENV_BACKEND=docker
++++ export APOLLO_ENV_CONTAINER_GID=1000
++++ APOLLO_ENV_CONTAINER_GID=1000
++++ export APOLLO_ENV_CONTAINER_GROUP=skye
++++ APOLLO_ENV_CONTAINER_GROUP=skye
++++ export APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu
++++ APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu
++++ export APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_
++++ APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_
++++ export APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
++++ APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
++++ export APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm
++++ APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm
++++ export APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu
++++ APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu
++++ export APOLLO_ENV_CONTAINER_SHELL=/bin/bash
++++ APOLLO_ENV_CONTAINER_SHELL=/bin/bash
++++ export APOLLO_ENV_CONTAINER_TAG=9.0-latest
++++ APOLLO_ENV_CONTAINER_TAG=9.0-latest
++++ export APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20
++++ APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20
++++ export APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22
++++ APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22
++++ export APOLLO_ENV_CONTAINER_UID=1000
++++ APOLLO_ENV_CONTAINER_UID=1000
++++ export APOLLO_ENV_CONTAINER_USER=skye
++++ APOLLO_ENV_CONTAINER_USER=skye
++++ export APOLLO_ENV_CROSS_PLATFORM=
++++ APOLLO_ENV_CROSS_PLATFORM=
++++ export APOLLO_ENV_NAME=edu
++++ APOLLO_ENV_NAME=edu
++++ export APOLLO_ENV_USE_GPU_HOST=1
++++ APOLLO_ENV_USE_GPU_HOST=1
++++ export APOLLO_ENV_WORKLOCAL=1
++++ APOLLO_ENV_WORKLOCAL=1
++++ export APOLLO_ENV_WORKROOT=/apollo_workspace
++++ APOLLO_ENV_WORKROOT=/apollo_workspace
++++ export APOLLO_ENV_WORKSPACE=/home/skye/application-pnc
++++ APOLLO_ENV_WORKSPACE=/home/skye/application-pnc
+++ echo docker
++ backend=docker
++ [[ docker == \h\o\s\t ]]
++ [[ docker == \d\o\c\k\e\r ]]
++ local container_name=apollo_neo_dev_edu
++ docker_container_exists apollo_neo_dev_edu
++ local container=apollo_neo_dev_edu
+++ docker ps -a '--format={{.Names}}' -f name=apollo_neo_dev_edu
+++ grep '^apollo_neo_dev_edu$'
++ local query=apollo_neo_dev_edu
++ [[ apollo_neo_dev_edu == \a\p\o\l\l\o\_\n\e\o\_\d\e\v\_\e\d\u ]]
++ return 0
++ return 0
++ set -a
++ source /home/skye/.aem/envs/edu/env.config
+++ export AEM_FLAG_FORCE_RECREATE=0
+++ AEM_FLAG_FORCE_RECREATE=0
+++ export AEM_FLAG_FORCE_RECREATE_VOLUMES=0
+++ AEM_FLAG_FORCE_RECREATE_VOLUMES=0
+++ export AEM_FLAG_SHM_SIZE=4G
+++ AEM_FLAG_SHM_SIZE=4G
+++ export AEM_FLAG_USE_GPU=1
+++ AEM_FLAG_USE_GPU=1
+++ export AEM_FLAG_USE_LOCAL_IMAGE=0
+++ AEM_FLAG_USE_LOCAL_IMAGE=0
+++ export AEM_GEO=
+++ AEM_GEO=
+++ export AEM_HOME=/opt/apollo/aem
+++ AEM_HOME=/opt/apollo/aem
+++ export AEM_INITED=1
+++ AEM_INITED=1
+++ export AEM_SYS_SHARE=/opt/apollo/aem/share/aem
+++ AEM_SYS_SHARE=/opt/apollo/aem/share/aem
+++ export AEM_VERSION=10.0.0-rc1-r4
+++ AEM_VERSION=10.0.0-rc1-r4
+++ export APOLLO_ENVS_ROOT=/home/skye/.aem/envs
+++ APOLLO_ENVS_ROOT=/home/skye/.aem/envs
+++ APOLLO_ENV_ARGS=()
+++ export APOLLO_ENV_ARGS
+++ export APOLLO_ENV_BACKEND=docker
+++ APOLLO_ENV_BACKEND=docker
+++ export APOLLO_ENV_CONTAINER_GID=1000
+++ APOLLO_ENV_CONTAINER_GID=1000
+++ export APOLLO_ENV_CONTAINER_GROUP=skye
+++ APOLLO_ENV_CONTAINER_GROUP=skye
+++ export APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu
+++ APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu
+++ export APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_
+++ APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_
+++ export APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
+++ APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
+++ export APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm
+++ APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm
+++ export APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu
+++ APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu
+++ export APOLLO_ENV_CONTAINER_SHELL=/bin/bash
+++ APOLLO_ENV_CONTAINER_SHELL=/bin/bash
+++ export APOLLO_ENV_CONTAINER_TAG=9.0-latest
+++ APOLLO_ENV_CONTAINER_TAG=9.0-latest
+++ export APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20
+++ APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20
+++ export APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22
+++ APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22
+++ export APOLLO_ENV_CONTAINER_UID=1000
+++ APOLLO_ENV_CONTAINER_UID=1000
+++ export APOLLO_ENV_CONTAINER_USER=skye
+++ APOLLO_ENV_CONTAINER_USER=skye
+++ export APOLLO_ENV_CROSS_PLATFORM=
+++ APOLLO_ENV_CROSS_PLATFORM=
+++ export APOLLO_ENV_NAME=edu
+++ APOLLO_ENV_NAME=edu
+++ export APOLLO_ENV_USE_GPU_HOST=1
+++ APOLLO_ENV_USE_GPU_HOST=1
+++ export APOLLO_ENV_WORKLOCAL=1
+++ APOLLO_ENV_WORKLOCAL=1
+++ export APOLLO_ENV_WORKROOT=/apollo_workspace
+++ APOLLO_ENV_WORKROOT=/apollo_workspace
+++ export APOLLO_ENV_WORKSPACE=/home/skye/application-pnc
+++ APOLLO_ENV_WORKSPACE=/home/skye/application-pnc
++ set +a
++ apollo_exec_env 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 -c "
+import sys
+sys.path.insert(0,'\''/apollo_workspace/bazel-out/k8-opt/bin/external/apollo_src'\'')
+sys.path.insert(0,'\''/apollo_workspace/bazel-out/k8-opt/bin'\'')
+from cyber.python.cyber_py3 import record
+from modules.common_msgs.perception_msgs import perception_obstacle_pb2
+r=record.RecordReader('\''/home/skye/.apollo/resources/records/202608012054_MkzExample_Xh2026Contest.00000.20260801205249.record'\'')
+base=None; n=0; shown={}
+for m in r.read_messages():
+    ts=m.timestamp/1e9
+    if base is None: base=ts
+    t=ts-base
+    if m.topic=='\''/apollo/perception/obstacles'\'':
+        o=perception_obstacle_pb2.PerceptionObstacles(); o.ParseFromString(m.message)
+        for ob in o.perception_obstacle:
+            if ob.type==2 and 423440<=ob.position.x<=423495:
+                key=round(ob.position.x/3)*3
+                if key not in shown:
+                    shown[key]=1
+                    print(f'\''t={t:.1f} guardrail id={ob.id} pos=({ob.position.x:.1f},{ob.position.y:.1f}) len={ob.length:.1f} w={ob.width:.1f}'\'')
+" 2>&1'
++ [[ docker == \d\o\c\k\e\r ]]
++ apollo_exec_container 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 -c "
+import sys
+sys.path.insert(0,'\''/apollo_workspace/bazel-out/k8-opt/bin/external/apollo_src'\'')
+sys.path.insert(0,'\''/apollo_workspace/bazel-out/k8-opt/bin'\'')
+from cyber.python.cyber_py3 import record
+from modules.common_msgs.perception_msgs import perception_obstacle_pb2
+r=record.RecordReader('\''/home/skye/.apollo/resources/records/202608012054_MkzExample_Xh2026Contest.00000.20260801205249.record'\'')
+base=None; n=0; shown={}
+for m in r.read_messages():
+    ts=m.timestamp/1e9
+    if base is None: base=ts
+    t=ts-base
+    if m.topic=='\''/apollo/perception/obstacles'\'':
+        o=perception_obstacle_pb2.PerceptionObstacles(); o.ParseFromString(m.message)
+        for ob in o.perception_obstacle:
+            if ob.type==2 and 423440<=ob.position.x<=423495:
+                key=round(ob.position.x/3)*3
+                if key not in shown:
+                    shown[key]=1
+                    print(f'\''t={t:.1f} guardrail id={ob.id} pos=({ob.position.x:.1f},{ob.position.y:.1f}) len={ob.length:.1f} w={ob.width:.1f}'\'')
+" 2>&1'
++ local 'cmd=cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 -c "
+import sys
+sys.path.insert(0,'\''/apollo_workspace/bazel-out/k8-opt/bin/external/apollo_src'\'')
+sys.path.insert(0,'\''/apollo_workspace/bazel-out/k8-opt/bin'\'')
+from cyber.python.cyber_py3 import record
+from modules.common_msgs.perception_msgs import perception_obstacle_pb2
+r=record.RecordReader('\''/home/skye/.apollo/resources/records/202608012054_MkzExample_Xh2026Contest.00000.20260801205249.record'\'')
+base=None; n=0; shown={}
+for m in r.read_messages():
+    ts=m.timestamp/1e9
+    if base is None: base=ts
+    t=ts-base
+    if m.topic=='\''/apollo/perception/obstacles'\'':
+        o=perception_obstacle_pb2.PerceptionObstacles(); o.ParseFromString(m.message)
+        for ob in o.perception_obstacle:
+            if ob.type==2 and 423440<=ob.position.x<=423495:
+                key=round(ob.position.x/3)*3
+                if key not in shown:
+                    shown[key]=1
+                    print(f'\''t={t:.1f} guardrail id={ob.id} pos=({ob.position.x:.1f},{ob.position.y:.1f}) len={ob.length:.1f} w={ob.width:.1f}'\'')
+" 2>&1'
++ shift
++ [[ -z cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 -c "
+import sys
+sys.path.insert(0,'/apollo_workspace/bazel-out/k8-opt/bin/external/apollo_src')
+sys.path.insert(0,'/apollo_workspace/bazel-out/k8-opt/bin')
+from cyber.python.cyber_py3 import record
+from modules.common_msgs.perception_msgs import perception_obstacle_pb2
+r=record.RecordReader('/home/skye/.apollo/resources/records/202608012054_MkzExample_Xh2026Contest.00000.20260801205249.record')
+base=None; n=0; shown={}
+for m in r.read_messages():
+    ts=m.timestamp/1e9
+    if base is None: base=ts
+    t=ts-base
+    if m.topic=='/apollo/perception/obstacles':
+        o=perception_obstacle_pb2.PerceptionObstacles(); o.ParseFromString(m.message)
+        for ob in o.perception_obstacle:
+            if ob.type==2 and 423440<=ob.position.x<=423495:
+                key=round(ob.position.x/3)*3
+                if key not in shown:
+                    shown[key]=1
+                    print(f't={t:.1f} guardrail id={ob.id} pos=({ob.position.x:.1f},{ob.position.y:.1f}) len={ob.length:.1f} w={ob.width:.1f}')
+" 2>&1 ]]
++ envs=()
++ local envs
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ envs+=('-e' "HISTFILE=${APOLLO_ENV_WORKROOT}/.cache/.bash_history")
++ envs+=('-e' 'HISTSIZE=200000')
++ envs+=('-e' 'HISTFILESIZE=200000')
++ envs+=('-e' 'HISTCONTROL=ignorespace:erasedups')
++ envs+=('-e' "DOCKER_USER=${APOLLO_ENV_CONTAINER_USER}")
++ xhost +local:root
++ docker exec -u skye -e APOLLO_ENV_ARGS= -e APOLLO_ENV_BACKEND=docker -e APOLLO_ENV_CONTAINER_GID=1000 -e APOLLO_ENV_CONTAINER_GROUP=skye -e APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu -e APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_ -e APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu -e APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm -e APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu -e APOLLO_ENV_CONTAINER_SHELL=/bin/bash -e APOLLO_ENV_CONTAINER_TAG=9.0-latest -e APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20 -e APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22 -e APOLLO_ENV_CONTAINER_UID=1000 -e APOLLO_ENV_CONTAINER_USER=skye -e APOLLO_ENV_CROSS_PLATFORM= -e 'APOLLO_ENV_EXEC_ARGS=cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 -c "
+import sys
+sys.path.insert(0,'\''/apollo_workspace/bazel-out/k8-opt/bin/external/apollo_src'\'')
+sys.path.insert(0,'\''/apollo_workspace/bazel-out/k8-opt/bin'\'')
+from cyber.python.cyber_py3 import record
+from modules.common_msgs.perception_msgs import perception_obstacle_pb2
+r=record.RecordReader('\''/home/skye/.apollo/resources/records/202608012054_MkzExample_Xh2026Contest.00000.20260801205249.record'\'')
+base=None; n=0; shown={}
+for m in r.read_messages():
+    ts=m.timestamp/1e9
+    if base is None: base=ts
+    t=ts-base
+    if m.topic=='\''/apollo/perception/obstacles'\'':
+        o=perception_obstacle_pb2.PerceptionObstacles(); o.ParseFromString(m.message)
+        for ob in o.perception_obstacle:
+            if ob.type==2 and 423440<=ob.position.x<=423495:
+                key=round(ob.position.x/3)*3
+                if key not in shown:
+                    shown[key]=1
+                    print(f'\''t={t:.1f} guardrail id={ob.id} pos=({ob.position.x:.1f},{ob.position.y:.1f}) len={ob.length:.1f} w={ob.width:.1f}'\'')
+" 2>&1' -e APOLLO_ENV_NAME=edu -e APOLLO_ENV_USE_GPU_HOST=1 -e APOLLO_ENV_WORKLOCAL=1 -e APOLLO_ENV_WORKROOT=/apollo_workspace -e APOLLO_ENV_WORKSPACE=/home/skye/application-pnc -e HISTFILE=/apollo_workspace/.cache/.bash_history -e HISTSIZE=200000 -e HISTFILESIZE=200000 -e HISTCONTROL=ignorespace:erasedups -e DOCKER_USER=skye -w /apollo_workspace -it apollo_neo_dev_edu /bin/bash -c 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 -c "
+import sys
+sys.path.insert(0,'\''/apollo_workspace/bazel-out/k8-opt/bin/external/apollo_src'\'')
+sys.path.insert(0,'\''/apollo_workspace/bazel-out/k8-opt/bin'\'')
+from cyber.python.cyber_py3 import record
+from modules.common_msgs.perception_msgs import perception_obstacle_pb2
+r=record.RecordReader('\''/home/skye/.apollo/resources/records/202608012054_MkzExample_Xh2026Contest.00000.20260801205249.record'\'')
+base=None; n=0; shown={}
+for m in r.read_messages():
+    ts=m.timestamp/1e9
+    if base is None: base=ts
+    t=ts-base
+    if m.topic=='\''/apollo/perception/obstacles'\'':
+        o=perception_obstacle_pb2.PerceptionObstacles(); o.ParseFromString(m.message)
+        for ob in o.perception_obstacle:
+            if ob.type==2 and 423440<=ob.position.x<=423495:
+                key=round(ob.position.x/3)*3
+                if key not in shown:
+                    shown[key]=1
+                    print(f'\''t={t:.1f} guardrail id={ob.id} pos=({ob.position.x:.1f},{ob.position.y:.1f}) len={ob.length:.1f} w={ob.width:.1f}'\'')
+" 2>&1 '
+WARNING: Logging before InitGoogleLogging() is written to STDERR
+I0801 20:58:40.623499 811140 py_record.cc:574] []init _cyber_record_wrapper
++ xhost -local:root

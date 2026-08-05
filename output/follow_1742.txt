@@ -1,0 +1,516 @@
++ [[ ! 1 == 1 ]]
++ execute -- 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/analyze_follow.py /home/skye/.apollo/resources/records/202608011742_MkzExample_Xh2026Contest.00000.20260801174234.record 2>&1'
++ [[ -f /home/skye/application-pnc/.env ]]
++ set -a
++ source /home/skye/application-pnc/.env
+++ APOLLO_ENV_NAME=edu
+++ APOLLO_ENV_WORKLOCAL=1
+++ APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
+++ APOLLO_ENV_CONTAINER_TAG=9.0-latest
++ set +a
++ parse_arguments -- 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/analyze_follow.py /home/skye/.apollo/resources/records/202608011742_MkzExample_Xh2026Contest.00000.20260801174234.record 2>&1'
++ args=()
++ [[ 2 -gt 0 ]]
++ local opt=--
++ shift
++ case "${opt}" in
++ args+=("$@")
++ break
++ APOLLO_ENV_EXEC_ARGS=('cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/analyze_follow.py /home/skye/.apollo/resources/records/202608011742_MkzExample_Xh2026Contest.00000.20260801174234.record 2>&1')
++ export APOLLO_ENV_EXEC_ARGS
++ apollo_env_exists edu
++ local env_name=edu
++ apollo_envhome_exists edu
++ local env_name=edu
++ [[ -d /home/skye/.aem/envs/edu ]]
++ return 0
++ [[ -e /home/skye/.aem/envs/edu/env.config ]]
++ declare backend
+++ source /home/skye/.aem/envs/edu/env.config
++++ export AEM_FLAG_FORCE_RECREATE=0
++++ AEM_FLAG_FORCE_RECREATE=0
++++ export AEM_FLAG_FORCE_RECREATE_VOLUMES=0
++++ AEM_FLAG_FORCE_RECREATE_VOLUMES=0
++++ export AEM_FLAG_SHM_SIZE=4G
++++ AEM_FLAG_SHM_SIZE=4G
++++ export AEM_FLAG_USE_GPU=1
++++ AEM_FLAG_USE_GPU=1
++++ export AEM_FLAG_USE_LOCAL_IMAGE=0
++++ AEM_FLAG_USE_LOCAL_IMAGE=0
++++ export AEM_GEO=
++++ AEM_GEO=
++++ export AEM_HOME=/opt/apollo/aem
++++ AEM_HOME=/opt/apollo/aem
++++ export AEM_INITED=1
++++ AEM_INITED=1
++++ export AEM_SYS_SHARE=/opt/apollo/aem/share/aem
++++ AEM_SYS_SHARE=/opt/apollo/aem/share/aem
++++ export AEM_VERSION=10.0.0-rc1-r4
++++ AEM_VERSION=10.0.0-rc1-r4
++++ export APOLLO_ENVS_ROOT=/home/skye/.aem/envs
++++ APOLLO_ENVS_ROOT=/home/skye/.aem/envs
++++ APOLLO_ENV_ARGS=()
++++ export APOLLO_ENV_ARGS
++++ export APOLLO_ENV_BACKEND=docker
++++ APOLLO_ENV_BACKEND=docker
++++ export APOLLO_ENV_CONTAINER_GID=1000
++++ APOLLO_ENV_CONTAINER_GID=1000
++++ export APOLLO_ENV_CONTAINER_GROUP=skye
++++ APOLLO_ENV_CONTAINER_GROUP=skye
++++ export APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu
++++ APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu
++++ export APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_
++++ APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_
++++ export APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
++++ APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
++++ export APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm
++++ APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm
++++ export APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu
++++ APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu
++++ export APOLLO_ENV_CONTAINER_SHELL=/bin/bash
++++ APOLLO_ENV_CONTAINER_SHELL=/bin/bash
++++ export APOLLO_ENV_CONTAINER_TAG=9.0-latest
++++ APOLLO_ENV_CONTAINER_TAG=9.0-latest
++++ export APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20
++++ APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20
++++ export APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22
++++ APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22
++++ export APOLLO_ENV_CONTAINER_UID=1000
++++ APOLLO_ENV_CONTAINER_UID=1000
++++ export APOLLO_ENV_CONTAINER_USER=skye
++++ APOLLO_ENV_CONTAINER_USER=skye
++++ export APOLLO_ENV_CROSS_PLATFORM=
++++ APOLLO_ENV_CROSS_PLATFORM=
++++ export APOLLO_ENV_NAME=edu
++++ APOLLO_ENV_NAME=edu
++++ export APOLLO_ENV_USE_GPU_HOST=1
++++ APOLLO_ENV_USE_GPU_HOST=1
++++ export APOLLO_ENV_WORKLOCAL=1
++++ APOLLO_ENV_WORKLOCAL=1
++++ export APOLLO_ENV_WORKROOT=/apollo_workspace
++++ APOLLO_ENV_WORKROOT=/apollo_workspace
++++ export APOLLO_ENV_WORKSPACE=/home/skye/application-pnc
++++ APOLLO_ENV_WORKSPACE=/home/skye/application-pnc
+++ echo docker
++ backend=docker
++ [[ docker == \h\o\s\t ]]
++ [[ docker == \d\o\c\k\e\r ]]
++ local container_name=apollo_neo_dev_edu
++ docker_container_exists apollo_neo_dev_edu
++ local container=apollo_neo_dev_edu
+++ docker ps -a '--format={{.Names}}' -f name=apollo_neo_dev_edu
+++ grep '^apollo_neo_dev_edu$'
++ local query=apollo_neo_dev_edu
++ [[ apollo_neo_dev_edu == \a\p\o\l\l\o\_\n\e\o\_\d\e\v\_\e\d\u ]]
++ return 0
++ return 0
++ set -a
++ source /home/skye/.aem/envs/edu/env.config
+++ export AEM_FLAG_FORCE_RECREATE=0
+++ AEM_FLAG_FORCE_RECREATE=0
+++ export AEM_FLAG_FORCE_RECREATE_VOLUMES=0
+++ AEM_FLAG_FORCE_RECREATE_VOLUMES=0
+++ export AEM_FLAG_SHM_SIZE=4G
+++ AEM_FLAG_SHM_SIZE=4G
+++ export AEM_FLAG_USE_GPU=1
+++ AEM_FLAG_USE_GPU=1
+++ export AEM_FLAG_USE_LOCAL_IMAGE=0
+++ AEM_FLAG_USE_LOCAL_IMAGE=0
+++ export AEM_GEO=
+++ AEM_GEO=
+++ export AEM_HOME=/opt/apollo/aem
+++ AEM_HOME=/opt/apollo/aem
+++ export AEM_INITED=1
+++ AEM_INITED=1
+++ export AEM_SYS_SHARE=/opt/apollo/aem/share/aem
+++ AEM_SYS_SHARE=/opt/apollo/aem/share/aem
+++ export AEM_VERSION=10.0.0-rc1-r4
+++ AEM_VERSION=10.0.0-rc1-r4
+++ export APOLLO_ENVS_ROOT=/home/skye/.aem/envs
+++ APOLLO_ENVS_ROOT=/home/skye/.aem/envs
+++ APOLLO_ENV_ARGS=()
+++ export APOLLO_ENV_ARGS
+++ export APOLLO_ENV_BACKEND=docker
+++ APOLLO_ENV_BACKEND=docker
+++ export APOLLO_ENV_CONTAINER_GID=1000
+++ APOLLO_ENV_CONTAINER_GID=1000
+++ export APOLLO_ENV_CONTAINER_GROUP=skye
+++ APOLLO_ENV_CONTAINER_GROUP=skye
+++ export APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu
+++ APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu
+++ export APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_
+++ APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_
+++ export APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
+++ APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
+++ export APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm
+++ APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm
+++ export APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu
+++ APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu
+++ export APOLLO_ENV_CONTAINER_SHELL=/bin/bash
+++ APOLLO_ENV_CONTAINER_SHELL=/bin/bash
+++ export APOLLO_ENV_CONTAINER_TAG=9.0-latest
+++ APOLLO_ENV_CONTAINER_TAG=9.0-latest
+++ export APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20
+++ APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20
+++ export APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22
+++ APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22
+++ export APOLLO_ENV_CONTAINER_UID=1000
+++ APOLLO_ENV_CONTAINER_UID=1000
+++ export APOLLO_ENV_CONTAINER_USER=skye
+++ APOLLO_ENV_CONTAINER_USER=skye
+++ export APOLLO_ENV_CROSS_PLATFORM=
+++ APOLLO_ENV_CROSS_PLATFORM=
+++ export APOLLO_ENV_NAME=edu
+++ APOLLO_ENV_NAME=edu
+++ export APOLLO_ENV_USE_GPU_HOST=1
+++ APOLLO_ENV_USE_GPU_HOST=1
+++ export APOLLO_ENV_WORKLOCAL=1
+++ APOLLO_ENV_WORKLOCAL=1
+++ export APOLLO_ENV_WORKROOT=/apollo_workspace
+++ APOLLO_ENV_WORKROOT=/apollo_workspace
+++ export APOLLO_ENV_WORKSPACE=/home/skye/application-pnc
+++ APOLLO_ENV_WORKSPACE=/home/skye/application-pnc
++ set +a
++ apollo_exec_env 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/analyze_follow.py /home/skye/.apollo/resources/records/202608011742_MkzExample_Xh2026Contest.00000.20260801174234.record 2>&1'
++ [[ docker == \d\o\c\k\e\r ]]
++ apollo_exec_container 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/analyze_follow.py /home/skye/.apollo/resources/records/202608011742_MkzExample_Xh2026Contest.00000.20260801174234.record 2>&1'
++ local 'cmd=cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/analyze_follow.py /home/skye/.apollo/resources/records/202608011742_MkzExample_Xh2026Contest.00000.20260801174234.record 2>&1'
++ shift
++ [[ -z cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/analyze_follow.py /home/skye/.apollo/resources/records/202608011742_MkzExample_Xh2026Contest.00000.20260801174234.record 2>&1 ]]
++ envs=()
++ local envs
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ envs+=('-e' "HISTFILE=${APOLLO_ENV_WORKROOT}/.cache/.bash_history")
++ envs+=('-e' 'HISTSIZE=200000')
++ envs+=('-e' 'HISTFILESIZE=200000')
++ envs+=('-e' 'HISTCONTROL=ignorespace:erasedups')
++ envs+=('-e' "DOCKER_USER=${APOLLO_ENV_CONTAINER_USER}")
++ xhost +local:root
++ docker exec -u skye -e APOLLO_ENV_ARGS= -e APOLLO_ENV_BACKEND=docker -e APOLLO_ENV_CONTAINER_GID=1000 -e APOLLO_ENV_CONTAINER_GROUP=skye -e APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu -e APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_ -e APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu -e APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm -e APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu -e APOLLO_ENV_CONTAINER_SHELL=/bin/bash -e APOLLO_ENV_CONTAINER_TAG=9.0-latest -e APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20 -e APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22 -e APOLLO_ENV_CONTAINER_UID=1000 -e APOLLO_ENV_CONTAINER_USER=skye -e APOLLO_ENV_CROSS_PLATFORM= -e 'APOLLO_ENV_EXEC_ARGS=cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/analyze_follow.py /home/skye/.apollo/resources/records/202608011742_MkzExample_Xh2026Contest.00000.20260801174234.record 2>&1' -e APOLLO_ENV_NAME=edu -e APOLLO_ENV_USE_GPU_HOST=1 -e APOLLO_ENV_WORKLOCAL=1 -e APOLLO_ENV_WORKROOT=/apollo_workspace -e APOLLO_ENV_WORKSPACE=/home/skye/application-pnc -e HISTFILE=/apollo_workspace/.cache/.bash_history -e HISTSIZE=200000 -e HISTFILESIZE=200000 -e HISTCONTROL=ignorespace:erasedups -e DOCKER_USER=skye -w /apollo_workspace -it apollo_neo_dev_edu /bin/bash -c 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/analyze_follow.py /home/skye/.apollo/resources/records/202608011742_MkzExample_Xh2026Contest.00000.20260801174234.record 2>&1 '
+WARNING: Logging before InitGoogleLogging() is written to STDERR
+I0801 17:43:50.110009 468547 py_record.cc:574] []init _cyber_record_wrapper
+=== 障碍物时间线（按出现帧排序，采样） ===
+obs6503 type=2 first_frame=1 pos=(423362.17,4437613.03) vel=(0.0,0.0)
+   last_frame=201 pos=(423362.17,4437613.03) vel=(0.0,0.0)
+   frame29: pos=(423362.17,4437613.03) vel=(0.0,0.0)
+   frame58: pos=(423362.17,4437613.03) vel=(0.0,0.0)
+   frame87: pos=(423362.17,4437613.03) vel=(0.0,0.0)
+   frame115: pos=(423362.17,4437613.03) vel=(0.0,0.0)
+   frame144: pos=(423362.17,4437613.03) vel=(0.0,0.0)
+   frame173: pos=(423362.17,4437613.03) vel=(0.0,0.0)
+obs3098 type=2 first_frame=1 pos=(423395.25,4437613.01) vel=(0.0,0.0)
+   last_frame=201 pos=(423395.25,4437613.01) vel=(0.0,0.0)
+   frame29: pos=(423395.25,4437613.01) vel=(0.0,0.0)
+   frame58: pos=(423395.25,4437613.01) vel=(0.0,0.0)
+   frame87: pos=(423395.25,4437613.01) vel=(0.0,0.0)
+   frame115: pos=(423395.25,4437613.01) vel=(0.0,0.0)
+   frame144: pos=(423395.25,4437613.01) vel=(0.0,0.0)
+   frame173: pos=(423395.25,4437613.01) vel=(0.0,0.0)
+obs2600 type=5 first_frame=1 pos=(423402.83,4437610.52) vel=(5.5,-0.01)
+   last_frame=201 pos=(423512.83,4437610.22) vel=(5.5,-0.01)
+   frame29: pos=(423418.23,4437610.48) vel=(5.5,-0.01)
+   frame58: pos=(423434.18,4437610.43) vel=(5.5,-0.01)
+   frame87: pos=(423450.13,4437610.39) vel=(5.5,-0.01)
+   frame115: pos=(423465.53,4437610.35) vel=(5.5,-0.01)
+   frame144: pos=(423481.48,4437610.31) vel=(5.5,-0.01)
+   frame173: pos=(423497.43,4437610.26) vel=(5.5,-0.01)
+obs4717 type=2 first_frame=1 pos=(423416.12,4437613.35) vel=(0.0,-0.0)
+   last_frame=201 pos=(423416.12,4437613.35) vel=(0.0,-0.0)
+   frame29: pos=(423416.12,4437613.35) vel=(0.0,-0.0)
+   frame58: pos=(423416.12,4437613.35) vel=(0.0,-0.0)
+   frame87: pos=(423416.12,4437613.35) vel=(0.0,-0.0)
+   frame115: pos=(423416.12,4437613.35) vel=(0.0,-0.0)
+   frame144: pos=(423416.12,4437613.35) vel=(0.0,-0.0)
+   frame173: pos=(423416.12,4437613.35) vel=(0.0,-0.0)
+obs4857 type=2 first_frame=1 pos=(423298.3,4437613.23) vel=(0.0,-0.0)
+   last_frame=201 pos=(423298.3,4437613.23) vel=(0.0,-0.0)
+   frame29: pos=(423298.3,4437613.23) vel=(0.0,-0.0)
+   frame58: pos=(423298.3,4437613.23) vel=(0.0,-0.0)
+   frame87: pos=(423298.3,4437613.23) vel=(0.0,-0.0)
+   frame115: pos=(423298.3,4437613.23) vel=(0.0,-0.0)
+   frame144: pos=(423298.3,4437613.23) vel=(0.0,-0.0)
+   frame173: pos=(423298.3,4437613.23) vel=(0.0,-0.0)
+obs6324 type=2 first_frame=1 pos=(423329.67,4437613.14) vel=(0.0,-0.0)
+   last_frame=201 pos=(423329.67,4437613.14) vel=(0.0,-0.0)
+   frame29: pos=(423329.67,4437613.14) vel=(0.0,-0.0)
+   frame58: pos=(423329.67,4437613.14) vel=(0.0,-0.0)
+   frame87: pos=(423329.67,4437613.14) vel=(0.0,-0.0)
+   frame115: pos=(423329.67,4437613.14) vel=(0.0,-0.0)
+   frame144: pos=(423329.67,4437613.14) vel=(0.0,-0.0)
+   frame173: pos=(423329.67,4437613.14) vel=(0.0,-0.0)
+obs5530 type=2 first_frame=1 pos=(423438.43,4437612.88) vel=(0.0,-0.0)
+   last_frame=201 pos=(423438.43,4437612.88) vel=(0.0,-0.0)
+   frame29: pos=(423438.43,4437612.88) vel=(0.0,-0.0)
+   frame58: pos=(423438.43,4437612.88) vel=(0.0,-0.0)
+   frame87: pos=(423438.43,4437612.88) vel=(0.0,-0.0)
+   frame115: pos=(423438.43,4437612.88) vel=(0.0,-0.0)
+   frame144: pos=(423438.43,4437612.88) vel=(0.0,-0.0)
+   frame173: pos=(423438.43,4437612.88) vel=(0.0,-0.0)
+
+=== 车辆轨迹采样（每 ~500 帧） ===
+  frame0: x=423384.09 y=4437610.85 v=5.51
+  frame500: x=423411.3 y=4437610.82 v=5.68
+  frame1000: x=423439.14 y=4437610.77 v=5.46
+  frame1500: x=423458.57 y=4437610.83 v=3.31
+  frame2000: x=423474.31 y=4437610.82 v=2.54
+
+=== 规划主决策序列（去重） ===
+  frame0: STOP obs=2 point=(423490.55637829955,4437610.691770126)
+  frame0: STOP obs=2 point=(423490.5563783033,4437610.691770126)
+  frame0: STOP obs=2 point=(423490.5563783006,4437610.691770126)
+  frame0: STOP obs=2 point=(423490.55637830135,4437610.691770125)
+  frame0: STOP obs=2 point=(423490.5563782964,4437610.691770125)
+  frame11: STOP obs=2 point=(423490.5563783005,4437610.691770126)
+  frame20: STOP obs=2 point=(423490.5563783008,4437610.691770126)
+  frame30: STOP obs=2 point=(423490.5563783018,4437610.691770125)
+  frame40: STOP obs=2 point=(423490.55637829966,4437610.691770125)
+  frame50: STOP obs=2 point=(423490.55637829873,4437610.691770126)
+  frame60: STOP obs=2 point=(423490.55637830053,4437610.691770126)
+  frame71: STOP obs=2 point=(423490.5563783012,4437610.691770125)
+  frame80: STOP obs=2 point=(423490.5563783018,4437610.691770126)
+  frame90: STOP obs=2 point=(423490.5563783009,4437610.691770126)
+  frame100: STOP obs=2 point=(423490.5563783033,4437610.691770126)
+  frame110: STOP obs=2 point=(423490.5563783017,4437610.691770126)
+  frame120: STOP obs=2 point=(423490.5563782988,4437610.691770125)
+  frame130: STOP obs=2 point=(423490.5563783028,4437610.691770126)
+  frame140: STOP obs=2 point=(423490.5563783005,4437610.691770126)
+  frame150: STOP obs=2 point=(423490.55637830205,4437610.691770126)
+  frame160: STOP obs=2 point=(423490.5563783016,4437610.691770125)
+  frame170: STOP obs=2 point=(423490.55637829535,4437610.691770125)
+  frame180: STOP obs=2 point=(423490.556378298,4437610.691770126)
+  frame190: STOP obs=2 point=(423490.55637830344,4437610.691770126)
+  frame200: STOP obs=2 point=(423490.5563783004,4437610.691770125)
+  frame210: STOP obs=2 point=(423490.5563783019,4437610.691770126)
+  frame220: STOP obs=2 point=(423490.5563783001,4437610.691770126)
+  frame230: STOP obs=2 point=(423490.5563782973,4437610.691770126)
+  frame240: STOP obs=2 point=(423490.55637830315,4437610.691770126)
+  frame250: STOP obs=4 point=(423417.430154655,4437610.800507108)
+  frame260: STOP obs=2 point=(423490.55637830053,4437610.691770126)
+  frame270: STOP obs=2 point=(423490.55637830193,4437610.691770126)
+  frame280: STOP obs=2 point=(423490.5563783009,4437610.691770126)
+  frame292: STOP obs=2 point=(423490.5563783002,4437610.691770126)
+  frame300: STOP obs=2 point=(423490.5563783017,4437610.691770126)
+  frame311: STOP obs=2 point=(423490.5563782991,4437610.691770126)
+  frame320: STOP obs=2 point=(423490.55637830205,4437610.691770125)
+  frame330: STOP obs=2 point=(423490.5563782999,4437610.691770126)
+  frame340: STOP obs=2 point=(423490.55637830053,4437610.691770126)
+  frame350: STOP obs=2 point=(423490.5563783005,4437610.691770125)
+  frame360: STOP obs=2 point=(423490.556378298,4437610.691770126)
+  frame370: STOP obs=2 point=(423490.5563782944,4437610.691770126)
+  frame380: STOP obs=2 point=(423490.55637829815,4437610.691770126)
+  frame390: STOP obs=2 point=(423490.5563783024,4437610.691770126)
+  frame400: STOP obs=2 point=(423490.5563782987,4437610.691770126)
+  frame414: STOP obs=2 point=(423490.5563783016,4437610.691770125)
+  frame421: STOP obs=2 point=(423490.5563783023,4437610.691770126)
+  frame430: STOP obs=2 point=(423490.5563782989,4437610.691770126)
+  frame440: STOP obs=2 point=(423490.5563782977,4437610.691770126)
+  frame450: STOP obs=2 point=(423490.5563782996,4437610.691770126)
+  frame460: STOP obs=2 point=(423490.5563783011,4437610.691770126)
+  frame471: STOP obs=2 point=(423490.5563782978,4437610.691770125)
+  frame481: STOP obs=2 point=(423490.55637830216,4437610.691770125)
+  frame490: STOP obs=2 point=(423490.55637829885,4437610.691770126)
+  frame501: STOP obs=2 point=(423490.55637830007,4437610.691770126)
+  frame511: STOP obs=2 point=(423490.55637829995,4437610.691770126)
+  frame520: STOP obs=2 point=(423490.55637829885,4437610.691770126)
+  frame530: STOP obs=2 point=(423490.5563783026,4437610.691770125)
+  frame540: STOP obs=2 point=(423490.5563783032,4437610.691770125)
+  frame550: STOP obs=2 point=(423490.55637830205,4437610.691770125)
+  frame560: STOP obs=2 point=(423490.55637830106,4437610.691770126)
+  frame570: STOP obs=2 point=(423490.55637829966,4437610.691770126)
+  frame580: STOP obs=2 point=(423490.55637830135,4437610.691770126)
+  frame590: STOP obs=2 point=(423490.5563783001,4437610.691770126)
+  frame599: STOP obs=2 point=(423490.5563783031,4437610.691770126)
+  frame610: STOP obs=2 point=(423490.55637830077,4437610.691770125)
+  frame620: STOP obs=2 point=(423490.55637829885,4437610.691770126)
+  frame630: STOP obs=2 point=(423490.5563782971,4437610.691770126)
+  frame640: STOP obs=2 point=(423490.5563783011,4437610.691770125)
+  frame650: STOP obs=2 point=(423490.55637830193,4437610.691770126)
+  frame660: STOP obs=2 point=(423490.556378301,4437610.691770126)
+  frame670: STOP obs=2 point=(423490.55637829955,4437610.691770126)
+  frame680: STOP obs=2 point=(423490.5563782993,4437610.691770126)
+  frame690: STOP obs=2 point=(423490.55637830164,4437610.691770126)
+  frame700: STOP obs=2 point=(423490.55637830094,4437610.691770126)
+  frame710: STOP obs=2 point=(423490.5563782983,4437610.691770126)
+  frame720: STOP obs=2 point=(423490.5563783005,4437610.691770126)
+  frame730: STOP obs=2 point=(423490.55637830094,4437610.691770125)
+  frame740: STOP obs=2 point=(423490.5563783022,4437610.691770126)
+  frame750: STOP obs=2 point=(423490.55637830077,4437610.691770125)
+  frame760: STOP obs=2 point=(423490.5563782972,4437610.691770126)
+  frame770: STOP obs=2 point=(423490.55637830123,4437610.691770126)
+  frame780: STOP obs=2 point=(423490.5563783024,4437610.691770126)
+  frame790: STOP obs=2 point=(423490.5563783031,4437610.691770126)
+  frame800: STOP obs=2 point=(423490.55637829605,4437610.691770126)
+  frame810: STOP obs=2 point=(423490.55637830024,4437610.691770126)
+  frame819: STOP obs=2 point=(423490.55637829914,4437610.691770126)
+  frame830: STOP obs=2 point=(423490.556378302,4437610.691770126)
+  frame840: STOP obs=2 point=(423490.55637830065,4437610.691770126)
+  frame849: STOP obs=2 point=(423490.5563783035,4437610.691770126)
+  frame860: STOP obs=2 point=(423490.55637830106,4437610.691770126)
+  frame870: STOP obs=2 point=(423490.5563782988,4437610.691770125)
+  frame880: STOP obs=2 point=(423490.55637829873,4437610.691770126)
+  frame890: STOP obs=2 point=(423490.55637829966,4437610.691770126)
+  frame900: STOP obs=2 point=(423490.5563783028,4437610.691770126)
+  frame910: STOP obs=2 point=(423490.5563783019,4437610.691770126)
+  frame920: STOP obs=2 point=(423490.55637830164,4437610.691770126)
+  frame930: STOP obs=2 point=(423490.5563783006,4437610.691770126)
+  frame940: STOP obs=2 point=(423490.55637830374,4437610.691770126)
+  frame950: STOP obs=2 point=(423490.5563783023,4437610.691770126)
+  frame960: STOP obs=2 point=(423490.55637829885,4437610.691770126)
+  frame970: STOP obs=2 point=(423490.55637830164,4437610.691770126)
+  frame980: STOP obs=2 point=(423490.5563783017,4437610.691770126)
+  frame990: STOP obs=2 point=(423490.5563782999,4437610.691770126)
+  frame1000: STOP obs=2 point=(423490.5563782981,4437610.691770126)
+  frame1010: STOP obs=2 point=(423490.55637830275,4437610.691770126)
+  frame1020: STOP obs=2 point=(423490.5563783021,4437610.691770126)
+  frame1030: STOP obs=2 point=(423490.55637829955,4437610.691770126)
+  frame1039: STOP obs=2 point=(423490.55637829885,4437610.691770126)
+  frame1050: STOP obs=2 point=(423490.5563782987,4437610.691770126)
+  frame1060: STOP obs=2 point=(423490.5563783003,4437610.691770126)
+  frame1070: STOP obs=2 point=(423490.55637830315,4437610.691770126)
+  frame1080: STOP obs=2 point=(423490.5563782994,4437610.691770126)
+  frame1089: STOP obs=2 point=(423490.5563782993,4437610.691770126)
+  frame1099: STOP obs=2 point=(423490.5563782976,4437610.691770126)
+  frame1109: STOP obs=2 point=(423490.5563782955,4437610.691770126)
+  frame1119: STOP obs=2 point=(423490.5563782977,4437610.691770126)
+  frame1129: STOP obs=2 point=(423490.55637830275,4437610.691770125)
+  frame1140: STOP obs=4 point=(423432.4296756643,4437610.778203171)
+  frame1149: STOP obs=2 point=(423490.5563783028,4437610.691770126)
+  frame1159: STOP obs=2 point=(423490.55637830065,4437610.691770126)
+  frame1180: STOP obs=2 point=(423490.5563782982,4437610.691770126)
+  frame1190: STOP obs=2 point=(423490.5563782992,4437610.691770125)
+  frame1200: STOP obs=2 point=(423490.5563783012,4437610.691770126)
+  frame1210: STOP obs=2 point=(423490.5563783028,4437610.691770126)
+  frame1220: STOP obs=2 point=(423490.5563783,4437610.691770126)
+  frame1231: STOP obs=2 point=(423490.5563782999,4437610.691770126)
+  frame1240: STOP obs=2 point=(423490.5563782987,4437610.691770126)
+  frame1250: STOP obs=2 point=(423490.55637829547,4437610.691770126)
+  frame1260: STOP obs=2 point=(423490.55637830135,4437610.691770126)
+  frame1270: STOP obs=2 point=(423490.5563783004,4437610.691770126)
+  frame1280: STOP obs=2 point=(423490.5563783016,4437610.691770125)
+  frame1290: STOP obs=2 point=(423490.5563783032,4437610.691770126)
+  frame1300: STOP obs=2 point=(423490.5563782999,4437610.691770126)
+  frame1309: STOP obs=2 point=(423490.5563783008,4437610.691770126)
+  frame1319: STOP obs=2 point=(423490.5563783029,4437610.691770126)
+  frame1329: STOP obs=2 point=(423490.55637830234,4437610.691770125)
+  frame1339: STOP obs=2 point=(423490.55637829733,4437610.691770125)
+  frame1349: STOP obs=2 point=(423490.55637829774,4437610.691770126)
+  frame1360: STOP obs=2 point=(423490.5563782974,4437610.691770125)
+  frame1369: STOP obs=4 point=(423432.42967567034,4437610.778203171)
+  frame1380: STOP obs=2 point=(423490.55637830065,4437610.691770125)
+  frame1389: STOP obs=2 point=(423490.55637830053,4437610.691770126)
+  frame1399: STOP obs=2 point=(423490.55637830176,4437610.691770126)
+  frame1410: STOP obs=2 point=(423490.55637829576,4437610.691770126)
+  frame1419: STOP obs=2 point=(423490.5563783006,4437610.691770126)
+  frame1430: STOP obs=2 point=(423490.5563782975,4437610.691770125)
+  frame1440: STOP obs=2 point=(423490.5563783017,4437610.691770126)
+  frame1449: STOP obs=2 point=(423490.55637830007,4437610.691770126)
+  frame1459: STOP obs=2 point=(423490.5563783012,4437610.691770126)
+  frame1470: STOP obs=2 point=(423490.5563782962,4437610.691770126)
+  frame1480: STOP obs=2 point=(423490.5563782994,4437610.691770126)
+  frame1489: STOP obs=2 point=(423490.5563782975,4437610.691770126)
+  frame1499: STOP obs=2 point=(423490.55637829687,4437610.691770125)
+  frame1509: STOP obs=2 point=(423490.5563782993,4437610.691770125)
+  frame1519: STOP obs=2 point=(423490.5563783005,4437610.691770126)
+  frame1529: STOP obs=2 point=(423490.5563783008,4437610.691770126)
+  frame1539: STOP obs=2 point=(423490.5563783025,4437610.691770126)
+  frame1549: STOP obs=2 point=(423490.55637830275,4437610.691770126)
+  frame1559: STOP obs=2 point=(423490.55637830036,4437610.691770126)
+  frame1569: STOP obs=2 point=(423490.55637830106,4437610.691770126)
+  frame1579: STOP obs=2 point=(423490.5563783035,4437610.691770126)
+  frame1589: STOP obs=2 point=(423490.5563783004,4437610.691770126)
+  frame1599: STOP obs=2 point=(423490.5563782998,4437610.691770125)
+  frame1609: STOP obs=2 point=(423490.5563782992,4437610.691770126)
+  frame1619: STOP obs=2 point=(423490.55637830205,4437610.691770126)
+  frame1629: STOP obs=2 point=(423490.55637829663,4437610.691770126)
+  frame1640: STOP obs=2 point=(423490.55637829856,4437610.691770126)
+  frame1649: STOP obs=2 point=(423490.5563783009,4437610.691770126)
+  frame1659: STOP obs=2 point=(423490.5563783012,4437610.691770126)
+  frame1669: STOP obs=2 point=(423490.55637830176,4437610.691770126)
+  frame1680: STOP obs=2 point=(423490.5563783008,4437610.691770126)
+  frame1689: STOP obs=2 point=(423490.55637830234,4437610.691770126)
+  frame1700: STOP obs=2 point=(423490.5563782963,4437610.691770125)
+  frame1709: STOP obs=2 point=(423490.5563783007,4437610.691770126)
+  frame1720: STOP obs=2 point=(423490.5563782998,4437610.691770126)
+  frame1731: STOP obs=2 point=(423490.556378302,4437610.691770126)
+  frame1740: STOP obs=2 point=(423490.55637830135,4437610.691770125)
+  frame1751: STOP obs=2 point=(423490.55637830164,4437610.691770126)
+  frame1760: STOP obs=2 point=(423490.55637830205,4437610.691770126)
+  frame1769: STOP obs=2 point=(423490.5563783013,4437610.691770126)
+  frame1779: STOP obs=2 point=(423490.5563783005,4437610.691770125)
+  frame1789: STOP obs=2 point=(423490.55637829995,4437610.691770126)
+  frame1799: STOP obs=2 point=(423490.5563782981,4437610.691770126)
+  frame1810: STOP obs=2 point=(423490.55637830135,4437610.691770126)
+  frame1820: STOP obs=2 point=(423490.5563783,4437610.691770126)
+  frame1829: STOP obs=2 point=(423490.5563782997,4437610.691770126)
+  frame1840: STOP obs=2 point=(423490.55637829984,4437610.691770125)
+  frame1849: STOP obs=2 point=(423490.5563782985,4437610.691770125)
+  frame1859: STOP obs=2 point=(423490.556378297,4437610.691770126)
+  frame1869: STOP obs=2 point=(423490.55637829914,4437610.691770125)
+  frame1879: STOP obs=2 point=(423490.55637830053,4437610.691770125)
+  frame1889: STOP obs=2 point=(423490.5563782965,4437610.691770126)
+  frame1899: STOP obs=2 point=(423490.5563782976,4437610.691770125)
+  frame1909: STOP obs=2 point=(423490.5563783019,4437610.691770125)
+  frame1919: STOP obs=2 point=(423490.5563782971,4437610.691770126)
+  frame1929: STOP obs=2 point=(423490.5563783005,4437610.691770126)
+  frame1939: STOP obs=2 point=(423490.5563783008,4437610.691770126)
+  frame1949: STOP obs=2 point=(423490.55637829873,4437610.691770126)
+  frame1959: STOP obs=2 point=(423490.55637830094,4437610.691770126)
+  frame1970: STOP obs=2 point=(423490.5563783009,4437610.691770126)
+  frame1979: STOP obs=2 point=(423490.55637830164,4437610.691770126)
+  frame1989: STOP obs=2 point=(423490.5563782967,4437610.691770126)
+  frame1999: STOP obs=2 point=(423490.5563782963,4437610.691770125)
+  frame2009: STOP obs=2 point=(423490.5563783021,4437610.691770126)
+  frame2019: STOP obs=2 point=(423490.5563782991,4437610.691770126)
+
+=== 对象级纵向决策统计 ===
+  obs2600_0: {'follow': 172, 'yield': 6} first_frame=0
+  obs5530: {'stop': 3} first_frame=250
+  obsDEST: {'stop': 207} first_frame=0
+  obsREF_END_1_0: {'stop': 89} first_frame=1140
+
+total_perception_frames: 206
+traj_points: 2026 min_v: 2.45 last: (423474.93, 4437610.82, 2.45)
++ xhost -local:root

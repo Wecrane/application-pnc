@@ -1,0 +1,6 @@
+/opt/apollo/neo/src/modules/dreamview_plus/frontend/dist
+dist
+lerna.json
+package.json
+packages
+patches

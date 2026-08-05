@@ -1,0 +1,705 @@
++ [[ ! 1 == 1 ]]
++ execute -- 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/dump_y_precise.py /home/skye/.apollo/resources/records/202608012054_MkzExample_Xh2026Contest.00000.20260801205249.record 8 55 2>&1'
++ [[ -f /home/skye/application-pnc/.env ]]
++ set -a
++ source /home/skye/application-pnc/.env
+++ APOLLO_ENV_NAME=edu
+++ APOLLO_ENV_WORKLOCAL=1
+++ APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
+++ APOLLO_ENV_CONTAINER_TAG=9.0-latest
++ set +a
++ parse_arguments -- 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/dump_y_precise.py /home/skye/.apollo/resources/records/202608012054_MkzExample_Xh2026Contest.00000.20260801205249.record 8 55 2>&1'
++ args=()
++ [[ 2 -gt 0 ]]
++ local opt=--
++ shift
++ case "${opt}" in
++ args+=("$@")
++ break
++ APOLLO_ENV_EXEC_ARGS=('cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/dump_y_precise.py /home/skye/.apollo/resources/records/202608012054_MkzExample_Xh2026Contest.00000.20260801205249.record 8 55 2>&1')
++ export APOLLO_ENV_EXEC_ARGS
++ apollo_env_exists edu
++ local env_name=edu
++ apollo_envhome_exists edu
++ local env_name=edu
++ [[ -d /home/skye/.aem/envs/edu ]]
++ return 0
++ [[ -e /home/skye/.aem/envs/edu/env.config ]]
++ declare backend
+++ source /home/skye/.aem/envs/edu/env.config
++++ export AEM_FLAG_FORCE_RECREATE=0
++++ AEM_FLAG_FORCE_RECREATE=0
++++ export AEM_FLAG_FORCE_RECREATE_VOLUMES=0
++++ AEM_FLAG_FORCE_RECREATE_VOLUMES=0
++++ export AEM_FLAG_SHM_SIZE=4G
++++ AEM_FLAG_SHM_SIZE=4G
++++ export AEM_FLAG_USE_GPU=1
++++ AEM_FLAG_USE_GPU=1
++++ export AEM_FLAG_USE_LOCAL_IMAGE=0
++++ AEM_FLAG_USE_LOCAL_IMAGE=0
++++ export AEM_GEO=
++++ AEM_GEO=
++++ export AEM_HOME=/opt/apollo/aem
++++ AEM_HOME=/opt/apollo/aem
++++ export AEM_INITED=1
++++ AEM_INITED=1
++++ export AEM_SYS_SHARE=/opt/apollo/aem/share/aem
++++ AEM_SYS_SHARE=/opt/apollo/aem/share/aem
++++ export AEM_VERSION=10.0.0-rc1-r4
++++ AEM_VERSION=10.0.0-rc1-r4
++++ export APOLLO_ENVS_ROOT=/home/skye/.aem/envs
++++ APOLLO_ENVS_ROOT=/home/skye/.aem/envs
++++ APOLLO_ENV_ARGS=()
++++ export APOLLO_ENV_ARGS
++++ export APOLLO_ENV_BACKEND=docker
++++ APOLLO_ENV_BACKEND=docker
++++ export APOLLO_ENV_CONTAINER_GID=1000
++++ APOLLO_ENV_CONTAINER_GID=1000
++++ export APOLLO_ENV_CONTAINER_GROUP=skye
++++ APOLLO_ENV_CONTAINER_GROUP=skye
++++ export APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu
++++ APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu
++++ export APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_
++++ APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_
++++ export APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
++++ APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
++++ export APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm
++++ APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm
++++ export APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu
++++ APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu
++++ export APOLLO_ENV_CONTAINER_SHELL=/bin/bash
++++ APOLLO_ENV_CONTAINER_SHELL=/bin/bash
++++ export APOLLO_ENV_CONTAINER_TAG=9.0-latest
++++ APOLLO_ENV_CONTAINER_TAG=9.0-latest
++++ export APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20
++++ APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20
++++ export APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22
++++ APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22
++++ export APOLLO_ENV_CONTAINER_UID=1000
++++ APOLLO_ENV_CONTAINER_UID=1000
++++ export APOLLO_ENV_CONTAINER_USER=skye
++++ APOLLO_ENV_CONTAINER_USER=skye
++++ export APOLLO_ENV_CROSS_PLATFORM=
++++ APOLLO_ENV_CROSS_PLATFORM=
++++ export APOLLO_ENV_NAME=edu
++++ APOLLO_ENV_NAME=edu
++++ export APOLLO_ENV_USE_GPU_HOST=1
++++ APOLLO_ENV_USE_GPU_HOST=1
++++ export APOLLO_ENV_WORKLOCAL=1
++++ APOLLO_ENV_WORKLOCAL=1
++++ export APOLLO_ENV_WORKROOT=/apollo_workspace
++++ APOLLO_ENV_WORKROOT=/apollo_workspace
++++ export APOLLO_ENV_WORKSPACE=/home/skye/application-pnc
++++ APOLLO_ENV_WORKSPACE=/home/skye/application-pnc
+++ echo docker
++ backend=docker
++ [[ docker == \h\o\s\t ]]
++ [[ docker == \d\o\c\k\e\r ]]
++ local container_name=apollo_neo_dev_edu
++ docker_container_exists apollo_neo_dev_edu
++ local container=apollo_neo_dev_edu
+++ docker ps -a '--format={{.Names}}' -f name=apollo_neo_dev_edu
+++ grep '^apollo_neo_dev_edu$'
++ local query=apollo_neo_dev_edu
++ [[ apollo_neo_dev_edu == \a\p\o\l\l\o\_\n\e\o\_\d\e\v\_\e\d\u ]]
++ return 0
++ return 0
++ set -a
++ source /home/skye/.aem/envs/edu/env.config
+++ export AEM_FLAG_FORCE_RECREATE=0
+++ AEM_FLAG_FORCE_RECREATE=0
+++ export AEM_FLAG_FORCE_RECREATE_VOLUMES=0
+++ AEM_FLAG_FORCE_RECREATE_VOLUMES=0
+++ export AEM_FLAG_SHM_SIZE=4G
+++ AEM_FLAG_SHM_SIZE=4G
+++ export AEM_FLAG_USE_GPU=1
+++ AEM_FLAG_USE_GPU=1
+++ export AEM_FLAG_USE_LOCAL_IMAGE=0
+++ AEM_FLAG_USE_LOCAL_IMAGE=0
+++ export AEM_GEO=
+++ AEM_GEO=
+++ export AEM_HOME=/opt/apollo/aem
+++ AEM_HOME=/opt/apollo/aem
+++ export AEM_INITED=1
+++ AEM_INITED=1
+++ export AEM_SYS_SHARE=/opt/apollo/aem/share/aem
+++ AEM_SYS_SHARE=/opt/apollo/aem/share/aem
+++ export AEM_VERSION=10.0.0-rc1-r4
+++ AEM_VERSION=10.0.0-rc1-r4
+++ export APOLLO_ENVS_ROOT=/home/skye/.aem/envs
+++ APOLLO_ENVS_ROOT=/home/skye/.aem/envs
+++ APOLLO_ENV_ARGS=()
+++ export APOLLO_ENV_ARGS
+++ export APOLLO_ENV_BACKEND=docker
+++ APOLLO_ENV_BACKEND=docker
+++ export APOLLO_ENV_CONTAINER_GID=1000
+++ APOLLO_ENV_CONTAINER_GID=1000
+++ export APOLLO_ENV_CONTAINER_GROUP=skye
+++ APOLLO_ENV_CONTAINER_GROUP=skye
+++ export APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu
+++ APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu
+++ export APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_
+++ APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_
+++ export APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
+++ APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
+++ export APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm
+++ APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm
+++ export APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu
+++ APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu
+++ export APOLLO_ENV_CONTAINER_SHELL=/bin/bash
+++ APOLLO_ENV_CONTAINER_SHELL=/bin/bash
+++ export APOLLO_ENV_CONTAINER_TAG=9.0-latest
+++ APOLLO_ENV_CONTAINER_TAG=9.0-latest
+++ export APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20
+++ APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20
+++ export APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22
+++ APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22
+++ export APOLLO_ENV_CONTAINER_UID=1000
+++ APOLLO_ENV_CONTAINER_UID=1000
+++ export APOLLO_ENV_CONTAINER_USER=skye
+++ APOLLO_ENV_CONTAINER_USER=skye
+++ export APOLLO_ENV_CROSS_PLATFORM=
+++ APOLLO_ENV_CROSS_PLATFORM=
+++ export APOLLO_ENV_NAME=edu
+++ APOLLO_ENV_NAME=edu
+++ export APOLLO_ENV_USE_GPU_HOST=1
+++ APOLLO_ENV_USE_GPU_HOST=1
+++ export APOLLO_ENV_WORKLOCAL=1
+++ APOLLO_ENV_WORKLOCAL=1
+++ export APOLLO_ENV_WORKROOT=/apollo_workspace
+++ APOLLO_ENV_WORKROOT=/apollo_workspace
+++ export APOLLO_ENV_WORKSPACE=/home/skye/application-pnc
+++ APOLLO_ENV_WORKSPACE=/home/skye/application-pnc
++ set +a
++ apollo_exec_env 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/dump_y_precise.py /home/skye/.apollo/resources/records/202608012054_MkzExample_Xh2026Contest.00000.20260801205249.record 8 55 2>&1'
++ [[ docker == \d\o\c\k\e\r ]]
++ apollo_exec_container 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/dump_y_precise.py /home/skye/.apollo/resources/records/202608012054_MkzExample_Xh2026Contest.00000.20260801205249.record 8 55 2>&1'
++ local 'cmd=cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/dump_y_precise.py /home/skye/.apollo/resources/records/202608012054_MkzExample_Xh2026Contest.00000.20260801205249.record 8 55 2>&1'
++ shift
++ [[ -z cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/dump_y_precise.py /home/skye/.apollo/resources/records/202608012054_MkzExample_Xh2026Contest.00000.20260801205249.record 8 55 2>&1 ]]
++ envs=()
++ local envs
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ envs+=('-e' "HISTFILE=${APOLLO_ENV_WORKROOT}/.cache/.bash_history")
++ envs+=('-e' 'HISTSIZE=200000')
++ envs+=('-e' 'HISTFILESIZE=200000')
++ envs+=('-e' 'HISTCONTROL=ignorespace:erasedups')
++ envs+=('-e' "DOCKER_USER=${APOLLO_ENV_CONTAINER_USER}")
++ xhost +local:root
++ docker exec -u skye -e APOLLO_ENV_ARGS= -e APOLLO_ENV_BACKEND=docker -e APOLLO_ENV_CONTAINER_GID=1000 -e APOLLO_ENV_CONTAINER_GROUP=skye -e APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu -e APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_ -e APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu -e APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm -e APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu -e APOLLO_ENV_CONTAINER_SHELL=/bin/bash -e APOLLO_ENV_CONTAINER_TAG=9.0-latest -e APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20 -e APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22 -e APOLLO_ENV_CONTAINER_UID=1000 -e APOLLO_ENV_CONTAINER_USER=skye -e APOLLO_ENV_CROSS_PLATFORM= -e 'APOLLO_ENV_EXEC_ARGS=cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/dump_y_precise.py /home/skye/.apollo/resources/records/202608012054_MkzExample_Xh2026Contest.00000.20260801205249.record 8 55 2>&1' -e APOLLO_ENV_NAME=edu -e APOLLO_ENV_USE_GPU_HOST=1 -e APOLLO_ENV_WORKLOCAL=1 -e APOLLO_ENV_WORKROOT=/apollo_workspace -e APOLLO_ENV_WORKSPACE=/home/skye/application-pnc -e HISTFILE=/apollo_workspace/.cache/.bash_history -e HISTSIZE=200000 -e HISTFILESIZE=200000 -e HISTCONTROL=ignorespace:erasedups -e DOCKER_USER=skye -w /apollo_workspace -it apollo_neo_dev_edu /bin/bash -c 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/dump_y_precise.py /home/skye/.apollo/resources/records/202608012054_MkzExample_Xh2026Contest.00000.20260801205249.record 8 55 2>&1 '
+WARNING: Logging before InitGoogleLogging() is written to STDERR
+I0801 21:01:38.064105 815982 py_record.cc:574] []init _cyber_record_wrapper
+t=8.03 veh_y=4437610.792 traj_yoff=+0.095,+0.095,+0.095 dec=stop
+t=8.11 veh_y=4437610.792 traj_yoff=+0.094,+0.094,+0.094 dec=stop
+t=8.21 veh_y=4437610.791 traj_yoff=+0.094,+0.094,+0.093 dec=stop
+t=8.31 veh_y=4437610.791 traj_yoff=+0.093,+0.093,+0.093 dec=stop
+t=8.41 veh_y=4437610.790 traj_yoff=+0.093,+0.092,+0.092 dec=stop
+t=8.51 veh_y=4437610.790 traj_yoff=+0.092,+0.092,+0.092 dec=stop
+t=8.61 veh_y=4437610.789 traj_yoff=+0.091,+0.091,+0.091 dec=stop
+t=8.71 veh_y=4437610.789 traj_yoff=+0.091,+0.091,+0.091 dec=stop
+t=8.81 veh_y=4437610.788 traj_yoff=+0.090,+0.090,+0.090 dec=stop
+t=8.91 veh_y=4437610.788 traj_yoff=+0.090,+0.090,+0.090 dec=stop
+t=9.02 veh_y=4437610.787 traj_yoff=+0.089,+0.089,+0.089 dec=stop
+t=9.11 veh_y=4437610.787 traj_yoff=+0.089,+0.089,+0.088 dec=stop
+t=9.21 veh_y=4437610.786 traj_yoff=+0.088,+0.088,+0.088 dec=stop
+t=9.31 veh_y=4437610.786 traj_yoff=+0.088,+0.088,+0.088 dec=stop
+t=9.41 veh_y=4437610.785 traj_yoff=+0.087,+0.087,+0.087 dec=stop
+t=9.51 veh_y=4437610.785 traj_yoff=+0.087,+0.086,+0.086 dec=stop
+t=9.61 veh_y=4437610.784 traj_yoff=+0.086,+0.086,+0.086 dec=stop
+t=9.71 veh_y=4437610.784 traj_yoff=+0.086,+0.085,+0.085 dec=stop
+t=9.81 veh_y=4437610.783 traj_yoff=+0.085,+0.085,+0.085 dec=stop
+t=9.91 veh_y=4437610.783 traj_yoff=+0.085,+0.085,+0.084 dec=stop
+t=10.01 veh_y=4437610.782 traj_yoff=+0.084,+0.084,+0.084 dec=stop
+t=10.11 veh_y=4437610.782 traj_yoff=+0.084,+0.084,+0.083 dec=stop
+t=10.21 veh_y=4437610.781 traj_yoff=+0.083,+0.083,+0.083 dec=stop
+t=10.31 veh_y=4437610.781 traj_yoff=+0.083,+0.083,+0.083 dec=stop
+t=10.41 veh_y=4437610.780 traj_yoff=+0.082,+0.082,+0.082 dec=stop
+t=10.51 veh_y=4437610.780 traj_yoff=+0.082,+0.082,+0.081 dec=stop
+t=10.61 veh_y=4437610.779 traj_yoff=+0.081,+0.081,+0.081 dec=stop
+t=10.71 veh_y=4437610.779 traj_yoff=+0.081,+0.081,+0.081 dec=stop
+t=10.81 veh_y=4437610.779 traj_yoff=+0.080,+0.080,+0.080 dec=stop
+t=10.91 veh_y=4437610.778 traj_yoff=+0.080,+0.080,+0.080 dec=stop
+t=11.02 veh_y=4437610.778 traj_yoff=+0.079,+0.079,+0.079 dec=stop
+t=11.11 veh_y=4437610.777 traj_yoff=+0.079,+0.079,+0.079 dec=stop
+t=11.21 veh_y=4437610.777 traj_yoff=+0.079,+0.078,+0.078 dec=stop
+t=11.31 veh_y=4437610.776 traj_yoff=+0.078,+0.078,+0.078 dec=stop
+t=11.41 veh_y=4437610.776 traj_yoff=+0.078,+0.078,+0.077 dec=stop
+t=11.51 veh_y=4437610.776 traj_yoff=+0.077,+0.077,+0.077 dec=stop
+t=11.61 veh_y=4437610.775 traj_yoff=+0.077,+0.077,+0.077 dec=stop
+t=11.71 veh_y=4437610.775 traj_yoff=+0.076,+0.076,+0.076 dec=stop
+t=11.81 veh_y=4437610.775 traj_yoff=+0.076,+0.076,+0.076 dec=stop
+t=11.91 veh_y=4437610.774 traj_yoff=+0.076,+0.076,+0.076 dec=stop
+t=12.01 veh_y=4437610.774 traj_yoff=+0.075,+0.075,+0.075 dec=stop
+t=12.11 veh_y=4437610.774 traj_yoff=+0.075,+0.075,+0.075 dec=stop
+t=12.21 veh_y=4437610.773 traj_yoff=+0.075,+0.074,+0.074 dec=stop
+t=12.31 veh_y=4437610.773 traj_yoff=+0.074,+0.074,+0.074 dec=-
+t=12.41 veh_y=4437610.773 traj_yoff=+0.074,+0.074,+0.074 dec=-
+t=12.51 veh_y=4437610.772 traj_yoff=+0.073,+0.073,+0.073 dec=-
+t=12.61 veh_y=4437610.772 traj_yoff=+0.073,+0.073,+0.073 dec=stop
+t=12.71 veh_y=4437610.771 traj_yoff=+0.073,+0.073,+0.073 dec=stop
+t=12.81 veh_y=4437610.771 traj_yoff=+0.073,+0.073,+0.072 dec=stop
+t=12.91 veh_y=4437610.771 traj_yoff=+0.072,+0.072,+0.072 dec=stop
+t=13.01 veh_y=4437610.771 traj_yoff=+0.072,+0.072,+0.072 dec=stop
+t=13.11 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=13.20 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=13.31 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=13.41 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=13.51 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=13.61 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=13.71 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=13.80 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=13.91 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=14.01 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=14.11 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=14.21 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=14.31 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=14.41 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=14.51 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=14.61 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=14.70 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=14.80 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=14.90 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=15.01 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=15.11 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=15.21 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=15.31 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=15.41 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=15.51 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=15.61 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=15.71 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=15.81 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=15.91 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=16.01 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=16.11 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=16.21 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=16.31 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=16.41 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=16.51 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=16.61 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=16.71 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=16.81 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=16.91 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=17.01 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=17.11 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=17.21 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=17.31 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=17.40 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=17.51 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=17.61 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=17.71 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=17.80 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=17.91 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=18.01 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=18.11 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=18.20 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=18.31 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=18.41 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=18.51 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=18.61 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=18.70 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=18.81 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=18.91 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=19.01 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=19.11 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=19.21 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=19.31 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=19.41 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=19.51 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=19.61 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=19.71 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=19.81 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=19.91 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=20.01 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=20.11 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=20.21 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=20.31 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=20.41 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=20.51 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=20.61 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=20.71 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=20.81 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=20.91 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=21.01 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=21.11 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=21.21 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=21.31 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=21.41 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=21.51 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=21.60 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=21.71 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=21.81 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=21.91 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=22.01 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=22.11 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=22.21 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=22.31 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=22.41 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=22.51 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=22.61 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=22.71 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=22.81 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=22.91 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=23.01 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=23.11 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=23.21 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=23.31 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=23.41 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=23.51 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=23.61 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=23.71 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=23.81 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=23.91 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=24.01 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=24.11 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=24.20 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=24.31 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=24.41 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=24.51 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=24.61 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=24.70 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=24.81 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=24.91 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=25.00 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=25.11 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=25.20 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=25.31 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=25.41 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=25.51 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=25.60 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=25.71 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=25.81 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=25.91 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=26.01 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=26.11 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=26.21 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=26.31 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=26.41 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=26.51 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=26.61 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=26.70 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=26.81 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=26.91 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=27.01 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=27.11 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=27.21 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=27.31 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=27.41 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=27.50 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=27.61 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=27.71 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=27.81 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=27.91 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=28.01 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=28.11 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=28.21 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=28.31 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=28.41 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=28.51 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=28.61 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=28.70 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=28.81 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=28.91 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=29.01 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=29.11 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=29.21 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=29.30 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=29.41 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=29.51 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=29.61 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=29.71 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=29.81 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=29.91 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=30.01 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=30.11 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=30.21 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=30.31 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=30.41 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=30.51 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=30.61 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=30.71 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=30.81 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=30.91 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=31.00 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=31.11 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=31.21 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=31.31 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=31.41 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=31.51 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=31.61 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=31.70 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=31.81 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=31.90 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=32.01 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=32.11 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=32.21 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=32.31 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=32.41 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=32.51 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=32.61 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=32.70 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=32.81 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=32.91 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=33.01 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=33.11 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=33.21 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=33.31 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=33.41 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=33.51 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=33.61 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=33.71 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=33.81 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=33.91 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=34.01 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=34.11 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=34.21 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=34.31 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=34.41 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=34.51 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=34.61 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=34.70 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=34.80 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=34.91 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=35.01 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=35.11 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=35.21 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=35.31 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=35.41 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=35.51 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=35.61 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=35.71 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=35.81 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=35.91 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=36.00 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=36.11 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=36.21 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=36.31 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=36.41 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=36.51 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=36.61 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=36.70 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=36.81 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=36.91 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=37.01 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=37.11 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=37.20 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=37.31 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=37.40 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=37.51 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=37.61 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=37.71 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=37.81 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=37.91 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=38.01 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=38.11 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=38.28 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=38.35 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=38.45 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=38.55 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=38.65 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=38.75 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=38.85 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=38.96 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=39.05 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=39.15 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=39.26 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=39.35 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=39.45 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=39.55 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=39.64 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=39.75 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=39.84 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=39.94 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=40.04 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=40.14 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=40.24 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=40.34 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=40.44 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=40.54 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=40.64 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=40.75 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=40.84 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=40.94 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=41.04 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=41.15 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=41.26 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=41.34 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=41.44 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=41.54 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=41.64 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=41.74 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=41.84 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=41.94 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=42.04 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=42.14 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=42.24 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=42.34 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=42.44 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=42.54 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=42.64 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=42.74 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=42.85 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=42.94 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=43.05 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=43.15 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=43.25 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=43.35 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=43.44 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=43.54 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=43.65 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=43.75 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=43.85 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=43.95 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=44.05 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=44.15 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=44.26 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=44.36 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=44.46 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=44.55 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=44.66 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=44.76 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=44.87 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=44.96 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=45.06 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=45.16 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=45.26 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=45.36 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=45.46 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=45.56 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=45.66 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=45.76 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=45.85 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=45.96 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=46.05 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=46.17 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=46.27 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=46.36 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=46.45 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=46.56 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=46.68 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=46.77 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=46.85 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=46.96 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=47.07 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=47.16 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=47.26 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=47.36 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=47.46 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=47.56 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=47.67 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=47.75 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=47.86 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=47.96 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=48.06 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=48.16 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=48.26 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=48.37 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=48.46 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=48.55 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=48.66 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=48.74 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=48.83 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=48.94 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=49.03 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=49.13 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=49.24 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=49.33 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=49.44 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=49.53 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=49.63 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=49.73 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=49.81 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=49.91 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=50.02 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=50.11 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=50.21 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=50.31 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=50.41 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=50.51 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=50.61 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=50.71 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=50.81 veh_y=4437610.771 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=50.91 veh_y=4437610.770 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=51.02 veh_y=4437610.770 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=51.11 veh_y=4437610.770 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=51.21 veh_y=4437610.770 traj_yoff=+0.071,+0.071,+0.071 dec=stop
+t=51.31 veh_y=4437610.770 traj_yoff=+0.070,+0.070,+0.070 dec=stop
+t=51.41 veh_y=4437610.770 traj_yoff=+0.070,+0.070,+0.070 dec=stop
+t=51.51 veh_y=4437610.769 traj_yoff=+0.070,+0.070,+0.070 dec=stop
+t=51.61 veh_y=4437610.769 traj_yoff=+0.070,+0.070,+0.070 dec=stop
+t=51.71 veh_y=4437610.769 traj_yoff=+0.070,+0.070,+0.070 dec=stop
+t=51.81 veh_y=4437610.769 traj_yoff=+0.070,+0.070,+0.070 dec=stop
+t=51.91 veh_y=4437610.769 traj_yoff=+0.069,+0.069,+0.069 dec=stop
+t=52.01 veh_y=4437610.768 traj_yoff=+0.069,+0.069,+0.069 dec=stop
+t=52.11 veh_y=4437610.768 traj_yoff=+0.069,+0.069,+0.069 dec=stop
+t=52.21 veh_y=4437610.768 traj_yoff=+0.069,+0.069,+0.069 dec=stop
+t=52.31 veh_y=4437610.767 traj_yoff=+0.068,+0.068,+0.068 dec=stop
+t=52.41 veh_y=4437610.767 traj_yoff=+0.068,+0.068,+0.068 dec=stop
+t=52.51 veh_y=4437610.767 traj_yoff=+0.068,+0.068,+0.068 dec=stop
+t=52.62 veh_y=4437610.766 traj_yoff=+0.068,+0.068,+0.068 dec=stop
+t=52.71 veh_y=4437610.766 traj_yoff=+0.067,+0.067,+0.067 dec=stop
+t=52.81 veh_y=4437610.766 traj_yoff=+0.067,+0.067,+0.067 dec=stop
+t=52.91 veh_y=4437610.765 traj_yoff=+0.067,+0.067,+0.067 dec=stop
+t=53.01 veh_y=4437610.765 traj_yoff=+0.067,+0.066,+0.066 dec=stop
+t=53.11 veh_y=4437610.765 traj_yoff=+0.066,+0.066,+0.066 dec=stop
+t=53.21 veh_y=4437610.764 traj_yoff=+0.066,+0.066,+0.066 dec=stop
+t=53.31 veh_y=4437610.764 traj_yoff=+0.065,+0.065,+0.065 dec=stop
+t=53.41 veh_y=4437610.763 traj_yoff=+0.065,+0.065,+0.065 dec=stop
+t=53.51 veh_y=4437610.763 traj_yoff=+0.065,+0.065,+0.064 dec=stop
+t=53.61 veh_y=4437610.762 traj_yoff=+0.064,+0.064,+0.064 dec=stop
+t=53.71 veh_y=4437610.762 traj_yoff=+0.064,+0.064,+0.063 dec=stop
+t=53.81 veh_y=4437610.761 traj_yoff=+0.063,+0.063,+0.063 dec=stop
+t=53.91 veh_y=4437610.761 traj_yoff=+0.063,+0.063,+0.063 dec=stop
+t=54.01 veh_y=4437610.760 traj_yoff=+0.062,+0.062,+0.062 dec=stop
+t=54.11 veh_y=4437610.760 traj_yoff=+0.062,+0.062,+0.062 dec=stop
+t=54.21 veh_y=4437610.759 traj_yoff=+0.061,+0.061,+0.061 dec=stop
+t=54.31 veh_y=4437610.759 traj_yoff=+0.061,+0.061,+0.061 dec=stop
+t=54.41 veh_y=4437610.758 traj_yoff=+0.060,+0.060,+0.060 dec=yield
+t=54.51 veh_y=4437610.758 traj_yoff=+0.060,+0.060,+0.060 dec=-
+t=54.61 veh_y=4437610.758 traj_yoff=+0.059,+0.059,+0.059 dec=-
+t=54.71 veh_y=4437610.757 traj_yoff=+0.059,+0.059,+0.059 dec=-
+t=54.81 veh_y=4437610.757 traj_yoff=+0.058,+0.058,+0.058 dec=-
+t=54.91 veh_y=4437610.756 traj_yoff=+0.058,+0.058,+0.058 dec=-
++ xhost -local:root

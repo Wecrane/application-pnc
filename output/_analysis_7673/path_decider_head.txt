@@ -1,0 +1,10 @@
+I0801 22:07:49.273993 921844 class_loader_utility.h:79] registerclass:apollo::planning::PathDecider,Task,/opt/apollo/neo/lib/modules/planning/tasks/path_decider/libpath_decider.so
+I0801 22:07:49.274063 921844 file.h:275] load conf file: /apollo/modules/planning/tasks/path_decider/conf/default_conf.pb.txt
+E0801 22:07:49.274128 921844 file.h:271] conf file [modules/planning/scenarios/lane_follow/conf/lane_follow_stage/path_decider.pb.txt] is not found in APOLLO_CONF_PATH
+W0801 22:07:49.274144 921844 config_util.h:87] can not load user defined config file[modules/planning/scenarios/lane_follow/conf/lane_follow_stage/path_decider.pb.txt], use default config instead
+I0801 22:07:49.826967 921849 file.h:275] load conf file: /apollo/modules/planning/tasks/path_decider/conf/default_conf.pb.txt
+E0801 22:07:49.826988 921849 file.h:271] conf file [modules/planning/scenarios/lane_follow/conf/lane_follow_stage/path_decider.pb.txt] is not found in APOLLO_CONF_PATH
+W0801 22:07:49.826999 921849 config_util.h:87] can not load user defined config file[modules/planning/scenarios/lane_follow/conf/lane_follow_stage/path_decider.pb.txt], use default config instead
+I0801 22:08:08.364125 921848 path_decider.cc:205] skip_overlap_stop_check
+I0801 22:08:08.470151 921845 path_decider.cc:205] skip_overlap_stop_check
+I0801 22:08:08.561689 921839 path_decider.cc:205] skip_overlap_stop_check

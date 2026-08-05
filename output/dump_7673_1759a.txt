@@ -1,0 +1,1495 @@
++ [[ ! 1 == 1 ]]
++ execute -- 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/dump_frame_obstacles.py /home/skye/.apollo/resources/records/202608011759_MkzExample_Xh2026Contest.00000.20260801175807.record 42.0 56.0 2>&1'
++ [[ -f /home/skye/application-pnc/.env ]]
++ set -a
++ source /home/skye/application-pnc/.env
+++ APOLLO_ENV_NAME=edu
+++ APOLLO_ENV_WORKLOCAL=1
+++ APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
+++ APOLLO_ENV_CONTAINER_TAG=9.0-latest
++ set +a
++ parse_arguments -- 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/dump_frame_obstacles.py /home/skye/.apollo/resources/records/202608011759_MkzExample_Xh2026Contest.00000.20260801175807.record 42.0 56.0 2>&1'
++ args=()
++ [[ 2 -gt 0 ]]
++ local opt=--
++ shift
++ case "${opt}" in
++ args+=("$@")
++ break
++ APOLLO_ENV_EXEC_ARGS=('cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/dump_frame_obstacles.py /home/skye/.apollo/resources/records/202608011759_MkzExample_Xh2026Contest.00000.20260801175807.record 42.0 56.0 2>&1')
++ export APOLLO_ENV_EXEC_ARGS
++ apollo_env_exists edu
++ local env_name=edu
++ apollo_envhome_exists edu
++ local env_name=edu
++ [[ -d /home/skye/.aem/envs/edu ]]
++ return 0
++ [[ -e /home/skye/.aem/envs/edu/env.config ]]
++ declare backend
+++ source /home/skye/.aem/envs/edu/env.config
++++ export AEM_FLAG_FORCE_RECREATE=0
++++ AEM_FLAG_FORCE_RECREATE=0
++++ export AEM_FLAG_FORCE_RECREATE_VOLUMES=0
++++ AEM_FLAG_FORCE_RECREATE_VOLUMES=0
++++ export AEM_FLAG_SHM_SIZE=4G
++++ AEM_FLAG_SHM_SIZE=4G
++++ export AEM_FLAG_USE_GPU=1
++++ AEM_FLAG_USE_GPU=1
++++ export AEM_FLAG_USE_LOCAL_IMAGE=0
++++ AEM_FLAG_USE_LOCAL_IMAGE=0
++++ export AEM_GEO=
++++ AEM_GEO=
++++ export AEM_HOME=/opt/apollo/aem
++++ AEM_HOME=/opt/apollo/aem
++++ export AEM_INITED=1
++++ AEM_INITED=1
++++ export AEM_SYS_SHARE=/opt/apollo/aem/share/aem
++++ AEM_SYS_SHARE=/opt/apollo/aem/share/aem
++++ export AEM_VERSION=10.0.0-rc1-r4
++++ AEM_VERSION=10.0.0-rc1-r4
++++ export APOLLO_ENVS_ROOT=/home/skye/.aem/envs
++++ APOLLO_ENVS_ROOT=/home/skye/.aem/envs
++++ APOLLO_ENV_ARGS=()
++++ export APOLLO_ENV_ARGS
++++ export APOLLO_ENV_BACKEND=docker
++++ APOLLO_ENV_BACKEND=docker
++++ export APOLLO_ENV_CONTAINER_GID=1000
++++ APOLLO_ENV_CONTAINER_GID=1000
++++ export APOLLO_ENV_CONTAINER_GROUP=skye
++++ APOLLO_ENV_CONTAINER_GROUP=skye
++++ export APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu
++++ APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu
++++ export APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_
++++ APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_
++++ export APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
++++ APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
++++ export APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm
++++ APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm
++++ export APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu
++++ APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu
++++ export APOLLO_ENV_CONTAINER_SHELL=/bin/bash
++++ APOLLO_ENV_CONTAINER_SHELL=/bin/bash
++++ export APOLLO_ENV_CONTAINER_TAG=9.0-latest
++++ APOLLO_ENV_CONTAINER_TAG=9.0-latest
++++ export APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20
++++ APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20
++++ export APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22
++++ APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22
++++ export APOLLO_ENV_CONTAINER_UID=1000
++++ APOLLO_ENV_CONTAINER_UID=1000
++++ export APOLLO_ENV_CONTAINER_USER=skye
++++ APOLLO_ENV_CONTAINER_USER=skye
++++ export APOLLO_ENV_CROSS_PLATFORM=
++++ APOLLO_ENV_CROSS_PLATFORM=
++++ export APOLLO_ENV_NAME=edu
++++ APOLLO_ENV_NAME=edu
++++ export APOLLO_ENV_USE_GPU_HOST=1
++++ APOLLO_ENV_USE_GPU_HOST=1
++++ export APOLLO_ENV_WORKLOCAL=1
++++ APOLLO_ENV_WORKLOCAL=1
++++ export APOLLO_ENV_WORKROOT=/apollo_workspace
++++ APOLLO_ENV_WORKROOT=/apollo_workspace
++++ export APOLLO_ENV_WORKSPACE=/home/skye/application-pnc
++++ APOLLO_ENV_WORKSPACE=/home/skye/application-pnc
+++ echo docker
++ backend=docker
++ [[ docker == \h\o\s\t ]]
++ [[ docker == \d\o\c\k\e\r ]]
++ local container_name=apollo_neo_dev_edu
++ docker_container_exists apollo_neo_dev_edu
++ local container=apollo_neo_dev_edu
+++ docker ps -a '--format={{.Names}}' -f name=apollo_neo_dev_edu
+++ grep '^apollo_neo_dev_edu$'
++ local query=apollo_neo_dev_edu
++ [[ apollo_neo_dev_edu == \a\p\o\l\l\o\_\n\e\o\_\d\e\v\_\e\d\u ]]
++ return 0
++ return 0
++ set -a
++ source /home/skye/.aem/envs/edu/env.config
+++ export AEM_FLAG_FORCE_RECREATE=0
+++ AEM_FLAG_FORCE_RECREATE=0
+++ export AEM_FLAG_FORCE_RECREATE_VOLUMES=0
+++ AEM_FLAG_FORCE_RECREATE_VOLUMES=0
+++ export AEM_FLAG_SHM_SIZE=4G
+++ AEM_FLAG_SHM_SIZE=4G
+++ export AEM_FLAG_USE_GPU=1
+++ AEM_FLAG_USE_GPU=1
+++ export AEM_FLAG_USE_LOCAL_IMAGE=0
+++ AEM_FLAG_USE_LOCAL_IMAGE=0
+++ export AEM_GEO=
+++ AEM_GEO=
+++ export AEM_HOME=/opt/apollo/aem
+++ AEM_HOME=/opt/apollo/aem
+++ export AEM_INITED=1
+++ AEM_INITED=1
+++ export AEM_SYS_SHARE=/opt/apollo/aem/share/aem
+++ AEM_SYS_SHARE=/opt/apollo/aem/share/aem
+++ export AEM_VERSION=10.0.0-rc1-r4
+++ AEM_VERSION=10.0.0-rc1-r4
+++ export APOLLO_ENVS_ROOT=/home/skye/.aem/envs
+++ APOLLO_ENVS_ROOT=/home/skye/.aem/envs
+++ APOLLO_ENV_ARGS=()
+++ export APOLLO_ENV_ARGS
+++ export APOLLO_ENV_BACKEND=docker
+++ APOLLO_ENV_BACKEND=docker
+++ export APOLLO_ENV_CONTAINER_GID=1000
+++ APOLLO_ENV_CONTAINER_GID=1000
+++ export APOLLO_ENV_CONTAINER_GROUP=skye
+++ APOLLO_ENV_CONTAINER_GROUP=skye
+++ export APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu
+++ APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu
+++ export APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_
+++ APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_
+++ export APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
+++ APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
+++ export APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm
+++ APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm
+++ export APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu
+++ APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu
+++ export APOLLO_ENV_CONTAINER_SHELL=/bin/bash
+++ APOLLO_ENV_CONTAINER_SHELL=/bin/bash
+++ export APOLLO_ENV_CONTAINER_TAG=9.0-latest
+++ APOLLO_ENV_CONTAINER_TAG=9.0-latest
+++ export APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20
+++ APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20
+++ export APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22
+++ APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22
+++ export APOLLO_ENV_CONTAINER_UID=1000
+++ APOLLO_ENV_CONTAINER_UID=1000
+++ export APOLLO_ENV_CONTAINER_USER=skye
+++ APOLLO_ENV_CONTAINER_USER=skye
+++ export APOLLO_ENV_CROSS_PLATFORM=
+++ APOLLO_ENV_CROSS_PLATFORM=
+++ export APOLLO_ENV_NAME=edu
+++ APOLLO_ENV_NAME=edu
+++ export APOLLO_ENV_USE_GPU_HOST=1
+++ APOLLO_ENV_USE_GPU_HOST=1
+++ export APOLLO_ENV_WORKLOCAL=1
+++ APOLLO_ENV_WORKLOCAL=1
+++ export APOLLO_ENV_WORKROOT=/apollo_workspace
+++ APOLLO_ENV_WORKROOT=/apollo_workspace
+++ export APOLLO_ENV_WORKSPACE=/home/skye/application-pnc
+++ APOLLO_ENV_WORKSPACE=/home/skye/application-pnc
++ set +a
++ apollo_exec_env 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/dump_frame_obstacles.py /home/skye/.apollo/resources/records/202608011759_MkzExample_Xh2026Contest.00000.20260801175807.record 42.0 56.0 2>&1'
++ [[ docker == \d\o\c\k\e\r ]]
++ apollo_exec_container 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/dump_frame_obstacles.py /home/skye/.apollo/resources/records/202608011759_MkzExample_Xh2026Contest.00000.20260801175807.record 42.0 56.0 2>&1'
++ local 'cmd=cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/dump_frame_obstacles.py /home/skye/.apollo/resources/records/202608011759_MkzExample_Xh2026Contest.00000.20260801175807.record 42.0 56.0 2>&1'
++ shift
++ [[ -z cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/dump_frame_obstacles.py /home/skye/.apollo/resources/records/202608011759_MkzExample_Xh2026Contest.00000.20260801175807.record 42.0 56.0 2>&1 ]]
++ envs=()
++ local envs
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ envs+=('-e' "HISTFILE=${APOLLO_ENV_WORKROOT}/.cache/.bash_history")
++ envs+=('-e' 'HISTSIZE=200000')
++ envs+=('-e' 'HISTFILESIZE=200000')
++ envs+=('-e' 'HISTCONTROL=ignorespace:erasedups')
++ envs+=('-e' "DOCKER_USER=${APOLLO_ENV_CONTAINER_USER}")
++ xhost +local:root
++ docker exec -u skye -e APOLLO_ENV_ARGS= -e APOLLO_ENV_BACKEND=docker -e APOLLO_ENV_CONTAINER_GID=1000 -e APOLLO_ENV_CONTAINER_GROUP=skye -e APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu -e APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_ -e APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu -e APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm -e APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu -e APOLLO_ENV_CONTAINER_SHELL=/bin/bash -e APOLLO_ENV_CONTAINER_TAG=9.0-latest -e APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20 -e APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22 -e APOLLO_ENV_CONTAINER_UID=1000 -e APOLLO_ENV_CONTAINER_USER=skye -e APOLLO_ENV_CROSS_PLATFORM= -e 'APOLLO_ENV_EXEC_ARGS=cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/dump_frame_obstacles.py /home/skye/.apollo/resources/records/202608011759_MkzExample_Xh2026Contest.00000.20260801175807.record 42.0 56.0 2>&1' -e APOLLO_ENV_NAME=edu -e APOLLO_ENV_USE_GPU_HOST=1 -e APOLLO_ENV_WORKLOCAL=1 -e APOLLO_ENV_WORKROOT=/apollo_workspace -e APOLLO_ENV_WORKSPACE=/home/skye/application-pnc -e HISTFILE=/apollo_workspace/.cache/.bash_history -e HISTSIZE=200000 -e HISTFILESIZE=200000 -e HISTCONTROL=ignorespace:erasedups -e DOCKER_USER=skye -w /apollo_workspace -it apollo_neo_dev_edu /bin/bash -c 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/dump_frame_obstacles.py /home/skye/.apollo/resources/records/202608011759_MkzExample_Xh2026Contest.00000.20260801175807.record 42.0 56.0 2>&1 '
+WARNING: Logging before InitGoogleLogging() is written to STDERR
+I0801 18:14:13.893632 520747 py_record.cc:574] []init _cyber_record_wrapper
+--- perception frame 421 ---
+  obs7673 type=PED pos=(423446.67,4437610.95) vel=(0.00,-0.00) speed=0.00
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 421] 7673:stop, DEST:stop, PATH_END_regular/leftforward:stop
+--- perception frame 422 ---
+  obs7673 type=PED pos=(423446.67,4437610.95) vel=(0.00,-0.00) speed=0.00
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 422] 7673:stop, DEST:stop, PATH_END_regular/leftforward:stop
+--- perception frame 423 ---
+  obs7673 type=PED pos=(423446.67,4437610.95) vel=(0.00,-0.00) speed=0.00
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 423] 7673:stop, DEST:stop, PATH_END_regular/leftforward:stop
+--- perception frame 424 ---
+  obs7673 type=PED pos=(423446.67,4437610.95) vel=(0.00,-0.00) speed=0.00
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 424] 7673:stop, DEST:stop, PATH_END_regular/leftforward:stop
+--- perception frame 425 ---
+  obs7673 type=PED pos=(423446.67,4437610.95) vel=(0.00,-0.00) speed=0.00
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 425] 7673:stop, DEST:stop, PATH_END_regular/leftforward:stop
+--- perception frame 426 ---
+  obs7673 type=PED pos=(423446.67,4437610.95) vel=(0.00,-0.00) speed=0.00
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 426] 7673:stop, DEST:stop, PATH_END_regular/leftforward:stop
+--- perception frame 427 ---
+  obs7673 type=PED pos=(423446.67,4437610.95) vel=(0.02,-0.01) speed=0.02
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 427] 7673:stop, DEST:stop, PATH_END_regular/leftforward:stop
+--- perception frame 428 ---
+  obs7673 type=PED pos=(423446.67,4437610.95) vel=(0.04,-0.02) speed=0.05
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 428] 7673:stop, DEST:stop, PATH_END_regular/leftforward:stop
+--- perception frame 429 ---
+  obs7673 type=PED pos=(423446.68,4437610.95) vel=(0.06,-0.02) speed=0.07
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 429] 7673:stop, DEST:stop, PATH_END_regular/leftforward:stop
+--- perception frame 430 ---
+  obs7673 type=PED pos=(423446.68,4437610.94) vel=(0.08,-0.03) speed=0.09
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 430] 7673:stop, DEST:stop, PATH_END_regular/leftforward:stop
+--- perception frame 431 ---
+  obs7673 type=PED pos=(423446.69,4437610.94) vel=(0.10,-0.04) speed=0.11
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 431] 7673:stop, DEST:stop, PATH_END_regular/leftforward:stop
+--- perception frame 432 ---
+  obs7673 type=PED pos=(423446.70,4437610.93) vel=(0.13,-0.05) speed=0.14
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 432] 7673:stop, DEST:stop, PATH_END_regular/leftforward:stop
+--- perception frame 433 ---
+  obs7673 type=PED pos=(423446.72,4437610.93) vel=(0.15,-0.06) speed=0.16
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 433] 7673:stop, DEST:stop, PATH_END_regular/leftforward:stop
+--- perception frame 434 ---
+  obs7673 type=PED pos=(423446.73,4437610.92) vel=(0.17,-0.06) speed=0.18
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 434] 7673:stop, DEST:stop, PATH_END_regular/leftforward:stop
+--- perception frame 435 ---
+  obs7673 type=PED pos=(423446.75,4437610.92) vel=(0.19,-0.07) speed=0.20
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 435] 7673_0:follow, DEST:stop
+--- perception frame 436 ---
+  obs7673 type=PED pos=(423446.77,4437610.91) vel=(0.21,-0.08) speed=0.22
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 436] 7673_0:follow, DEST:stop
+--- perception frame 437 ---
+  obs7673 type=PED pos=(423446.79,4437610.90) vel=(0.23,-0.09) speed=0.25
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 437] 7673_0:follow, DEST:stop
+--- perception frame 438 ---
+  obs7673 type=PED pos=(423446.82,4437610.89) vel=(0.25,-0.10) speed=0.27
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 438] 7673_0:follow, DEST:stop
+--- perception frame 439 ---
+  obs7673 type=PED pos=(423446.84,4437610.88) vel=(0.27,-0.11) speed=0.29
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 439] 7673_0:follow, DEST:stop
+--- perception frame 440 ---
+  obs7673 type=PED pos=(423446.87,4437610.87) vel=(0.29,-0.11) speed=0.32
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 440] 7673_0:follow, DEST:stop
+--- perception frame 441 ---
+  obs7673 type=PED pos=(423446.90,4437610.86) vel=(0.31,-0.12) speed=0.34
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 441] 7673_0:follow, DEST:stop
+--- perception frame 442 ---
+  obs7673 type=PED pos=(423446.93,4437610.85) vel=(0.34,-0.13) speed=0.36
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 442] 7673_0:follow, DEST:stop
+--- perception frame 443 ---
+  obs7673 type=PED pos=(423446.97,4437610.83) vel=(0.36,-0.14) speed=0.38
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 443] 7673_0:follow, DEST:stop
+--- perception frame 444 ---
+  obs7673 type=PED pos=(423447.01,4437610.82) vel=(0.38,-0.15) speed=0.41
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 444] 7673_0:follow, DEST:stop
+--- perception frame 445 ---
+  obs7673 type=PED pos=(423447.05,4437610.80) vel=(0.40,-0.15) speed=0.43
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 445] 7673_0:follow, DEST:stop
+--- perception frame 446 ---
+  obs7673 type=PED pos=(423447.09,4437610.79) vel=(0.42,-0.16) speed=0.45
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 446] 7673_0:follow, DEST:stop
+--- perception frame 447 ---
+  obs7673 type=PED pos=(423447.13,4437610.77) vel=(0.44,-0.17) speed=0.47
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 447] 7673_0:follow, DEST:stop
+--- perception frame 448 ---
+  obs7673 type=PED pos=(423447.17,4437610.75) vel=(0.46,-0.18) speed=0.50
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 448] 7673_0:follow, DEST:stop
+--- perception frame 449 ---
+  obs7673 type=PED pos=(423447.22,4437610.74) vel=(0.48,-0.19) speed=0.52
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 449] 7673_0:follow, DEST:stop
+--- perception frame 450 ---
+  obs7673 type=PED pos=(423447.27,4437610.72) vel=(0.50,-0.19) speed=0.54
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 450] 7673_0:follow, DEST:stop
+--- perception frame 451 ---
+  obs7673 type=PED pos=(423447.32,4437610.70) vel=(0.52,-0.20) speed=0.56
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 451] 7673_0:follow, DEST:stop
+--- perception frame 452 ---
+  obs7673 type=PED pos=(423447.38,4437610.68) vel=(0.55,-0.21) speed=0.59
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 452] 7673_0:follow, DEST:stop
+--- perception frame 453 ---
+  obs7673 type=PED pos=(423447.43,4437610.65) vel=(0.57,-0.22) speed=0.61
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 453] 7673_0:follow, DEST:stop
+--- perception frame 454 ---
+  obs7673 type=PED pos=(423447.49,4437610.63) vel=(0.59,-0.23) speed=0.63
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 454] 7673_0:follow, DEST:stop
+--- perception frame 455 ---
+  obs7673 type=PED pos=(423447.55,4437610.61) vel=(0.61,-0.23) speed=0.65
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 455] 7673_0:follow, DEST:stop
+--- perception frame 456 ---
+  obs7673 type=PED pos=(423447.61,4437610.59) vel=(0.63,-0.24) speed=0.67
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 456] 7673_0:follow, DEST:stop
+--- perception frame 457 ---
+  obs7673 type=PED pos=(423447.68,4437610.56) vel=(0.65,-0.25) speed=0.70
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 457] 7673_0:follow, DEST:stop
+--- perception frame 458 ---
+  obs7673 type=PED pos=(423447.74,4437610.54) vel=(0.67,-0.26) speed=0.72
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 458] 7673_0:follow, DEST:stop
+--- perception frame 459 ---
+  obs7673 type=PED pos=(423447.81,4437610.51) vel=(0.69,-0.27) speed=0.74
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 459] 7673_0:follow, DEST:stop
+--- perception frame 460 ---
+  obs7673 type=PED pos=(423447.88,4437610.48) vel=(0.71,-0.27) speed=0.76
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 460] 7673_0:follow, DEST:stop
+--- perception frame 461 ---
+  obs7673 type=PED pos=(423447.95,4437610.45) vel=(0.73,-0.28) speed=0.79
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 461] 7673_0:follow, DEST:stop
+--- perception frame 462 ---
+  obs7673 type=PED pos=(423448.03,4437610.43) vel=(0.76,-0.29) speed=0.81
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 462] 7673_0:follow, DEST:stop
+--- perception frame 463 ---
+  obs7673 type=PED pos=(423448.10,4437610.40) vel=(0.78,-0.30) speed=0.83
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 463] 7673_0:follow, DEST:stop
+--- perception frame 464 ---
+  obs7673 type=PED pos=(423448.18,4437610.37) vel=(0.80,-0.31) speed=0.85
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 464] 7673_0:follow, DEST:stop
+--- perception frame 465 ---
+  obs7673 type=PED pos=(423448.26,4437610.34) vel=(0.82,-0.32) speed=0.88
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 465] 7673_0:follow, DEST:stop
+--- perception frame 466 ---
+  obs7673 type=PED pos=(423448.35,4437610.30) vel=(0.84,-0.32) speed=0.90
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 466] 7673_0:follow, DEST:stop
+--- perception frame 467 ---
+  obs7673 type=PED pos=(423448.43,4437610.27) vel=(0.86,-0.33) speed=0.92
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 467] 7673_0:follow, DEST:stop
+--- perception frame 468 ---
+  obs7673 type=PED pos=(423448.52,4437610.24) vel=(0.88,-0.34) speed=0.94
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 468] 7673_0:follow, DEST:stop
+--- perception frame 469 ---
+  obs7673 type=PED pos=(423448.61,4437610.20) vel=(0.90,-0.35) speed=0.97
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 469] 7673_0:follow, DEST:stop
+--- perception frame 470 ---
+  obs7673 type=PED pos=(423448.70,4437610.17) vel=(0.92,-0.36) speed=0.99
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 470] 7673_0:follow, DEST:stop
+--- perception frame 471 ---
+  obs7673 type=PED pos=(423448.79,4437610.13) vel=(0.94,-0.36) speed=1.01
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 471] 7673_0:follow, DEST:stop
+--- perception frame 472 ---
+  obs7673 type=PED pos=(423448.89,4437610.09) vel=(0.97,-0.37) speed=1.03
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 472] 7673_0:follow, DEST:stop
+--- perception frame 473 ---
+  obs7673 type=PED pos=(423448.99,4437610.06) vel=(0.99,-0.38) speed=1.06
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 473] 7673_0:follow, DEST:stop
+--- perception frame 474 ---
+  obs7673 type=PED pos=(423449.09,4437610.02) vel=(1.01,-0.39) speed=1.08
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 474] 7673_0:follow, DEST:stop
+--- perception frame 475 ---
+  obs7673 type=PED pos=(423449.19,4437609.98) vel=(1.03,-0.40) speed=1.10
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 475] 7673_0:follow, DEST:stop
+--- perception frame 476 ---
+  obs7673 type=PED pos=(423449.29,4437609.94) vel=(1.05,-0.40) speed=1.12
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 476] 7673_0:follow, DEST:stop
+--- perception frame 477 ---
+  obs7673 type=PED pos=(423449.40,4437609.90) vel=(1.07,-0.41) speed=1.15
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 477] 7673_0:follow, DEST:stop
+--- perception frame 478 ---
+  obs7673 type=PED pos=(423449.51,4437609.86) vel=(1.09,-0.42) speed=1.17
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 478] 7673_0:follow, DEST:stop
+--- perception frame 479 ---
+  obs7673 type=PED pos=(423449.62,4437609.81) vel=(1.11,-0.43) speed=1.19
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 479] 7673_0:follow, DEST:stop
+--- perception frame 480 ---
+  obs7673 type=PED pos=(423449.73,4437609.77) vel=(1.13,-0.44) speed=1.21
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 480] 7673_0:follow, DEST:stop
+--- perception frame 481 ---
+  obs7673 type=PED pos=(423449.84,4437609.73) vel=(1.15,-0.44) speed=1.24
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 481] 7673_0:follow, DEST:stop
+--- perception frame 482 ---
+  obs7673 type=PED pos=(423449.96,4437609.68) vel=(1.18,-0.45) speed=1.26
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 482] 7673_0:follow, DEST:stop
+--- perception frame 483 ---
+  obs7673 type=PED pos=(423450.08,4437609.64) vel=(1.20,-0.46) speed=1.28
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 483] 7673_0:follow, DEST:stop
+--- perception frame 484 ---
+  obs7673 type=PED pos=(423450.20,4437609.59) vel=(1.22,-0.47) speed=1.30
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 484] 7673_0:follow, DEST:stop
+--- perception frame 485 ---
+  obs7673 type=PED pos=(423450.32,4437609.54) vel=(1.24,-0.48) speed=1.33
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 485] 7673_0:follow, DEST:stop
+--- perception frame 486 ---
+  obs7673 type=PED pos=(423450.45,4437609.50) vel=(1.26,-0.48) speed=1.35
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 486] 7673_0:follow, DEST:stop
+--- perception frame 487 ---
+  obs7673 type=PED pos=(423450.57,4437609.45) vel=(1.28,-0.49) speed=1.37
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 487] 7673_0:follow, DEST:stop
+--- perception frame 488 ---
+  obs7673 type=PED pos=(423450.70,4437609.40) vel=(1.30,-0.50) speed=1.39
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 488] 7673_0:follow, DEST:stop
+--- perception frame 489 ---
+  obs7673 type=PED pos=(423450.83,4437609.35) vel=(1.32,-0.51) speed=1.42
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 489] 7673_0:follow, DEST:stop
+--- perception frame 490 ---
+  obs7673 type=PED pos=(423450.97,4437609.30) vel=(1.34,-0.52) speed=1.44
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 490] 7673_0:follow, DEST:stop
+--- perception frame 491 ---
+  obs7673 type=PED pos=(423451.10,4437609.24) vel=(1.36,-0.53) speed=1.46
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 491] 7673_0:follow, DEST:stop
+--- perception frame 492 ---
+  obs7673 type=PED pos=(423451.24,4437609.19) vel=(1.39,-0.53) speed=1.48
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 492] 7673_0:follow, DEST:stop
+--- perception frame 493 ---
+  obs7673 type=PED pos=(423451.38,4437609.14) vel=(1.41,-0.54) speed=1.51
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 493] 7673_0:follow, DEST:stop
+--- perception frame 494 ---
+  obs7673 type=PED pos=(423451.52,4437609.08) vel=(1.43,-0.55) speed=1.53
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 494] 7673_0:follow, DEST:stop
+--- perception frame 495 ---
+  obs7673 type=PED pos=(423451.67,4437609.03) vel=(1.45,-0.56) speed=1.55
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 495] 7673_0:follow, DEST:stop
+--- perception frame 496 ---
+  obs7673 type=PED pos=(423451.81,4437608.97) vel=(1.47,-0.57) speed=1.57
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 496] 7673_0:follow, DEST:stop
+--- perception frame 497 ---
+  obs7673 type=PED pos=(423451.96,4437608.91) vel=(1.49,-0.57) speed=1.60
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 497] 7673_0:follow, DEST:stop
+--- perception frame 498 ---
+  obs7673 type=PED pos=(423452.11,4437608.86) vel=(1.51,-0.58) speed=1.62
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 498] 7673_0:follow, DEST:stop
+--- perception frame 499 ---
+  obs7673 type=PED pos=(423452.26,4437608.80) vel=(1.53,-0.59) speed=1.64
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 499] 7673_0:follow, DEST:stop
+--- perception frame 500 ---
+  obs7673 type=PED pos=(423452.42,4437608.74) vel=(1.55,-0.60) speed=1.66
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 500] 7673_0:follow, DEST:stop
+--- perception frame 501 ---
+  obs7673 type=PED pos=(423452.57,4437608.68) vel=(1.57,-0.61) speed=1.69
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 501] 7673_0:follow, DEST:stop
+--- perception frame 502 ---
+  obs7673 type=PED pos=(423452.73,4437608.62) vel=(1.60,-0.61) speed=1.71
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 502] 7673_0:follow, DEST:stop
+--- perception frame 503 ---
+  obs7673 type=PED pos=(423452.89,4437608.55) vel=(1.62,-0.62) speed=1.73
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 503] 7673_0:follow, DEST:stop
+--- perception frame 504 ---
+  obs7673 type=PED pos=(423453.05,4437608.49) vel=(1.64,-0.63) speed=1.75
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 504] 7673_0:follow, DEST:stop
+--- perception frame 505 ---
+  obs7673 type=PED pos=(423453.22,4437608.43) vel=(1.66,-0.64) speed=1.78
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 505] 7673_0:follow, DEST:stop
+--- perception frame 506 ---
+  obs7673 type=PED pos=(423453.39,4437608.36) vel=(1.68,-0.65) speed=1.80
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 506] 7673_0:follow, DEST:stop
+--- perception frame 507 ---
+  obs7673 type=PED pos=(423453.56,4437608.30) vel=(1.70,-0.65) speed=1.82
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 507] 7673_0:follow, DEST:stop
+--- perception frame 508 ---
+  obs7673 type=PED pos=(423453.73,4437608.23) vel=(1.72,-0.66) speed=1.84
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 508] 7673_0:follow, DEST:stop
+--- perception frame 509 ---
+  obs7673 type=PED pos=(423453.90,4437608.17) vel=(1.74,-0.67) speed=1.87
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 509] 7673_0:follow, DEST:stop
+--- perception frame 510 ---
+  obs7673 type=PED pos=(423454.07,4437608.10) vel=(1.76,-0.68) speed=1.89
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 510] 7673_0:follow, DEST:stop
+--- perception frame 511 ---
+  obs7673 type=PED pos=(423454.25,4437608.03) vel=(1.78,-0.69) speed=1.91
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 511] 7673_0:follow, DEST:stop
+--- perception frame 512 ---
+  obs7673 type=PED pos=(423454.43,4437607.96) vel=(1.81,-0.69) speed=1.93
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 512] 7673_0:follow, DEST:stop
+--- perception frame 513 ---
+  obs7673 type=PED pos=(423454.61,4437607.89) vel=(1.83,-0.70) speed=1.96
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 513] 7673_0:follow, DEST:stop
+--- perception frame 514 ---
+  obs7673 type=PED pos=(423454.80,4437607.82) vel=(1.85,-0.71) speed=1.98
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 514] 7673_0:follow, DEST:stop
+--- perception frame 515 ---
+  obs7673 type=PED pos=(423454.98,4437607.75) vel=(1.87,-0.72) speed=2.00
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 515] 7673_0:follow, DEST:stop
+--- perception frame 516 ---
+  obs7673 type=PED pos=(423455.17,4437607.68) vel=(1.89,-0.73) speed=2.02
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 516] 7673_0:follow, DEST:stop
+--- perception frame 517 ---
+  obs7673 type=PED pos=(423455.36,4437607.60) vel=(1.91,-0.74) speed=2.05
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 517] 7673_0:follow, DEST:stop
+--- perception frame 518 ---
+  obs7673 type=PED pos=(423455.55,4437607.53) vel=(1.93,-0.74) speed=2.07
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 518] 7673_0:follow, DEST:stop
+--- perception frame 519 ---
+  obs7673 type=PED pos=(423455.75,4437607.46) vel=(1.95,-0.75) speed=2.09
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 519] 7673_0:follow, DEST:stop
+--- perception frame 520 ---
+  obs7673 type=PED pos=(423455.94,4437607.38) vel=(1.97,-0.76) speed=2.11
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 520] 7673_0:follow, DEST:stop
+--- perception frame 521 ---
+  obs7673 type=PED pos=(423456.14,4437607.30) vel=(1.99,-0.77) speed=2.14
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 521] 7673_0:follow, DEST:stop
+--- perception frame 522 ---
+  obs7673 type=PED pos=(423456.34,4437607.23) vel=(2.02,-0.78) speed=2.16
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 522] 7673_0:yield, DEST:stop
+--- perception frame 523 ---
+  obs7673 type=PED pos=(423456.55,4437607.15) vel=(2.04,-0.78) speed=2.18
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 523] 7673_0:yield, DEST:stop
+--- perception frame 524 ---
+  obs7673 type=PED pos=(423456.75,4437607.07) vel=(2.06,-0.79) speed=2.20
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 524] 7673_0:yield, DEST:stop
+--- perception frame 525 ---
+  obs7673 type=PED pos=(423456.96,4437606.99) vel=(2.08,-0.80) speed=2.23
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 525] 7673_0:yield, DEST:stop
+--- perception frame 526 ---
+  obs7673 type=PED pos=(423457.17,4437606.91) vel=(2.10,-0.81) speed=2.25
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 526] 7673_0:yield, DEST:stop
+--- perception frame 527 ---
+  obs7673 type=PED pos=(423457.38,4437606.83) vel=(2.12,-0.82) speed=2.27
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 527] 7673_0:yield, DEST:stop
+--- perception frame 528 ---
+  obs7673 type=PED pos=(423457.59,4437606.75) vel=(2.14,-0.82) speed=2.29
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 528] 7673_0:yield, DEST:stop
+--- perception frame 529 ---
+  obs7673 type=PED pos=(423457.81,4437606.66) vel=(2.16,-0.83) speed=2.32
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 529] 7673_0:yield, DEST:stop
+--- perception frame 530 ---
+  obs7673 type=PED pos=(423458.02,4437606.58) vel=(2.18,-0.84) speed=2.34
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 530] DEST:stop
+--- perception frame 531 ---
+  obs7673 type=PED pos=(423458.24,4437606.50) vel=(2.20,-0.85) speed=2.36
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 531] DEST:stop
+--- perception frame 532 ---
+  obs7673 type=PED pos=(423458.46,4437606.41) vel=(2.23,-0.86) speed=2.38
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 532] DEST:stop
+--- perception frame 533 ---
+  obs7673 type=PED pos=(423458.69,4437606.33) vel=(2.25,-0.86) speed=2.41
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 533] DEST:stop
+--- perception frame 534 ---
+  obs7673 type=PED pos=(423458.91,4437606.24) vel=(2.27,-0.87) speed=2.43
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 534] DEST:stop
+--- perception frame 535 ---
+  obs7673 type=PED pos=(423459.14,4437606.15) vel=(2.29,-0.88) speed=2.45
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 535] DEST:stop, REF_END_1_0:stop
+--- perception frame 536 ---
+  obs7673 type=PED pos=(423459.37,4437606.06) vel=(2.31,-0.89) speed=2.47
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 536] DEST:stop, REF_END_1_0:stop
+--- perception frame 537 ---
+  obs7673 type=PED pos=(423459.60,4437605.97) vel=(2.33,-0.90) speed=2.50
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 537] DEST:stop, REF_END_1_0:stop
+--- perception frame 538 ---
+  obs7673 type=PED pos=(423459.84,4437605.88) vel=(2.35,-0.90) speed=2.52
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 538] DEST:stop, REF_END_1_0:stop
+--- perception frame 539 ---
+  obs7673 type=PED pos=(423460.07,4437605.79) vel=(2.37,-0.91) speed=2.54
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 539] DEST:stop, REF_END_1_0:stop
+--- perception frame 540 ---
+  obs7673 type=PED pos=(423460.31,4437605.70) vel=(2.39,-0.92) speed=2.56
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 540] DEST:stop, REF_END_1_0:stop
+--- perception frame 541 ---
+  obs7673 type=PED pos=(423460.55,4437605.61) vel=(2.41,-0.93) speed=2.59
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 541] DEST:stop, REF_END_1_0:stop
+--- perception frame 542 ---
+  obs7673 type=PED pos=(423460.79,4437605.51) vel=(2.44,-0.94) speed=2.61
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 542] DEST:stop, REF_END_1_0:stop
+--- perception frame 543 ---
+  obs7673 type=PED pos=(423461.04,4437605.42) vel=(2.46,-0.95) speed=2.63
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 543] DEST:stop, REF_END_1_0:stop
+--- perception frame 544 ---
+  obs7673 type=PED pos=(423461.29,4437605.33) vel=(2.48,-0.95) speed=2.65
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 544] DEST:stop, REF_END_1_0:stop
+--- perception frame 545 ---
+  obs7673 type=PED pos=(423461.54,4437605.23) vel=(2.50,-0.96) speed=2.68
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 545] DEST:stop, REF_END_1_0:stop
+--- perception frame 546 ---
+  obs7673 type=PED pos=(423461.79,4437605.13) vel=(2.52,-0.97) speed=2.70
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 546] DEST:stop, REF_END_1_0:stop
+--- perception frame 547 ---
+  obs7673 type=PED pos=(423462.04,4437605.04) vel=(2.54,-0.98) speed=2.72
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 547] DEST:stop, REF_END_1_0:stop
+--- perception frame 548 ---
+  obs7673 type=PED pos=(423462.29,4437604.94) vel=(2.56,-0.99) speed=2.74
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 548] DEST:stop, REF_END_1_0:stop
+--- perception frame 549 ---
+  obs7673 type=PED pos=(423462.55,4437604.84) vel=(2.58,-0.99) speed=2.77
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 549] DEST:stop, REF_END_1_0:stop
+--- perception frame 550 ---
+  obs7673 type=PED pos=(423462.81,4437604.74) vel=(2.60,-1.00) speed=2.79
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 550] DEST:stop, REF_END_1_0:stop
+--- perception frame 551 ---
+  obs7673 type=PED pos=(423463.09,4437604.63) vel=(2.80,-1.08) speed=3.00
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 551] DEST:stop, REF_END_1_0:stop
+--- perception frame 552 ---
+  obs7673 type=PED pos=(423463.37,4437604.52) vel=(2.80,-1.08) speed=3.00
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 552] DEST:stop, REF_END_1_0:stop
+--- perception frame 553 ---
+  obs7673 type=PED pos=(423463.65,4437604.42) vel=(2.80,-1.08) speed=3.00
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 553] DEST:stop, REF_END_1_0:stop
+--- perception frame 554 ---
+  obs7673 type=PED pos=(423463.93,4437604.31) vel=(2.80,-1.08) speed=3.00
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 554] DEST:stop, REF_END_1_0:stop
+--- perception frame 555 ---
+  obs7673 type=PED pos=(423464.21,4437604.20) vel=(2.80,-1.08) speed=3.00
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 555] DEST:stop, REF_END_1_0:stop
+--- perception frame 556 ---
+  obs7673 type=PED pos=(423464.49,4437604.09) vel=(2.80,-1.08) speed=3.00
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 556] DEST:stop, REF_END_1_0:stop
+--- perception frame 557 ---
+  obs7673 type=PED pos=(423464.77,4437603.99) vel=(2.80,-1.08) speed=3.00
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 557] DEST:stop, REF_END_1_0:stop
+--- perception frame 558 ---
+  obs7673 type=PED pos=(423465.05,4437603.88) vel=(2.80,-1.08) speed=3.00
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 558] DEST:stop, REF_END_1_0:stop
+--- perception frame 559 ---
+  obs7673 type=PED pos=(423465.33,4437603.77) vel=(2.80,-1.08) speed=3.00
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 559] DEST:stop, REF_END_1_0:stop
+--- perception frame 560 ---
+  obs7673 type=PED pos=(423465.61,4437603.66) vel=(2.80,-1.08) speed=3.00
+  obs6503 type=UNK_UNMOV pos=(423362.17,4437613.03) vel=(0.00,0.00) speed=0.00
+  obs6324 type=UNK_UNMOV pos=(423329.67,4437613.14) vel=(0.00,-0.00) speed=0.00
+  obs5530 type=UNK_UNMOV pos=(423438.43,4437612.88) vel=(0.00,-0.00) speed=0.00
+  obs4857 type=UNK_UNMOV pos=(423298.30,4437613.23) vel=(0.00,-0.00) speed=0.00
+  obs4717 type=UNK_UNMOV pos=(423416.12,4437613.35) vel=(0.00,-0.00) speed=0.00
+  obs3098 type=UNK_UNMOV pos=(423395.25,4437613.01) vel=(0.00,0.00) speed=0.00
+  [plan frame 560] DEST:stop, REF_END_1_0:stop
++ xhost -local:root

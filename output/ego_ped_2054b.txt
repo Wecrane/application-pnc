@@ -1,0 +1,365 @@
++ [[ ! 1 == 1 ]]
++ execute -- 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/dump_ego_ped_full.py /home/skye/.apollo/resources/records/202608012054_MkzExample_Xh2026Contest.00001.20260801205350.record 7673 2>&1'
++ [[ -f /home/skye/application-pnc/.env ]]
++ set -a
++ source /home/skye/application-pnc/.env
+++ APOLLO_ENV_NAME=edu
+++ APOLLO_ENV_WORKLOCAL=1
+++ APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
+++ APOLLO_ENV_CONTAINER_TAG=9.0-latest
++ set +a
++ parse_arguments -- 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/dump_ego_ped_full.py /home/skye/.apollo/resources/records/202608012054_MkzExample_Xh2026Contest.00001.20260801205350.record 7673 2>&1'
++ args=()
++ [[ 2 -gt 0 ]]
++ local opt=--
++ shift
++ case "${opt}" in
++ args+=("$@")
++ break
++ APOLLO_ENV_EXEC_ARGS=('cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/dump_ego_ped_full.py /home/skye/.apollo/resources/records/202608012054_MkzExample_Xh2026Contest.00001.20260801205350.record 7673 2>&1')
++ export APOLLO_ENV_EXEC_ARGS
++ apollo_env_exists edu
++ local env_name=edu
++ apollo_envhome_exists edu
++ local env_name=edu
++ [[ -d /home/skye/.aem/envs/edu ]]
++ return 0
++ [[ -e /home/skye/.aem/envs/edu/env.config ]]
++ declare backend
+++ source /home/skye/.aem/envs/edu/env.config
++++ export AEM_FLAG_FORCE_RECREATE=0
++++ AEM_FLAG_FORCE_RECREATE=0
++++ export AEM_FLAG_FORCE_RECREATE_VOLUMES=0
++++ AEM_FLAG_FORCE_RECREATE_VOLUMES=0
++++ export AEM_FLAG_SHM_SIZE=4G
++++ AEM_FLAG_SHM_SIZE=4G
++++ export AEM_FLAG_USE_GPU=1
++++ AEM_FLAG_USE_GPU=1
++++ export AEM_FLAG_USE_LOCAL_IMAGE=0
++++ AEM_FLAG_USE_LOCAL_IMAGE=0
++++ export AEM_GEO=
++++ AEM_GEO=
++++ export AEM_HOME=/opt/apollo/aem
++++ AEM_HOME=/opt/apollo/aem
++++ export AEM_INITED=1
++++ AEM_INITED=1
++++ export AEM_SYS_SHARE=/opt/apollo/aem/share/aem
++++ AEM_SYS_SHARE=/opt/apollo/aem/share/aem
++++ export AEM_VERSION=10.0.0-rc1-r4
++++ AEM_VERSION=10.0.0-rc1-r4
++++ export APOLLO_ENVS_ROOT=/home/skye/.aem/envs
++++ APOLLO_ENVS_ROOT=/home/skye/.aem/envs
++++ APOLLO_ENV_ARGS=()
++++ export APOLLO_ENV_ARGS
++++ export APOLLO_ENV_BACKEND=docker
++++ APOLLO_ENV_BACKEND=docker
++++ export APOLLO_ENV_CONTAINER_GID=1000
++++ APOLLO_ENV_CONTAINER_GID=1000
++++ export APOLLO_ENV_CONTAINER_GROUP=skye
++++ APOLLO_ENV_CONTAINER_GROUP=skye
++++ export APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu
++++ APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu
++++ export APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_
++++ APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_
++++ export APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
++++ APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
++++ export APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm
++++ APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm
++++ export APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu
++++ APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu
++++ export APOLLO_ENV_CONTAINER_SHELL=/bin/bash
++++ APOLLO_ENV_CONTAINER_SHELL=/bin/bash
++++ export APOLLO_ENV_CONTAINER_TAG=9.0-latest
++++ APOLLO_ENV_CONTAINER_TAG=9.0-latest
++++ export APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20
++++ APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20
++++ export APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22
++++ APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22
++++ export APOLLO_ENV_CONTAINER_UID=1000
++++ APOLLO_ENV_CONTAINER_UID=1000
++++ export APOLLO_ENV_CONTAINER_USER=skye
++++ APOLLO_ENV_CONTAINER_USER=skye
++++ export APOLLO_ENV_CROSS_PLATFORM=
++++ APOLLO_ENV_CROSS_PLATFORM=
++++ export APOLLO_ENV_NAME=edu
++++ APOLLO_ENV_NAME=edu
++++ export APOLLO_ENV_USE_GPU_HOST=1
++++ APOLLO_ENV_USE_GPU_HOST=1
++++ export APOLLO_ENV_WORKLOCAL=1
++++ APOLLO_ENV_WORKLOCAL=1
++++ export APOLLO_ENV_WORKROOT=/apollo_workspace
++++ APOLLO_ENV_WORKROOT=/apollo_workspace
++++ export APOLLO_ENV_WORKSPACE=/home/skye/application-pnc
++++ APOLLO_ENV_WORKSPACE=/home/skye/application-pnc
+++ echo docker
++ backend=docker
++ [[ docker == \h\o\s\t ]]
++ [[ docker == \d\o\c\k\e\r ]]
++ local container_name=apollo_neo_dev_edu
++ docker_container_exists apollo_neo_dev_edu
++ local container=apollo_neo_dev_edu
+++ docker ps -a '--format={{.Names}}' -f name=apollo_neo_dev_edu
+++ grep '^apollo_neo_dev_edu$'
++ local query=apollo_neo_dev_edu
++ [[ apollo_neo_dev_edu == \a\p\o\l\l\o\_\n\e\o\_\d\e\v\_\e\d\u ]]
++ return 0
++ return 0
++ set -a
++ source /home/skye/.aem/envs/edu/env.config
+++ export AEM_FLAG_FORCE_RECREATE=0
+++ AEM_FLAG_FORCE_RECREATE=0
+++ export AEM_FLAG_FORCE_RECREATE_VOLUMES=0
+++ AEM_FLAG_FORCE_RECREATE_VOLUMES=0
+++ export AEM_FLAG_SHM_SIZE=4G
+++ AEM_FLAG_SHM_SIZE=4G
+++ export AEM_FLAG_USE_GPU=1
+++ AEM_FLAG_USE_GPU=1
+++ export AEM_FLAG_USE_LOCAL_IMAGE=0
+++ AEM_FLAG_USE_LOCAL_IMAGE=0
+++ export AEM_GEO=
+++ AEM_GEO=
+++ export AEM_HOME=/opt/apollo/aem
+++ AEM_HOME=/opt/apollo/aem
+++ export AEM_INITED=1
+++ AEM_INITED=1
+++ export AEM_SYS_SHARE=/opt/apollo/aem/share/aem
+++ AEM_SYS_SHARE=/opt/apollo/aem/share/aem
+++ export AEM_VERSION=10.0.0-rc1-r4
+++ AEM_VERSION=10.0.0-rc1-r4
+++ export APOLLO_ENVS_ROOT=/home/skye/.aem/envs
+++ APOLLO_ENVS_ROOT=/home/skye/.aem/envs
+++ APOLLO_ENV_ARGS=()
+++ export APOLLO_ENV_ARGS
+++ export APOLLO_ENV_BACKEND=docker
+++ APOLLO_ENV_BACKEND=docker
+++ export APOLLO_ENV_CONTAINER_GID=1000
+++ APOLLO_ENV_CONTAINER_GID=1000
+++ export APOLLO_ENV_CONTAINER_GROUP=skye
+++ APOLLO_ENV_CONTAINER_GROUP=skye
+++ export APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu
+++ APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu
+++ export APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_
+++ APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_
+++ export APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
+++ APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
+++ export APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm
+++ APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm
+++ export APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu
+++ APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu
+++ export APOLLO_ENV_CONTAINER_SHELL=/bin/bash
+++ APOLLO_ENV_CONTAINER_SHELL=/bin/bash
+++ export APOLLO_ENV_CONTAINER_TAG=9.0-latest
+++ APOLLO_ENV_CONTAINER_TAG=9.0-latest
+++ export APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20
+++ APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20
+++ export APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22
+++ APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22
+++ export APOLLO_ENV_CONTAINER_UID=1000
+++ APOLLO_ENV_CONTAINER_UID=1000
+++ export APOLLO_ENV_CONTAINER_USER=skye
+++ APOLLO_ENV_CONTAINER_USER=skye
+++ export APOLLO_ENV_CROSS_PLATFORM=
+++ APOLLO_ENV_CROSS_PLATFORM=
+++ export APOLLO_ENV_NAME=edu
+++ APOLLO_ENV_NAME=edu
+++ export APOLLO_ENV_USE_GPU_HOST=1
+++ APOLLO_ENV_USE_GPU_HOST=1
+++ export APOLLO_ENV_WORKLOCAL=1
+++ APOLLO_ENV_WORKLOCAL=1
+++ export APOLLO_ENV_WORKROOT=/apollo_workspace
+++ APOLLO_ENV_WORKROOT=/apollo_workspace
+++ export APOLLO_ENV_WORKSPACE=/home/skye/application-pnc
+++ APOLLO_ENV_WORKSPACE=/home/skye/application-pnc
++ set +a
++ apollo_exec_env 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/dump_ego_ped_full.py /home/skye/.apollo/resources/records/202608012054_MkzExample_Xh2026Contest.00001.20260801205350.record 7673 2>&1'
++ [[ docker == \d\o\c\k\e\r ]]
++ apollo_exec_container 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/dump_ego_ped_full.py /home/skye/.apollo/resources/records/202608012054_MkzExample_Xh2026Contest.00001.20260801205350.record 7673 2>&1'
++ local 'cmd=cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/dump_ego_ped_full.py /home/skye/.apollo/resources/records/202608012054_MkzExample_Xh2026Contest.00001.20260801205350.record 7673 2>&1'
++ shift
++ [[ -z cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/dump_ego_ped_full.py /home/skye/.apollo/resources/records/202608012054_MkzExample_Xh2026Contest.00001.20260801205350.record 7673 2>&1 ]]
++ envs=()
++ local envs
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ envs+=('-e' "HISTFILE=${APOLLO_ENV_WORKROOT}/.cache/.bash_history")
++ envs+=('-e' 'HISTSIZE=200000')
++ envs+=('-e' 'HISTFILESIZE=200000')
++ envs+=('-e' 'HISTCONTROL=ignorespace:erasedups')
++ envs+=('-e' "DOCKER_USER=${APOLLO_ENV_CONTAINER_USER}")
++ xhost +local:root
++ docker exec -u skye -e APOLLO_ENV_ARGS= -e APOLLO_ENV_BACKEND=docker -e APOLLO_ENV_CONTAINER_GID=1000 -e APOLLO_ENV_CONTAINER_GROUP=skye -e APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu -e APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_ -e APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu -e APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm -e APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu -e APOLLO_ENV_CONTAINER_SHELL=/bin/bash -e APOLLO_ENV_CONTAINER_TAG=9.0-latest -e APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20 -e APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22 -e APOLLO_ENV_CONTAINER_UID=1000 -e APOLLO_ENV_CONTAINER_USER=skye -e APOLLO_ENV_CROSS_PLATFORM= -e 'APOLLO_ENV_EXEC_ARGS=cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/dump_ego_ped_full.py /home/skye/.apollo/resources/records/202608012054_MkzExample_Xh2026Contest.00001.20260801205350.record 7673 2>&1' -e APOLLO_ENV_NAME=edu -e APOLLO_ENV_USE_GPU_HOST=1 -e APOLLO_ENV_WORKLOCAL=1 -e APOLLO_ENV_WORKROOT=/apollo_workspace -e APOLLO_ENV_WORKSPACE=/home/skye/application-pnc -e HISTFILE=/apollo_workspace/.cache/.bash_history -e HISTSIZE=200000 -e HISTFILESIZE=200000 -e HISTCONTROL=ignorespace:erasedups -e DOCKER_USER=skye -w /apollo_workspace -it apollo_neo_dev_edu /bin/bash -c 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/dump_ego_ped_full.py /home/skye/.apollo/resources/records/202608012054_MkzExample_Xh2026Contest.00001.20260801205350.record 7673 2>&1 '
+WARNING: Logging before InitGoogleLogging() is written to STDERR
+I0801 20:56:57.613524 808151 py_record.cc:574] []init _cyber_record_wrapper
+t    ped(x,y,v)                       veh(x,y,v)      dec
+   0.0                            (-) (423467.31,4437610.73,3.77) -
+   0.1    (423475.75,4437599.76,0.00) (423467.68,4437610.73,3.73) -
+   0.2    (423475.75,4437599.76,0.00) (423468.05,4437610.72,3.69) -
+   0.3    (423475.75,4437599.76,0.00) (423468.42,4437610.72,3.64) -
+   0.4    (423475.75,4437599.76,0.00) (423468.78,4437610.72,3.60) -
+   0.5    (423475.75,4437599.76,0.00) (423469.18,4437610.72,3.55) -
+   0.6    (423475.75,4437599.76,0.00) (423469.49,4437610.72,3.51) -
+   0.7    (423475.75,4437599.76,0.00) (423469.84,4437610.72,3.46) -
+   0.8    (423475.75,4437599.76,0.00) (423470.19,4437610.72,3.42) -
+   0.9    (423475.75,4437599.76,0.00) (423470.52,4437610.72,3.37) -
+   1.0    (423475.75,4437599.76,0.00) (423470.86,4437610.72,3.33) -
+   1.1    (423475.75,4437599.76,0.00) (423471.19,4437610.72,3.28) -
+   1.2    (423475.75,4437599.76,0.00) (423471.52,4437610.72,3.23) -
+   1.3    (423475.75,4437599.76,0.00) (423471.84,4437610.72,3.19) -
+   1.4    (423475.75,4437599.76,0.00) (423472.19,4437610.72,3.14) -
+   1.5    (423475.75,4437599.76,0.00) (423472.47,4437610.72,3.10) -
+   1.6    (423475.75,4437599.76,0.00) (423472.77,4437610.72,3.05) -
+   1.7    (423475.75,4437599.76,0.00) (423473.08,4437610.72,3.00) -
+   1.8    (423475.75,4437599.76,0.00) (423473.37,4437610.72,2.96) -
+   1.9    (423475.75,4437599.76,0.00) (423473.67,4437610.72,2.91) -
+   2.0    (423475.75,4437599.76,0.00) (423473.96,4437610.72,2.86) -
+   2.1    (423475.75,4437599.76,0.00) (423474.24,4437610.72,2.82) -
+   2.2    (423475.75,4437599.76,0.00) (423474.52,4437610.72,2.77) -
+   2.3    (423475.75,4437599.76,0.00) (423474.79,4437610.72,2.73) -
+   2.4    (423475.75,4437599.76,0.00) (423475.06,4437610.71,2.68) -
+   2.5    (423475.75,4437599.76,0.00) (423475.33,4437610.71,2.64) -
+   2.6    (423475.75,4437599.76,0.00) (423475.59,4437610.71,2.59) -
+   2.7    (423475.75,4437599.76,0.00) (423475.85,4437610.71,2.55) -
+   2.8    (423475.75,4437599.76,0.00) (423476.10,4437610.71,2.51) -
+   2.9    (423475.75,4437599.76,0.00) (423476.35,4437610.71,2.46) -
+   3.0    (423475.75,4437599.76,0.00) (423476.62,4437610.71,2.42) -
+   3.1    (423475.75,4437599.76,0.00) (423476.84,4437610.71,2.38) -
+   3.2    (423475.75,4437599.76,0.00) (423477.10,4437610.71,2.33) -
+   3.3    (423475.75,4437599.76,0.00) (423477.30,4437610.71,2.30) -
+   3.4    (423475.75,4437599.76,0.00) (423477.53,4437610.71,2.26) -
+   3.5    (423475.75,4437599.76,0.00) (423477.75,4437610.71,2.21) -
+   3.6    (423475.75,4437599.76,0.00) (423477.97,4437610.71,2.17) -
+   3.7    (423475.75,4437599.76,0.00) (423478.19,4437610.71,2.13) -
+   3.8    (423475.75,4437599.76,0.00) (423478.40,4437610.71,2.09) -
+   3.9    (423475.75,4437599.76,0.00) (423478.61,4437610.71,2.05) -
+   4.0    (423475.75,4437599.76,0.00) (423478.81,4437610.71,2.02) -
+   4.1    (423475.75,4437599.76,0.00) (423479.01,4437610.71,1.98) -
+   4.2    (423475.75,4437599.76,0.00) (423479.21,4437610.71,1.94) -
+   4.3    (423475.75,4437599.76,0.00) (423479.40,4437610.71,1.90) -
+   4.4    (423475.75,4437599.76,0.00) (423479.59,4437610.71,1.86) -
+   4.5    (423475.75,4437599.76,0.00) (423479.77,4437610.71,1.83) -
+   4.6    (423475.75,4437599.76,0.00) (423479.95,4437610.71,1.79) -
+   4.7    (423475.75,4437599.76,0.00) (423480.13,4437610.71,1.75) -
+   4.8    (423475.75,4437599.76,0.00) (423480.30,4437610.71,1.72) -
+   4.9    (423475.75,4437599.76,0.00) (423480.47,4437610.71,1.68) -
+   5.0    (423475.75,4437599.76,0.00) (423480.64,4437610.71,1.65) -
+   5.1    (423475.75,4437599.76,0.00) (423480.80,4437610.71,1.61) -
+   5.2    (423475.75,4437599.76,0.00) (423480.96,4437610.71,1.58) -
+   5.3    (423475.75,4437599.76,0.00) (423481.13,4437610.71,1.54) -
+   5.4    (423475.75,4437599.76,0.00) (423481.27,4437610.71,1.51) -
+   5.5    (423475.75,4437599.76,0.00) (423481.42,4437610.71,1.48) -
+   5.6    (423475.75,4437599.76,0.00) (423481.58,4437610.71,1.44) -
+   5.7    (423475.75,4437599.76,0.00) (423481.71,4437610.70,1.42) -
+   5.8    (423475.75,4437599.76,0.00) (423481.85,4437610.70,1.38) -
+   5.9    (423475.75,4437599.76,0.00) (423482.00,4437610.70,1.35) -
+   6.0    (423475.75,4437599.76,0.00) (423482.12,4437610.70,1.32) -
+   6.1    (423475.75,4437599.76,0.00) (423482.25,4437610.70,1.29) -
+   6.2    (423475.75,4437599.76,0.00) (423482.38,4437610.70,1.26) -
+   6.3    (423475.75,4437599.76,0.00) (423482.52,4437610.70,1.23) -
+   6.4    (423475.75,4437599.76,0.00) (423482.63,4437610.70,1.21) -
+   6.5    (423475.75,4437599.76,0.00) (423482.75,4437610.70,1.18) -
+   6.6    (423475.75,4437599.76,0.00) (423482.86,4437610.70,1.15) -
+   6.7    (423475.75,4437599.76,0.00) (423482.98,4437610.70,1.12) -
+   6.8    (423475.75,4437599.76,0.00) (423483.09,4437610.70,1.10) -
+   6.9    (423475.75,4437599.76,0.00) (423483.21,4437610.70,1.07) -
+   7.0    (423475.75,4437599.76,0.00) (423483.31,4437610.70,1.04) -
+   7.1    (423475.75,4437599.76,0.00) (423483.41,4437610.70,1.02) -
+   7.2    (423475.75,4437599.76,0.00) (423483.52,4437610.70,0.99) -
+   7.3    (423475.75,4437599.76,0.00) (423483.60,4437610.70,0.97) -
+   7.4    (423475.75,4437599.76,0.00) (423483.70,4437610.70,0.95) -
+   7.5    (423475.75,4437599.76,0.00) (423483.79,4437610.70,0.92) -
+   7.6    (423475.75,4437599.76,0.00) (423483.89,4437610.70,0.90) -
+   7.7    (423475.75,4437599.76,0.00) (423483.98,4437610.70,0.87) -
+   7.8    (423475.75,4437599.76,0.00) (423484.06,4437610.70,0.85) -
+   7.9    (423475.75,4437599.76,0.00) (423484.14,4437610.70,0.83) -
+   8.0    (423475.75,4437599.76,0.00) (423484.23,4437610.70,0.81) -
+   8.1    (423475.75,4437599.76,0.00) (423484.31,4437610.70,0.79) -
+   8.2    (423475.75,4437599.76,0.00) (423484.38,4437610.70,0.77) -
+   8.3    (423475.75,4437599.76,0.00) (423484.46,4437610.70,0.75) -
+   8.4    (423475.75,4437599.76,0.00) (423484.53,4437610.70,0.73) -
+   8.5    (423475.75,4437599.76,0.00) (423484.61,4437610.70,0.71) -
+   8.6    (423475.75,4437599.76,0.00) (423484.68,4437610.70,0.69) -
+   8.7    (423475.75,4437599.76,0.00) (423484.74,4437610.70,0.67) -
+   8.8    (423475.75,4437599.76,0.00) (423484.82,4437610.70,0.65) -
+   8.9    (423475.75,4437599.76,0.00) (423484.87,4437610.70,0.64) -
+   9.0    (423475.75,4437599.76,0.00) (423484.94,4437610.70,0.62) -
+   9.1    (423475.75,4437599.76,0.00) (423485.00,4437610.70,0.60) -
+   9.2    (423475.75,4437599.76,0.00) (423485.06,4437610.70,0.58) -
+   9.3    (423475.75,4437599.76,0.00) (423485.12,4437610.70,0.57) -
+   9.4    (423475.75,4437599.76,0.00) (423485.17,4437610.70,0.55) -
+   9.5    (423475.75,4437599.76,0.00) (423485.22,4437610.70,0.53) -
+   9.6    (423475.75,4437599.76,0.00) (423485.28,4437610.70,0.52) -
+   9.7    (423475.75,4437599.76,0.00) (423485.33,4437610.70,0.50) -
+   9.8    (423475.75,4437599.76,0.00) (423485.38,4437610.70,0.49) -
+   9.9    (423475.75,4437599.76,0.00) (423485.43,4437610.70,0.47) -
+  10.0    (423475.75,4437599.76,0.00) (423485.48,4437610.70,0.46) -
+  10.1    (423475.75,4437599.76,0.00) (423485.52,4437610.70,0.45) -
+  10.2    (423475.75,4437599.76,0.00) (423485.57,4437610.70,0.43) -
+  10.3    (423475.75,4437599.76,0.00) (423485.61,4437610.70,0.42) -
+  10.4    (423475.75,4437599.76,0.00) (423485.65,4437610.70,0.41) -
+  10.5    (423475.75,4437599.76,0.00) (423485.69,4437610.70,0.39) -
+  10.6    (423475.75,4437599.76,0.00) (423485.73,4437610.70,0.38) -
+  10.7    (423475.75,4437599.76,0.00) (423485.76,4437610.70,0.37) -
+  10.8    (423475.75,4437599.76,0.00) (423485.80,4437610.70,0.36) -
+  10.9    (423475.75,4437599.76,0.00) (423485.84,4437610.70,0.35) -
+  11.0    (423475.75,4437599.76,0.00) (423485.87,4437610.70,0.34) -
+  11.1    (423475.75,4437599.76,0.00) (423485.90,4437610.70,0.33) -
+  11.2    (423475.75,4437599.76,0.00) (423485.94,4437610.70,0.32) -
+  11.3    (423475.75,4437599.76,0.00) (423485.97,4437610.70,0.31) -
+  11.4    (423475.75,4437599.76,0.00) (423486.00,4437610.70,0.30) -
+  11.5    (423475.75,4437599.76,0.00) (423486.03,4437610.70,0.29) -
+  11.6    (423475.75,4437599.76,0.00) (423486.06,4437610.70,0.28) -
+  11.7    (423475.75,4437599.76,0.00) (423486.08,4437610.70,0.27) -
+  11.8    (423475.75,4437599.76,0.00) (423486.11,4437610.70,0.26) -
+  11.9    (423475.75,4437599.76,0.00) (423486.14,4437610.70,0.25) -
+  12.0    (423475.75,4437599.76,0.00) (423486.16,4437610.70,0.24) -
+  12.1    (423475.75,4437599.76,0.00) (423486.18,4437610.70,0.23) -
+  12.2    (423475.75,4437599.76,0.00) (423486.21,4437610.70,0.23) -
+  12.3    (423475.75,4437599.76,0.00) (423486.23,4437610.70,0.22) -
+  12.4    (423475.75,4437599.76,0.00) (423486.25,4437610.70,0.21) -
+  12.5    (423475.75,4437599.76,0.00) (423486.27,4437610.70,0.20) -
+  12.6    (423475.75,4437599.76,0.00) (423486.29,4437610.70,0.20) -
+  12.7    (423475.75,4437599.76,0.00) (423486.31,4437610.70,0.19) -
+  12.8    (423475.75,4437599.76,0.00) (423486.33,4437610.70,0.18) -
++ xhost -local:root

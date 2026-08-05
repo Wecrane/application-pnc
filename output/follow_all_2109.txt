@@ -1,0 +1,418 @@
++ [[ ! 1 == 1 ]]
++ execute -- 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/dump_follow_all.py /home/skye/.apollo/resources/records/202608012109_MkzExample_Xh2026Contest.00000.20260801210813.record 0 60 2>&1'
++ [[ -f /home/skye/application-pnc/.env ]]
++ set -a
++ source /home/skye/application-pnc/.env
+++ APOLLO_ENV_NAME=edu
+++ APOLLO_ENV_WORKLOCAL=1
+++ APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
+++ APOLLO_ENV_CONTAINER_TAG=9.0-latest
++ set +a
++ parse_arguments -- 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/dump_follow_all.py /home/skye/.apollo/resources/records/202608012109_MkzExample_Xh2026Contest.00000.20260801210813.record 0 60 2>&1'
++ args=()
++ [[ 2 -gt 0 ]]
++ local opt=--
++ shift
++ case "${opt}" in
++ args+=("$@")
++ break
++ APOLLO_ENV_EXEC_ARGS=('cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/dump_follow_all.py /home/skye/.apollo/resources/records/202608012109_MkzExample_Xh2026Contest.00000.20260801210813.record 0 60 2>&1')
++ export APOLLO_ENV_EXEC_ARGS
++ apollo_env_exists edu
++ local env_name=edu
++ apollo_envhome_exists edu
++ local env_name=edu
++ [[ -d /home/skye/.aem/envs/edu ]]
++ return 0
++ [[ -e /home/skye/.aem/envs/edu/env.config ]]
++ declare backend
+++ source /home/skye/.aem/envs/edu/env.config
++++ export AEM_FLAG_FORCE_RECREATE=0
++++ AEM_FLAG_FORCE_RECREATE=0
++++ export AEM_FLAG_FORCE_RECREATE_VOLUMES=0
++++ AEM_FLAG_FORCE_RECREATE_VOLUMES=0
++++ export AEM_FLAG_SHM_SIZE=4G
++++ AEM_FLAG_SHM_SIZE=4G
++++ export AEM_FLAG_USE_GPU=1
++++ AEM_FLAG_USE_GPU=1
++++ export AEM_FLAG_USE_LOCAL_IMAGE=0
++++ AEM_FLAG_USE_LOCAL_IMAGE=0
++++ export AEM_GEO=
++++ AEM_GEO=
++++ export AEM_HOME=/opt/apollo/aem
++++ AEM_HOME=/opt/apollo/aem
++++ export AEM_INITED=1
++++ AEM_INITED=1
++++ export AEM_SYS_SHARE=/opt/apollo/aem/share/aem
++++ AEM_SYS_SHARE=/opt/apollo/aem/share/aem
++++ export AEM_VERSION=10.0.0-rc1-r4
++++ AEM_VERSION=10.0.0-rc1-r4
++++ export APOLLO_ENVS_ROOT=/home/skye/.aem/envs
++++ APOLLO_ENVS_ROOT=/home/skye/.aem/envs
++++ APOLLO_ENV_ARGS=()
++++ export APOLLO_ENV_ARGS
++++ export APOLLO_ENV_BACKEND=docker
++++ APOLLO_ENV_BACKEND=docker
++++ export APOLLO_ENV_CONTAINER_GID=1000
++++ APOLLO_ENV_CONTAINER_GID=1000
++++ export APOLLO_ENV_CONTAINER_GROUP=skye
++++ APOLLO_ENV_CONTAINER_GROUP=skye
++++ export APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu
++++ APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu
++++ export APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_
++++ APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_
++++ export APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
++++ APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
++++ export APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm
++++ APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm
++++ export APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu
++++ APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu
++++ export APOLLO_ENV_CONTAINER_SHELL=/bin/bash
++++ APOLLO_ENV_CONTAINER_SHELL=/bin/bash
++++ export APOLLO_ENV_CONTAINER_TAG=9.0-latest
++++ APOLLO_ENV_CONTAINER_TAG=9.0-latest
++++ export APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20
++++ APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20
++++ export APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22
++++ APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22
++++ export APOLLO_ENV_CONTAINER_UID=1000
++++ APOLLO_ENV_CONTAINER_UID=1000
++++ export APOLLO_ENV_CONTAINER_USER=skye
++++ APOLLO_ENV_CONTAINER_USER=skye
++++ export APOLLO_ENV_CROSS_PLATFORM=
++++ APOLLO_ENV_CROSS_PLATFORM=
++++ export APOLLO_ENV_NAME=edu
++++ APOLLO_ENV_NAME=edu
++++ export APOLLO_ENV_USE_GPU_HOST=1
++++ APOLLO_ENV_USE_GPU_HOST=1
++++ export APOLLO_ENV_WORKLOCAL=1
++++ APOLLO_ENV_WORKLOCAL=1
++++ export APOLLO_ENV_WORKROOT=/apollo_workspace
++++ APOLLO_ENV_WORKROOT=/apollo_workspace
++++ export APOLLO_ENV_WORKSPACE=/home/skye/application-pnc
++++ APOLLO_ENV_WORKSPACE=/home/skye/application-pnc
+++ echo docker
++ backend=docker
++ [[ docker == \h\o\s\t ]]
++ [[ docker == \d\o\c\k\e\r ]]
++ local container_name=apollo_neo_dev_edu
++ docker_container_exists apollo_neo_dev_edu
++ local container=apollo_neo_dev_edu
+++ docker ps -a '--format={{.Names}}' -f name=apollo_neo_dev_edu
+++ grep '^apollo_neo_dev_edu$'
++ local query=apollo_neo_dev_edu
++ [[ apollo_neo_dev_edu == \a\p\o\l\l\o\_\n\e\o\_\d\e\v\_\e\d\u ]]
++ return 0
++ return 0
++ set -a
++ source /home/skye/.aem/envs/edu/env.config
+++ export AEM_FLAG_FORCE_RECREATE=0
+++ AEM_FLAG_FORCE_RECREATE=0
+++ export AEM_FLAG_FORCE_RECREATE_VOLUMES=0
+++ AEM_FLAG_FORCE_RECREATE_VOLUMES=0
+++ export AEM_FLAG_SHM_SIZE=4G
+++ AEM_FLAG_SHM_SIZE=4G
+++ export AEM_FLAG_USE_GPU=1
+++ AEM_FLAG_USE_GPU=1
+++ export AEM_FLAG_USE_LOCAL_IMAGE=0
+++ AEM_FLAG_USE_LOCAL_IMAGE=0
+++ export AEM_GEO=
+++ AEM_GEO=
+++ export AEM_HOME=/opt/apollo/aem
+++ AEM_HOME=/opt/apollo/aem
+++ export AEM_INITED=1
+++ AEM_INITED=1
+++ export AEM_SYS_SHARE=/opt/apollo/aem/share/aem
+++ AEM_SYS_SHARE=/opt/apollo/aem/share/aem
+++ export AEM_VERSION=10.0.0-rc1-r4
+++ AEM_VERSION=10.0.0-rc1-r4
+++ export APOLLO_ENVS_ROOT=/home/skye/.aem/envs
+++ APOLLO_ENVS_ROOT=/home/skye/.aem/envs
+++ APOLLO_ENV_ARGS=()
+++ export APOLLO_ENV_ARGS
+++ export APOLLO_ENV_BACKEND=docker
+++ APOLLO_ENV_BACKEND=docker
+++ export APOLLO_ENV_CONTAINER_GID=1000
+++ APOLLO_ENV_CONTAINER_GID=1000
+++ export APOLLO_ENV_CONTAINER_GROUP=skye
+++ APOLLO_ENV_CONTAINER_GROUP=skye
+++ export APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu
+++ APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu
+++ export APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_
+++ APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_
+++ export APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
+++ APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
+++ export APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm
+++ APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm
+++ export APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu
+++ APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu
+++ export APOLLO_ENV_CONTAINER_SHELL=/bin/bash
+++ APOLLO_ENV_CONTAINER_SHELL=/bin/bash
+++ export APOLLO_ENV_CONTAINER_TAG=9.0-latest
+++ APOLLO_ENV_CONTAINER_TAG=9.0-latest
+++ export APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20
+++ APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20
+++ export APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22
+++ APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22
+++ export APOLLO_ENV_CONTAINER_UID=1000
+++ APOLLO_ENV_CONTAINER_UID=1000
+++ export APOLLO_ENV_CONTAINER_USER=skye
+++ APOLLO_ENV_CONTAINER_USER=skye
+++ export APOLLO_ENV_CROSS_PLATFORM=
+++ APOLLO_ENV_CROSS_PLATFORM=
+++ export APOLLO_ENV_NAME=edu
+++ APOLLO_ENV_NAME=edu
+++ export APOLLO_ENV_USE_GPU_HOST=1
+++ APOLLO_ENV_USE_GPU_HOST=1
+++ export APOLLO_ENV_WORKLOCAL=1
+++ APOLLO_ENV_WORKLOCAL=1
+++ export APOLLO_ENV_WORKROOT=/apollo_workspace
+++ APOLLO_ENV_WORKROOT=/apollo_workspace
+++ export APOLLO_ENV_WORKSPACE=/home/skye/application-pnc
+++ APOLLO_ENV_WORKSPACE=/home/skye/application-pnc
++ set +a
++ apollo_exec_env 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/dump_follow_all.py /home/skye/.apollo/resources/records/202608012109_MkzExample_Xh2026Contest.00000.20260801210813.record 0 60 2>&1'
++ [[ docker == \d\o\c\k\e\r ]]
++ apollo_exec_container 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/dump_follow_all.py /home/skye/.apollo/resources/records/202608012109_MkzExample_Xh2026Contest.00000.20260801210813.record 0 60 2>&1'
++ local 'cmd=cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/dump_follow_all.py /home/skye/.apollo/resources/records/202608012109_MkzExample_Xh2026Contest.00000.20260801210813.record 0 60 2>&1'
++ shift
++ [[ -z cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/dump_follow_all.py /home/skye/.apollo/resources/records/202608012109_MkzExample_Xh2026Contest.00000.20260801210813.record 0 60 2>&1 ]]
++ envs=()
++ local envs
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ envs+=('-e' "HISTFILE=${APOLLO_ENV_WORKROOT}/.cache/.bash_history")
++ envs+=('-e' 'HISTSIZE=200000')
++ envs+=('-e' 'HISTFILESIZE=200000')
++ envs+=('-e' 'HISTCONTROL=ignorespace:erasedups')
++ envs+=('-e' "DOCKER_USER=${APOLLO_ENV_CONTAINER_USER}")
++ xhost +local:root
++ docker exec -u skye -e APOLLO_ENV_ARGS= -e APOLLO_ENV_BACKEND=docker -e APOLLO_ENV_CONTAINER_GID=1000 -e APOLLO_ENV_CONTAINER_GROUP=skye -e APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu -e APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_ -e APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu -e APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm -e APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu -e APOLLO_ENV_CONTAINER_SHELL=/bin/bash -e APOLLO_ENV_CONTAINER_TAG=9.0-latest -e APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20 -e APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22 -e APOLLO_ENV_CONTAINER_UID=1000 -e APOLLO_ENV_CONTAINER_USER=skye -e APOLLO_ENV_CROSS_PLATFORM= -e 'APOLLO_ENV_EXEC_ARGS=cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/dump_follow_all.py /home/skye/.apollo/resources/records/202608012109_MkzExample_Xh2026Contest.00000.20260801210813.record 0 60 2>&1' -e APOLLO_ENV_NAME=edu -e APOLLO_ENV_USE_GPU_HOST=1 -e APOLLO_ENV_WORKLOCAL=1 -e APOLLO_ENV_WORKROOT=/apollo_workspace -e APOLLO_ENV_WORKSPACE=/home/skye/application-pnc -e HISTFILE=/apollo_workspace/.cache/.bash_history -e HISTSIZE=200000 -e HISTFILESIZE=200000 -e HISTCONTROL=ignorespace:erasedups -e DOCKER_USER=skye -w /apollo_workspace -it apollo_neo_dev_edu /bin/bash -c 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/dump_follow_all.py /home/skye/.apollo/resources/records/202608012109_MkzExample_Xh2026Contest.00000.20260801210813.record 0 60 2>&1 '
+WARNING: Logging before InitGoogleLogging() is written to STDERR
+I0801 21:43:27.539510 879995 py_record.cc:574] []init _cyber_record_wrapper
+t=5.15 7673:STOP
+t=5.46 7673:STOP DEST:STOP
+t=5.75 7673:STOP DEST:STOP
+t=6.06 7673:STOP DEST:STOP
+t=6.36 7673:STOP DEST:STOP
+t=6.65 7673:STOP DEST:STOP
+t=6.95 7673:STOP DEST:STOP
+t=7.25 7673:STOP DEST:STOP
+t=7.55 7673:STOP DEST:STOP
+t=7.85 7673:STOP DEST:STOP
+t=8.15 7673:STOP DEST:STOP
+t=8.45 7673:STOP DEST:STOP
+t=8.75 7673:STOP DEST:STOP
+t=9.05 7673:STOP DEST:STOP
+t=9.35 7673:STOP DEST:STOP
+t=9.65 7673:STOP DEST:STOP
+t=9.95 7673:STOP DEST:STOP
+t=10.25 7673:STOP DEST:STOP
+t=10.55 7673:STOP DEST:STOP
+t=10.85 7673:STOP DEST:STOP
+t=11.15 7673:STOP DEST:STOP
+t=11.45 7673:STOP DEST:STOP
+t=11.75 7673:STOP DEST:STOP
+t=12.05 7673:STOP DEST:STOP
+t=12.36 7673:STOP DEST:STOP
+t=12.65 7673:STOP DEST:STOP
+t=12.95 7673:STOP DEST:STOP
+t=13.25 7673:STOP DEST:STOP
+t=13.56 7673:STOP DEST:STOP
+t=13.85 7673:STOP DEST:STOP
+t=14.15 7673:STOP DEST:STOP
+t=14.45 7673:STOP DEST:STOP
+t=14.76 7673:STOP DEST:STOP
+t=15.05 7673:STOP DEST:STOP
+t=15.35 7673:STOP DEST:STOP
+t=15.65 7673:STOP DEST:STOP
+t=15.95 7673:STOP DEST:STOP
+t=16.25 7673:STOP DEST:STOP
+t=16.55 7673:STOP DEST:STOP
+t=16.85 7673:STOP DEST:STOP
+t=17.15 7673:STOP DEST:STOP
+t=17.45 7673:STOP DEST:STOP
+t=17.75 7673:STOP DEST:STOP
+t=18.05 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=18.35 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=18.65 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=18.95 DEST:STOP PATH_END_regular/leftforward:STOP
+t=19.25 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=19.55 DEST:STOP PATH_END_regular/leftforward:STOP
+t=19.85 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=20.15 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=20.45 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=20.75 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=21.04 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=21.35 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=21.65 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=21.95 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=22.25 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=22.55 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=22.85 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=23.15 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=23.45 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=23.75 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=24.04 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=24.35 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=24.65 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=24.95 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=25.25 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=25.55 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=25.85 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=26.15 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=26.44 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=26.75 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=27.05 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=27.35 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=27.65 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=27.95 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=28.24 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=28.55 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=28.85 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=29.15 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=29.45 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=29.75 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=30.05 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=30.35 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=30.65 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=30.95 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=31.25 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=31.55 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=31.85 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=32.15 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=32.44 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=32.75 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=33.05 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=33.35 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=33.64 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=33.95 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=34.25 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=34.55 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=34.85 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=35.15 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=35.45 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=35.75 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=36.05 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=36.34 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=36.65 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=36.95 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=37.25 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=37.55 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=37.85 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=38.15 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=38.45 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=38.75 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=39.05 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=39.34 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=39.65 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=39.95 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=40.25 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=40.55 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=40.85 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=41.15 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=41.45 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=41.74 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=42.05 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=42.34 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=42.65 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=42.95 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=43.25 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=43.55 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=43.85 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=44.15 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=44.44 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=44.75 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=45.05 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=45.35 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=45.65 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=45.95 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=46.25 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=46.55 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=46.85 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=47.15 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=47.45 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=47.75 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=48.05 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=48.35 7673:STOP DEST:STOP PATH_END_regular/leftforward:STOP
+t=48.69 7673_0:STOP DEST:STOP
+t=48.99 7673_0:STOP DEST:STOP
+t=49.30 7673_0:STOP DEST:STOP
+t=49.59 7673_0:STOP DEST:STOP
+t=49.89 7673_0:STOP DEST:STOP
+t=50.18 7673_0:STOP DEST:STOP
+t=50.48 7673_0:STOP DEST:STOP
+t=50.78 7673_0:STOP DEST:STOP
+t=51.08 7673_0:STOP DEST:STOP
+t=51.38 7673_0:STOP DEST:STOP
+t=51.68 7673_0:STOP DEST:STOP
+t=51.99 7673_0:STOP DEST:STOP
+t=52.29 7673_0:STOP DEST:STOP
+t=52.59 7673_0:STOP DEST:STOP
+t=52.88 7673_0:STOP DEST:STOP
+t=53.18 7673_0:STOP DEST:STOP
+t=53.48 7673_0:STOP DEST:STOP
+t=53.79 7673_0:STOP DEST:STOP
+t=54.09 7673_0:STOP DEST:STOP
+t=54.39 7673_0:STOP DEST:STOP
+t=54.70 7673_0:STOP DEST:STOP
+t=55.00 7673_0:STOP DEST:STOP
+t=55.29 7673_0:STOP DEST:STOP
+t=55.59 7673_0:STOP DEST:STOP
+t=55.90 7673_0:STOP DEST:STOP
+t=56.20 7673_0:STOP DEST:STOP
+t=56.50 7673_0:STOP DEST:STOP
+t=56.79 7673_0:STOP DEST:STOP
+t=57.09 7673_0:STOP DEST:STOP
+t=57.39 7673_0:STOP DEST:STOP
+t=57.69 7673_0:STOP DEST:STOP
+t=58.00 7673_0:STOP DEST:STOP
+t=58.29 7673_0:STOP DEST:STOP
+t=58.60 7673_0:STOP DEST:STOP
+t=58.90 7673_0:STOP DEST:STOP
+t=59.17 7673_0:STOP DEST:STOP
+t=59.47 7673_0:STOP DEST:STOP
+t=59.77 7673_0:STOP DEST:STOP
++ xhost -local:root

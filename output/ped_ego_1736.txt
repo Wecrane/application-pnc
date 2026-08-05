@@ -1,0 +1,699 @@
++ [[ ! 1 == 1 ]]
++ execute -- 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/analyze_ped_vs_ego.py /home/skye/.apollo/resources/records/202608011736_MkzExample_Xh2025Contest.00000.20260801173540.record 3060 2>&1'
++ [[ -f /home/skye/application-pnc/.env ]]
++ set -a
++ source /home/skye/application-pnc/.env
+++ APOLLO_ENV_NAME=edu
+++ APOLLO_ENV_WORKLOCAL=1
+++ APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
+++ APOLLO_ENV_CONTAINER_TAG=9.0-latest
++ set +a
++ parse_arguments -- 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/analyze_ped_vs_ego.py /home/skye/.apollo/resources/records/202608011736_MkzExample_Xh2025Contest.00000.20260801173540.record 3060 2>&1'
++ args=()
++ [[ 2 -gt 0 ]]
++ local opt=--
++ shift
++ case "${opt}" in
++ args+=("$@")
++ break
++ APOLLO_ENV_EXEC_ARGS=('cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/analyze_ped_vs_ego.py /home/skye/.apollo/resources/records/202608011736_MkzExample_Xh2025Contest.00000.20260801173540.record 3060 2>&1')
++ export APOLLO_ENV_EXEC_ARGS
++ apollo_env_exists edu
++ local env_name=edu
++ apollo_envhome_exists edu
++ local env_name=edu
++ [[ -d /home/skye/.aem/envs/edu ]]
++ return 0
++ [[ -e /home/skye/.aem/envs/edu/env.config ]]
++ declare backend
+++ source /home/skye/.aem/envs/edu/env.config
++++ export AEM_FLAG_FORCE_RECREATE=0
++++ AEM_FLAG_FORCE_RECREATE=0
++++ export AEM_FLAG_FORCE_RECREATE_VOLUMES=0
++++ AEM_FLAG_FORCE_RECREATE_VOLUMES=0
++++ export AEM_FLAG_SHM_SIZE=4G
++++ AEM_FLAG_SHM_SIZE=4G
++++ export AEM_FLAG_USE_GPU=1
++++ AEM_FLAG_USE_GPU=1
++++ export AEM_FLAG_USE_LOCAL_IMAGE=0
++++ AEM_FLAG_USE_LOCAL_IMAGE=0
++++ export AEM_GEO=
++++ AEM_GEO=
++++ export AEM_HOME=/opt/apollo/aem
++++ AEM_HOME=/opt/apollo/aem
++++ export AEM_INITED=1
++++ AEM_INITED=1
++++ export AEM_SYS_SHARE=/opt/apollo/aem/share/aem
++++ AEM_SYS_SHARE=/opt/apollo/aem/share/aem
++++ export AEM_VERSION=10.0.0-rc1-r4
++++ AEM_VERSION=10.0.0-rc1-r4
++++ export APOLLO_ENVS_ROOT=/home/skye/.aem/envs
++++ APOLLO_ENVS_ROOT=/home/skye/.aem/envs
++++ APOLLO_ENV_ARGS=()
++++ export APOLLO_ENV_ARGS
++++ export APOLLO_ENV_BACKEND=docker
++++ APOLLO_ENV_BACKEND=docker
++++ export APOLLO_ENV_CONTAINER_GID=1000
++++ APOLLO_ENV_CONTAINER_GID=1000
++++ export APOLLO_ENV_CONTAINER_GROUP=skye
++++ APOLLO_ENV_CONTAINER_GROUP=skye
++++ export APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu
++++ APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu
++++ export APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_
++++ APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_
++++ export APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
++++ APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
++++ export APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm
++++ APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm
++++ export APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu
++++ APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu
++++ export APOLLO_ENV_CONTAINER_SHELL=/bin/bash
++++ APOLLO_ENV_CONTAINER_SHELL=/bin/bash
++++ export APOLLO_ENV_CONTAINER_TAG=9.0-latest
++++ APOLLO_ENV_CONTAINER_TAG=9.0-latest
++++ export APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20
++++ APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20
++++ export APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22
++++ APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22
++++ export APOLLO_ENV_CONTAINER_UID=1000
++++ APOLLO_ENV_CONTAINER_UID=1000
++++ export APOLLO_ENV_CONTAINER_USER=skye
++++ APOLLO_ENV_CONTAINER_USER=skye
++++ export APOLLO_ENV_CROSS_PLATFORM=
++++ APOLLO_ENV_CROSS_PLATFORM=
++++ export APOLLO_ENV_NAME=edu
++++ APOLLO_ENV_NAME=edu
++++ export APOLLO_ENV_USE_GPU_HOST=1
++++ APOLLO_ENV_USE_GPU_HOST=1
++++ export APOLLO_ENV_WORKLOCAL=1
++++ APOLLO_ENV_WORKLOCAL=1
++++ export APOLLO_ENV_WORKROOT=/apollo_workspace
++++ APOLLO_ENV_WORKROOT=/apollo_workspace
++++ export APOLLO_ENV_WORKSPACE=/home/skye/application-pnc
++++ APOLLO_ENV_WORKSPACE=/home/skye/application-pnc
+++ echo docker
++ backend=docker
++ [[ docker == \h\o\s\t ]]
++ [[ docker == \d\o\c\k\e\r ]]
++ local container_name=apollo_neo_dev_edu
++ docker_container_exists apollo_neo_dev_edu
++ local container=apollo_neo_dev_edu
+++ docker ps -a '--format={{.Names}}' -f name=apollo_neo_dev_edu
+++ grep '^apollo_neo_dev_edu$'
++ local query=apollo_neo_dev_edu
++ [[ apollo_neo_dev_edu == \a\p\o\l\l\o\_\n\e\o\_\d\e\v\_\e\d\u ]]
++ return 0
++ return 0
++ set -a
++ source /home/skye/.aem/envs/edu/env.config
+++ export AEM_FLAG_FORCE_RECREATE=0
+++ AEM_FLAG_FORCE_RECREATE=0
+++ export AEM_FLAG_FORCE_RECREATE_VOLUMES=0
+++ AEM_FLAG_FORCE_RECREATE_VOLUMES=0
+++ export AEM_FLAG_SHM_SIZE=4G
+++ AEM_FLAG_SHM_SIZE=4G
+++ export AEM_FLAG_USE_GPU=1
+++ AEM_FLAG_USE_GPU=1
+++ export AEM_FLAG_USE_LOCAL_IMAGE=0
+++ AEM_FLAG_USE_LOCAL_IMAGE=0
+++ export AEM_GEO=
+++ AEM_GEO=
+++ export AEM_HOME=/opt/apollo/aem
+++ AEM_HOME=/opt/apollo/aem
+++ export AEM_INITED=1
+++ AEM_INITED=1
+++ export AEM_SYS_SHARE=/opt/apollo/aem/share/aem
+++ AEM_SYS_SHARE=/opt/apollo/aem/share/aem
+++ export AEM_VERSION=10.0.0-rc1-r4
+++ AEM_VERSION=10.0.0-rc1-r4
+++ export APOLLO_ENVS_ROOT=/home/skye/.aem/envs
+++ APOLLO_ENVS_ROOT=/home/skye/.aem/envs
+++ APOLLO_ENV_ARGS=()
+++ export APOLLO_ENV_ARGS
+++ export APOLLO_ENV_BACKEND=docker
+++ APOLLO_ENV_BACKEND=docker
+++ export APOLLO_ENV_CONTAINER_GID=1000
+++ APOLLO_ENV_CONTAINER_GID=1000
+++ export APOLLO_ENV_CONTAINER_GROUP=skye
+++ APOLLO_ENV_CONTAINER_GROUP=skye
+++ export APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu
+++ APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu
+++ export APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_
+++ APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_
+++ export APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
+++ APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu
+++ export APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm
+++ APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm
+++ export APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu
+++ APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu
+++ export APOLLO_ENV_CONTAINER_SHELL=/bin/bash
+++ APOLLO_ENV_CONTAINER_SHELL=/bin/bash
+++ export APOLLO_ENV_CONTAINER_TAG=9.0-latest
+++ APOLLO_ENV_CONTAINER_TAG=9.0-latest
+++ export APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20
+++ APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20
+++ export APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22
+++ APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22
+++ export APOLLO_ENV_CONTAINER_UID=1000
+++ APOLLO_ENV_CONTAINER_UID=1000
+++ export APOLLO_ENV_CONTAINER_USER=skye
+++ APOLLO_ENV_CONTAINER_USER=skye
+++ export APOLLO_ENV_CROSS_PLATFORM=
+++ APOLLO_ENV_CROSS_PLATFORM=
+++ export APOLLO_ENV_NAME=edu
+++ APOLLO_ENV_NAME=edu
+++ export APOLLO_ENV_USE_GPU_HOST=1
+++ APOLLO_ENV_USE_GPU_HOST=1
+++ export APOLLO_ENV_WORKLOCAL=1
+++ APOLLO_ENV_WORKLOCAL=1
+++ export APOLLO_ENV_WORKROOT=/apollo_workspace
+++ APOLLO_ENV_WORKROOT=/apollo_workspace
+++ export APOLLO_ENV_WORKSPACE=/home/skye/application-pnc
+++ APOLLO_ENV_WORKSPACE=/home/skye/application-pnc
++ set +a
++ apollo_exec_env 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/analyze_ped_vs_ego.py /home/skye/.apollo/resources/records/202608011736_MkzExample_Xh2025Contest.00000.20260801173540.record 3060 2>&1'
++ [[ docker == \d\o\c\k\e\r ]]
++ apollo_exec_container 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/analyze_ped_vs_ego.py /home/skye/.apollo/resources/records/202608011736_MkzExample_Xh2025Contest.00000.20260801173540.record 3060 2>&1'
++ local 'cmd=cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/analyze_ped_vs_ego.py /home/skye/.apollo/resources/records/202608011736_MkzExample_Xh2025Contest.00000.20260801173540.record 3060 2>&1'
++ shift
++ [[ -z cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/analyze_ped_vs_ego.py /home/skye/.apollo/resources/records/202608011736_MkzExample_Xh2025Contest.00000.20260801173540.record 3060 2>&1 ]]
++ envs=()
++ local envs
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ for x in ${!APOLLO_ENV_@}
++ envs+=('-e' "${x}=${!x}")
++ envs+=('-e' "HISTFILE=${APOLLO_ENV_WORKROOT}/.cache/.bash_history")
++ envs+=('-e' 'HISTSIZE=200000')
++ envs+=('-e' 'HISTFILESIZE=200000')
++ envs+=('-e' 'HISTCONTROL=ignorespace:erasedups')
++ envs+=('-e' "DOCKER_USER=${APOLLO_ENV_CONTAINER_USER}")
++ xhost +local:root
++ docker exec -u skye -e APOLLO_ENV_ARGS= -e APOLLO_ENV_BACKEND=docker -e APOLLO_ENV_CONTAINER_GID=1000 -e APOLLO_ENV_CONTAINER_GROUP=skye -e APOLLO_ENV_CONTAINER_NAME=apollo_neo_dev_edu -e APOLLO_ENV_CONTAINER_PREFIX=apollo_neo_dev_ -e APOLLO_ENV_CONTAINER_REPO=registry.baidubce.com/apollo/apollo-env-gpu -e APOLLO_ENV_CONTAINER_REPO_ARM=registry.baidubce.com/apollo/apollo-env-arm -e APOLLO_ENV_CONTAINER_REPO_X86=registry.baidubce.com/apollo/apollo-env-gpu -e APOLLO_ENV_CONTAINER_SHELL=/bin/bash -e APOLLO_ENV_CONTAINER_TAG=9.0-latest -e APOLLO_ENV_CONTAINER_TAG_ARM=10.0-u20 -e APOLLO_ENV_CONTAINER_TAG_X86=10.0-u22 -e APOLLO_ENV_CONTAINER_UID=1000 -e APOLLO_ENV_CONTAINER_USER=skye -e APOLLO_ENV_CROSS_PLATFORM= -e 'APOLLO_ENV_EXEC_ARGS=cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/analyze_ped_vs_ego.py /home/skye/.apollo/resources/records/202608011736_MkzExample_Xh2025Contest.00000.20260801173540.record 3060 2>&1' -e APOLLO_ENV_NAME=edu -e APOLLO_ENV_USE_GPU_HOST=1 -e APOLLO_ENV_WORKLOCAL=1 -e APOLLO_ENV_WORKROOT=/apollo_workspace -e APOLLO_ENV_WORKSPACE=/home/skye/application-pnc -e HISTFILE=/apollo_workspace/.cache/.bash_history -e HISTSIZE=200000 -e HISTFILESIZE=200000 -e HISTCONTROL=ignorespace:erasedups -e DOCKER_USER=skye -w /apollo_workspace -it apollo_neo_dev_edu /bin/bash -c 'cd /apollo_workspace && PYTHONPATH=/opt/apollo/neo/src/cyber/python:/opt/apollo/neo/src python3 scripts/analyze_ped_vs_ego.py /home/skye/.apollo/resources/records/202608011736_MkzExample_Xh2025Contest.00000.20260801173540.record 3060 2>&1 '
+WARNING: Logging before InitGoogleLogging() is written to STDERR
+I0801 19:53:34.303828 691940 py_record.cc:574] []init _cyber_record_wrapper
+t    ped(x,y,v)                veh(x,v)      obs决策
+  0.7                      (-) (424425.34,7.16) -
+  0.8                      (-) (424425.34,7.06) -
+  0.9                      (-) (424425.34,6.94) -
+  1.0                      (-) (424425.34,6.83) -
+  1.1                      (-) (424425.34,6.72) -
+  1.2                      (-) (424425.34,6.62) -
+  1.3                      (-) (424425.34,6.51) -
+  1.4                      (-) (424425.35,6.41) -
+  1.5                      (-) (424425.35,6.29) -
+  1.6                      (-) (424425.35,6.19) -
+  1.7                      (-) (424425.35,6.08) -
+  1.8                      (-) (424425.36,5.98) -
+  1.9                      (-) (424425.36,5.87) -
+  2.1                      (-) (424425.37,5.68) -
+  2.2                      (-) (424425.37,5.57) -
+  2.3                      (-) (424425.37,5.47) -
+  2.4                      (-) (424425.38,5.37) -
+  2.5                      (-) (424425.38,5.27) -
+  2.6                      (-) (424425.38,5.18) -
+  2.7                      (-) (424425.39,5.07) -
+  2.8                      (-) (424425.39,4.98) -
+  2.9                      (-) (424425.39,4.88) -
+  3.0                      (-)  (424425.4,4.78) -
+  3.1                      (-)  (424425.4,4.70) -
+  3.2                      (-) (424425.41,4.60) -
+  3.3                      (-) (424425.41,4.52) -
+  3.4                      (-) (424425.41,4.43) -
+  3.5                      (-) (424425.42,4.35) -
+  3.6                      (-) (424425.42,4.25) -
+  3.7                      (-) (424425.43,4.17) -
+  3.8                      (-) (424425.43,4.08) -
+  3.9                      (-) (424425.43,4.00) -
+  4.0                      (-) (424425.44,3.92) -
+  4.1                      (-) (424425.44,3.83) -
+  4.2                      (-) (424425.44,3.76) -
+  4.3                      (-) (424425.45,3.68) -
+  4.4                      (-) (424425.45,3.60) -
+  4.5                      (-) (424425.45,3.52) -
+  4.6                      (-) (424425.46,3.46) -
+  4.7                      (-) (424425.46,3.38) -
+  4.8                      (-) (424425.46,3.29) -
+  4.9                      (-) (424425.47,3.23) -
+  5.0                      (-) (424425.47,3.17) -
+  5.1                      (-) (424425.47,3.10) -
+  5.2                      (-) (424425.48,3.03) -
+  5.3                      (-) (424425.48,2.96) -
+  5.4                      (-) (424425.48,2.89) -
+  5.5                      (-) (424425.48,2.83) -
+  5.6                      (-) (424425.49,2.76) -
+  5.7                      (-) (424425.49,2.70) -
+  5.8                      (-) (424425.49,2.64) -
+  5.9                      (-) (424425.49,2.58) -
+  6.0                      (-)  (424425.5,2.52) -
+  6.1                      (-)  (424425.5,2.47) -
+  6.2                      (-)  (424425.5,2.40) -
+  6.3                      (-)  (424425.5,2.35) -
+  6.4                      (-) (424425.51,2.30) -
+  6.5                      (-) (424425.51,2.24) -
+  6.6                      (-) (424425.51,2.19) -
+  6.7                      (-) (424425.51,2.13) -
+  6.8                      (-) (424425.51,2.08) -
+  6.9                      (-) (424425.51,2.03) -
+  7.1                      (-) (424425.52,1.94) -
+  7.2                      (-) (424425.52,1.88) -
+  7.3                      (-) (424425.52,1.83) -
+  7.4                      (-) (424425.52,1.79) -
+  7.5                      (-) (424425.52,1.74) -
+  7.6                      (-) (424425.52,1.70) -
+  7.7                      (-) (424425.53,1.65) -
+  7.8                      (-) (424425.53,1.61) -
+  7.9                      (-) (424425.53,1.56) -
+  8.0                      (-) (424425.53,1.53) -
+  8.1                      (-) (424425.53,1.49) -
+  8.2                      (-) (424425.53,1.45) -
+  8.3                      (-) (424425.53,1.41) -
+  8.4                      (-) (424425.53,1.37) -
+  8.6                      (-) (424425.53,1.29) -
+  8.7                      (-) (424425.54,1.26) -
+  8.8                      (-) (424425.54,1.22) -
+  8.9                      (-) (424425.54,1.19) -
+  9.0                      (-) (424425.54,1.15) -
+  9.1                      (-) (424425.54,1.12) -
+  9.2                      (-) (424425.54,1.09) -
+  9.3                      (-) (424425.54,1.05) -
+  9.4                      (-) (424425.54,1.03) -
+  9.5                      (-) (424425.54,0.99) -
+  9.6                      (-) (424425.54,0.96) -
+  9.7                      (-) (424425.54,0.93) -
+  9.8                      (-) (424425.54,0.91) -
+  9.9                      (-) (424425.54,0.88) -
+ 10.0                      (-) (424425.54,0.85) -
+ 10.1                      (-) (424425.54,0.83) -
+ 10.2                      (-) (424425.54,0.80) -
+ 10.3                      (-) (424425.54,0.77) -
+ 10.4                      (-) (424425.54,0.75) -
+ 10.5                      (-) (424425.54,0.72) -
+ 10.6                      (-) (424425.54,0.70) -
+ 10.7                      (-) (424425.54,0.68) -
+ 10.8                      (-) (424425.55,0.65) -
+ 10.9                      (-) (424425.55,0.64) -
+ 11.0                      (-) (424425.55,0.61) -
+ 11.1                      (-) (424425.55,0.59) -
+ 11.2                      (-) (424425.55,0.57) -
+ 11.3                      (-) (424425.55,0.55) -
+ 11.4                      (-) (424425.55,0.53) -
+ 11.5                      (-) (424425.55,0.51) -
+ 11.6                      (-) (424425.55,0.49) -
+ 11.7                      (-) (424425.55,0.48) -
+ 11.8                      (-) (424425.55,0.46) -
+ 11.9                      (-) (424425.55,0.44) -
+ 12.0                      (-) (424425.55,0.42) -
+ 12.1                      (-) (424425.55,0.41) -
+ 12.2                      (-) (424425.55,0.39) -
+ 12.3                      (-) (424425.55,0.37) -
+ 12.4                      (-) (424425.55,0.36) -
+ 12.5                      (-) (424425.55,0.34) -
+ 12.6                      (-) (424425.55,0.33) -
+ 12.7                      (-) (424425.55,0.32) -
+ 12.8                      (-) (424425.55,0.30) -
+ 12.9                      (-) (424425.55,0.29) -
+ 13.0                      (-) (424425.55,0.28) -
+ 13.1                      (-) (424425.55,0.26) -
+ 13.2                      (-) (424425.55,0.25) -
+ 13.3                      (-) (424425.55,0.23) -
+ 13.4                      (-) (424425.55,0.22) -
+ 13.5                      (-) (424425.55,0.21) -
+ 13.6                      (-) (424425.55,0.20) -
+ 13.7                      (-) (424425.55,0.19) -
+ 13.8                      (-) (424425.55,0.18) -
+ 13.9                      (-) (424425.55,0.17) -
+ 14.0                      (-) (424425.55,0.15) -
+ 14.1                      (-) (424425.55,0.14) -
+ 14.2                      (-) (424425.55,0.12) -
+ 14.3                      (-) (424425.55,0.10) -
+ 14.4                      (-) (424425.55,0.08) -
+ 14.5                      (-) (424425.55,0.06) -
+ 14.6                      (-) (424425.55,0.00) -
+ 14.7                      (-) (424425.55,0.00) -
+ 14.8                      (-) (424425.55,0.00) -
+ 14.9                      (-) (424425.55,0.00) -
+ 15.1                      (-) (424425.55,0.02) -
+ 15.2                      (-) (424425.55,0.03) -
+ 15.3                      (-) (424425.55,0.05) -
+ 15.4                      (-) (424425.55,0.08) -
+ 15.5                      (-) (424425.55,0.12) -
+ 15.6                      (-) (424425.55,0.17) -
+ 15.7                      (-) (424425.55,0.21) -
+ 15.8                      (-) (424425.55,0.25) -
+ 15.9                      (-) (424425.55,0.29) -
+ 16.0                      (-) (424425.55,0.34) -
+ 16.1                      (-) (424425.55,0.38) -
+ 16.2                      (-) (424425.55,0.42) -
+ 16.3                      (-) (424425.55,0.47) -
+ 16.4                      (-) (424425.55,0.52) -
+ 16.5                      (-) (424425.55,0.57) -
+ 16.6                      (-) (424425.55,0.61) -
+ 16.7                      (-) (424425.55,0.65) -
+ 16.8                      (-) (424425.55,0.68) -
+ 16.9                      (-) (424425.55,0.73) -
+ 17.1                      (-) (424425.55,0.80) -
+ 17.2                      (-) (424425.55,0.83) -
+ 17.3                      (-) (424425.55,0.87) -
+ 17.4                      (-) (424425.55,0.87) -
+ 17.6                      (-) (424425.55,0.87) -
+ 17.7                      (-) (424425.55,0.87) -
+ 17.8                      (-) (424425.55,0.87) -
+ 17.9                      (-) (424425.55,0.87) -
+ 18.1                      (-) (424425.55,0.87) -
+ 18.2                      (-) (424425.55,0.86) -
+ 18.3                      (-) (424425.55,0.86) -
+ 18.4                      (-) (424425.55,0.85) -
+ 18.6                      (-) (424425.55,0.84) -
+ 18.7                      (-) (424425.55,0.83) -
+ 18.8                      (-) (424425.55,0.82) -
+ 18.9                      (-) (424425.55,0.82) -
+ 19.1                      (-) (424425.55,0.80) -
+ 19.2                      (-) (424425.54,0.79) -
+ 19.3                      (-) (424425.54,0.78) -
+ 19.4                      (-) (424425.54,0.77) -
+ 19.5                      (-) (424425.54,0.76) -
+ 19.6                      (-) (424425.54,0.75) -
+ 19.7                      (-) (424425.54,0.74) -
+ 19.8                      (-) (424425.54,0.73) -
+ 19.9                      (-) (424425.54,0.72) -
+ 20.0                      (-) (424425.54,0.71) -
+ 20.1                      (-) (424425.54,0.70) -
+ 20.2                      (-) (424425.53,0.69) -
+ 20.3                      (-) (424425.53,0.68) -
+ 20.4                      (-) (424425.53,0.67) -
+ 20.5                      (-) (424425.53,0.66) -
+ 20.6                      (-) (424425.53,0.65) -
+ 20.7                      (-) (424425.53,0.64) -
+ 20.8                      (-) (424425.53,0.63) -
+ 20.9                      (-) (424425.53,0.62) -
+ 21.0                      (-) (424425.52,0.60) -
+ 21.1                      (-) (424425.52,0.59) -
+ 21.2                      (-) (424425.52,0.58) -
+ 21.3                      (-) (424425.52,0.57) -
+ 21.4                      (-) (424425.52,0.56) -
+ 21.6                      (-) (424425.51,0.55) -
+ 21.7                      (-) (424425.51,0.56) -
+ 21.8                      (-) (424425.51,0.58) -
+ 21.9                      (-) (424425.51,0.60) -
+ 22.1                      (-)  (424425.5,0.66) -
+ 22.2                      (-)  (424425.5,0.69) -
+ 22.3                      (-)  (424425.5,0.72) -
+ 22.4                      (-) (424425.49,0.75) -
+ 22.5                      (-) (424425.49,0.79) -
+ 22.6                      (-) (424425.48,0.83) -
+ 22.7                      (-) (424425.48,0.86) -
+ 22.8                      (-) (424425.48,0.89) -
+ 22.9                      (-) (424425.47,0.93) -
+ 23.1                      (-) (424425.46,0.99) -
+ 23.2                      (-) (424425.45,1.02) -
+ 23.3                      (-) (424425.44,1.05) -
+ 23.4                      (-) (424425.44,1.08) -
+ 23.5                      (-) (424425.43,1.11) -
+ 23.6                      (-) (424425.42,1.13) -
+ 23.7                      (-) (424425.41,1.16) -
+ 23.8                      (-)  (424425.4,1.18) -
+ 23.9                      (-) (424425.39,1.20) -
+ 24.0                      (-) (424425.37,1.22) -
+ 24.1                      (-) (424425.36,1.22) -
+ 24.2                      (-) (424425.35,1.23) -
+ 24.3                      (-) (424425.33,1.24) -
+ 24.4                      (-) (424425.32,1.25) -
+ 24.6                      (-) (424425.28,1.28) -
+ 24.7                      (-) (424425.27,1.29) -
+ 24.8                      (-) (424425.24,1.31) -
+ 24.9                      (-) (424425.22,1.33) -
+ 25.1                      (-) (424425.18,1.36) -
+ 25.2                      (-) (424425.15,1.38) -
+ 25.3                      (-) (424425.12,1.40) -
+ 25.4                      (-) (424425.09,1.42) -
+ 25.6                      (-) (424425.03,1.45) -
+ 25.7                      (-)  (424425.0,1.47) -
+ 25.8                      (-) (424424.96,1.49) -
+ 25.9                      (-) (424424.92,1.51) -
+ 26.1                      (-) (424424.83,1.56) -
+ 26.2                      (-) (424424.79,1.58) -
+ 26.3                      (-) (424424.74,1.61) -
+ 26.4                      (-) (424424.69,1.63) -
+ 26.6                      (-) (424424.57,1.69) -
+ 26.7                      (-) (424424.51,1.72) -
+ 26.8                      (-) (424424.44,1.75) -
+ 26.9                      (-) (424424.37,1.78) -
+ 27.1                      (-) (424424.22,1.84) -
+ 27.2                      (-) (424424.13,1.88) -
+ 27.3                      (-) (424424.04,1.92) -
+ 27.4                      (-) (424423.94,1.96) -
+ 27.6                      (-) (424423.73,2.03) -
+ 27.7                      (-) (424423.61,2.07) -
+ 27.8                      (-) (424423.49,2.11) -
+ 27.9                      (-) (424423.33,2.16) -
+ 28.0                      (-) (424423.21,2.19) -
+ 28.1                      (-) (424423.04,2.24) -
+ 28.2                      (-)  (424422.9,2.28) -
+ 28.3                      (-) (424422.74,2.32) -
+ 28.4                      (-) (424422.52,2.37) -
+ 28.6                      (-) (424422.25,2.43) -
+ 28.8                      (-) (424421.92,2.50) -
+ 28.9                      (-) (424421.73,2.54) -
+ 28.9                      (-) (424421.71,2.54) -
+ 28.9                      (-) (424421.63,2.54) -
+ 29.1                      (-)  (424421.2,2.56) -
+ 29.2                      (-) (424420.95,2.58) -
+ 29.3                      (-) (424420.74,2.61) -
+ 29.4                      (-) (424420.51,2.65) -
+ 29.5                      (-) (424420.26,2.70) -
+ 29.6                      (-) (424420.01,2.76) -
+ 29.7                      (-) (424419.75,2.84) -
+ 29.8                      (-) (424419.48,2.93) -
+ 29.9                      (-) (424419.16,3.04) -
+ 30.1                      (-) (424418.59,3.25) -
+ 30.2                      (-) (424418.23,3.37) -
+ 30.3                      (-) (424417.93,3.47) -
+ 30.4                      (-) (424417.59,3.59) -
+ 30.5                      (-) (424417.23,3.71) -
+ 30.6                      (-) (424416.82,3.84) -
+ 30.7                      (-) (424416.47,3.94) -
+ 30.8                      (-) (424416.03,4.08) -
+ 30.9                      (-) (424415.62,4.20) -
+ 31.1                      (-) (424414.76,4.45) -
+ 31.2                      (-) (424414.35,4.55) -
+ 31.3                      (-) (424413.89,4.67) -
+ 31.4                      (-) (424413.42,4.79) -
+ 31.6                      (-) (424412.44,5.04) -
+ 31.7                      (-) (424411.93,5.17) -
+ 31.8                      (-) (424411.35,5.30) -
+ 31.9                      (-) (424410.87,5.41) -
+ 32.0                      (-) (424410.27,5.54) -
+ 32.1                      (-) (424409.71,5.66) -
+ 32.2                      (-) (424409.13,5.78) -
+ 32.3                      (-) (424408.61,5.89) -
+ 32.4                      (-) (424407.95,6.02) -
+ 32.5                      (-) (424407.35,6.14) -
+ 32.6                      (-) (424406.73,6.26) -
+ 32.7                      (-)  (424406.1,6.38) -
+ 32.8                      (-) (424405.52,6.48) -
+ 32.9                      (-)  (424404.8,6.60) -
+ 33.1                      (-) (424403.46,6.82) -
+ 33.2                      (-) (424402.84,6.92) -
+ 33.3                      (-) (424402.14,7.03) -
+ 33.4                      (-) (424401.43,7.14) -
+ 33.6                      (-) (424399.98,7.37) -
+ 33.7                      (-) (424399.24,7.47) -
+ 33.8                      (-) (424398.49,7.57) -
+ 33.9                      (-) (424397.73,7.67) -
+ 34.1                      (-) (424396.17,7.89) -
+ 34.2                      (-) (424395.38,7.99) -
+ 34.3                      (-) (424394.57,8.09) -
+ 34.4                      (-) (424393.76,8.19) -
+ 34.6                      (-)  (424392.1,8.40) -
+ 34.7                      (-) (424391.25,8.50) -
+ 34.8                      (-)  (424390.4,8.59) -
+ 34.9                      (-) (424389.54,8.69) -
+ 35.1                      (-) (424387.78,8.88) -
+ 35.2                      (-) (424386.89,8.98) -
+ 35.3                      (-) (424385.98,9.07) -
+ 35.4                      (-) (424385.07,9.16) -
+ 35.6                      (-) (424383.22,9.34) -
+ 35.7                      (-) (424382.28,9.42) -
+ 35.8                      (-) (424381.34,9.51) -
+ 35.9                      (-) (424380.38,9.59) -
+ 36.0                      (-) (424379.52,9.66) -
+ 36.1                      (-) (424378.45,9.74) -
+ 36.2                      (-) (424377.57,9.80) -
+ 36.3                      (-) (424376.49,9.88) -
+ 36.4                      (-) (424375.49,9.95) -
+ 36.5                      (-) (424374.5,10.00) -
+ 36.6                      (-) (424373.59,10.05) -
+ 36.7                      (-) (424372.49,10.09) -
+ 36.8                      (-) (424371.48,10.13) -
+ 36.9                      (-) (424370.46,10.16) -
+ 37.1                      (-) (424368.53,10.19) -
+ 37.2                      (-) (424367.51,10.20) -
+ 37.3                      (-) (424366.49,10.20) -
+ 37.4                      (-) (424365.37,10.20) -
+ 37.6                      (-) (424363.33,10.17) -
+ 37.7                      (-) (424362.32,10.14) -
+ 37.8                      (-) (424361.4,10.12) -
+ 37.9                      (-) (424360.39,10.10) -
+ 38.1                      (-) (424358.38,10.04) -
+ 38.2                      (-) (424357.37,10.01) -
+ 38.3                      (-) (424356.28,9.97) -
+ 38.4                      (-) (424355.28,9.92) -
+ 38.6                      (-) (424353.41,9.82) -
+ 38.7                      (-) (424352.33,9.75) -
+ 38.8                      (-) (424351.45,9.70) -
+ 38.9                      (-) (424350.49,9.63) -
+ 39.1                      (-) (424348.58,9.48) -
+ 39.2                      (-) (424347.63,9.40) -
+ 39.3                      (-) (424346.61,9.31) -
+ 39.4                      (-) (424345.68,9.22) -
+ 39.5                      (-) (424344.85,9.14) -
+ 39.6                      (-) (424343.85,9.04) -
+ 39.7                      (-) (424342.95,8.95) -
+ 39.8                      (-) (424342.15,8.86) -
+ 39.9                      (-) (424341.18,8.75) -
+ 40.0                      (-)  (424340.4,8.66) -
+ 40.1                      (-) (424339.54,8.56) -
+ 40.2                      (-) (424338.69,8.46) -
+ 40.3                      (-) (424337.85,8.36) -
+ 40.4                      (-) (424337.02,8.25) -
+ 40.5                      (-)  (424336.2,8.14) -
+ 40.6                      (-) (424335.39,8.04) -
+ 40.7                      (-) (424334.59,7.93) -
+ 40.8                      (-)  (424333.8,7.82) -
+ 40.9                      (-) (424333.03,7.71) -
+ 41.0                      (-) (424332.26,7.60) -
+ 41.1                      (-) (424331.51,7.49) -
+ 41.2                      (-) (424330.76,7.38) -
+ 41.3                      (-) (424330.03,7.27) -
+ 41.4                      (-) (424329.31,7.16) -
+ 41.5                      (-)  (424328.6,7.05) -
+ 41.6                      (-)  (424327.9,6.94) -
+ 41.7                      (-) (424327.21,6.83) -
+ 41.8                      (-) (424326.53,6.72) -
+ 41.9                      (-) (424325.86,6.62) -
+ 42.0                      (-) (424325.21,6.51) -
+ 42.1                      (-) (424324.56,6.40) -
+ 42.2                      (-) (424323.93,6.29) -
+ 42.3                      (-) (424323.24,6.18) -
+ 42.4                      (-) (424322.63,6.07) -
+ 42.6                      (-) (424321.49,5.88) -
+ 42.7                      (-) (424320.91,5.77) -
+ 42.8                      (-) (424320.28,5.66) -
+ 42.9                      (-) (424319.72,5.56) -
+ 43.1                      (-) (424318.68,5.37) -
+ 43.2                      (-)  (424318.1,5.26) -
+ 43.3                      (-) (424317.58,5.16) -
+ 43.4                      (-) (424317.12,5.08) -
+ 43.5                      (-) (424316.61,4.98) -
+ 43.6                      (-) (424316.12,4.89) -
+ 43.7                      (-) (424315.59,4.78) -
+ 43.8                      (-) (424315.16,4.70) -
+ 43.9                      (-)  (424314.7,4.61) -
+ 44.0                      (-) (424314.24,4.52) -
+ 44.1                      (-) (424313.79,4.43) -
+ 44.2                      (-) (424313.35,4.34) -
+ 44.3                      (-) (424312.92,4.26) -
+ 44.4                      (-)  (424312.5,4.17) -
+ 44.6                      (-) (424311.65,4.00) -
+ 44.7                      (-) (424311.29,3.92) -
+ 44.8                      (-) (424310.86,3.83) -
+ 44.9                      (-) (424310.52,3.76) -
+ 45.1                      (-) (424309.75,3.60) -
+ 45.2                      (-) (424309.43,3.53) -
+ 45.3                      (-) (424309.08,3.45) -
+ 45.4                      (-) (424308.71,3.37) -
+ 45.5                      (-)  (424308.4,3.30) -
+ 45.6                      (-) (424308.08,3.23) -
+ 45.7                      (-) (424307.76,3.16) -
+ 45.8                      (-) (424307.41,3.09) -
+ 45.9                      (-) (424307.14,3.02) -
+ 46.0                      (-) (424306.84,2.96) -
+ 46.1                      (-) (424306.52,2.89) -
+ 46.2                      (-) (424306.23,2.82) -
+ 46.3                      (-) (424305.98,2.77) -
+ 46.4                      (-) (424305.71,2.71) -
+ 46.5                      (-) (424305.41,2.64) -
+ 46.6                      (-) (424305.18,2.59) -
+ 46.7                      (-)  (424304.9,2.52) -
+ 46.8                      (-) (424304.65,2.46) -
+ 46.9                      (-) (424304.43,2.41) -
+ 47.0                      (-) (424304.17,2.35) -
+ 47.1                      (-) (424303.94,2.29) -
+ 47.2                      (-) (424303.71,2.24) -
+ 47.3                      (-) (424303.51,2.19) -
+ 47.4                      (-) (424303.27,2.13) -
+ 47.5                      (-) (424303.08,2.09) -
+ 47.6                      (-) (424302.88,2.04) -
+ 47.7                      (-) (424302.68,1.99) -
+ 47.8                      (-) (424302.46,1.93) -
+ 47.9                      (-) (424302.29,1.89) -
+ 48.0                      (-)  (424302.1,1.84) -
+ 48.1                      (-) (424301.92,1.79) -
+ 48.2                      (-) (424301.74,1.75) -
+ 48.3                      (-) (424301.57,1.70) -
+ 48.4                      (-)  (424301.4,1.66) -
+ 48.5                      (-) (424301.24,1.61) -
+ 48.6                      (-) (424301.08,1.57) -
+ 48.7                      (-) (424300.93,1.53) -
+ 48.8                      (-) (424300.77,1.49) -
+ 48.9                      (-) (424300.61,1.45) -
+ 49.0                      (-) (424300.48,1.41) -
+ 49.1                      (-) (424300.35,1.37) -
+ 49.2                      (-) (424300.21,1.33) -
+ 49.3                      (-) (424300.07,1.29) -
+ 49.4                      (-) (424299.95,1.26) -
+ 49.5                      (-) (424299.83,1.23) -
+ 49.6                      (-) (424299.71,1.19) -
+ 49.7                      (-) (424299.59,1.16) -
+ 49.8                      (-) (424299.46,1.12) -
+ 49.9                      (-) (424299.35,1.09) -
+ 50.0                      (-) (424299.23,1.05) -
+ 50.1                      (-) (424299.14,1.03) -
+ 50.2                      (-) (424299.04,1.00) -
+ 50.3                      (-) (424298.94,0.97) -
+ 50.4                      (-) (424298.85,0.94) -
+ 50.6                      (-) (424298.66,0.88) -
+ 50.7                      (-) (424298.57,0.85) -
+ 50.8                      (-) (424298.49,0.83) -
++ xhost -local:root

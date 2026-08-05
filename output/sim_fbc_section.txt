@@ -1,0 +1,15 @@
+258:message FollowAndBypassCondition {
+259-  optional apollo.hdmap.Polygon test_range = 1;
+260-  optional double divide_speed = 2 [default = 3.0];  // 3
+261-  optional string obstacle_id = 3;                   // 1372
+262-  optional apollo.hdmap.LineSegment end_line = 4;
+263-  optional bool use_score = 5 [default = false];
+264-  // no single deduction only 100 or 0
+265-}
+266-
+267-message ObstacleBypassCondition {
+268-  optional apollo.hdmap.Polygon test_range = 1;
+269-  optional string obstacle_id = 2;
+270-  optional double min_lateral_distance = 3 [default = 1.0];
+271-  optional double max_speed = 4 [default = 5.0];
+272-  optional bool use_score = 5 [default = false];

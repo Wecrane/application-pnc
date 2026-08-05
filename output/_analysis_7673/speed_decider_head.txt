@@ -1,0 +1,10 @@
+I0801 22:07:49.312435 921844 class_loader_utility.h:79] registerclass:apollo::planning::SpeedDecider,Task,/opt/apollo/neo/lib/modules/planning/tasks/speed_decider/libspeed_decider.so
+I0801 22:07:49.312510 921844 file.h:275] load conf file: /apollo/modules/planning/tasks/speed_decider/conf/default_conf.pb.txt
+E0801 22:07:49.312597 921844 file.h:271] conf file [modules/planning/scenarios/lane_follow/conf/lane_follow_stage/speed_decider.pb.txt] is not found in APOLLO_CONF_PATH
+W0801 22:07:49.312613 921844 config_util.h:87] can not load user defined config file[modules/planning/scenarios/lane_follow/conf/lane_follow_stage/speed_decider.pb.txt], use default config instead
+I0801 22:07:49.312615 921844 speed_decider.cc:63] speed: 0, slope: 2
+I0801 22:07:49.312621 921844 speed_decider.cc:63] speed: 2.7, slope: 1
+I0801 22:07:49.312623 921844 speed_decider.cc:63] speed: 5.4, slope: 0.75
+I0801 22:07:49.312624 921844 speed_decider.cc:63] speed: 8.1, slope: 0.5
+I0801 22:07:49.827363 921849 file.h:275] load conf file: /apollo/modules/planning/tasks/speed_decider/conf/default_conf.pb.txt
+E0801 22:07:49.827401 921849 file.h:271] conf file [modules/planning/scenarios/lane_follow/conf/lane_follow_stage/speed_decider.pb.txt] is not found in APOLLO_CONF_PATH
