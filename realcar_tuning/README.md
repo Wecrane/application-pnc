@@ -9,6 +9,15 @@
 realcar_tuning/
 ├── README.md                          # 本说明
 ├── 参数改动清单.md                     # 🚨 逐参数改动清单（原值/新值/注释/依据/审查结论）
+├── 评分细则.md                         # 🚨 实车赛评分细则（源码级，怎么评/扣多少）
+├── 参数手册/                           # 🚨 全参数手册（回归代码版，逐参数含义）
+│   ├── README.md                      # 参数手册总览
+│   ├── 01_planning_core.md            # planning.conf 全 gflags + 核心配置
+│   ├── 02_traffic_rules.md            # 10 个 TrafficRule 全参数
+│   ├── 03_tasks_core.md               # 16 个核心 Task 全参数
+│   ├── 04_tasks_open_space.md         # 16 个 open_space/泊车 Task
+│   ├── 05_scenarios.md                # 17 个 Scenario 全参数
+│   └── 06_control.md                  # Control 全参数（LQR/PID/防溜坡/标定表）
 ├── ORIGINAL/                          # ✅ 实车原始配置（未改动，基准/对照）
 │   └── modules/
 │       ├── planning/                  # planning 全量配置（137 文件）
