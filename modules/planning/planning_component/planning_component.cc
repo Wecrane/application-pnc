@@ -251,23 +251,6 @@ bool PlanningComponent::Proc(
   for (auto& p : *adc_trajectory_pb.mutable_trajectory_point()) {
     p.set_relative_time(p.relative_time() + dt);
   }
-  // 离散化输出给 control 的加速度: 只允许 {2.9, 0, -5.9} 三档,
-  // 需要加速时拉满 2.9, 需要减速时拉满 -5.9, 巡航时为 0 (加速度最大化)
-  {
-    constexpr double kAccelFull = 2.9;
-    constexpr double kDecelFull = -5.9;
-    constexpr double kAccelEpsilon = 0.05;  // 阈值, 避免浮点噪声被放大成满档
-    for (auto& p : *adc_trajectory_pb.mutable_trajectory_point()) {
-      const double a = p.a();
-      if (a > kAccelEpsilon) {
-        p.set_a(kAccelFull);
-      } else if (a < -kAccelEpsilon) {
-        p.set_a(kDecelFull);
-      } else {
-        p.set_a(0.0);
-      }
-    }
-  }
   planning_writer_->Write(adc_trajectory_pb);
 
   // Send command execution feedback.
