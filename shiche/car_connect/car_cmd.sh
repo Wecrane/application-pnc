@@ -11,7 +11,7 @@
 # =============================================================================
 set -euo pipefail
 
-PROJ="${PROJ_DIR:-apollo-edu-9.1.1}"
+PROJ="${PROJ_DIR:-apollo-edu_9.1.1}"   # 实车实测为下划线
 CMD="${1:-}"
 
 if [ -z "${CMD}" ]; then

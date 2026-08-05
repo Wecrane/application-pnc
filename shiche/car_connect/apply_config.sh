@@ -11,7 +11,7 @@
 # =============================================================================
 set -euo pipefail
 
-PROJ="${PROJ_DIR:-apollo-edu-9.1.1}"
+PROJ="${PROJ_DIR:-apollo-edu_9.1.1}"   # 实车实测为下划线
 TARGET="${1:-}"
 
 if ! ssh -O check car >/dev/null 2>&1; then

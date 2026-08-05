@@ -10,7 +10,7 @@
 # =============================================================================
 set -euo pipefail
 
-PROJ="${PROJ_DIR:-apollo-edu-9.1.1}"   # ⚠️ 现场 ssh car 'ls ~' 核实（可能下划线）
+PROJ="${PROJ_DIR:-apollo-edu_9.1.1}"   # ⚠️ 实车实测为下划线（890车确认）；仍可 PROJ_DIR 覆盖
 MNT_ROOT="${HOME}/car"
 
 # 1. 确保 master 连接存在（首次会要求密码）

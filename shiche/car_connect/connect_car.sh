@@ -78,13 +78,13 @@ echo "✅ 免密 master 已建立（4 小时内 ssh/scp/sshfs 免密）"
 
 # ---------- 6. 探测工程目录名（现场可能有差异） ----------
 PROJ=""
-for cand in apollo-edu-9.1.1 apollo-edu_9.1.1 apollo-deu-9.1.1; do
+for cand in apollo-edu_9.1.1 apollo-edu-9.1.1 apollo-deu-9.1.1; do   # 实车实测下划线优先
   if ssh car "test -d ~/${cand}" >/dev/null 2>&1; then
     PROJ="${cand}"
     break
   fi
 done
-PROJ="${PROJ:-apollo-edu-9.1.1}"
+PROJ="${PROJ:-apollo-edu_9.1.1}"   # 实车实测为下划线
 echo "ℹ️  实车工程目录 = ~/${PROJ}"
 
 # ---------- 7. 挂载 profiles + modules（SFTP 到本地） ----------

@@ -9,7 +9,7 @@
 # =============================================================================
 set -euo pipefail
 
-PROJ="${PROJ_DIR:-apollo-edu-9.1.1}"
+PROJ="${PROJ_DIR:-apollo-edu_9.1.1}"   # 实车实测为下划线
 SCOPE="${1:-profiles}"
 TS="$(date +%Y%m%d_%H%M%S)"
 DST="${HOME}/car_backup_${TS}"
