@@ -31,7 +31,7 @@ case "$TARGET" in
     restart_module "Planning" "/apollo/modules/planning/planning_component/launch/planning.launch"
     ;;
   control)
-    restart_module "Control" "/apollo/modules/control/launch/control.launch"
+    restart_module "Control" "/apollo/modules/control/control_component/launch/control.launch"
     ;;
   --restart-all)
     echo "==> 重启 Dreamview（全部模块）..."

@@ -34,6 +34,12 @@
 | 跟车/停车决策 | `.../tasks/speed_decider/conf/default_conf.pb.txt` |
 | 路径权重 | `.../tasks/lane_follow_path/conf/default_conf.pb.txt` |
 | 速度平滑 | `.../tasks/piecewise_jerk_speed/conf/default_conf.pb.txt` |
+| **Control 全局 gflags** | `modules/control/control_component/conf/control.conf` |
+| **Control 流水线** | `modules/control/control_component/conf/pipeline.pb.txt` |
+| **横向 LQR** | `modules/control/controllers/lat_based_lqr_controller/conf/controller_conf.pb.txt` |
+| **纵向 PID** | `modules/control/controllers/lon_based_pid_controller/conf/controller_conf.pb.txt` |
+
+> Control 模块官方发布包已在本地 `modules/control/`（详见 `references/09-control-module.md`）。只改 control 参数 → 重启 Control 模块（`apply_config.sh control`）。
 
 ### 1.3 生效（只改参数：改哪个模块就重启哪个模块）
 
