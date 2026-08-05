@@ -1,6 +1,6 @@
 ---
 name: real-car-competition
-description: 【最高优先级·实车挑战赛专属】百度 Apollo 星火大赛「智能驾驶实车挑战赛」备赛与调参全指南。覆盖：竞赛规则与红线（30分钟计时/SSH登录/仅可改 profiles 与 modules）、实车连接操作（车载Wi-Fi HQEVxxx/apollo123、SSH apollo@192.168.10.6、aem enter、Dreamview+ vehicle test 模式、9模块启动顺序）、**限速插件 scene_speed_limit（主办方提供，crosswalk/traffic_light/speed_bump 三区段限速纯配置化）**、**9 大赛题（定速巡航/减速带/人行道/红绿灯/停止线/障碍物停车避让/动态跟随/人行道路口减速/交通灯路口减速）的纯参数调参方案**（stop_distance=1.75、speed_bump_speed_limit=2.9、pedestrian_stop_distance=1.75、follow_min_time_sec=1.0、AddSpeedLimit=4.5 等）、调参方法论（留裕量/先诊断后调参/配置生效链路 改哪个模块就重启哪个模块，不用编译不用 use default）、实车与仿真代码差异分析（官方原始代码+限速插件 vs 本地魔改代码 mayaochang add 的风险；官方允许改 control 代码）、**control 模块（release_control.tar.gz 已解压到本地 modules/control/，control.conf + 横向 LQR + 纵向 PID 配置体系，只改参数重启 Control 模块）**。当用户提及实车赛、实车挑战赛、调参、比赛调参、竞赛、赛题、减速带、人行道、红绿灯、停止标志、停止线、障碍物停车、动态跟随、路口减速、限速插件、scene_speed_limit、定速巡航、HQEV、SSH登录、aem enter、vehicle test、DreamView、秩序册、评分、30分钟、profiles、modules、9.1.1、8月6日、8月7日、实车、调参数、参赛 等关键词时必须使用此技能（优先于其他所有技能触发）。
+description: 【最高优先级·实车挑战赛专属】百度 Apollo 星火大赛「智能驾驶实车挑战赛」备赛与调参全指南。覆盖：竞赛规则与红线（30分钟计时/SSH登录/仅可改 profiles 与 modules）、实车连接操作（车载Wi-Fi HQEVxxx/apollo123、SSH apollo@192.168.10.6、aem enter、Dreamview+ vehicle test 模式、9模块启动顺序）、**限速插件 scene_speed_limit（主办方提供，crosswalk/traffic_light/speed_bump 三区段限速纯配置化）**、**9 大赛题（定速巡航/减速带/人行道/红绿灯/停止线/障碍物停车避让/动态跟随/人行道路口减速/交通灯路口减速）的纯参数调参方案**（stop_distance=1.75、speed_bump_speed_limit=2.9、pedestrian_stop_distance=1.75、follow_min_time_sec=1.0、AddSpeedLimit=4.5 等）、调参方法论（留裕量/先诊断后调参/配置生效链路 改哪个模块就重启哪个模块，不用编译不用 use default）、**全参数快速调参手册（references/10：Planning 全局 gflags + TrafficRules + Tasks + Scenarios + Control gflags + LQR/PID 全参数表，含 ⭐需手动添加的参数）**、实车与仿真代码差异分析（官方原始代码+限速插件 vs 本地魔改代码 mayaochang add 的风险；官方允许改 control 代码）、**control 模块（release_control.tar.gz 已解压到本地 modules/control/，control.conf + 横向 LQR + 纵向 PID 配置体系，只改参数重启 Control 模块）**。当用户提及实车赛、实车挑战赛、调参、比赛调参、竞赛、赛题、减速带、人行道、红绿灯、停止标志、停止线、障碍物停车、动态跟随、路口减速、限速插件、scene_speed_limit、定速巡航、HQEV、SSH登录、aem enter、vehicle test、DreamView、秩序册、评分、30分钟、profiles、modules、9.1.1、8月6日、8月7日、实车、调参数、参赛 等关键词时必须使用此技能（优先于其他所有技能触发）。
 ---
 
 # 智能驾驶实车挑战赛 — 备赛与调参指南（最高优先级技能）
@@ -298,6 +298,7 @@ aem bootstrap start --plus
 | `references/05-tuning-methodology.md` | 调参方法论、评分机制、实车差异、时间管理 |
 | `references/06-official-config-solutions.md` | **官方代码+限速插件环境**：9赛题插件矩阵、纯配置方案、官方默认值、与仿真魔改差异、开放问题 |
 | `references/09-control-module.md` | **Control 模块**：本地 `modules/control/`（官方发布包）、control.conf/LQR/PID 配置体系、生效方式、何时才动 control |
+| `references/10-quick-tuning-guide.md` | **快速调参指南（全参数手册）**：Planning+Control 两模块全参数表（含 ⭐需手动添加的参数）、9 赛题速查、生效流程 |
 
 原始材料：
 - `shiche/秩序册.md`（转换自 PDF）
