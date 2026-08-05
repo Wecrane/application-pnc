@@ -4,6 +4,7 @@
 > **目标**：只改 `profiles/HQEV_BDN/` 下的 5 个配置文件 + 重启模块，一套配置打满 4 个场次。
 > **生效方式（官方确认）**：只改参数 → 改哪个模块就重启哪个模块（Dreamview+ 模块栏开关），**不编译、不用 `aem profile use default`**。
 > **铁律**：所有情况以实车为准，现场先 `check_car.sh` 摸底 + 跑一圈实测，再按本指南微调。
+> **📁 配置文件模板**：工作区根目录 **`realcar_tuning/`**（`ORIGINAL/`=实车原始配置、`RECOMMENDED/`=推荐参数已应用版，比赛直接上传 RECOMMENDED）。⚠️ 注意与工作区 `modules/planning/traffic_rules/`（官方源码默认值）区分！
 
 ---
 

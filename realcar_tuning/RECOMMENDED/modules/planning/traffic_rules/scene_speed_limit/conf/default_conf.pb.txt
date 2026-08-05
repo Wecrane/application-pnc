@@ -1,0 +1,19 @@
+crosswalk_enabled: true
+crosswalk_forward_buffer: 8.0
+crosswalk_backward_buffer: 2.0
+crosswalk_limit_speed: 0.8        # 减速带区域 ≤1.0，留 0.2 裕量
+
+traffic_light_enabled: true
+traffic_light_forward_buffer: 8.0
+traffic_light_backward_buffer: 2.0
+traffic_light_limit_speed: 0.8    # 减速带区域 ≤1.0，留 0.2 裕量
+
+speed_bump_enabled: false
+speed_bump_forward_buffer: 1.0
+speed_bump_backward_buffer: 1.0
+speed_bump_limit_speed: 1.0
+
+junction_enabled: false
+junction_forward_buffer: 1.0
+junction_backward_buffer: 1.0
+junction_limit_speed: 1.0

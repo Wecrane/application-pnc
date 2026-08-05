@@ -1,0 +1,8 @@
+stop_distance: 1.25        # 原 0.10 → 1.25（评分停车 [1.0,1.5]m）
+max_stop_deceleration: 4.0
+min_pass_s_distance: 1.0
+expand_s_distance: 6.0     # 原 0.0 → 6.0（提前识别行人防急刹）
+stop_strict_l_distance: 1.0
+stop_loose_l_distance: 1.5
+start_watch_timer_distance:10
+stop_timeout: 30.0       # 原 3.0 → 30.0（防行人未走完提前放行）
