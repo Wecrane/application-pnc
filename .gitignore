@@ -59,3 +59,7 @@ backup/realcar_20260805_163156/profiles_default.tar.gz
 shiche/car_890/car_more_logs.tar.gz
 shiche/car_890/suzhou_extracted/
 release-donglixue.tar.gz
+
+# buildtool安装缓存
+dev/install/
+dev/bazel/
