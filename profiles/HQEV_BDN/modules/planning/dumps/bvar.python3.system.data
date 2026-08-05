@@ -1,0 +1,32 @@
+python3_kernel_version : "Linux in-dev-docker 5.4.115-rt57 #1 SMP PREEMPT_RT Tue Jul 6 07:38:24 UTC 2021 x86_64 x86_64 x86_64 GNU/Linux
+"
+python3_process_cmdline : "/usr/bin/python3
+/opt/apollo/neo/bin/planning_command.runfiles/apollo-park-generic/modules/tools/planning_command/planning_command.py
+"
+python3_process_context_switches_involuntary_second : 117
+python3_process_context_switches_voluntary_second : 9609
+python3_process_cpu_usage : 0.115
+python3_process_cpu_usage_system : 0.077
+python3_process_cpu_usage_user : 0.038
+python3_process_disk_read_bytes_second : 0
+python3_process_disk_write_bytes_second : 1228
+python3_process_faults_major : 119
+python3_process_faults_minor_second : 0
+python3_process_fd_count : 27
+python3_process_inblocks_second : 0
+python3_process_io_read_bytes_second : 529
+python3_process_io_read_second : 5
+python3_process_io_write_bytes_second : 272
+python3_process_io_write_second : 0
+python3_process_memory_data_and_stack : 1110056960
+python3_process_memory_resident : 95854592
+python3_process_memory_shared : 43622400
+python3_process_memory_text : 3883008
+python3_process_memory_virtual : 3420393472
+python3_process_nice : 0
+python3_process_outblocks_second : 2
+python3_process_priority : 20
+python3_process_thread_count : 32
+python3_process_uptime : 100.640125
+python3_process_username : "unknown (No such device or address)"
+python3_process_work_dir : "/apollo_workspace/profiles/HQEV_BDN/modules/planning"

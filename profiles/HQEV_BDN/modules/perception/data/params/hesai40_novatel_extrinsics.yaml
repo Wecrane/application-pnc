@@ -1,0 +1,18 @@
+header:
+  frame_id: novatel
+  stamp:
+    nsecs: 0
+    secs: 1561700513
+  seq: 0
+frame: ENU
+child_frame_id: hesai40
+transform:
+  rotation:
+    x: 0.007740754368934889
+    y: -0.002093690120419159
+    z: 0.6996071202215428
+    w: 0.7144827321347936
+  translation:
+    x: 0.0004759260292200119
+    y: 1.144297611747176
+    z: 1.2193
