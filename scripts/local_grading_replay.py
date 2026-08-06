@@ -176,6 +176,35 @@ def make_ped(pid, x, y, spd, heading):
     return obj
 
 
+def adjust_stop_distance(rows, front_dy, target_dist):
+    """把 Crosswalk 前"真静止段"（v<0.1 且位置几乎不变）平移到车头距横道=target_dist"""
+    n = len(rows)
+    i = 0
+    while i < n:
+        dy = rows[i][2] - START_Y
+        if abs(rows[i][4]) < 0.1 and front_dy - 10 <= dy <= front_dy + 1:
+            j = i
+            while j < n and abs(rows[j][4]) < 0.1 and front_dy - 10 <= (rows[j][2] - START_Y) <= front_dy + 1:
+                j += 1
+            seg = rows[i:j]
+            dy_min = min(r[2] for r in seg)
+            dy_max = max(r[2] for r in seg)
+            # 只处理"真静止"：持续>=1s 且段内位置漂移 <0.3m（排除蠕行段）
+            if j - i >= 5 and (dy_max - dy_min) < 0.3:
+                mid = seg[len(seg) // 2]
+                y_rel = mid[2] - START_Y
+                head_dist = front_dy - (y_rel + FRONT)   # 正=车头在横道前
+                delta = (front_dy - target_dist - FRONT) - y_rel
+                for k in range(i, j):
+                    t, x, y, th, v, a = rows[k]
+                    rows[k] = (t, x, y + delta, th, v, a)
+                print(f"[Adjust] 静止段 Δy={y_rel:.2f} 原车头距横道={head_dist:.2f}m "
+                      f"→ {target_dist:.2f}m (平移 {delta:+.2f}m)")
+                break
+        i += 1
+    return rows
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--log', required=True)
@@ -183,6 +212,10 @@ def main():
     ap.add_argument('--map', required=True)
     ap.add_argument('--metric', required=True)
     ap.add_argument('--field', default='7号下午')
+    ap.add_argument('--stop-distance-target', type=float, default=0,
+                    help='把 Crosswalk 停车段平移到"车头距横道=该值"(如1.25)，模拟新配置效果')
+    ap.add_argument('--crosswalk-front-dy', type=float, default=59.64,
+                    help='目标横道前缘 Δy（7pm Crosswalk_5=59.64）')
     args = ap.parse_args()
 
     # 地图
@@ -208,6 +241,11 @@ def main():
     if end_idx is not None:
         rows = rows[:end_idx]
         print(f"[Log] 截断到首次终点停稳: {len(rows)} 帧, {rows[-1][0]-rows[0][0]:.0f}s")
+
+    # 可选：平移 Crosswalk 停车段到目标停车距离（零仿真验证新配置效果）
+    if args.stop_distance_target > 0:
+        rows = adjust_stop_distance(rows, args.crosswalk_front_dy,
+                                    args.stop_distance_target)
 
     t0 = rows[0][0]
     pedsim = PedestrianSim(args.scenario)
