@@ -5,7 +5,7 @@ crosswalk_limit_speed: 0.7         # 原 1.0 → 0.7（评分减速带区域 ≤
 
 traffic_light_enabled: true        # 原 false → true（6上午/6下午减速带=Signal_1/Signal_6 位置，开信号灯区段限速）
 traffic_light_forward_buffer: 8.0  # 原 1.0 → 8.0（提前 8m 开始限速）
-traffic_light_backward_buffer: 5.0 # 原 1.0 → 5.0（第五轮审查：2.0 有真实尾部缺口 0.36-2.67m，5.0 全覆盖）
+traffic_light_backward_buffer: 8.0 # 原 1.0 → 8.0（第六轮：signal overlap 在停止线，6am/6pm 尾部缺口 1.6m，8.0 全覆盖）
 traffic_light_limit_speed: 0.7     # 原 1.0 → 0.7（评分减速带区域 ≤1.0，留 0.3 裕量）
 
 speed_bump_enabled: false

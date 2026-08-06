@@ -143,11 +143,11 @@ RoadSpeedLimit: speed_limit_regions: limit_max_speed=1.0, 扣 2 分/单位/帧
 | **traffic_light** | `traffic_light_enabled` | **true** | 6上午/6下午减速带（=Signal_1/Signal_6 位置） |
 | | `traffic_light_limit_speed` | **0.7** | 同上 |
 | | `traffic_light_forward_buffer` | **8.0** | 同上 |
-| | `traffic_light_backward_buffer` | **5.0** | 同上（缺口最严重 2.67m） |
+| | `traffic_light_backward_buffer` | **8.0** | 第六轮修正：signal overlap 在停止线（提前 1.1-1.35m），6am/6pm 尾部缺口 1.6m，8.0 全覆盖 |
 | speed_bump | `speed_bump_enabled` | false | ⚠️ 地图无 speed_bump，开了无效 |
 | junction | `junction_enabled` | false | 保持关闭 |
 
-> **💡 通用配置**：crosswalk + traffic_light 两组**同时开**（都配 0.7/8.0/5.0）→ 4 个场次一网打尽！不需要按场次切换。
+> **💡 通用配置**：crosswalk + traffic_light 两组**同时开**（crosswalk 0.7/8.0/5.0 + traffic_light 0.7/8.0/8.0）→ 4 个场次一网打尽！不需要按场次切换。
 
 ### 3.4 跟车/障碍（新版无此赛题，备选）
 
@@ -194,7 +194,7 @@ crosswalk_limit_speed: 0.7
 
 traffic_light_enabled: true
 traffic_light_forward_buffer: 8.0
-traffic_light_backward_buffer: 5.0
+traffic_light_backward_buffer: 8.0
 traffic_light_limit_speed: 0.7
 
 # speed_bump / junction 两组保持 false（地图无对应元素，开了无效）
@@ -324,7 +324,7 @@ ssh car "cat /apollo/modules/planning/traffic_rules/crosswalk/conf/default_conf.
 | crosswalk conf | `stop_timeout` | **30.0** |
 | traffic_light conf | `stop_distance` | **1.25** |
 | scene_speed_limit conf | `crosswalk_enabled` / `limit_speed` / `forward_buffer` / `backward_buffer` | **true / 0.7 / 8.0 / 5.0** |
-| scene_speed_limit conf | `traffic_light_enabled` / `limit_speed` / `forward_buffer` / `backward_buffer` | **true / 0.7 / 8.0 / 5.0** |
+| scene_speed_limit conf | `traffic_light_enabled` / `limit_speed` / `forward_buffer` / `backward_buffer` | **true / 0.7 / 8.0 / 8.0** |
 | stop_sign conf（备选） | `stop_distance` | 1.25 |
 
 **配置生效**：只改 Planning 相关 → 重启 Planning 模块（Dreamview+ 关开），不编译。
