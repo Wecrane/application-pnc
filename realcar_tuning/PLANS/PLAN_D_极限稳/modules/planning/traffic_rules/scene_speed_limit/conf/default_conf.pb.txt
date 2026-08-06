@@ -1,0 +1,19 @@
+crosswalk_enabled: true
+crosswalk_forward_buffer: 10.0
+crosswalk_backward_buffer: 5.0
+crosswalk_limit_speed: 0.6
+
+traffic_light_enabled: true
+traffic_light_forward_buffer: 10.0
+traffic_light_backward_buffer: 8.0
+traffic_light_limit_speed: 0.6
+
+speed_bump_enabled: false
+speed_bump_forward_buffer: 1.0
+speed_bump_backward_buffer: 1.0
+speed_bump_limit_speed: 1.0
+
+junction_enabled: false
+junction_forward_buffer: 1.0
+junction_backward_buffer: 1.0
+junction_limit_speed: 1.0
