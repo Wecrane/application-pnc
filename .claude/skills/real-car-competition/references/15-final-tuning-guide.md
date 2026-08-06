@@ -139,15 +139,15 @@ RoadSpeedLimit: speed_limit_regions: limit_max_speed=1.0, 扣 2 分/单位/帧
 | **crosswalk** | `crosswalk_enabled` | **true** | 7上午/7下午减速带（=Crosswalk_1 位置） |
 | | `crosswalk_limit_speed` | **0.7** | 限速 ≤1.0 留 0.3 裕量 |
 | | `crosswalk_forward_buffer` | **8.0** | 提前 8m 开始限速（2.5→0.7 平缓减速） |
-| | `crosswalk_backward_buffer` | **2.0** | 区域后 2m 恢复 |
+| | `crosswalk_backward_buffer` | **5.0** | 第五轮审查：2.0 有真实尾部缺口（6下 2.67m/6上 0.95m/7下 0.36m），5.0 全覆盖 |
 | **traffic_light** | `traffic_light_enabled` | **true** | 6上午/6下午减速带（=Signal_1/Signal_6 位置） |
 | | `traffic_light_limit_speed` | **0.7** | 同上 |
 | | `traffic_light_forward_buffer` | **8.0** | 同上 |
-| | `traffic_light_backward_buffer` | **2.0** | 同上 |
+| | `traffic_light_backward_buffer` | **5.0** | 同上（缺口最严重 2.67m） |
 | speed_bump | `speed_bump_enabled` | false | ⚠️ 地图无 speed_bump，开了无效 |
 | junction | `junction_enabled` | false | 保持关闭 |
 
-> **💡 通用配置**：crosswalk + traffic_light 两组**同时开**（都配 0.7/8.0/2.0）→ 4 个场次一网打尽！不需要按场次切换。
+> **💡 通用配置**：crosswalk + traffic_light 两组**同时开**（都配 0.7/8.0/5.0）→ 4 个场次一网打尽！不需要按场次切换。
 
 ### 3.4 跟车/障碍（新版无此赛题，备选）
 
@@ -189,12 +189,12 @@ max_stop_deceleration: 4.0 # 保持
 ```text
 crosswalk_enabled: true
 crosswalk_forward_buffer: 8.0
-crosswalk_backward_buffer: 2.0
+crosswalk_backward_buffer: 5.0
 crosswalk_limit_speed: 0.7
 
 traffic_light_enabled: true
 traffic_light_forward_buffer: 8.0
-traffic_light_backward_buffer: 2.0
+traffic_light_backward_buffer: 5.0
 traffic_light_limit_speed: 0.7
 
 # speed_bump / junction 两组保持 false（地图无对应元素，开了无效）
@@ -323,8 +323,8 @@ ssh car "cat /apollo/modules/planning/traffic_rules/crosswalk/conf/default_conf.
 | crosswalk conf | `expand_s_distance` | **6.0** |
 | crosswalk conf | `stop_timeout` | **30.0** |
 | traffic_light conf | `stop_distance` | **1.25** |
-| scene_speed_limit conf | `crosswalk_enabled` / `limit_speed` / `forward_buffer` | **true / 0.7 / 8.0** |
-| scene_speed_limit conf | `traffic_light_enabled` / `limit_speed` / `forward_buffer` | **true / 0.7 / 8.0** |
+| scene_speed_limit conf | `crosswalk_enabled` / `limit_speed` / `forward_buffer` / `backward_buffer` | **true / 0.7 / 8.0 / 5.0** |
+| scene_speed_limit conf | `traffic_light_enabled` / `limit_speed` / `forward_buffer` / `backward_buffer` | **true / 0.7 / 8.0 / 5.0** |
 | stop_sign conf（备选） | `stop_distance` | 1.25 |
 
 **配置生效**：只改 Planning 相关 → 重启 Planning 模块（Dreamview+ 关开），不编译。
