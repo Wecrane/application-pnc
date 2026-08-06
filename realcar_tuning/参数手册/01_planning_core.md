@@ -27,8 +27,8 @@
 | `--longitudinal_jerk_lower_bound` | **-5** | -4.0 | 纵向 jerk 下界，`piecewise_jerk_speed_optimizer.cc:180/409` set_dddx_bound | 实车放宽到 -5（更陡急刹可行）⭐ |
 | `--longitudinal_jerk_upper_bound` | **5** | 2.0 | 纵向 jerk 上界 | 实车放宽到 5（加速更灵活）⭐ |
 | `--obstacle_lat_buffer` | 0.4 | 0.4 | 障碍物横向 buffer（m），path 边界让出宽度 | 调大→绕障更安全但更贴线外 ○ |
-| `--min_stop_distance_obstacle` | **0.0** | 6.0 | 车道内障碍最小停车距离。`obstacle.cc:311-312` 钳制 | **钳到 0：可紧贴障碍停车** ⭐ |
-| `--max_stop_distance_obstacle` | **0.0** | 10.0 | 障碍最大停车距离上限 | 与 min 一致→停车距离=障碍边界 ⭐ |
+| `--min_stop_distance_obstacle` | **0.0→0.8** | 6.0 | **停车题命门（第八轮）**：speed_decider 所有 STOP 分支（static/cross/too_close）`CreateStopDecision(-FLAGS_min_stop_distance_obstacle)` 停障碍物前 N 米（speed_decider.cc:204/255/283/293/332）；`obstacle.cc:311-312` 只影响 MinRadiusStopDistance（转弯）不影响本参数。**横穿行人感知 UNKNOWN → crosswalk 规则不触发 → 本参数是唯一可控停车距离兜底** | 原 0（紧贴障碍停车→实测 0.26~0.62m 扣 20）；**改 0.8 → 停车 1.06~1.42m ∈[1.0,1.5] ✓**；⚠️ 不能 1.25（0.26+1.25=1.51 超限）⭐ |
+| `--max_stop_distance_obstacle` | **0.0** | 10.0 | 障碍最大停车距离上限（仅 MinRadiusStopDistance 转弯用，不影响 speed_decider STOP） | 与 min 一致→停车距离=障碍边界 ⭐ |
 | `--static_obstacle_nudge_l_buffer` | **0.6** | 0.3 | 静态障碍绕行最小横向距离 | 实车 2 倍→绕障余量更大 ⭐ |
 | `--enable_smoother_failsafe` | true | false | 平滑器失败用 warm start 结果兜底 | 开空间 △ |
 | `--enable_parallel_trajectory_smoothing` | true | false | 分段并行平滑 | 开空间 △ |

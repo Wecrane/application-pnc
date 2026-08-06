@@ -22,6 +22,7 @@
 |------|---------|--------|------|
 | planning | `default_cruise_speed` | 5.0 | 巡航速度（评分 ≤3.0556，**推荐 2.5** 留 0.56 裕量）⭐ |
 | planning | `planning_upper_speed_limit` | 5.0 | 全局限速（铁律 [1.5,5.1] 别动）⭐ |
+| planning | `min_stop_distance_obstacle` | 0.0 | **停车题终极兜底（第八轮）**：实车横穿行人感知 UNKNOWN → crosswalk 规则不触发 → speed_decider 停行人前 N 米。**0.0→0.8**（停车 1.06~1.42m 达标；不能 1.25）⭐ |
 | crosswalk | `stop_distance` / `expand_s_distance` / `stop_timeout` | 0.10 / 0.0 / 3.0 | 人行道停车距离/检测区/等待超时 ⭐ |
 | traffic_light | `stop_distance` | 0.10 | 红灯停车距离 ⭐ |
 | scene_speed_limit | `crosswalk_*` / `traffic_light_*` | 全 false | 限速插件（减速带/路口限速核心）⭐ |
