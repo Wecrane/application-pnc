@@ -21,6 +21,7 @@
 #   ./car_deploy.sh --rollback         # 从最近备份回滚
 #   ./car_deploy.sh --backup-only      # 只备份
 #   ./car_deploy.sh --list             # 列出本机可用计划与参数
+#   ./car_deploy.sh --restore-default  # 一键恢复官方默认配置（ORIGINAL，应急回归基线）
 #
 # 可选环境变量：HOST / USER / PASS / CAR_PROJ
 #   HOST     实车 IP（默认 192.168.10.6）
@@ -66,11 +67,20 @@ _ssh() {
   ssh -o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=8 "$USER@$HOST" "$@" 2>/dev/null \
     || sshpass -p "$PASS" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=8 "$USER@$HOST" "$@"
 }
+# scp 同样免密优先：免密可用直接 scp，否则 sshpass 兜底（与 _ssh 逻辑一致，避免依赖 sshpass）
 _scp_up() {
-  sshpass -p "$PASS" scp -o StrictHostKeyChecking=no "$1" "$USER@$HOST:$2"
+  if ssh -o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=5 "$USER@$HOST" "echo ok" >/dev/null 2>&1; then
+    scp -o StrictHostKeyChecking=no "$1" "$USER@$HOST:$2"
+  else
+    sshpass -p "$PASS" scp -o StrictHostKeyChecking=no "$1" "$USER@$HOST:$2"
+  fi
 }
 _scp_dn() {
-  sshpass -p "$PASS" scp -o StrictHostKeyChecking=no "$USER@$HOST:$1" "$2"
+  if ssh -o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=5 "$USER@$HOST" "echo ok" >/dev/null 2>&1; then
+    scp -o StrictHostKeyChecking=no "$USER@$HOST:$1" "$2"
+  else
+    sshpass -p "$PASS" scp -o StrictHostKeyChecking=no "$USER@$HOST:$1" "$2"
+  fi
 }
 
 need_sshpass() {
@@ -168,10 +178,43 @@ deploy_plan() {
   echo ">>> 下一步：请重启 Planning 模块（DreamView 关闭再开启 Planning，或 cyber_launch restart）"
 }
 
+# ---------------- 2.5 一键恢复官方默认配置 ----------------
+restore_default() {
+  local src="$REPO_ROOT/realcar_tuning/ORIGINAL"
+  echo "===== [恢复默认] 一键恢复官方默认配置（ORIGINAL）====="
+  # 本地官方默认 4 个目标文件齐全性检查
+  for f in "${CONF_FILES[@]}"; do
+    if [[ ! -f "$src/$f" ]]; then
+      echo "❌ 本地官方默认配置缺失: $src/$f"; exit 1
+    fi
+  done
+  # 先备份当前配置（恢复前可 --rollback 回到当前状态）
+  backup_car
+  local tarball="/tmp/restore_default_$TS.tar.gz"
+  local files_str=""
+  for f in "${CONF_FILES[@]}"; do files_str="$files_str $f"; done
+  (cd "$src" && tar -czf "$tarball" $files_str 2>/dev/null) || {
+    echo "❌ 本地打包失败"; exit 1; }
+  echo "  本地打包: $tarball（官方默认 4 个目标文件）"
+  # 上传并覆盖（检查解压是否成功）
+  _scp_up "$tarball" "/tmp/"
+  if _ssh "cd $CAR_CFG_ROOT && tar -xzf /tmp/$(basename $tarball) && echo RESTORE_OK"; then
+    echo "✅ 已恢复官方默认配置: $CAR_CFG_ROOT"
+  else
+    echo "❌ 恢复失败！请检查车上空间/权限，用 --rollback 回滚"
+    exit 1
+  fi
+  echo ""
+  verify_car
+  echo ""
+  echo "⚠️ 已恢复官方默认（cruise=5.0 会持续超速扣分，仅应急回归基线用）"
+  echo ">>> 比赛前必须重新部署 A/B，并重启 Planning 模块"
+}
+
 # ---------------- 3. 验证 ----------------
 verify_car() {
   echo "===== [验证] 车上生效值 ====="
-  _ssh "echo '--- planning.conf ---'; grep -E 'default_cruise_speed|planning_upper_speed_limit|min_stop_distance_obstacle' $CAR_CFG_ROOT/modules/planning/planning_component/conf/planning.conf; echo '--- crosswalk ---'; cat $CAR_CFG_ROOT/modules/planning/traffic_rules/crosswalk/conf/default_conf.pb.txt; echo '--- scene_speed_limit ---'; grep -E 'enabled|limit_speed|forward_buffer|backward_buffer' $CAR_CFG_ROOT/modules/planning/traffic_rules/scene_speed_limit/conf/default_conf.pb.txt"
+  _ssh "echo '--- planning.conf ---'; grep -E 'default_cruise_speed|planning_upper_speed_limit|min_stop_distance_obstacle' $CAR_CFG_ROOT/modules/planning/planning_component/conf/planning.conf; echo '--- crosswalk ---'; cat $CAR_CFG_ROOT/modules/planning/traffic_rules/crosswalk/conf/default_conf.pb.txt; echo ''; echo '--- scene_speed_limit ---'; grep -E 'enabled|limit_speed|forward_buffer|backward_buffer' $CAR_CFG_ROOT/modules/planning/traffic_rules/scene_speed_limit/conf/default_conf.pb.txt"
 }
 
 # ---------------- 4. 回滚 ----------------
@@ -266,16 +309,18 @@ menu() {
   echo "  A) 部署计划 A（15项：必改12 + min_stop + expand + upper）"
   echo "  B) 部署计划 B（12项：只必改）"
   echo "  C) 部署计划 C（先=A，比赛时按反馈 --set 微调）"
+  echo "  D) 恢复官方默认配置（ORIGINAL，应急回归基线）"
   echo "  R) 回滚到最近备份"
   echo "  V) 仅验证当前车上配置"
   echo "  L) 查看本机计划与参数说明"
   echo "  Q) 退出"
   echo "----------------------------------------------"
-  read -rp "  请选择 [A/B/C/R/V/L/Q]: " ch
+  read -rp "  请选择 [A/B/C/D/R/V/L/Q]: " ch
   case "$ch" in
     A|a) deploy_plan A ;;
     B|b) deploy_plan B ;;
     C|c) deploy_plan C ;;
+    D|d) restore_default ;;
     R|r) rollback_car ;;
     V|v) ping_car && verify_car ;;
     L|l) list_info ;;
@@ -285,13 +330,16 @@ menu() {
 }
 
 list_info() {
-  echo "===== 本机可用计划 ====="
-  for d in PLAN_A PLAN_B PLAN_C_兜底 PLAN_D_极限稳; do
+  echo "===== 本机可用部署计划 ====="
+  for key in A B; do
+    local d="${PLAN_DIR[$key]}"
     if [[ -d "$LOCAL_PLANS/$d" ]]; then
-      echo "  - $d"
+      echo "  - $key) $d"
       grep -hE "default_cruise_speed|planning_upper|min_stop" "$LOCAL_PLANS/$d/modules/planning/planning_component/conf/planning.conf" 2>/dev/null | sed 's/^/      /'
     fi
   done
+  echo "  C) 同 A（先部署 A，比赛时按反馈 --set 微调）"
+  echo "  D) 恢复官方默认配置（realcar_tuning/ORIGINAL）"
   echo ""
   echo "===== --set 支持参数 ====="
   echo "  cruise=值(巡航速度)  upper=值  min_stop=值(停车兜底)"
@@ -313,6 +361,7 @@ while [[ $# -gt 0 ]]; do
     --backup-only) ACTION="backup"; shift;;
     --list) ACTION="list"; shift;;
     --verify) ACTION="verify"; shift;;
+    --restore-default) ACTION="restore_default"; shift;;
     *) echo "未知参数: $1"; exit 1;;
   esac
 done
@@ -322,6 +371,7 @@ case "$ACTION" in
   backup)   ping_car && backup_car; exit 0;;
   list)     list_info; exit 0;;
   verify)   ping_car && verify_car; exit 0;;
+  restore_default) ping_car && restore_default; exit 0;;
 esac
 
 if [[ -n "$SET_KV" ]]; then
