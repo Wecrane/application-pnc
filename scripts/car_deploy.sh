@@ -154,9 +154,14 @@ deploy_plan() {
     echo "❌ 本地打包失败"; exit 1; }
   echo "  本地打包: $tarball（仅 4 个目标文件）"
   echo "  内容: $(tar -tzf "$tarball" | tr '\n' ' ')"
-  # 上传并覆盖
+  # 上传并覆盖（检查解压是否成功）
   _scp_up "$tarball" "/tmp/"
-  _ssh "cd $CAR_CFG_ROOT && tar -xzf /tmp/$(basename $tarball) && echo '✅ 已覆盖配置: $CAR_CFG_ROOT'"
+  if _ssh "cd $CAR_CFG_ROOT && tar -xzf /tmp/$(basename $tarball) && echo DEPLOY_OK"; then
+    echo "✅ 已覆盖配置: $CAR_CFG_ROOT"
+  else
+    echo "❌ 解压覆盖失败！请检查车上空间/权限，用 --rollback 回滚"
+    exit 1
+  fi
   echo ""
   verify_car
   echo ""
@@ -210,6 +215,11 @@ set_param() {
       file="modules/planning/traffic_rules/crosswalk/conf/default_conf.pb.txt"
       match="stop_distance:"
       new="stop_distance: $val";;
+    tl_stop)
+      # 红灯停车距离微调（traffic_light stop_distance）
+      file="modules/planning/traffic_rules/traffic_light/conf/default_conf.pb.txt"
+      match="stop_distance:"
+      new="stop_distance: $val";;
     expand)
       file="modules/planning/traffic_rules/crosswalk/conf/default_conf.pb.txt"
       match="expand_s_distance:"
@@ -238,7 +248,7 @@ set_param() {
       echo ">>> 请重启 Planning 模块"; return 0;;
     *)
       echo "❌ 不支持的参数名: $key"
-      echo "   支持: cruise / upper / min_stop / stop_distance / expand / timeout / limit / forward / backward"
+      echo "   支持: cruise / upper / min_stop / stop_distance(人行道) / tl_stop(红灯) / expand / timeout / limit / forward / backward"
       exit 1;;
   esac
   _ssh "cd $CAR_CFG_ROOT && sed -i 's|.*$match.*|$new|' $file && echo '✅ $file 已改为 $new'"
@@ -285,7 +295,7 @@ list_info() {
   echo ""
   echo "===== --set 支持参数 ====="
   echo "  cruise=值(巡航速度)  upper=值  min_stop=值(停车兜底)"
-  echo "  stop_distance=值(人行道停车)  expand=值  timeout=值"
+  echo "  stop_distance=值(人行道停车)  tl_stop=值(红灯停车)  expand=值  timeout=值"
   echo "  limit=值(限速带速度,同时改两区段)  forward=值  backward=值"
 }
 
