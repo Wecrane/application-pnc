@@ -22,7 +22,12 @@
 #   ./car_deploy.sh --backup-only      # 只备份
 #   ./car_deploy.sh --list             # 列出本机可用计划与参数
 #
-# 可选环境变量：HOST / USER / PASS（默认 192.168.10.6 / apollo / apollo123）
+# 可选环境变量：HOST / USER / PASS / CAR_PROJ
+#   HOST     实车 IP（默认 192.168.10.6）
+#   USER     用户名（默认 apollo）
+#   PASS     SSH 密码（默认 apollo，⚠️注意不是 WiFi 密码 apollo123）
+#   CAR_PROJ 车上工程目录名（默认自动探测 apollo-edu_9.1.1 / apollo-edu-9.1.1）
+# 💡 免密：现场第一次手动 `ssh apollo@192.168.10.6` 输一次密码后，4 小时内 ssh/scp 全部免密，脚本不再需要 sshpass。
 # ============================================================
 
 set -uo pipefail
@@ -30,9 +35,9 @@ set -uo pipefail
 # ---------------- 配置 ----------------
 HOST="${HOST:-192.168.10.6}"
 USER="${USER:-apollo}"
-PASS="${PASS:-apollo123}"
-CAR_PROJ="apollo-edu_9.1.1"                 # 车上工程目录名
-CAR_CFG_ROOT="~/${CAR_PROJ}/profiles/HQEV_BDN"   # 配置根（profile 覆盖生效）
+PASS="${PASS:-apollo}"                    # ⚠️ SSH 密码 = apollo（WiFi 才是 apollo123）
+CAR_PROJ="${CAR_PROJ:-}"                    # 留空则自动探测
+CAR_CFG_ROOT=""                             # 探测后设置
 TS=$(date +%Y%m%d_%H%M%S)
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -56,25 +61,61 @@ declare -A PLAN_DIR=(
 )
 
 # ---------------- 工具函数 ----------------
+# 免密优先：若已建立免密（首次手动 ssh 后），直接用 ssh；否则用 sshpass 带密码
+_ssh() {
+  ssh -o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=8 "$USER@$HOST" "$@" 2>/dev/null \
+    || sshpass -p "$PASS" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=8 "$USER@$HOST" "$@"
+}
+_scp_up() {
+  sshpass -p "$PASS" scp -o StrictHostKeyChecking=no "$1" "$USER@$HOST:$2"
+}
+_scp_dn() {
+  sshpass -p "$PASS" scp -o StrictHostKeyChecking=no "$USER@$HOST:$1" "$2"
+}
+
 need_sshpass() {
+  # 若免密可用则不需要 sshpass
+  if ssh -o BatchMode=yes -o ConnectTimeout=5 -o StrictHostKeyChecking=no "$USER@$HOST" "echo ok" >/dev/null 2>&1; then
+    return 0
+  fi
   if ! command -v sshpass >/dev/null 2>&1; then
-    echo "❌ 未安装 sshpass。请先安装：sudo apt-get install sshpass"
-    echo "   或改用 expect（见脚本底部注释）。"
+    echo "❌ 未安装 sshpass 且未建立免密。"
+    echo "   方案1（推荐）：先手动执行一次：ssh $USER@$HOST（输密码 apollo），之后 4 小时免密"
+    echo "   方案2：sudo apt-get install sshpass"
     exit 1
   fi
 }
 
-ssh_cmd() { sshpass -p "$PASS" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=8 "$USER@$HOST" "$@"; }
-scp_up()   { sshpass -p "$PASS" scp -o StrictHostKeyChecking=no "$1" "$USER@$HOST:$2"; }
-scp_dn()   { sshpass -p "$PASS" scp -o StrictHostKeyChecking=no "$USER@$HOST:$1" "$2"; }
+# 自动探测工程目录名（apollo-edu_9.1.1 下划线 / apollo-edu-9.1.1 连字符，现场以实际为准）
+detect_project() {
+  if [[ -n "$CAR_PROJ" ]]; then
+    CAR_CFG_ROOT="~/$CAR_PROJ/profiles/HQEV_BDN"
+    return 0
+  fi
+  local found
+  found=$(ssh -o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=8 "$USER@$HOST" "ls -d ~/apollo-edu* 2>/dev/null | head -1 | xargs -n1 basename" 2>/dev/null)
+  if [[ -z "$found" ]]; then
+    found=$(sshpass -p "$PASS" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=8 "$USER@$HOST" "ls -d ~/apollo-edu* 2>/dev/null | head -1 | xargs -n1 basename" 2>/dev/null)
+  fi
+  if [[ -z "$found" ]]; then
+    echo "❌ 未探测到车上 apollo-edu* 工程目录，请用 CAR_PROJ=实际目录名 ./car_deploy.sh 指定"
+    exit 1
+  fi
+  CAR_PROJ="$found"
+  CAR_CFG_ROOT="~/$CAR_PROJ/profiles/HQEV_BDN"
+  echo "✅ 自动探测工程目录: $CAR_PROJ"
+}
+
 
 ping_car() {
   echo "==> 连接实车 $USER@$HOST ..."
-  if ssh_cmd "echo OK && ls -d $CAR_CFG_ROOT 2>/dev/null"; then
+  need_sshpass
+  detect_project
+  if _ssh "echo OK && ls -d $CAR_CFG_ROOT 2>/dev/null"; then
     echo "✅ 连接成功，配置目录存在：$CAR_CFG_ROOT"
   else
     echo "❌ 连接失败或配置目录不存在。请检查：WiFi(HQEVxxx)/IP/工程名。"
-    echo "   若工程名不是 apollo-edu_9.1.1，用 CAR_PROJ=... ./car_deploy.sh 覆盖"
+    echo "   若工程目录探测不对，用 CAR_PROJ=实际目录名 ./car_deploy.sh 覆盖"
     exit 1
   fi
 }
@@ -87,9 +128,9 @@ backup_car() {
   # 车上打包
   local files_str=""
   for f in "${CONF_FILES[@]}"; do files_str="$files_str $f"; done
-  ssh_cmd "mkdir -p $REMOTE_BAK && cd $CAR_CFG_ROOT && cp --parents $files_str $REMOTE_BAK/ && tar -czf $REMOTE_BAK/config_backup.tar.gz -C $REMOTE_BAK . && echo '车上备份: $REMOTE_BAK' && ls -la $REMOTE_BAK/"
+  _ssh "mkdir -p $REMOTE_BAK && cd $CAR_CFG_ROOT && cp --parents $files_str $REMOTE_BAK/ && tar -czf $REMOTE_BAK/config_backup.tar.gz -C $REMOTE_BAK . && echo '车上备份: $REMOTE_BAK' && ls -la $REMOTE_BAK/"
   # 下载到本地
-  ssh_cmd "cat $REMOTE_BAK/config_backup.tar.gz" > "$LOCAL_BAK/config_backup.tar.gz"
+  _ssh "cat $REMOTE_BAK/config_backup.tar.gz" > "$LOCAL_BAK/config_backup.tar.gz"
   echo "✅ 本地备份: $LOCAL_BAK/config_backup.tar.gz"
   echo "   最新备份路径记录: $REMOTE_BAK" > "$LOCAL_BAK/README.txt"
   echo "$REMOTE_BAK" > "$REPO_ROOT/backup/car_deploy/.latest_remote"
@@ -114,8 +155,8 @@ deploy_plan() {
   echo "  本地打包: $tarball（仅 4 个目标文件）"
   echo "  内容: $(tar -tzf "$tarball" | tr '\n' ' ')"
   # 上传并覆盖
-  scp_up "$tarball" "/tmp/"
-  ssh_cmd "cd $CAR_CFG_ROOT && tar -xzf /tmp/$(basename $tarball) && echo '✅ 已覆盖配置: $CAR_CFG_ROOT'"
+  _scp_up "$tarball" "/tmp/"
+  _ssh "cd $CAR_CFG_ROOT && tar -xzf /tmp/$(basename $tarball) && echo '✅ 已覆盖配置: $CAR_CFG_ROOT'"
   echo ""
   verify_car
   echo ""
@@ -125,7 +166,7 @@ deploy_plan() {
 # ---------------- 3. 验证 ----------------
 verify_car() {
   echo "===== [验证] 车上生效值 ====="
-  ssh_cmd "echo '--- planning.conf ---'; grep -E 'default_cruise_speed|planning_upper_speed_limit|min_stop_distance_obstacle' $CAR_CFG_ROOT/modules/planning/planning_component/conf/planning.conf; echo '--- crosswalk ---'; cat $CAR_CFG_ROOT/modules/planning/traffic_rules/crosswalk/conf/default_conf.pb.txt; echo '--- scene_speed_limit ---'; grep -E 'enabled|limit_speed|forward_buffer|backward_buffer' $CAR_CFG_ROOT/modules/planning/traffic_rules/scene_speed_limit/conf/default_conf.pb.txt"
+  _ssh "echo '--- planning.conf ---'; grep -E 'default_cruise_speed|planning_upper_speed_limit|min_stop_distance_obstacle' $CAR_CFG_ROOT/modules/planning/planning_component/conf/planning.conf; echo '--- crosswalk ---'; cat $CAR_CFG_ROOT/modules/planning/traffic_rules/crosswalk/conf/default_conf.pb.txt; echo '--- scene_speed_limit ---'; grep -E 'enabled|limit_speed|forward_buffer|backward_buffer' $CAR_CFG_ROOT/modules/planning/traffic_rules/scene_speed_limit/conf/default_conf.pb.txt"
 }
 
 # ---------------- 4. 回滚 ----------------
@@ -137,11 +178,11 @@ rollback_car() {
   echo "===== [回滚] 从最近备份恢复 ====="
   if [[ -z "$latest" ]]; then
     echo "⚠️ 没有本地记录的最新备份，列出车上可用备份："
-    ssh_cmd "ls -d ~/car_config_backup_* 2>/dev/null | tail -5"
+    _ssh "ls -d ~/car_config_backup_* 2>/dev/null | tail -5"
     read -rp "输入要恢复的备份目录（~/car_config_backup_XXX）: " latest
     [[ -z "$latest" ]] && { echo "取消"; exit 0; }
   fi
-  ssh_cmd "cd $CAR_CFG_ROOT && tar -xzf $latest/config_backup.tar.gz && echo '✅ 已从 $latest 恢复'"
+  _ssh "cd $CAR_CFG_ROOT && tar -xzf $latest/config_backup.tar.gz && echo '✅ 已从 $latest 恢复'"
   verify_car
   echo ">>> 请重启 Planning 模块使回滚生效"
 }
@@ -180,19 +221,19 @@ set_param() {
     limit)
       # 同时改 crosswalk + traffic_light 两个区段限速值
       f1="modules/planning/traffic_rules/scene_speed_limit/conf/default_conf.pb.txt"
-      ssh_cmd "cd $CAR_CFG_ROOT && sed -i 's/crosswalk_limit_speed: .*/crosswalk_limit_speed: $val/' $f1 && sed -i 's/traffic_light_limit_speed: .*/traffic_light_limit_speed: $val/' $f1 && echo '✅ crosswalk+traffic_light limit_speed 已改为 $val'"
+      _ssh "cd $CAR_CFG_ROOT && sed -i 's/crosswalk_limit_speed: .*/crosswalk_limit_speed: $val/' $f1 && sed -i 's/traffic_light_limit_speed: .*/traffic_light_limit_speed: $val/' $f1 && echo '✅ crosswalk+traffic_light limit_speed 已改为 $val'"
       verify_car | grep limit_speed
       echo ">>> 请重启 Planning 模块"; return 0;;
     forward)
       file="modules/planning/traffic_rules/scene_speed_limit/conf/default_conf.pb.txt"
       match="crosswalk_forward_buffer:"
       new="crosswalk_forward_buffer: $val"
-      ssh_cmd "cd $CAR_CFG_ROOT && sed -i 's/traffic_light_forward_buffer: .*/traffic_light_forward_buffer: $val/' $file && sed -i 's/crosswalk_forward_buffer: .*/crosswalk_forward_buffer: $val/' $file && echo '✅ forward_buffer 已改为 $val'"
+      _ssh "cd $CAR_CFG_ROOT && sed -i 's/traffic_light_forward_buffer: .*/traffic_light_forward_buffer: $val/' $file && sed -i 's/crosswalk_forward_buffer: .*/crosswalk_forward_buffer: $val/' $file && echo '✅ forward_buffer 已改为 $val'"
       verify_car | grep forward_buffer
       echo ">>> 请重启 Planning 模块"; return 0;;
     backward)
       file="modules/planning/traffic_rules/scene_speed_limit/conf/default_conf.pb.txt"
-      ssh_cmd "cd $CAR_CFG_ROOT && sed -i 's/traffic_light_backward_buffer: .*/traffic_light_backward_buffer: $val/' $file && sed -i 's/crosswalk_backward_buffer: .*/crosswalk_backward_buffer: $val/' $file && echo '✅ backward_buffer 已改为 $val'"
+      _ssh "cd $CAR_CFG_ROOT && sed -i 's/traffic_light_backward_buffer: .*/traffic_light_backward_buffer: $val/' $file && sed -i 's/crosswalk_backward_buffer: .*/crosswalk_backward_buffer: $val/' $file && echo '✅ backward_buffer 已改为 $val'"
       verify_car | grep backward_buffer
       echo ">>> 请重启 Planning 模块"; return 0;;
     *)
@@ -200,7 +241,7 @@ set_param() {
       echo "   支持: cruise / upper / min_stop / stop_distance / expand / timeout / limit / forward / backward"
       exit 1;;
   esac
-  ssh_cmd "cd $CAR_CFG_ROOT && sed -i 's|^$match.*|$new|' $file && echo '✅ $file 已改为 $new'"
+  _ssh "cd $CAR_CFG_ROOT && sed -i 's|^$match.*|$new|' $file && echo '✅ $file 已改为 $new'"
   verify_car | grep -E "default_cruise_speed|upper|min_stop|stop_distance|expand|timeout" || true
   echo ">>> 请重启 Planning 模块"
 }
