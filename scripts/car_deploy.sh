@@ -241,7 +241,7 @@ set_param() {
       echo "   支持: cruise / upper / min_stop / stop_distance / expand / timeout / limit / forward / backward"
       exit 1;;
   esac
-  _ssh "cd $CAR_CFG_ROOT && sed -i 's|^$match.*|$new|' $file && echo '✅ $file 已改为 $new'"
+  _ssh "cd $CAR_CFG_ROOT && sed -i 's|.*$match.*|$new|' $file && echo '✅ $file 已改为 $new'"
   verify_car | grep -E "default_cruise_speed|upper|min_stop|stop_distance|expand|timeout" || true
   echo ">>> 请重启 Planning 模块"
 }
@@ -290,7 +290,6 @@ list_info() {
 }
 
 # ---------------- main ----------------
-need_sshpass
 
 ACTION=""
 PLAN=""
