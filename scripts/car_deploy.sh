@@ -22,6 +22,8 @@
 #   ./car_deploy.sh --backup-only      # 只备份
 #   ./car_deploy.sh --list             # 列出本机可用计划与参数
 #   ./car_deploy.sh --restore-default  # 一键恢复官方默认配置（ORIGINAL，应急回归基线）
+#   ./car_deploy.sh --save-baseline    # 把当前实车配置保存为第一版基线（比赛当天原始状态）
+#   ./car_deploy.sh --restore-baseline # 一键恢复到第一版基线（首次部署自动保存，随时可回）
 #
 # 可选环境变量：HOST / USER / PASS / CAR_PROJ
 #   HOST     实车 IP（默认 192.168.10.6）
@@ -154,6 +156,8 @@ deploy_plan() {
     echo "❌ 找不到计划目录: $LOCAL_PLANS/$dir"; exit 1
   fi
   echo "===== [部署] 计划 $plan -> $dir ====="
+  # 首次部署自动锁定第一版基线（比赛当天实车原始配置）
+  ensure_baseline
   # 先备份
   backup_car
   # 只打包 4 个目标文件（不打包整个 modules 树，避免误覆盖车上其他配置）
@@ -188,6 +192,8 @@ restore_default() {
       echo "❌ 本地官方默认配置缺失: $src/$f"; exit 1
     fi
   done
+  # 首次恢复也自动锁定第一版基线（若尚未保存）
+  ensure_baseline
   # 先备份当前配置（恢复前可 --rollback 回到当前状态）
   backup_car
   local tarball="/tmp/restore_default_$TS.tar.gz"
@@ -209,6 +215,72 @@ restore_default() {
   echo ""
   echo "⚠️ 已恢复官方默认（cruise=5.0 会持续超速扣分，仅应急回归基线用）"
   echo ">>> 比赛前必须重新部署 A/B，并重启 Planning 模块"
+}
+
+# ---------------- 2.6 第一版基线（比赛当天实车原始配置） ----------------
+# 核心：把当前实车 4 个配置打包为"第一版基线"，本地 + 车上双份保存
+save_baseline_core() {
+  local BASELINE_DIR="$REPO_ROOT/backup/car_deploy/baseline"
+  local REMOTE_BASE="~/car_config_baseline"
+  mkdir -p "$BASELINE_DIR"
+  local files_str=""
+  for f in "${CONF_FILES[@]}"; do files_str="$files_str $f"; done
+  # 车上也存一份（双保险：换笔记本也能从车上恢复）
+  _ssh "mkdir -p $REMOTE_BASE && cd $CAR_CFG_ROOT && tar -czf $REMOTE_BASE/config_backup.tar.gz $files_str && echo '✅ 车上基线: $REMOTE_BASE/config_backup.tar.gz'" \
+    || { echo "❌ 车上基线打包失败"; return 1; }
+  # 下载到本地（tar 内为 modules/... 相对路径，恢复时 cd CAR_CFG_ROOT 解压即可）
+  _ssh "cat $REMOTE_BASE/config_backup.tar.gz" > "$BASELINE_DIR/config_backup.tar.gz"
+  echo "第一版基线（实车原始配置）: $(date '+%Y-%m-%d %H:%M:%S')" > "$BASELINE_DIR/README.txt"
+  echo "✅ 第一版基线已保存（本地 $BASELINE_DIR/ + 车上 $REMOTE_BASE/）"
+}
+
+# 首次自动保存：比赛当天第一次部署/恢复时，把实车原始配置锁为第一版基线（已有则跳过）
+ensure_baseline() {
+  local BASELINE_DIR="$REPO_ROOT/backup/car_deploy/baseline"
+  if [[ -f "$BASELINE_DIR/config_backup.tar.gz" ]]; then
+    return 0
+  fi
+  echo "📌 尚无第一版基线 → 自动保存当前实车配置（=比赛当天原始状态，之后可 --restore-baseline 一键恢复）"
+  save_baseline_core || exit 1
+}
+
+# 手动保存/覆盖基线
+save_baseline() {
+  local BASELINE_DIR="$REPO_ROOT/backup/car_deploy/baseline"
+  echo "===== [保存基线] 将当前实车配置保存为第一版基线 ====="
+  if [[ -f "$BASELINE_DIR/config_backup.tar.gz" ]]; then
+    echo "⚠️ 基线已存在：$(head -1 "$BASELINE_DIR/README.txt" 2>/dev/null)"
+    read -rp "  确认覆盖为新基线? [y/N]: " yn
+    [[ "$yn" != "y" && "$yn" != "Y" ]] && { echo "取消"; return 0; }
+  fi
+  save_baseline_core
+}
+
+# 一键恢复到第一版基线
+restore_baseline() {
+  local BASELINE_DIR="$REPO_ROOT/backup/car_deploy/baseline"
+  echo "===== [恢复基线] 一键恢复第一版基线（比赛当天原始配置）====="
+  if [[ ! -f "$BASELINE_DIR/config_backup.tar.gz" ]]; then
+    echo "❌ 本地没有第一版基线备份。"
+    echo "   比赛当天第一次部署会自动保存第一版；或先执行：./scripts/car_deploy.sh --save-baseline"
+    exit 1
+  fi
+  echo "  基线来源: $(head -1 "$BASELINE_DIR/README.txt" 2>/dev/null)"
+  # 先备份当前配置（恢复前可 --rollback 回到当前状态）
+  backup_car
+  local tarball="/tmp/restore_baseline_$TS.tar.gz"
+  cp "$BASELINE_DIR/config_backup.tar.gz" "$tarball"
+  _scp_up "$tarball" "/tmp/"
+  if _ssh "cd $CAR_CFG_ROOT && tar -xzf /tmp/$(basename $tarball) && echo BASELINE_OK"; then
+    echo "✅ 已恢复第一版基线配置: $CAR_CFG_ROOT"
+  else
+    echo "❌ 恢复失败！请检查车上空间/权限，用 --rollback 回滚"
+    exit 1
+  fi
+  echo ""
+  verify_car
+  echo ""
+  echo ">>> 请重启 Planning 模块使恢复生效"
 }
 
 # ---------------- 3. 验证 ----------------
@@ -310,17 +382,19 @@ menu() {
   echo "  B) 部署计划 B（12项：只必改）"
   echo "  C) 部署计划 C（先=A，比赛时按反馈 --set 微调）"
   echo "  D) 恢复官方默认配置（ORIGINAL，应急回归基线）"
+  echo "  E) 恢复第一版基线（比赛当天首次部署自动保存的原始配置）"
   echo "  R) 回滚到最近备份"
   echo "  V) 仅验证当前车上配置"
   echo "  L) 查看本机计划与参数说明"
   echo "  Q) 退出"
   echo "----------------------------------------------"
-  read -rp "  请选择 [A/B/C/D/R/V/L/Q]: " ch
+  read -rp "  请选择 [A/B/C/D/E/R/V/L/Q]: " ch
   case "$ch" in
     A|a) deploy_plan A ;;
     B|b) deploy_plan B ;;
     C|c) deploy_plan C ;;
     D|d) restore_default ;;
+    E|e) restore_baseline ;;
     R|r) rollback_car ;;
     V|v) ping_car && verify_car ;;
     L|l) list_info ;;
@@ -340,6 +414,11 @@ list_info() {
   done
   echo "  C) 同 A（先部署 A，比赛时按反馈 --set 微调）"
   echo "  D) 恢复官方默认配置（realcar_tuning/ORIGINAL）"
+  echo "  E) 恢复第一版基线（比赛当天原始配置，首次部署自动保存）"
+  echo ""
+  echo "===== 基线命令 ====="
+  echo "  --save-baseline    把当前实车配置保存/覆盖为第一版基线"
+  echo "  --restore-baseline 一键恢复到第一版基线"
   echo ""
   echo "===== --set 支持参数 ====="
   echo "  cruise=值(巡航速度)  upper=值  min_stop=值(停车兜底)"
@@ -362,6 +441,8 @@ while [[ $# -gt 0 ]]; do
     --list) ACTION="list"; shift;;
     --verify) ACTION="verify"; shift;;
     --restore-default) ACTION="restore_default"; shift;;
+    --save-baseline)   ACTION="save_baseline"; shift;;
+    --restore-baseline) ACTION="restore_baseline"; shift;;
     *) echo "未知参数: $1"; exit 1;;
   esac
 done
@@ -372,6 +453,8 @@ case "$ACTION" in
   list)     list_info; exit 0;;
   verify)   ping_car && verify_car; exit 0;;
   restore_default) ping_car && restore_default; exit 0;;
+  save_baseline)   ping_car && save_baseline; exit 0;;
+  restore_baseline) ping_car && restore_baseline; exit 0;;
 esac
 
 if [[ -n "$SET_KV" ]]; then
