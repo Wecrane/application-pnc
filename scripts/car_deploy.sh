@@ -25,9 +25,9 @@
 #   ./car_deploy.sh --save-baseline    # 把当前实车配置保存为第一版基线（比赛当天原始状态）
 #   ./car_deploy.sh --restore-baseline # 一键恢复到第一版基线（首次部署自动保存，随时可回）
 #
-# 可选环境变量：HOST / USER / PASS / CAR_PROJ
+# 可选环境变量：HOST / SSH_USER / PASS / CAR_PROJ
 #   HOST     实车 IP（默认 192.168.10.6）
-#   USER     用户名（默认 apollo）
+#   SSH_USER 用户名（默认 apollo；⚠️勿用 USER，系统环境变量=本机登录名会污染连接）
 #   PASS     SSH 密码（默认 apollo，⚠️注意不是 WiFi 密码 apollo123）
 #   CAR_PROJ 车上工程目录名（默认自动探测 apollo-edu_9.1.1 / apollo-edu-9.1.1）
 # 💡 免密：现场第一次手动 `ssh apollo@192.168.10.6` 输一次密码后，4 小时内 ssh/scp 全部免密，脚本不再需要 sshpass。
@@ -37,7 +37,7 @@ set -uo pipefail
 
 # ---------------- 配置 ----------------
 HOST="${HOST:-192.168.10.6}"
-USER="${USER:-apollo}"
+SSH_USER="${SSH_USER:-apollo}"              # ⚠️ 连接用户名默认 apollo；不能用 USER（系统变量=本机登录名）
 PASS="${PASS:-apollo}"                    # ⚠️ SSH 密码 = apollo（WiFi 才是 apollo123）
 CAR_PROJ="${CAR_PROJ:-}"                    # 留空则自动探测
 CAR_CFG_ROOT=""                             # 探测后设置
@@ -66,33 +66,33 @@ declare -A PLAN_DIR=(
 # ---------------- 工具函数 ----------------
 # 免密优先：若已建立免密（首次手动 ssh 后），直接用 ssh；否则用 sshpass 带密码
 _ssh() {
-  ssh -o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=8 "$USER@$HOST" "$@" 2>/dev/null \
-    || sshpass -p "$PASS" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=8 "$USER@$HOST" "$@"
+  ssh -o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=8 "$SSH_USER@$HOST" "$@" 2>/dev/null \
+    || sshpass -p "$PASS" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=8 "$SSH_USER@$HOST" "$@"
 }
 # scp 同样免密优先：免密可用直接 scp，否则 sshpass 兜底（与 _ssh 逻辑一致，避免依赖 sshpass）
 _scp_up() {
-  if ssh -o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=5 "$USER@$HOST" "echo ok" >/dev/null 2>&1; then
-    scp -o StrictHostKeyChecking=no "$1" "$USER@$HOST:$2"
+  if ssh -o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=5 "$SSH_USER@$HOST" "echo ok" >/dev/null 2>&1; then
+    scp -o StrictHostKeyChecking=no "$1" "$SSH_USER@$HOST:$2"
   else
-    sshpass -p "$PASS" scp -o StrictHostKeyChecking=no "$1" "$USER@$HOST:$2"
+    sshpass -p "$PASS" scp -o StrictHostKeyChecking=no "$1" "$SSH_USER@$HOST:$2"
   fi
 }
 _scp_dn() {
-  if ssh -o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=5 "$USER@$HOST" "echo ok" >/dev/null 2>&1; then
-    scp -o StrictHostKeyChecking=no "$USER@$HOST:$1" "$2"
+  if ssh -o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=5 "$SSH_USER@$HOST" "echo ok" >/dev/null 2>&1; then
+    scp -o StrictHostKeyChecking=no "$SSH_USER@$HOST:$1" "$2"
   else
-    sshpass -p "$PASS" scp -o StrictHostKeyChecking=no "$USER@$HOST:$1" "$2"
+    sshpass -p "$PASS" scp -o StrictHostKeyChecking=no "$SSH_USER@$HOST:$1" "$2"
   fi
 }
 
 need_sshpass() {
   # 若免密可用则不需要 sshpass
-  if ssh -o BatchMode=yes -o ConnectTimeout=5 -o StrictHostKeyChecking=no "$USER@$HOST" "echo ok" >/dev/null 2>&1; then
+  if ssh -o BatchMode=yes -o ConnectTimeout=5 -o StrictHostKeyChecking=no "$SSH_USER@$HOST" "echo ok" >/dev/null 2>&1; then
     return 0
   fi
   if ! command -v sshpass >/dev/null 2>&1; then
     echo "❌ 未安装 sshpass 且未建立免密。"
-    echo "   方案1（推荐）：先手动执行一次：ssh $USER@$HOST（输密码 apollo），之后 4 小时免密"
+    echo "   方案1（推荐）：先手动执行一次：ssh $SSH_USER@$HOST（输密码 apollo），之后 4 小时免密"
     echo "   方案2：sudo apt-get install sshpass"
     exit 1
   fi
@@ -105,9 +105,9 @@ detect_project() {
     return 0
   fi
   local found
-  found=$(ssh -o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=8 "$USER@$HOST" "ls -d ~/apollo-edu* 2>/dev/null | head -1 | xargs -n1 basename" 2>/dev/null)
+  found=$(ssh -o BatchMode=yes -o StrictHostKeyChecking=no -o ConnectTimeout=8 "$SSH_USER@$HOST" "ls -d ~/apollo-edu* 2>/dev/null | head -1 | xargs -n1 basename" 2>/dev/null)
   if [[ -z "$found" ]]; then
-    found=$(sshpass -p "$PASS" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=8 "$USER@$HOST" "ls -d ~/apollo-edu* 2>/dev/null | head -1 | xargs -n1 basename" 2>/dev/null)
+    found=$(sshpass -p "$PASS" ssh -o StrictHostKeyChecking=no -o ConnectTimeout=8 "$SSH_USER@$HOST" "ls -d ~/apollo-edu* 2>/dev/null | head -1 | xargs -n1 basename" 2>/dev/null)
   fi
   if [[ -z "$found" ]]; then
     echo "❌ 未探测到车上 apollo-edu* 工程目录，请用 CAR_PROJ=实际目录名 ./car_deploy.sh 指定"
@@ -120,7 +120,7 @@ detect_project() {
 
 
 ping_car() {
-  echo "==> 连接实车 $USER@$HOST ..."
+  echo "==> 连接实车 $SSH_USER@$HOST ..."
   need_sshpass
   detect_project
   if _ssh "echo OK && ls -d $CAR_CFG_ROOT 2>/dev/null"; then
@@ -376,7 +376,7 @@ menu() {
   echo ""
   echo "=============================================="
   echo "  实车配置部署 · 苏州实车赛 2026-08-07"
-  echo "  车: $USER@$HOST  |  配置根: $CAR_CFG_ROOT"
+  echo "  车: $SSH_USER@$HOST  |  配置根: $CAR_CFG_ROOT"
   echo "=============================================="
   echo "  A) 部署计划 A（15项：必改12 + min_stop + expand + upper）"
   echo "  B) 部署计划 B（12项：只必改）"
