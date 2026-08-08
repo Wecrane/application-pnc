@@ -66,3 +66,19 @@ release-donglixue.tar.gz
 # buildtool安装缓存
 dev/install/
 dev/bazel/
+
+# ===== 2026-08-08 追加：大文件不入库（submit提交包 + 实车大备份 + 模型文件）=====
+# 提交包目录（90个tar.gz，约6GB）
+submit/
+
+# 实车备份大文件（保留小配置/评分系统源码tar.gz，仅排除大文件）
+shiche/car_890/car_selected_logs.tar.gz
+shiche/car_890/car_xh_bak.tar.gz
+shiche/car_890/car_scripts_biglogs.tar.gz
+shiche/car_890/car_maps_and_tools.tar.gz
+shiche/car_890/car_config_backup.tar.gz
+shiche/car_890/car_replay_logs.tar.gz
+shiche/car_890/xh_bak/.XH_2026_bak/01-01_20260804_233536/modules.tar.gz
+
+# 预测模型文件（94MB）
+modules/prediction/data/junction_map_vehicle_model.pt
